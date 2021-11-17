@@ -53,6 +53,12 @@ class Chunk:
     def range_dec(self) -> str:
         return f"{self.start_offset} - {self.end_offset}"
 
+    def contains(self, other: "Chunk"):
+        return (
+            self.start_offset < other.start_offset
+            and self.end_offset >= other.end_offset
+        )
+
 
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
