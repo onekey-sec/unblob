@@ -39,7 +39,7 @@ class Chunk:
 
     start_offset: int
     end_offset: int
-    handler: "Handler" = attr.ib(init=False)
+    handler: "Handler" = attr.ib(init=False, eq=False)
 
     @property
     def size(self) -> int:
