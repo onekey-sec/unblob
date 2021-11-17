@@ -2,14 +2,14 @@
 import click
 from typing import Tuple
 from pathlib import Path
-from .finder import search_blobs
+from .strategies import extract_with_priority
 
 
 @click.command()
 @click.argument(
     "files",
     nargs=-1,
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(path_type=Path, exists=True, resolve_path=True),
 )
 @click.option(
     "-e",
