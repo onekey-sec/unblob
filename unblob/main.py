@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import click
 from typing import List
 from pathlib import Path
@@ -35,3 +36,5 @@ from .finder import search_blobs
 def main(files, extract_dir, depth):
     click.echo(f"Got files: {files}")
     process_files(files, extract_dir)
+if __name__ == "__main__":
+    main()
