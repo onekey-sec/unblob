@@ -32,9 +32,10 @@ from .finder import search_blobs
     default="priority",
     help="The strategy of how we do extraction. Default is priority.",
 )
-
 def main(files, extract_dir, depth):
     click.echo(f"Got files: {files}")
     process_files(files, extract_dir)
+
+
 if __name__ == "__main__":
     main()
