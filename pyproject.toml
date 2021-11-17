@@ -8,6 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.6"
 yara-python = "^4.1.0"
+click = "^8.0.1"
 
 [tool.poetry.dev-dependencies]
 
