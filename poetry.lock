@@ -82,6 +82,14 @@ optional = false
 python-versions = ">=3.6, <3.7"
 
 [[package]]
+name = "dissect.cstruct"
+version = "2.0"
+description = "Structure parsing in Python made easy."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "importlib-metadata"
 version = "4.5.0"
 description = "Read metadata from Python packages"
@@ -239,7 +247,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "216d3501bab5bcf2ebd5c368cc3b353ce5163269ec82325c463da43569461aca"
+content-hash = "3d22943ca2013d0b8346890a407cf876d47ba8f7e18e1eb64ed00315f640b178"
 
 [metadata.files]
 appdirs = [
@@ -269,6 +277,10 @@ colorama = [
 dataclasses = [
     {file = "dataclasses-0.8-py3-none-any.whl", hash = "sha256:0201d89fa866f68c8ebd9d08ee6ff50c0b255f8ec63a71c16fda7af82bb887bf"},
     {file = "dataclasses-0.8.tar.gz", hash = "sha256:8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97"},
+]
+"dissect.cstruct" = [
+    {file = "dissect.cstruct-2.0-py3-none-any.whl", hash = "sha256:e150abcc7500a279126ebf1a0f87c34d857e126ac3d65a980844bfb3296a5492"},
+    {file = "dissect.cstruct-2.0.tar.gz", hash = "sha256:4f1d3911da99270213feed0a0b22e70670b04fe53b16d95d2e04bafcd338f547"},
 ]
 importlib-metadata = [
     {file = "importlib_metadata-4.5.0-py3-none-any.whl", hash = "sha256:833b26fb89d5de469b24a390e9df088d4e52e4ba33b01dc5e0e4f41b81a16c00"},
