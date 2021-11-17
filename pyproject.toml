@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "unblob"
+version = "0.1.0"
+description = "Extract files from any kind of container formats"
+authors = ["IoT Inspector <support@iot-inspector.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
