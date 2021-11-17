@@ -14,6 +14,9 @@ click = "^8.0.1"
 pytest = "^6.2.4"
 black = "^21.5b2"
 
+[tool.poetry.scripts]
+unblob = "unblob.main:main"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
