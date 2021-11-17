@@ -13,10 +13,11 @@ from .finder import search_blobs
 )
 @click.option(
     "-e",
-    "--extract",
-    "extract_dir",
-    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
-    help="Extract the files to the given directory",
+    "--extract-dir",
+    "extract_root",
+    type=click.Path(path_type=Path, dir_okay=True, file_okay=False, resolve_path=True),
+    default=Path.cwd(),
+    help="Extract the files to this directory. Will be created if doesn't exist.",
 )
 @click.option(
     "-d",
