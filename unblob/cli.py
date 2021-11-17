@@ -23,7 +23,7 @@ from .finder import search_blobs
     "-d",
     "--depth",
     type=int,
-    default=1,
+    default=10,
     help="Recursion depth. How deep should we extract containers.",
 )
 def main(files, extract_dir, depth):
