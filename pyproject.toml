@@ -11,6 +11,7 @@ yara-python = "^4.1.0"
 click = "^8.0.1"
 "dissect.cstruct" = "^2.0"
 typing-extensions = "^3.10.0"
+attrs = "^21.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
