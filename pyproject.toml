@@ -6,12 +6,13 @@ authors = ["IoT Inspector <support@iot-inspector.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.6.2"
 yara-python = "^4.1.0"
 click = "^8.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
+black = "^21.5b2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
