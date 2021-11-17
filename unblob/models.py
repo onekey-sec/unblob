@@ -9,7 +9,7 @@ import attr
 #                                      └──► UnknownChunk
 
 
-@attr.s(auto_attribs=True)
+@attr.define
 class Blob:
     """Unknown bytes, can be file, memory, anything.
 
@@ -21,7 +21,7 @@ class Blob:
     start_offset: int
 
 
-@attr.s(auto_attribs=True)
+@attr.define
 class YaraMatchResult:
     """Results of a YARA match grouped by file types (handlers).
 
@@ -33,13 +33,13 @@ class YaraMatchResult:
     blobs: List[Blob]
 
 
-@attr.s(auto_attribs=True)
+@attr.define
 class Chunk:
     """Chunk of a Blob, have start and end offset, but still can be invalid."""
 
     start_offset: int
     end_offset: int
-    handler: Optional["Handler"] = None
+    handler: "Handler" = attr.ib(init=False)
 
     @property
     def size(self) -> int:
