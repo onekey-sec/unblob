@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Extract files from any kind of container formats"
 authors = ["IoT Inspector <support@iot-inspector.com>"]
 license = "MIT"
+packages = [
+    { include = "unblob" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
