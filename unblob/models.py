@@ -1,24 +1,14 @@
 import io
-from typing import List, Optional
+from typing import List, Optional, Union
 from typing_extensions import Protocol
 import attr
+import yara
+
 
 # The state transitions are:
 #                                      ┌──► ValidChunk
-# Blob ──► YaraMatchResult ──► Chunk ──┤
+# file ──► YaraMatchResult ──► Chunk ──┤
 #                                      └──► UnknownChunk
-
-
-@attr.define
-class Blob:
-    """Unknown bytes, can be file, memory, anything.
-
-    Found as the result of a YARA search.
-    These are the things we are "unblobbing".
-    """
-
-    name: str
-    start_offset: int
 
 
 @attr.define
@@ -30,7 +20,7 @@ class YaraMatchResult:
     """
 
     handler: "Handler"
-    blobs: List[Blob]
+    match: yara.Match
 
 
 @attr.define
@@ -60,10 +50,12 @@ class Chunk:
         )
 
 
+@attr.define
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
 
 
+@attr.define
 class UnknownChunk(Chunk):
     """Gaps between valid chunks or otherwise unknown chunks.
 
@@ -74,6 +66,9 @@ class UnknownChunk(Chunk):
     like most common bytest (like \x00 and \xFF), ASCII strings, high entropy, etc.
     """
 
+    reason: str
+    end_offset: Optional[int] = None
+
 
 class Handler(Protocol):
     """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
@@ -82,11 +77,9 @@ class Handler(Protocol):
     YARA_RULE: str
 
     @staticmethod
-    def validate_blob(file: io.BufferedReader, blob: Blob):
-        """Validate that the found YARA match is actually a valid Blob for this handler which it can extract."""
-
-    @staticmethod
-    def calculate_chunk(file: io.BufferedReader, blob: Blob) -> Chunk:
+    def calculate_chunk(
+        file: io.BufferedReader, start_offset: int
+    ) -> Union[ValidChunk, UnknownChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 
     @staticmethod
