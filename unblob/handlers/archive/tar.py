@@ -11,10 +11,9 @@ NAME = "tar"
 YARA_RULE = r"""
     strings:
         $tar_magic = { 75 73 74 61 72 }
-        $end = /[\x00]{1024}/
 
     condition:
-        $tar_magic and $end
+        $tar_magic
 """
 
 cparser = cstruct()
