@@ -11,8 +11,8 @@ from .handlers import _ALL_MODULES_BY_PRIORITY
 def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk]:
     all_chunks = []
 
-    for ind, handlers in enumerate(_ALL_MODULES_BY_PRIORITY):
-        print("Starting priority level:", ind + 1)
+    for ind, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
+        print("Starting priority level:", ind)
         yara_results = search_chunks(handlers, path)
 
         print("YARA results:", yara_results)
