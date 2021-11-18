@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-import click
-from typing import Tuple
 from pathlib import Path
+from typing import Tuple
+
+import click
 from structlog import get_logger
+
 from .logging import configure_logger, format_hex
 from .strategies import extract_with_priority
-
 
 logger = get_logger()
 

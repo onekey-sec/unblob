@@ -4,9 +4,11 @@ https://codedread.github.io/bitjs/docs/unrar.html
 """
 
 import io
-from ...models import Chunk
 from typing import List
+
 from dissect.cstruct import cstruct
+
+from ...models import Chunk
 
 NAME = "rar"
 

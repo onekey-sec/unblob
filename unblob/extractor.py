@@ -1,10 +1,11 @@
 import io
-from pathlib import Path
 import shlex
 import subprocess
-from structlog import get_logger
-from .models import Chunk, Handler
+from pathlib import Path
 
+from structlog import get_logger
+
+from .models import Chunk, Handler
 
 logger = get_logger()
 

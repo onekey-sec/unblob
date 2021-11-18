@@ -1,8 +1,10 @@
-import io
 import gzip
+import io
 import zlib
 from typing import List, Union
+
 from dissect.cstruct import cstruct
+
 from ...models import UnknownChunk, ValidChunk
 
 NAME = "gzip"
