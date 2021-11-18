@@ -12,7 +12,7 @@ def configure_logger():
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
-        structlog.dev.ConsoleRenderer()
+        structlog.dev.ConsoleRenderer(),
     ]
 
     structlog.configure(
