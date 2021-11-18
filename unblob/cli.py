@@ -31,8 +31,9 @@ logger = get_logger()
     default=10,
     help="Recursion depth. How deep should we extract containers.",
 )
-def main(files: Tuple[Path], extract_root: Path, depth: int):
-    configure_logger()
+@click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
+def main(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
+    configure_logger(verbose=verbose)
     logger.info("Start processing files", count=len(files))
     for path in files:
         process_file(path.parent, path, extract_root, depth)

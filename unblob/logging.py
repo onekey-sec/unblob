@@ -6,7 +6,8 @@ def format_hex(value: int):
     return f"0x{value:x}"
 
 
-def configure_logger():
+def configure_logger(*, verbose: bool):
+    log_level = logging.DEBUG if verbose else logging.INFO
     processors = [
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(
@@ -19,7 +20,7 @@ def configure_logger():
     ]
 
     structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(logging.DEBUG),
+        wrapper_class=structlog.make_filtering_bound_logger(log_level),
         processors=processors,
         cache_logger_on_first_use=True,
     )
