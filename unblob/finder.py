@@ -23,7 +23,7 @@ def _make_yara_rules(handlers: Iterable[Handler]):
         _YARA_RULE_TEMPLATE.format(NAME=h.NAME, YARA_RULE=h.YARA_RULE.strip())
         for h in handlers
     )
-    logger.info(f"Searching with yara rules: {all_yara_rules}")
+    logger.debug("Compiled YARA rules", rules=all_yara_rules)
     compiled_rules = yara.compile(source=all_yara_rules, includes=False)
     return compiled_rules
 

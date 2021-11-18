@@ -7,6 +7,7 @@ from .finder import search_chunks
 from .extractor import make_extract_dir, carve_chunk_to_file, extract_with_command
 from .models import Chunk, UnknownChunk
 from .handlers import _ALL_MODULES_BY_PRIORITY
+from .logging import format_hex
 
 
 logger = get_logger()
@@ -15,23 +16,30 @@ logger = get_logger()
 def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk]:
     all_chunks = []
 
-    for ind, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
-        logger.info(f"Starting priority level: {ind}")
+    for priority_level, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
+        logger.info("Starting priority level", priority_level=priority_level)
         yara_results = search_chunks(handlers, path)
 
-        logger.info(f"YARA results: {yara_results}")
+        if yara_results:
+            logger.info(f"Found YARA results", count=len(yara_results))
+
         for result in yara_results:
             handler = result.handler
             match = result.match
-            logger.info(f"Next match to look at: {match}")
             for offset, identifier, string_data in match.strings:
                 file.seek(0)
+                logger.info(
+                    "Calculating chunk for YARA match",
+                    start_offset=format_hex(offset),
+                    identifier=identifier,
+                )
                 chunk = handler.calculate_chunk(file, offset)
                 chunk.handler = handler
+                log = logger.bind(chunk=chunk, handler=handler.NAME)
                 if isinstance(chunk, UnknownChunk):
-                    # TODO: Log these chunks too, entropy analysis, etc.
+                    log.info("Found unknown chunk")
                     continue
-                logger.info(f"Found chunk: {chunk}")
+                log.info("Found valid chunk")
                 all_chunks.append(chunk)
 
     return all_chunks
@@ -44,6 +52,7 @@ def remove_inner_chunks(chunks: List[Chunk]):
     for chunk in chunks[1:]:
         if not any(outer.contains(chunk) for outer in outer_chunks):
             outer_chunks.append(chunk)
+    logger.info("Removed inner chunks", outer_chunk_count=len(outer_chunks))
     return outer_chunks
 
 
