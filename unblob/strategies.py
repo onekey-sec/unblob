@@ -4,22 +4,26 @@ from operator import attrgetter
 from pathlib import Path
 from .finder import search_chunks
 from .extractor import make_extract_dir, carve_chunk_to_file, extract_with_command
+from .logging import get_logger
 from .models import Chunk, UnknownChunk
 from .handlers import _ALL_MODULES_BY_PRIORITY
+
+
+logger = get_logger()
 
 
 def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk]:
     all_chunks = []
 
     for ind, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
-        print("Starting priority level:", ind)
+        logger.info(f"Starting priority level: {ind}")
         yara_results = search_chunks(handlers, path)
 
-        print("YARA results:", yara_results)
+        logger.info(f"YARA results: {yara_results}")
         for result in yara_results:
             handler = result.handler
             match = result.match
-            print("Next match to look at:", match)
+            logger.info(f"Next match to look at: {match}")
             for offset, identifier, string_data in match.strings:
                 file.seek(0)
                 chunk = handler.calculate_chunk(file, offset)
@@ -27,7 +31,7 @@ def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk
                 if isinstance(chunk, UnknownChunk):
                     # TODO: Log these chunks too, entropy analysis, etc.
                     continue
-                print("Found chunk:", chunk)
+                logger.info(f"Found chunk: {chunk}")
                 all_chunks.append(chunk)
 
     return all_chunks
