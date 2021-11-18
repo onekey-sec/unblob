@@ -2,8 +2,12 @@ import io
 import logging
 from typing import List, Union
 from zipfile import ZipFile
+from structlog import get_logger
 from dissect.cstruct import cstruct
 from ...models import ValidChunk, UnknownChunk
+
+
+logger = get_logger()
 
 
 NAME = "zip"
@@ -138,7 +142,7 @@ def _guess_zip_size(file: io.BufferedReader, start_offset: int):
     content = io.BytesIO(file.read(zip_end - start_offset))
 
     with ZipFile(content) as z:
-        print(f"Found ZIP file contains: {[ x.filename for x in z.infolist()]}")
+        logger.info("Found ZIP filenames", filenames=[x.filename for x in z.infolist()])
         for g in z.infolist():
             if g.flag_bits & 0b0001:
                 encrypted_files.add(g.filename)
@@ -158,7 +162,6 @@ def calculate_chunk(
             reason=f"ZIP (0x{start_offset:x}): Version too high!",
         )
 
-    print(f"Starting ZIP at 0x{start_offset:x} ")
     size = _guess_zip_size(file, start_offset)
     return ValidChunk(
         start_offset=start_offset,

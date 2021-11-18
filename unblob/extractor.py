@@ -1,7 +1,12 @@
 import io
 from pathlib import Path
+import shlex
 import subprocess
+from structlog import get_logger
 from .models import Chunk, Handler
+
+
+logger = get_logger()
 
 
 class ExtractionFailed(Exception):
@@ -17,7 +22,7 @@ def make_extract_dir(root: Path, path: Path, extract_root: Path) -> Path:
     extract_name = relative_path.name + APPEND_NAME
     extract_dir = extract_root / relative_path.with_name(extract_name)
     extract_dir.mkdir(parents=True, exist_ok=True)
-    print("EXTRACT_DIR:", extract_dir)
+    logger.info("Created extraction dir", path=extract_dir)
     return extract_dir.expanduser().resolve()
 
 
@@ -26,7 +31,7 @@ def carve_chunk_to_file(
 ) -> Path:
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
     chunk_name = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
-    print(f"Extracting chunk {chunk_name} to {extract_dir}")
+    logger.info(f"Extracting chunk", chunk=chunk, extract_dir=extract_dir)
     carved_file_path = extract_dir / chunk_name
     file.seek(chunk.start_offset)
     # FIXME: use iterators, don't read the whole file to memory
@@ -46,25 +51,23 @@ def extract_with_command(
     outdir = content_dir.expanduser().resolve()
     cmd = handler.make_extract_command(str(inpath), str(outdir))
 
-    print(f"Running extract command: {cmd}")
+    logger.info(f"Running extract command", command=shlex.join(cmd))
     try:
         res = subprocess.run(
             cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if res.returncode != 0:
-            print(
-                f"Extract command exited with non-0 return code: {cmd}\n"
-                f"stdout: {res.stdout}\n"
-                f"stderr: {res.stderr}"
+            logger.error(
+                f"Extract command failed", stdout=res.stdout, stderr=res.stderr
             )
             raise ExtractionFailed
     except FileNotFoundError:
-        print(
-            f"FileNotFoundError - Can't run extract command: {cmd}. Is the extractor installed?"
+        logger.exception(
+            "FileNotFoundError - Can't run extract command. Is the extractor installed?"
         )
         raise
-    except Exception as e:
-        print(f"Unhandled exception while trying to run extraction: {e}")
+    except Exception:
+        logger.exception("Unhandled exception while trying to run extraction")
         raise
 
     return content_dir
