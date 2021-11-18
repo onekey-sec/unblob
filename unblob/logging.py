@@ -2,6 +2,10 @@ import structlog
 import logging
 
 
+def format_hex(value: int):
+    return f"0x{value:x}"
+
+
 def configure_logger():
     processors = [
         structlog.stdlib.add_log_level,
