@@ -2,8 +2,12 @@ import io
 from pathlib import Path
 from typing import Dict, List, Iterable
 import yara
+from .logging import get_logger
 from .models import YaraMatchResult
 from .handlers import Handler
+
+
+logger = get_logger()
 
 
 _YARA_RULE_TEMPLATE = """
@@ -19,7 +23,7 @@ def _make_yara_rules(handlers: Iterable[Handler]):
         _YARA_RULE_TEMPLATE.format(NAME=h.NAME, YARA_RULE=h.YARA_RULE.strip())
         for h in handlers
     )
-    print("Searching with yara rules:", all_yara_rules)
+    logger.info(f"Searching with yara rules: {all_yara_rules}")
     compiled_rules = yara.compile(source=all_yara_rules, includes=False)
     return compiled_rules
 
