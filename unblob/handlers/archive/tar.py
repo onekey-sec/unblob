@@ -1,5 +1,6 @@
 import io
 import math
+import tarfile
 from typing import List, Union
 from dissect.cstruct import cstruct
 from ...models import ValidChunk, UnknownChunk
@@ -57,26 +58,12 @@ END_BLOCK_SIZE = BLOCK_SIZE * 2
 END_BLOCK = b"\x00" * END_BLOCK_SIZE
 
 
-def _calc_chunk_size(size: int):
-    whole_blocks = size // BLOCKSIZE
-    # size=517, whole_blocks=1, total = BLOCKSIZE * 2 = 1024
-    # size=6, whole_blocks=0, total = BLOCKSIZE * 1 = 512
-    total = BLOCKSIZE * (1 + whole_blocks)
-    return total
-
-
-def _get_tar_size(file: io.BufferedReader, offset: int):
-    # Try to avoid tail recursive loop by using a while loop
-    # with a return. Really big (~2000+ file) tar files would
-    # throw a RecursionError.
-    while True:
-        file.seek(offset)
-        if file.read(END_BLOCKSIZE) == END_BLOCK:
-            return file.tell()
-        file.seek(offset)
-        header = cparser.posix_header(file)
-        header_size = int(snull(header.size), 8)
-        offset += _calc_chunk_size(header_size) + BLOCKSIZE
+def _get_tar_end_offset(file: io.BufferedReader, offset: int):
+    tf = tarfile.TarFile(mode="r", fileobj=file)
+    last_member = tf.getmembers()[-1]
+    last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
+    end_offset = last_member.offset + HEADER_SIZE + last_file_size + END_BLOCK_SIZE
+    return end_offset
 
 
 def calculate_chunk(
@@ -98,10 +85,11 @@ def calculate_chunk(
         )
 
     file.seek(real_start_offset)
-    size = _get_tar_size(file, real_start_offset)
+    end_offset = _get_tar_end_offset(file, real_start_offset)
+
     return ValidChunk(
         start_offset=real_start_offset,
-        end_offset=real_start_offset + size - 1,
+        end_offset=end_offset,
     )
 
 
