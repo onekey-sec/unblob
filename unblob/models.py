@@ -38,7 +38,7 @@ class Chunk:
 
     @property
     def range_hex(self) -> str:
-        return f"0x{self.start_offset:x} - 0x{self.end_offset:x}"
+        return f"0x{self.start_offset:x}-0x{self.end_offset:x}"
 
     @property
     def range_dec(self) -> str:
@@ -50,10 +50,16 @@ class Chunk:
             and self.end_offset >= other.end_offset
         )
 
+    def __repr__(self):
+        return self.range_hex
+
 
 @attr.define
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
+
+    def __repr__(self):
+        return self.range_hex
 
 
 @attr.define
@@ -69,6 +75,9 @@ class UnknownChunk(Chunk):
 
     reason: str
     end_offset: Optional[int] = None
+
+    def __repr__(self):
+        return self.range_hex
 
 
 class Handler(Protocol):

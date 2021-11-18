@@ -2,7 +2,12 @@
 import click
 from typing import Tuple
 from pathlib import Path
+from structlog import get_logger
+from .logging import configure_logger, format_hex
 from .strategies import extract_with_priority
+
+
+logger = get_logger()
 
 
 @click.command()
@@ -26,8 +31,10 @@ from .strategies import extract_with_priority
     default=10,
     help="Recursion depth. How deep should we extract containers.",
 )
-def main(files: Tuple[Path], extract_root: Path, depth: int):
-    click.echo(f"Got files: {files}")
+@click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
+def main(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
+    configure_logger(verbose, extract_root)
+    logger.info("Start processing files", count=len(files))
     for path in files:
         process_file(path.parent, path, extract_root, depth)
 
@@ -38,26 +45,29 @@ def process_file(
     extract_root: Path,
     depth: int,
 ):
+    log = logger.bind(path=path)
+    log.info("Start processing file", _absolute_path=True)
+
     if depth <= 0:
-        print("Reached maximum depth, stop further processing")
+        log.info("Reached maximum depth, stop further processing")
         return
 
     if path.is_dir():
-        print("Path is a dir:", path)
+        log.info("Found directory")
         for path in path.iterdir():
             process_file(root, path, extract_root, depth - 1)
         return
 
     if path.is_symlink():
-        print("Path is symlink, ignoring")
+        log.info("Ignoring symlink")
         return
 
     file_size = path.stat().st_size
-    print(f"File: {path.resolve()}\n" f"Size: 0x{file_size:x} ({file_size})\n")
     if file_size == 0:
-        print("Filesize is 0, skipping.")
+        log.info("Ignoring empty file")
         return
 
+    log.info("Calculated file size", size=format_hex(file_size))
     for new_path in extract_with_priority(root, path, extract_root):
         process_file(extract_root, new_path, extract_root, depth - 1)
 
