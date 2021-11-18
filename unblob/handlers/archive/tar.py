@@ -43,7 +43,7 @@ struct posix_header
 )
 
 MAGIC_OFFSET = 257
-BLOCKSIZE = 512
+BLOCK_SIZE = HEADER_SIZE = 512
 
 # Because the header of the tar file doesn't necessarily
 # contain the size of the whole tar block (because "Physically,
@@ -53,8 +53,8 @@ BLOCKSIZE = 512
 # and then return the size of the total file once we reach the
 # blocks of NULLs.
 # https://www.gnu.org/software/tar/manual/html_node/Standard.html
-END_BLOCKSIZE = BLOCKSIZE * 2
-END_BLOCK = b"\x00" * END_BLOCKSIZE
+END_BLOCK_SIZE = BLOCK_SIZE * 2
+END_BLOCK = b"\x00" * END_BLOCK_SIZE
 
 
 def _calc_chunk_size(size: int):
