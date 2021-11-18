@@ -22,6 +22,7 @@ structlog = "^21.2.0"
 pytest = "^6.2.4"
 black = "^21.10b0"
 isort = "^5.10.1"
+pyright = "^0.0.12"
 
 [tool.isort]
 profile = "black"
