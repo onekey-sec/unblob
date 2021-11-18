@@ -1,5 +1,6 @@
 import io
 from pathlib import Path
+import shlex
 import subprocess
 from structlog import get_logger
 from .models import Chunk, Handler
@@ -50,12 +51,7 @@ def extract_with_command(
     outdir = content_dir.expanduser().resolve()
     cmd = handler.make_extract_command(str(inpath), str(outdir))
 
-    logger.info(
-        f"Running extract command",
-        command=" ".join(cmd),
-        inpath=carved_path,
-        outdir=content_dir,
-    )
+    logger.info(f"Running extract command", command=shlex.join(cmd))
     try:
         res = subprocess.run(
             cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
