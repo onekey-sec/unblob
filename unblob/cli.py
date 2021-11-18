@@ -9,6 +9,8 @@ from .strategies import extract_with_priority
 
 logger = get_logger()
 
+DEFAULT_DEPTH = 10
+
 
 @click.command()
 @click.argument(
@@ -28,7 +30,7 @@ logger = get_logger()
     "-d",
     "--depth",
     type=int,
-    default=10,
+    default=DEFAULT_DEPTH,
     help="Recursion depth. How deep should we extract containers.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
@@ -45,8 +47,9 @@ def process_file(
     extract_root: Path,
     depth: int,
 ):
+    is_initial_file = DEFAULT_DEPTH == depth
     log = logger.bind(path=path)
-    log.info("Start processing file", _absolute_path=True)
+    log.info("Start processing file", _absolute_path=is_initial_file)
 
     if depth <= 0:
         log.info("Reached maximum depth, stop further processing")
@@ -67,7 +70,11 @@ def process_file(
         log.info("Ignoring empty file")
         return
 
-    log.info("Calculated file size", size=format_hex(file_size))
+    log.info(
+        "Calculated file size",
+        size=format_hex(file_size),
+        _absolute_path=is_initial_file,
+    )
     for new_path in extract_with_priority(root, path, extract_root):
         process_file(extract_root, new_path, extract_root, depth - 1)
 
