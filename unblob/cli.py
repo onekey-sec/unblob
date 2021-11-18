@@ -6,8 +6,9 @@ from structlog import get_logger
 from .logging import configure_logger
 from .strategies import extract_with_priority
 
-configure_logger()
+
 logger = get_logger()
+
 
 @click.command()
 @click.argument(
@@ -31,6 +32,7 @@ logger = get_logger()
     help="Recursion depth. How deep should we extract containers.",
 )
 def main(files: Tuple[Path], extract_root: Path, depth: int):
+    configure_logger()
     logger.info(f"Got files: {files}")
     for path in files:
         process_file(path.parent, path, extract_root, depth)
