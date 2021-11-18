@@ -16,6 +16,7 @@ click = "^8.0.1"
 typing-extensions = "^4.0.0"
 attrs = "^21.2.0"
 structlog = "^21.2.0"
+py7zr = "^0.16.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
