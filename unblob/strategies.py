@@ -21,6 +21,7 @@ def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk
             match = result.match
             print("Next match to look at:", match)
             for offset, identifier, string_data in match.strings:
+                file.seek(0)
                 chunk = handler.calculate_chunk(file, offset)
                 chunk.handler = handler
                 if isinstance(chunk, UnknownChunk):
