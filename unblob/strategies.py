@@ -1,14 +1,15 @@
 import io
-from typing import List, Generator
 from operator import attrgetter
 from pathlib import Path
+from typing import Generator, List
+
 from structlog import get_logger
+
+from .extractor import carve_chunk_to_file, extract_with_command, make_extract_dir
 from .finder import search_chunks
-from .extractor import make_extract_dir, carve_chunk_to_file, extract_with_command
-from .models import Chunk, UnknownChunk
 from .handlers import _ALL_MODULES_BY_PRIORITY
 from .logging import format_hex
-
+from .models import Chunk, UnknownChunk
 
 logger = get_logger()
 
