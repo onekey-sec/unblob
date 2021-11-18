@@ -1,7 +1,7 @@
 import io
 from pathlib import Path
 import subprocess
-from .logging import get_logger
+from structlog import get_logger
 from .models import Chunk, Handler
 
 

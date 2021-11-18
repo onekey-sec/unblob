@@ -2,9 +2,9 @@ import io
 import logging
 from typing import List, Union
 from zipfile import ZipFile
+from structlog import get_logger
 from dissect.cstruct import cstruct
 from ...models import ValidChunk, UnknownChunk
-from unblob.logging import get_logger
 
 
 logger = get_logger()

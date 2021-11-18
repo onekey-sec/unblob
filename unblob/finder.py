@@ -1,8 +1,8 @@
 import io
 from pathlib import Path
+from structlog import get_logger
 from typing import Dict, List, Iterable
 import yara
-from .logging import get_logger
 from .models import YaraMatchResult
 from .handlers import Handler
 
