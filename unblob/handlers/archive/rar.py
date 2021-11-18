@@ -4,9 +4,11 @@ https://codedread.github.io/bitjs/docs/unrar.html
 """
 
 import io
-from ...models import Chunk
 from typing import List
+
 from dissect.cstruct import cstruct
+
+from ...models import Chunk
 
 NAME = "rar"
 
@@ -106,7 +108,8 @@ FILE_HEADER_FLAGS = [
 ]
 
 
-def _calculate_end(file, start_offset: int):
+# FIXME: C901 '_calculate_end' is too complex
+def _calculate_end(file, start_offset: int):  # noqa: C901
     offset = start_offset
     while True:
         file.seek(offset)

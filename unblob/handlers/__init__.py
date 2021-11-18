@@ -1,6 +1,7 @@
-from typing import List, Dict
+from typing import Dict, List
+
 from ..models import Handler
-from .archive import zip, tar, gzip, rar
+from .archive import tar, zip
 
 
 def _make_handler_map(*handlers: Handler) -> Dict[str, Handler]:

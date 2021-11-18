@@ -1,6 +1,7 @@
-import structlog
 import logging
 from pathlib import Path
+
+import structlog
 
 
 def format_hex(value: int):

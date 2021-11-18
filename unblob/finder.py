@@ -1,11 +1,11 @@
-import io
 from pathlib import Path
-from structlog import get_logger
-from typing import Dict, List, Iterable
-import yara
-from .models import YaraMatchResult
-from .handlers import Handler
+from typing import Dict, Iterable, List
 
+import yara
+from structlog import get_logger
+
+from .handlers import Handler
+from .models import YaraMatchResult
 
 logger = get_logger()
 

@@ -1,8 +1,10 @@
-import io
 import gzip
+import io
 import zlib
 from typing import List, Union
+
 from dissect.cstruct import cstruct
+
 from ...models import UnknownChunk, ValidChunk
 
 NAME = "gzip"
@@ -57,7 +59,8 @@ OS_TYPES = {
 HEADER_STRUCT_SIZE = 10
 
 
-def calculate_chunk(
+# FIXME: C901 '_calculate_end' is too complex
+def calculate_chunk(  # noqa: C901
     file: io.BufferedReader, start_offset: int
 ) -> Union[UnknownChunk, ValidChunk]:
     header = cparser.gzip_struct(file)

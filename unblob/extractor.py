@@ -1,10 +1,11 @@
 import io
-from pathlib import Path
 import shlex
 import subprocess
-from structlog import get_logger
-from .models import Chunk, Handler
+from pathlib import Path
 
+from structlog import get_logger
+
+from .models import Chunk, Handler
 
 logger = get_logger()
 
@@ -31,7 +32,7 @@ def carve_chunk_to_file(
 ) -> Path:
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
     chunk_name = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
-    logger.info(f"Extracting chunk", chunk=chunk, extract_dir=extract_dir)
+    logger.info("Extracting chunk", chunk=chunk, extract_dir=extract_dir)
     carved_file_path = extract_dir / chunk_name
     file.seek(chunk.start_offset)
     # FIXME: use iterators, don't read the whole file to memory
@@ -51,15 +52,13 @@ def extract_with_command(
     outdir = content_dir.expanduser().resolve()
     cmd = handler.make_extract_command(str(inpath), str(outdir))
 
-    logger.info(f"Running extract command", command=shlex.join(cmd))
+    logger.info("Running extract command", command=shlex.join(cmd))
     try:
         res = subprocess.run(
             cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if res.returncode != 0:
-            logger.error(
-                f"Extract command failed", stdout=res.stdout, stderr=res.stderr
-            )
+            logger.error("Extract command failed", stdout=res.stdout, stderr=res.stderr)
             raise ExtractionFailed
     except FileNotFoundError:
         logger.exception(
