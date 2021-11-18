@@ -33,7 +33,7 @@ logger = get_logger()
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
 def main(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
-    configure_logger(verbose=verbose)
+    configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=len(files))
     for path in files:
         process_file(path.parent, path, extract_root, depth)
@@ -46,7 +46,7 @@ def process_file(
     depth: int,
 ):
     log = logger.bind(path=path)
-    log.info("Start processing file")
+    log.info("Start processing file", _absolute_path=True)
 
     if depth <= 0:
         log.info("Reached maximum depth, stop further processing")
