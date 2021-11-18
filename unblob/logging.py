@@ -20,7 +20,3 @@ def configure_logger():
         processors=processors,
         cache_logger_on_first_use=True,
     )
-
-
-def get_logger():
-    return structlog.get_logger()

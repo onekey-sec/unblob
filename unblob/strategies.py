@@ -2,9 +2,9 @@ import io
 from typing import Callable, List, Optional, Generator
 from operator import attrgetter
 from pathlib import Path
+from structlog import get_logger
 from .finder import search_chunks
 from .extractor import make_extract_dir, carve_chunk_to_file, extract_with_command
-from .logging import get_logger
 from .models import Chunk, UnknownChunk
 from .handlers import _ALL_MODULES_BY_PRIORITY
 

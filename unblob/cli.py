@@ -2,7 +2,8 @@
 import click
 from typing import Tuple
 from pathlib import Path
-from .logging import configure_logger, get_logger
+from structlog import get_logger
+from .logging import configure_logger
 from .strategies import extract_with_priority
 
 configure_logger()
