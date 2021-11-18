@@ -8,5 +8,5 @@ def _make_handler_map(*handlers: Handler) -> Dict[str, Handler]:
 
 
 _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
-    _make_handler_map(zip),
+    _make_handler_map(zip, tar),
 ]
