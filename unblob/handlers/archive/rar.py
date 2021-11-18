@@ -106,7 +106,8 @@ FILE_HEADER_FLAGS = [
 ]
 
 
-def _calculate_end(file, start_offset: int):
+# FIXME: C901 '_calculate_end' is too complex
+def _calculate_end(file, start_offset: int):  # noqa: C901
     offset = start_offset
     while True:
         file.seek(offset)
