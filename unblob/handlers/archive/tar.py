@@ -1,5 +1,4 @@
 import io
-import math
 import tarfile
 from typing import List, Union
 from dissect.cstruct import cstruct

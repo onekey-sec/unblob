@@ -1,4 +1,3 @@
-import io
 from pathlib import Path
 from structlog import get_logger
 from typing import Dict, List, Iterable
