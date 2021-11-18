@@ -45,7 +45,7 @@ def process_file(
     extract_root: Path,
     depth: int,
 ):
-    log = logger.bind(path=str(path))
+    log = logger.bind(path=path)
     log.info("Start processing file")
 
     if depth <= 0:
