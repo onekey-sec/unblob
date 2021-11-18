@@ -1,9 +1,9 @@
 import io
 from typing import List, Optional, Union
-from typing_extensions import Protocol
+
 import attr
 import yara
-
+from typing_extensions import Protocol
 
 # The state transitions are:
 #                                      ┌──► ValidChunk

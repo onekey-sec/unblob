@@ -1,10 +1,11 @@
 import io
 import tarfile
 from typing import List, Union
-from dissect.cstruct import cstruct
-from ...models import ValidChunk, UnknownChunk
-from ...file_utils import snull
 
+from dissect.cstruct import cstruct
+
+from ...file_utils import snull
+from ...models import UnknownChunk, ValidChunk
 
 NAME = "tar"
 
