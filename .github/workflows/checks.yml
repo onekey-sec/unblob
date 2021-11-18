@@ -1,0 +1,25 @@
+name: Checks
+
+on: [push, pull_request]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - uses: pre-commit/action@v2.0.3
+
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install poetry
+            poetry install
+
+      - name: Check - pyright
+        run: PYRIGHT_PYTHON_FORCE_VERSION=1.1.164 poetry run pyright .
