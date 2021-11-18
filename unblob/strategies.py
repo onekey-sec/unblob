@@ -1,5 +1,5 @@
 import io
-from typing import Callable, List, Optional, Generator
+from typing import List, Generator
 from operator import attrgetter
 from pathlib import Path
 from structlog import get_logger
@@ -21,7 +21,7 @@ def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk
         yara_results = search_chunks(handlers, path)
 
         if yara_results:
-            logger.info(f"Found YARA results", count=len(yara_results))
+            logger.info("Found YARA results", count=len(yara_results))
 
         for result in yara_results:
             handler = result.handler
