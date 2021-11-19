@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from ..models import Handler
-from .archive import cpio, tar, zip
+from .archive import cab, cpio, tar, zip
 
 
 def _make_handler_map(*handlers: Handler) -> Dict[str, Handler]:
@@ -10,6 +10,7 @@ def _make_handler_map(*handlers: Handler) -> Dict[str, Handler]:
 
 _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
     _make_handler_map(
+        cab,
         zip,
         tar,
         cpio.PortableASCIIHandler,
