@@ -1,0 +1,24 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install poetry
+            poetry install
+
+      - name: Run pytest
+        # TODO: Dummy coverage (branch: 0%) is needed for the pass rate. Increase this
+        run: poetry run pytest --cov=. --cov-branch --cov-fail-under=0
