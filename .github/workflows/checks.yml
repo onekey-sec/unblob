@@ -22,4 +22,4 @@ jobs:
             poetry install
 
       - name: Check - pyright
-        run: PYRIGHT_PYTHON_FORCE_VERSION=1.1.164 poetry run pyright .
+        run: PYRIGHT_PYTHON_FORCE_VERSION=1.1.188 poetry run pyright .
