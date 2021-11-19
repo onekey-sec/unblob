@@ -32,9 +32,22 @@ class _CPIOHandlerBase:
             c_filesize = cls._calculate_file_size(header)
             c_namesize = cls._calculate_name_size(header)
 
+            # heuristics 1: check the filename
+            if c_namesize > MAX_LINUX_PATH_LENGTH:
+                return UnknownChunk(
+                    start_offset=start_offset, reason="Invalid CPIO header"
+                )
+
             if c_namesize > 0:
                 file.seek(offset + len(header), io.SEEK_SET)
                 tmp_filename = file.read(c_namesize)
+
+                # heuristics 2: check that filename is null-byte terminated
+                if not tmp_filename.endswith(b"\x00"):
+                    return UnknownChunk(
+                        start_offset=start_offset, reason="Invalid CPIO header"
+                    )
+
                 filename = snull(tmp_filename)
 
                 if filename == CPIO_TRAILER_NAME:
