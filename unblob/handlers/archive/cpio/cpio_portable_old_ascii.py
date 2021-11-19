@@ -2,7 +2,6 @@ from dissect.cstruct import cstruct
 
 from .base import _CPIOHandlerBase
 
-
 cparser = cstruct()
 cparser.load(
     """
