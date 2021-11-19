@@ -38,7 +38,8 @@ class Chunk:
 
     @property
     def range_hex(self) -> str:
-        return f"0x{self.start_offset:x}-0x{self.end_offset:x}"
+        end_offset = f"0x{self.end_offset:x}" if self.end_offset is not None else ""
+        return f"0x{self.start_offset:x}-{end_offset}"
 
     @property
     def range_dec(self) -> str:
