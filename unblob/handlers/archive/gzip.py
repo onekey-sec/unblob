@@ -62,7 +62,7 @@ HEADER_STRUCT_SIZE = 10
 # FIXME: C901 '_calculate_end' is too complex
 def calculate_chunk(  # noqa: C901
     file: io.BufferedReader, start_offset: int
-) -> Union[UnknownChunk, ValidChunk]:
+) -> Union[UnknownChunk, ValidChunk]:  # type: ignore - not yet ready feature, will be overridden
     header = cparser.gzip_struct(file)
 
     if header.os not in OS_TYPES:
@@ -82,7 +82,7 @@ def calculate_chunk(  # noqa: C901
     if header.flags & 0b00001000:
         file_name = read_until(file, start=start_offset + HEADER_STRUCT_SIZE)
         try:
-            file_name.decode("utf-8")
+            file_name.decode("utf-8")  # type: ignore - not yet ready feature, will be overridden
         except UnicodeDecodeError:
             return UnknownChunk(
                 start_offset=start_offset, reason="Unicode error on filename"
