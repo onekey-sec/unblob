@@ -28,3 +28,7 @@ repos:
     hooks:
       - id: isort
         name: Check isort
+
+# See https://pre-commit.ci/ for more information
+ci:
+  autoupdate_schedule: weekly
