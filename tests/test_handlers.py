@@ -27,6 +27,10 @@ TEST_IDS = [p.name for p in TEST_CASE_DIRS]
     ids=TEST_IDS,
 )
 def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
+    assert (
+        list(input_dir.iterdir()) != []
+    ), f"Integration test input dir should contain at least 1 file: {input_dir}"
+
     process_file(
         root=input_dir, path=input_dir, extract_root=tmp_path, depth=DEFAULT_DEPTH
     )
