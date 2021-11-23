@@ -28,6 +28,9 @@ class LimitedStartReader(io.BufferedIOBase):
             new_pos = self._file.seek(self._start, io.SEEK_SET)
         return new_pos
 
+    def write(self, *args, **kwargs):
+        raise TypeError("MUST NOT call write method")
+
     def detach(self, *args, **kwargs):
         return self._file.detach(*args, **kwargs)
 

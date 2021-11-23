@@ -61,3 +61,8 @@ class TestLimitedStartReader:
 
         mock_method = getattr(mock_file, method_name)
         mock_method.assert_called_with("arg1", "arg2", kw1="kw1", kw2="kw2")
+
+    def test_read_only(self, fake_file):
+        reader = LimitedStartReader(fake_file, 5)
+        with pytest.raises(TypeError):
+            reader.write(b"something")
