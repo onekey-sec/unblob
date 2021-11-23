@@ -16,6 +16,7 @@ class _CPIOHandlerBase:
 
     NAME: str
     YARA_RULE: str
+    YARA_MATCH_OFFSET: int = 0
 
     _PAD_ALIGN: int
     _HEADER_PARSER: Callable

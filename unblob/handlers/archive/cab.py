@@ -13,6 +13,7 @@ YARA_RULE = r"""
     condition:
         $magic
 """
+YARA_MATCH_OFFSET = 0
 
 cparser = cstruct()
 cparser.load(

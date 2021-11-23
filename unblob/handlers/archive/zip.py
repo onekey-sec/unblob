@@ -20,6 +20,7 @@ strings:
 condition:
     $zip_header
 """
+YARA_MATCH_OFFSET = 0
 
 cparser = cstruct()
 cparser.load(
