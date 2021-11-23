@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 from pathlib import Path
 from typing import Tuple
 
@@ -33,11 +34,22 @@ logger = get_logger()
     help="Recursion depth. How deep should we extract containers.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
-def main(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
+def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=len(files))
     for path in files:
         process_file(path.parent, path, extract_root, depth)
+
+
+def main():
+    try:
+        ctx = cli.make_context("unblob", sys.argv[1:])
+    except click.ClickException as e:
+        e.show()
+        sys.exit(e.exit_code)
+
+    with ctx:
+        cli.invoke(ctx)
 
 
 if __name__ == "__main__":
