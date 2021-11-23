@@ -1,4 +1,5 @@
 import io
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -46,3 +47,17 @@ class TestLimitedStartReader:
         reader = LimitedStartReader(fake_file, 5)
         reader.seek(-1, io.SEEK_END)
         assert reader.tell() == len(fake_file.getvalue()) - 1
+
+    @pytest.mark.parametrize(
+        "method_name",
+        ("detach", "read", "read1", "readinto", "readinto1"),
+    )
+    def test_methods_dispatched_to_file(self, method_name):
+        mock_file = MagicMock(io.BufferedReader)
+        reader = LimitedStartReader(mock_file, 10)
+
+        method = getattr(reader, method_name)
+        method("arg1", "arg2", kw1="kw1", kw2="kw2")
+
+        mock_method = getattr(mock_file, method_name)
+        mock_method.assert_called_with("arg1", "arg2", kw1="kw1", kw2="kw2")

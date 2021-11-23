@@ -6,7 +6,6 @@ from zipfile import ZipFile
 from dissect.cstruct import cstruct
 from structlog import get_logger
 
-from ...file_utils import LimitedStartReader
 from ...models import UnknownChunk, ValidChunk
 
 logger = get_logger()
@@ -99,7 +98,7 @@ struct streaming_data
 MAXIMUM_VERSION = 0xFF
 
 
-def _find_end_of_zip(file: io.BufferedReader, start_offset: int) -> int:
+def _find_end_of_zip(file: io.BufferedIOBase, start_offset: int) -> int:
     """Find the end of the zip file
     by looking for the end of central directory header bytes, verifying, then
     returning the end of the end of central directory header structure.
@@ -124,7 +123,7 @@ def _find_end_of_zip(file: io.BufferedReader, start_offset: int) -> int:
     return start_offset + end_marker + len(header)
 
 
-def _guess_zip_size(file: LimitedStartReader, start_offset: int):
+def _guess_zip_size(file: io.BufferedIOBase, start_offset: int):
     # If we just pass a full firmware blob to zipfile.ZipFile, somehow,
     # the way that it is parsed means that only the final zipfile in the
     # blob is recognised, if at all. Sometimes, if the firmware is just
@@ -156,7 +155,7 @@ def _guess_zip_size(file: LimitedStartReader, start_offset: int):
 
 
 def calculate_chunk(
-    file: LimitedStartReader, start_offset: int
+    file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
     header = cparser.local_file_header(file)
     if header.version_needed_to_extract > MAXIMUM_VERSION:
