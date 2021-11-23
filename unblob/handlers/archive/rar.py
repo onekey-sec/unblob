@@ -3,11 +3,11 @@ RAR version 4.x
 https://codedread.github.io/bitjs/docs/unrar.html
 """
 
-import io
 from typing import List
 
 from dissect.cstruct import cstruct
 
+from ...file_utils import LimitedStartReader
 from ...models import Chunk
 
 NAME = "rar"
@@ -166,7 +166,7 @@ def _calculate_end(file, start_offset: int):  # noqa: C901
         offset = offset + header.size + extra_data
 
 
-def calculate_chunk(file: io.BufferedReader, start_offset: int) -> Chunk:
+def calculate_chunk(file: LimitedStartReader, start_offset: int) -> Chunk:
     end_offset = _calculate_end(file, start_offset)
     return Chunk(start_offset, end_offset)
 
