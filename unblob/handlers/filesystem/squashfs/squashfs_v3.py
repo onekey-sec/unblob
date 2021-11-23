@@ -23,6 +23,7 @@ YARA_RULE = r"""
     condition:
         $squashfs_v3_magic_le or $squashfs_v3_magic_be
 """
+YARA_MATCH_OFFSET = 0
 
 cparser = cstruct()
 cparser.load(

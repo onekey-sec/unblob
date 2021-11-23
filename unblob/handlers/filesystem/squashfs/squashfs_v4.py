@@ -17,6 +17,7 @@ YARA_RULE = r"""
     condition:
         $squashfs_v4_magic_le
 """
+YARA_MATCH_OFFSET = 0
 
 # Default endianness is LE
 cparser = cstruct()
