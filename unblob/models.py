@@ -1,9 +1,10 @@
-import io
 from typing import List, Optional, Union
 
 import attr
 import yara
 from typing_extensions import Protocol
+
+from .file_utils import LimitedStartReader
 
 # The state transitions are:
 #                                      ┌──► ValidChunk
@@ -89,7 +90,7 @@ class Handler(Protocol):
 
     @staticmethod
     def calculate_chunk(
-        file: io.BufferedReader, start_offset: int
+        file: LimitedStartReader, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 

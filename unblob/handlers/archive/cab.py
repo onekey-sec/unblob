@@ -1,8 +1,8 @@
-import io
 from typing import List, Union
 
 from dissect.cstruct import cstruct
 
+from ...file_utils import LimitedStartReader
 from ...models import UnknownChunk, ValidChunk
 
 NAME = "cab"
@@ -46,7 +46,7 @@ struct cab_header
 
 
 def calculate_chunk(
-    file: io.BufferedReader, start_offset: int
+    file: LimitedStartReader, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
 
     file.seek(start_offset)

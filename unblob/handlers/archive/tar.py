@@ -1,10 +1,9 @@
-import io
 import tarfile
 from typing import List, Union
 
 from dissect.cstruct import cstruct
 
-from ...file_utils import snull
+from ...file_utils import LimitedStartReader, snull
 from ...models import UnknownChunk, ValidChunk
 
 NAME = "tar"
@@ -58,7 +57,7 @@ END_BLOCK_SIZE = BLOCK_SIZE * 2
 END_BLOCK = b"\x00" * END_BLOCK_SIZE
 
 
-def _get_tar_end_offset(file: io.BufferedReader, offset: int):
+def _get_tar_end_offset(file: LimitedStartReader, offset: int):
     tf = tarfile.TarFile(mode="r", fileobj=file)
     last_member = tf.getmembers()[-1]
     last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
@@ -67,7 +66,7 @@ def _get_tar_end_offset(file: io.BufferedReader, offset: int):
 
 
 def calculate_chunk(
-    file: io.BufferedReader, start_offset: int
+    file: LimitedStartReader, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
     # Since the magic is at 257, we have to subtract that from the match offset
     # to get to the start of the file.
