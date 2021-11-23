@@ -12,7 +12,7 @@ def round_up(size: int, alignment: int):
     return alignment * math.ceil(size / alignment)
 
 
-class LimitedStartReader:
+class LimitedStartReader(io.BufferedIOBase):
     """Wrapper for open files, which
     enforces that seekeng earlier than the start offset is not possible.
     """
@@ -28,5 +28,17 @@ class LimitedStartReader:
             new_pos = self._file.seek(self._start, io.SEEK_SET)
         return new_pos
 
-    def __getattr__(self, attr):
-        return getattr(self._file, attr)
+    def detach(self, *args, **kwargs):
+        return self._file.detach(*args, **kwargs)
+
+    def read(self, *args, **kwargs):
+        return self._file.read(*args, **kwargs)
+
+    def read1(self, *args, **kwargs):
+        return self._file.read1(*args, **kwargs)
+
+    def readinto(self, *args, **kwargs):
+        return self._file.readinto(*args, **kwargs)
+
+    def readinto1(self, *args, **kwargs):
+        return self._file.readinto1(*args, **kwargs)

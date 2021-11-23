@@ -53,7 +53,7 @@ PAD_SIZE = 4096
 
 
 def calculate_chunk(
-    file: io.BufferedReader, start_offset: int
+    file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
     header = cparser.SQUASHFS4_SUPER_BLOCK(file)
     # the actual size is padded to 4KiB
