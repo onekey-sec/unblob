@@ -1,5 +1,4 @@
 import io
-from pathlib import Path
 from typing import List, Union
 
 import py7zr
@@ -65,6 +64,6 @@ def calculate_chunk(
     )
 
 
-def make_extract_command(inpath: Path, outdir: Path) -> List[str]:
+def make_extract_command(inpath: str, outdir: str) -> List[str]:
     # 7z needs the outdir to be directly after the -o, without any space.
     return ["7z", "x", "-y", inpath, f"-o{outdir}"]
