@@ -1,11 +1,10 @@
-import py7zr, io
-
+import io
 from pathlib import Path
 from typing import List, Union
-from dissect.cstruct import cstruct
 
-from ...models import ValidChunk, UnknownChunk
+import py7zr
 
+from ...models import UnknownChunk, ValidChunk
 
 NAME = "sevenzip"
 # Yara doesn't like the rule starting with a number
@@ -14,30 +13,11 @@ NAME = "sevenzip"
 YARA_RULE = r"""
     strings:
         // '7', 'z', 0xBC, 0xAF, 0x27, 0x1C
-        $sevenzip_magic = { 37 7A BC AF 27 1C } 
+        $sevenzip_magic = { 37 7A BC AF 27 1C }
 
     condition:
         $sevenzip_magic
 """
-
-cparser = cstruct()
-cparser.load(
-    """
-struct sevenzip_header {
-    char magic[6];
-    uint8 version_maj;
-    uint8 version_min;
-    uint32 crc;
-    uint64 next_header_offset;
-    uint64 next_header_size;
-    uint32 next_header_crc;
-}
-
-struct header_db {
-    char property_id;
-}
-"""
-)
 
 
 def calculate_chunk(
@@ -46,10 +26,23 @@ def calculate_chunk(
 
     # TODO: py7zr approach will only work if the 7z file starts at 0, because as part of the
     # header reading/checksum calculation routine, the file cursor is moved to 0 + len(7z_signature).
+    # For the time being, I'm just reading everything from the found offset into the BytesIO
+    # stream, but we're going to have to replace this with a better generic way to handle cases
+    # like this in the future.
 
     file.seek(start_offset)
+    sevenzip_dup = io.BytesIO(file.read())
+
+    # py7zr needs the BytesIO stream to have a none-None name to avoid an assertation error.
+    # If we pass a BytesIO object to the SevenZipFile(), the filename is read using:
+    #   self.filename = getattr(file, "name", None)
+    # It also needs this to be a valid file as it tries to get the fstat(), so we just copy
+    # the filename of the original.
+
+    sevenzip_dup.name = file.name
+
     try:
-        sevenzip_file = py7zr.SevenZipFile(file)
+        sevenzip_file = py7zr.SevenZipFile(sevenzip_dup)
     except py7zr.exceptions.Bad7zFile as b7f:
         return UnknownChunk(
             start_offset=start_offset,
@@ -65,6 +58,7 @@ def calculate_chunk(
         )
 
     size = sevenzip_file.archiveinfo().size
+
     return ValidChunk(
         start_offset=start_offset,
         end_offset=start_offset + size,
