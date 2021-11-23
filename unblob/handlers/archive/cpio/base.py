@@ -1,7 +1,7 @@
 import io
 from typing import Callable, List, Union
 
-from ....file_utils import LimitedStartReader, round_up, snull
+from ....file_utils import round_up, snull
 from ....models import UnknownChunk, ValidChunk
 
 CPIO_TRAILER_NAME = b"TRAILER!!!"
@@ -23,7 +23,7 @@ class _CPIOHandlerBase:
 
     @classmethod
     def calculate_chunk(
-        cls, file: LimitedStartReader, start_offset: int
+        cls, file: io.BufferedIOBase, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
         file.seek(start_offset)
         offset = start_offset
