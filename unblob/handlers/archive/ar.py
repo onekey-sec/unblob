@@ -1,8 +1,8 @@
-import arpy
 import io
 import os
-
 from typing import List, Union
+
+import arpy
 from structlog import get_logger
 
 from ...models import UnknownChunk, ValidChunk
