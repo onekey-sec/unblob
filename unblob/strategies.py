@@ -6,6 +6,7 @@ from typing import Generator, List
 from structlog import get_logger
 
 from .extractor import carve_chunk_to_file, extract_with_command, make_extract_dir
+from .file_utils import LimitedStartReader
 from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
 from .logging import format_hex
@@ -28,13 +29,14 @@ def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk
             handler = result.handler
             match = result.match
             for offset, identifier, string_data in match.strings:
-                file.seek(0)
                 logger.info(
                     "Calculating chunk for YARA match",
                     start_offset=format_hex(offset),
                     identifier=identifier,
                 )
-                chunk = handler.calculate_chunk(file, offset)
+                real_offset = offset + handler.YARA_MATCH_OFFSET
+                limited_reader = LimitedStartReader(file, real_offset)
+                chunk = handler.calculate_chunk(limited_reader, real_offset)
                 chunk.handler = handler
                 log = logger.bind(chunk=chunk, handler=handler.NAME)
                 if isinstance(chunk, UnknownChunk):

@@ -86,10 +86,13 @@ class Handler(Protocol):
 
     NAME: str
     YARA_RULE: str
+    # We need this, because not every match reflects the actual start
+    # (e.g. tar magic is in the middle of the header)
+    YARA_MATCH_OFFSET: int
 
     @staticmethod
     def calculate_chunk(
-        file: io.BufferedReader, start_offset: int
+        file: io.BufferedIOBase, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 

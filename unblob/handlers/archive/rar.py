@@ -19,7 +19,7 @@ strings:
 condition:
     $magic_v4
 """
-
+YARA_MATCH_OFFSET = 0
 
 cparser = cstruct()
 cparser.load(
@@ -166,7 +166,7 @@ def _calculate_end(file, start_offset: int):  # noqa: C901
         offset = offset + header.size + extra_data
 
 
-def calculate_chunk(file: io.BufferedReader, start_offset: int) -> Chunk:
+def calculate_chunk(file: io.BufferedIOBase, start_offset: int) -> Chunk:
     end_offset = _calculate_end(file, start_offset)
     return Chunk(start_offset, end_offset)
 

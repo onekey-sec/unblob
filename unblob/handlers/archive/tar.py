@@ -17,6 +17,13 @@ YARA_RULE = r"""
         $tar_magic
 """
 
+MAGIC_OFFSET = 257
+
+# Since the magic is at 257, we have to subtract that from the match offset
+# to get to the start of the file.
+YARA_MATCH_OFFSET = -MAGIC_OFFSET
+
+
 cparser = cstruct()
 cparser.load(
     """
@@ -43,7 +50,6 @@ struct posix_header
 """
 )
 
-MAGIC_OFFSET = 257
 BLOCK_SIZE = HEADER_SIZE = 512
 
 # Because the header of the tar file doesn't necessarily
@@ -58,7 +64,7 @@ END_BLOCK_SIZE = BLOCK_SIZE * 2
 END_BLOCK = b"\x00" * END_BLOCK_SIZE
 
 
-def _get_tar_end_offset(file: io.BufferedReader, offset: int):
+def _get_tar_end_offset(file: io.BufferedIOBase, offset: int):
     tf = tarfile.TarFile(mode="r", fileobj=file)
     last_member = tf.getmembers()[-1]
     last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
@@ -67,13 +73,8 @@ def _get_tar_end_offset(file: io.BufferedReader, offset: int):
 
 
 def calculate_chunk(
-    file: io.BufferedReader, start_offset: int
+    file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
-    # Since the magic is at 257, we have to subtract that from the match offset
-    # to get to the start of the file.
-    real_start_offset = start_offset - MAGIC_OFFSET
-
-    file.seek(real_start_offset)
     header = cparser.posix_header(file)
     header_size = snull(header.size)
     try:
@@ -84,11 +85,11 @@ def calculate_chunk(
             reason=f"Size field isn't octal: {header_size} (ValueError: {exc})",
         )
 
-    file.seek(real_start_offset)
-    end_offset = _get_tar_end_offset(file, real_start_offset)
+    file.seek(start_offset)
+    end_offset = _get_tar_end_offset(file, start_offset)
 
     return ValidChunk(
-        start_offset=real_start_offset,
+        start_offset=start_offset,
         end_offset=end_offset,
     )
 

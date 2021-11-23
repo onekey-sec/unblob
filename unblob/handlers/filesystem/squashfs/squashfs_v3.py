@@ -23,6 +23,7 @@ YARA_RULE = r"""
     condition:
         $squashfs_v3_magic_le or $squashfs_v3_magic_be
 """
+YARA_MATCH_OFFSET = 0
 
 cparser = cstruct()
 cparser.load(
@@ -64,7 +65,7 @@ BIG_ENDIAN_MAGIC = 0x73717368
 
 
 def calculate_chunk(
-    file: io.BufferedReader, start_offset: int
+    file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
 
     # read the magic and derive endianness from it
