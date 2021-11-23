@@ -34,8 +34,9 @@ def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk
                     start_offset=format_hex(offset),
                     identifier=identifier,
                 )
-                limited_reader = LimitedStartReader(file, offset)
-                chunk = handler.calculate_chunk(limited_reader, offset)
+                real_offset = offset + handler.YARA_MATCH_OFFSET
+                limited_reader = LimitedStartReader(file, real_offset)
+                chunk = handler.calculate_chunk(limited_reader, real_offset)
                 chunk.handler = handler
                 log = logger.bind(chunk=chunk, handler=handler.NAME)
                 if isinstance(chunk, UnknownChunk):

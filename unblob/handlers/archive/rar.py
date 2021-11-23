@@ -19,7 +19,7 @@ strings:
 condition:
     $magic_v4
 """
-
+YARA_MATCH_OFFSET = 0
 
 cparser = cstruct()
 cparser.load(
