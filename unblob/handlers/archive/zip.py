@@ -1,11 +1,11 @@
 import io
-import logging
+import zipfile
 from typing import List, Union
-from zipfile import ZipFile
 
 from dissect.cstruct import cstruct
 from structlog import get_logger
 
+from ...file_utils import find_first
 from ...models import UnknownChunk, ValidChunk
 
 logger = get_logger()
@@ -97,65 +97,30 @@ struct streaming_data
 MAXIMUM_VERSION = 0xFF
 
 
-def _find_end_of_zip(file: io.BufferedReader, start_offset: int) -> int:
-    """Find the end of the zip file
-    by looking for the end of central directory header bytes, verifying, then
-    returning the end of the end of central directory header structure.
-    """
-    file.seek(start_offset)
-    content = file.read()
-    end_marker = content.find(b"\x50\x4b\x05\x06")
-    if end_marker == -1:
-        logging.debug(
-            f"ZIP (0x{start_offset:x}): No End of Central Directory headers in the rest of the stream."
-        )
-        return 0
-
-    file.seek(start_offset + end_marker)
-    header = cparser.end_of_central_directory(file)
-
-    try:
-        header.zip_file_comment.decode("utf-8")
-    except UnicodeDecodeError:
-        return _find_end_of_zip(file, start_offset + end_marker + 22)
-
-    return start_offset + end_marker + len(header)
-
-
-def _guess_zip_size(file: io.BufferedReader, start_offset: int):
-    # If we just pass a full firmware blob to zipfile.ZipFile, somehow,
-    # the way that it is parsed means that only the final zipfile in the
-    # blob is recognised, if at all. Sometimes, if the firmware is just
-    # a big blob of lots of other things, then ZipFile will just throw an
-    # error. Basically, ZipFile is really bad at dealing with anything
-    # which isn't actually a ZIP.
-
-    # For this reason, we need to try to guess the length of the ZIP file
-    # chunk within our firmware image, and then carve that chunk out.
-    # Then, we make this is a BytesIO stream, so we can just pass this
-    # stream to ZipFile.
-
-    file_names = set()
-    encrypted_files = set()
-    zip_end = _find_end_of_zip(file, start_offset)
+def _calculate_zipfile_end(file: io.BufferedReader, start_offset: int) -> int:
+    # If we just pass a firmware blob with multiple ZIP files in it to zipfile.ZipFile, it seems
+    # that it will basically scan for the final EOCD record header, and assume that that's where
+    # the file ends.
+    # E.g. in the case our firmware image looks like this:
+    # | ZIPFILE | SOMETHING ELSE | ZIPFILE |
+    # zipfile.ZipFile() will assume:
+    # |    THIS IS ALL THE SAME ZIPFILE    |
+    # For obvious reasons, this is not helpful in our case. We need to try to guess the length of
+    # the ZIP file chunk within our firmware image, independently, and then carve that chunk out.
 
     file.seek(start_offset)
-    content = io.BytesIO(file.read(zip_end - start_offset))
 
-    with ZipFile(content) as z:
-        logger.info("Found ZIP filenames", filenames=[x.filename for x in z.infolist()])
-        for g in z.infolist():
-            if g.flag_bits & 0b0001:
-                encrypted_files.add(g.filename)
-            file_names.add(g.filename)
-
-    size = zip_end - start_offset
-    return size
+    # In our case, we want to find the first instance of the EOCD record header, not the last!
+    zip_end = find_first(file, b"\x50\x4b\x05\x06") + start_offset
+    file.seek(zip_end)
+    _ = cparser.end_of_central_directory(file)
+    return file.tell()
 
 
 def calculate_chunk(
     file: io.BufferedReader, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
+
     header = cparser.local_file_header(file)
     if header.version_needed_to_extract > MAXIMUM_VERSION:
         return UnknownChunk(
@@ -163,12 +128,35 @@ def calculate_chunk(
             reason=f"ZIP (0x{start_offset:x}): Version too high!",
         )
 
-    size = _guess_zip_size(file, start_offset)
+    end_of_zip = _calculate_zipfile_end(file, start_offset)
+
+    file.seek(start_offset)
+
+    encrypted_files = set()
+    all_files = set()
+
+    this_zip_chunk = io.BytesIO(file.read(end_of_zip - start_offset))
+    with zipfile.ZipFile(this_zip_chunk) as zip:
+        for zipinfo in zip.infolist():
+            if zipinfo.flag_bits & 0b0001:
+                encrypted_files.add(zipinfo.filename)
+            all_files.add(zipinfo.filename)
+
+    if len(encrypted_files) > 0:
+        # TODO: We can't handle encrypted ZIP files yet, so we fall back to the UnknownChunk in the
+        # cases where there are encrypted files in the ZIP.
+        return UnknownChunk(
+            start_offset=start_offset,
+            end_offset=end_of_zip,
+            reason="ZIP contains encrypted files.",
+        )
+
     return ValidChunk(
         start_offset=start_offset,
-        end_offset=start_offset + size,
+        end_offset=end_of_zip,
     )
 
 
 def make_extract_command(inpath: str, outdir: str) -> List[str]:
+    # TODO: This will just hang waiting for user input if any the ZIP is encrypted.
     return ["unzip", inpath, "-d", outdir]
