@@ -13,6 +13,7 @@ YARA_RULE = r"""
     condition:
         $magic
 """
+YARA_MATCH_OFFSET = 0
 
 cparser = cstruct()
 cparser.load(
@@ -46,7 +47,7 @@ struct cab_header
 
 
 def calculate_chunk(
-    file: io.BufferedReader, start_offset: int
+    file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
 
     file.seek(start_offset)

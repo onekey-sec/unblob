@@ -16,13 +16,14 @@ class _CPIOHandlerBase:
 
     NAME: str
     YARA_RULE: str
+    YARA_MATCH_OFFSET: int = 0
 
     _PAD_ALIGN: int
     _HEADER_PARSER: Callable
 
     @classmethod
     def calculate_chunk(
-        cls, file: io.BufferedReader, start_offset: int
+        cls, file: io.BufferedIOBase, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
         file.seek(start_offset)
         offset = start_offset
