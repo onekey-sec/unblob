@@ -3,6 +3,7 @@ from typing import Dict, List
 from ..models import Handler
 from .archive import ar, cab, cpio, tar, zip
 
+
 def _make_handler_map(*handlers: Handler) -> Dict[str, Handler]:
     return {h.NAME: h for h in handlers}
 
