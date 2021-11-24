@@ -1,4 +1,12 @@
 [[package]]
+name = "arpy"
+version = "2.2.0"
+description = "Library for accessing \"ar\" files"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "atomicwrites"
 version = "1.4.0"
 description = "Atomic file writes."
@@ -329,9 +337,12 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "d9594b7ff2f0656205f34abef201e12c078d7d1276678500267dad7e1b05b496"
+content-hash = "1e537a57c0b82897f3a63629693cc2343e5056db91de6ab6b68686c00368e6e9"
 
 [metadata.files]
+arpy = [
+    {file = "arpy-2.2.0.tar.gz", hash = "sha256:e07dfefc4cdf3d8b080e4b37e8c2b8360e7741b10faf6528f820b74999e0e6bc"},
+]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
     {file = "atomicwrites-1.4.0.tar.gz", hash = "sha256:ae70396ad1a434f9c7046fd2dd196fc04b12f9e91ffb859164193be8b6168a7a"},
