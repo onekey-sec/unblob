@@ -138,13 +138,12 @@ class SquashFSv4Handler(_SquashFSBase):
             int64  lookup_table_start;
         };
     """
+    HEADER_STRUCT = "SQUASHFS4_SUPER_BLOCK"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
-        header = self.cparser.SQUASHFS4_SUPER_BLOCK(file)
-        logger.debug("Header parsed", header=header)
+        header = self.parse_header(file)
         size = round_up(header.bytes_used, PAD_SIZE)
         end_offset = start_offset + size
-
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)

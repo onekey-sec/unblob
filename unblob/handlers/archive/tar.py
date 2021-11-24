@@ -71,13 +71,12 @@ class TarHandler(Handler):
                                 /* 500 */
         };
     """
+    HEADER_STRUCT = "posix_header"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
-        header = self.cparser.posix_header(file)
-        logger.debug("Header parsed", header=header)
-
+        header = self.parse_header(file)
         header_size = snull(header.size)
         try:
             int(header_size, 8)

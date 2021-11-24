@@ -44,12 +44,12 @@ class CABHandler(Handler):
             u1  szDiskNext[];     /* (optional) name of next disk */
         };
     """
+    HEADER_STRUCT = "cab_header"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
-        header = self.cparser.cab_header(file)
-        logger.debug("Header parsed", header=header)
+        header = self.parse_header(file)
 
         if header.cbCabinet < len(header):
             return UnknownChunk(

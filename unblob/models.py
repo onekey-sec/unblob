@@ -5,6 +5,9 @@ from typing import List, Optional, Union
 import attr
 import yara
 from dissect.cstruct import cstruct
+from structlog import get_logger
+
+logger = get_logger()
 
 # The state transitions are:
 #                                      ┌──► ValidChunk
@@ -90,12 +93,24 @@ class Handler(abc.ABC):
     # We need this, because not every match reflects the actual start
     # (e.g. tar magic is in the middle of the header)
     YARA_MATCH_OFFSET: int = 0
+
     C_STRUCTURES: Optional[str] = None
+
+    # One of the C_STRUCTURES used to parse the file's header
+    HEADER_STRUCT: Optional[str] = None
 
     def __init__(self):
         if self.C_STRUCTURES:
             self.cparser = cstruct()
             self.cparser.load(self.C_STRUCTURES)
+
+            if self.HEADER_STRUCT:
+                self._header_parser = getattr(self.cparser, self.HEADER_STRUCT)
+
+    def parse_header(self, file: io.BufferedIOBase):
+        header = self._header_parser(file)
+        logger.debug("Header parsed", header=header)
+        return header
 
     @abc.abstractmethod
     def calculate_chunk(
