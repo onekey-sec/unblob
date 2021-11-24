@@ -48,8 +48,6 @@ class CABHandler(Handler):
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
-
-        file.seek(start_offset)
         header = self.cparser.cab_header(file)
         logger.debug("Header parsed", header=header)
 
