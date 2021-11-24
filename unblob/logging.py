@@ -20,6 +20,24 @@ def pretty_print_paths(extract_root: Path):
     return add_path
 
 
+class LazyField:
+    """Evaluates __repr__ lazily for heavy calculations.
+    Expects callable with args and kwargs of how to calculate the value.
+    """
+
+    def __init__(self, func, *args, **kwargs):
+        self._func = func
+        self._args = args
+        self._kwargs = kwargs
+        self._value = ...
+
+    def __repr__(self):
+        if self._value is ...:
+            value = self._func(*self._args, **self._kwargs)
+            self._value = value
+        return self._value
+
+
 def configure_logger(verbose: bool, extract_root: Path):
     log_level = logging.DEBUG if verbose else logging.INFO
     processors = [
