@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 import structlog
-from dissect.cstruct import cstruct, dumpstruct
+from dissect.cstruct import Instance, dumpstruct
 
 
 def format_hex(value: int):
@@ -17,7 +17,7 @@ def pretty_print_types(extract_root: Path):
                 path = value if use_absolute_path else value.relative_to(extract_root)
                 event_dict[key] = str(path)
 
-            elif isinstance(value, cstruct):
+            elif isinstance(value, Instance):
                 event_dict[key] = dumpstruct(value, output="string")
 
         return event_dict
