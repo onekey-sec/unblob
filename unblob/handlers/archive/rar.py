@@ -7,8 +7,11 @@ import io
 from typing import List
 
 from dissect.cstruct import cstruct
+from structlog import get_logger
 
 from ...models import Chunk
+
+logger = get_logger()
 
 NAME = "rar"
 
@@ -114,6 +117,8 @@ def _calculate_end(file, start_offset: int):  # noqa: C901
     while True:
         file.seek(offset)
         header = cparser.base_vol_header(file)
+        logger.debug("Header parsed", header=header)
+
         file.seek(offset)
 
         extra_data = 0
