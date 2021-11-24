@@ -4,6 +4,7 @@ from typing import List, Union
 
 from dissect.cstruct import cstruct
 
+from ....file_utils import round_up
 from ....models import UnknownChunk, ValidChunk
 
 NAME = "squashfs_v3"
@@ -78,8 +79,7 @@ def calculate_chunk(
     file.seek(start_offset)
     header = cparser.SQUASHFS3_SUPER_BLOCK(file)
 
-    # the actual size is padded to 4KiB
-    size = (1 + header.bytes_used // PAD_SIZE) * PAD_SIZE
+    size = round_up(header.bytes_used, PAD_SIZE)
     end_offset = start_offset + size
 
     return ValidChunk(start_offset=start_offset, end_offset=end_offset)
