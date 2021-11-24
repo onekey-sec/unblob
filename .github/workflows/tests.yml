@@ -19,6 +19,10 @@ jobs:
             pip install poetry
             poetry install
 
+      - name: Install 3rd party from apt
+        run: |
+            sudo apt install unar
+
       - name: Run pytest
         # TODO: Dummy coverage (branch: 0%) is needed for the pass rate. Increase this
         run: poetry run pytest --cov=. --cov-branch --cov-fail-under=0
