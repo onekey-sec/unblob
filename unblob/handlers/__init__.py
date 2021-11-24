@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from ..models import Handler
-from .archive import cab, cpio, tar, zip
+from .archive import ar, cab, cpio, tar, zip
 from .filesystem.squashfs import squashfs_v3, squashfs_v4
 
 
@@ -15,6 +15,7 @@ _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
         squashfs_v4,
     ),
     _make_handler_map(
+        ar,
         cab,
         zip,
         tar,
