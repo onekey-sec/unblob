@@ -114,6 +114,7 @@ def _find_end_of_zip(file: io.BufferedIOBase, start_offset: int) -> int:
 
     file.seek(start_offset + end_marker)
     header = cparser.end_of_central_directory(file)
+    logger.debug("Header parsed", header=header)
 
     try:
         header.zip_file_comment.decode("utf-8")
@@ -158,6 +159,8 @@ def calculate_chunk(
     file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
     header = cparser.local_file_header(file)
+    logger.debug("Header parsed", header=header)
+
     if header.version_needed_to_extract > MAXIMUM_VERSION:
         return UnknownChunk(
             start_offset=start_offset,
