@@ -25,9 +25,7 @@ YARA_RULE = r"""
 """
 YARA_MATCH_OFFSET = 0
 
-cparser = cstruct()
-cparser.load(
-    """
+SUASHFS_V4_HEADER = """
 struct SQUASHFS3_SUPER_BLOCK
 {
     char   s_magic[4];
@@ -58,7 +56,11 @@ struct SQUASHFS3_SUPER_BLOCK
     int64  lookup_table_start;
 };
 """
-)
+cparser_le = cstruct()
+cparser_le.load(SUASHFS_V4_HEADER)
+
+cparser_be = cstruct(endian=">")
+cparser_be.load(SUASHFS_V4_HEADER)
 
 PAD_SIZE = 4096
 BIG_ENDIAN_MAGIC = 0x73717368
@@ -71,9 +73,7 @@ def calculate_chunk(
     # read the magic and derive endianness from it
     magic_bytes = file.read(4)
     magic = struct.unpack(">I", magic_bytes)[0]
-
-    is_big_endian = magic == BIG_ENDIAN_MAGIC
-    cparser.endian = ">" if is_big_endian else "<"
+    cparser = cparser_be if magic == BIG_ENDIAN_MAGIC else cparser_le
 
     file.seek(start_offset)
     header = cparser.SQUASHFS3_SUPER_BLOCK(file)
