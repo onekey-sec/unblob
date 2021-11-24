@@ -15,9 +15,9 @@ _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
         squashfs.SquashFSv4Handler,
     ),
     _make_handler_map(
-        ar,
-        cab,
-        tar,
+        ar.ARHandler,
+        cab.CABHandler,
+        tar.TarHandler,
         cpio.PortableASCIIHandler,
         cpio.PortableASCIIWithCRCHandler,
         cpio.PortableOldASCIIHandler,
