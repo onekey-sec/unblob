@@ -90,11 +90,12 @@ class Handler(abc.ABC):
     # We need this, because not every match reflects the actual start
     # (e.g. tar magic is in the middle of the header)
     YARA_MATCH_OFFSET: int = 0
-    C_STRUCTURES: str
+    C_STRUCTURES: Optional[str] = None
 
     def __init__(self):
-        self.cparser = cstruct()
-        self.cparser.load(self.C_STRUCTURES)
+        if self.C_STRUCTURES:
+            self.cparser = cstruct()
+            self.cparser.load(self.C_STRUCTURES)
 
     @abc.abstractmethod
     def calculate_chunk(
