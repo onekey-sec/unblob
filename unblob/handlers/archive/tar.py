@@ -3,9 +3,12 @@ import tarfile
 from typing import List, Union
 
 from dissect.cstruct import cstruct
+from structlog import get_logger
 
 from ...file_utils import snull
 from ...models import UnknownChunk, ValidChunk
+
+logger = get_logger()
 
 NAME = "tar"
 
@@ -76,6 +79,8 @@ def calculate_chunk(
     file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
     header = cparser.posix_header(file)
+    logger.debug("Header parsed", header=header)
+
     header_size = snull(header.size)
     try:
         int(header_size, 8)
