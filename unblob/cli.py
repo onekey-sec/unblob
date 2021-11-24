@@ -47,6 +47,8 @@ def main():
     except click.ClickException as e:
         e.show()
         sys.exit(e.exit_code)
+    except click.exceptions.Exit as e:
+        sys.exit(e.exit_code)
 
     with ctx:
         cli.invoke(ctx)
