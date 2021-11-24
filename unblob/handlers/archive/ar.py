@@ -28,7 +28,7 @@ def calculate_chunk(
     file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
 
-    ar = arpy.Archive(fileobj=file)
+    ar = arpy.Archive(fileobj=file)  # type: ignore
 
     try:
         ar.read_all_headers()
