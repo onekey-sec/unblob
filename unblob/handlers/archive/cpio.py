@@ -1,5 +1,5 @@
 import io
-from typing import Callable, List, Union
+from typing import List, Union
 
 from structlog import get_logger
 
@@ -19,7 +19,6 @@ class _CPIOHandlerBase(Handler):
     """
 
     _PAD_ALIGN: int
-    _header_parser: Callable
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -27,8 +26,7 @@ class _CPIOHandlerBase(Handler):
         offset = start_offset
         while True:
             file.seek(offset)
-            header = self._header_parser(file)
-            logger.debug("Header parsed", header=header)
+            header = self.parse_header(file)
 
             c_filesize = self._calculate_file_size(header)
             c_namesize = self._calculate_name_size(header)
@@ -113,12 +111,9 @@ class BinaryHandler(_CPIOHandlerBase):
             ushort c_filesize[2];
         };
     """
+    HEADER_STRUCT = "old_cpio_header"
 
     _PAD_ALIGN = 2
-
-    def __init__(self):
-        super().__init__()
-        self._header_parser = self.cparser.old_cpio_header
 
     @staticmethod
     def _calculate_file_size(header) -> int:
@@ -155,12 +150,9 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
             char c_filesize[11];
         };
     """
+    HEADER_STRUCT = "old_ascii_header"
 
     _PAD_ALIGN = 2
-
-    def __init__(self):
-        super().__init__()
-        self._header_parser = self.cparser.old_ascii_header
 
     @staticmethod
     def _calculate_file_size(header) -> int:
@@ -191,11 +183,9 @@ class _NewASCIICommon(Handler):
             char c_chksum[8];
         };
     """
-    _PAD_ALIGN = 4
+    HEADER_STRUCT = "new_ascii_header"
 
-    def __init__(self):
-        super().__init__()
-        self._header_parser = self.cparser.new_ascii_header
+    _PAD_ALIGN = 4
 
 
 class PortableASCIIHandler(_NewASCIICommon, _CPIOHandlerBase):
