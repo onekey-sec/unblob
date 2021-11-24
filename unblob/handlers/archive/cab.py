@@ -2,8 +2,11 @@ import io
 from typing import List, Union
 
 from dissect.cstruct import cstruct
+from structlog import get_logger
 
 from ...models import UnknownChunk, ValidChunk
+
+logger = get_logger()
 
 NAME = "cab"
 
@@ -52,6 +55,7 @@ def calculate_chunk(
 
     file.seek(start_offset)
     header = cparser.cab_header(file)
+    logger.debug("Header parsed", header=header)
 
     if header.cbCabinet < len(header):
         return UnknownChunk(
