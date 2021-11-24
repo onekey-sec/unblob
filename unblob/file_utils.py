@@ -1,7 +1,6 @@
 import enum
 import io
 import math
-import os
 import struct
 
 from dissect.cstruct import cstruct
