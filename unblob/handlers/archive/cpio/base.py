@@ -1,8 +1,12 @@
 import io
 from typing import Callable, List, Union
 
+from structlog import get_logger
+
 from ....file_utils import round_up, snull
 from ....models import UnknownChunk, ValidChunk
+
+logger = get_logger()
 
 CPIO_TRAILER_NAME = b"TRAILER!!!"
 MAX_LINUX_PATH_LENGTH = 0x1000
@@ -30,6 +34,8 @@ class _CPIOHandlerBase:
         while True:
             file.seek(offset, io.SEEK_SET)
             header = cls._HEADER_PARSER(file)
+            logger.debug("Header parsed", header=header)
+
             c_filesize = cls._calculate_file_size(header)
             c_namesize = cls._calculate_name_size(header)
 

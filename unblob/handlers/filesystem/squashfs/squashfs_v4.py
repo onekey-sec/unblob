@@ -2,8 +2,12 @@ import io
 from typing import List, Union
 
 from dissect.cstruct import cstruct
+from structlog import get_logger
 
+from ....file_utils import round_up
 from ....models import UnknownChunk, ValidChunk
+
+logger = get_logger()
 
 NAME = "squashfs_v4"
 
@@ -48,7 +52,6 @@ struct SQUASHFS4_SUPER_BLOCK
 """
 )
 
-
 PAD_SIZE = 4096
 
 
@@ -56,8 +59,8 @@ def calculate_chunk(
     file: io.BufferedIOBase, start_offset: int
 ) -> Union[ValidChunk, UnknownChunk]:
     header = cparser.SQUASHFS4_SUPER_BLOCK(file)
-    # the actual size is padded to 4KiB
-    size = (1 + header.bytes_used // PAD_SIZE) * PAD_SIZE
+    logger.debug("Header parsed", header=header)
+    size = round_up(header.bytes_used, PAD_SIZE)
     end_offset = start_offset + size
 
     return ValidChunk(start_offset=start_offset, end_offset=end_offset)
