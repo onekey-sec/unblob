@@ -2,19 +2,18 @@ import io
 import struct
 from typing import List, Union
 
-from dissect.cstruct import cstruct
 from structlog import get_logger
 
-from ...file_utils import round_up
-from ...models import Handler, UnknownChunk, ValidChunk
+from ...file_utils import Endian, round_up
+from ...models import StructHandler, UnknownChunk, ValidChunk
 
 logger = get_logger()
 
-PAD_SIZE = 4096
-BIG_ENDIAN_MAGIC = 0x73717368
+PAD_SIZE = 4_096
+BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
 
-class _SquashFSBase(Handler):
+class _SquashFSBase(StructHandler):
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
         return ["unsquashfs", "-f", "-d", outdir, inpath]
@@ -41,7 +40,7 @@ class SquashFSv3Handler(_SquashFSBase):
             $squashfs_v3_magic_le or $squashfs_v3_magic_be
     """
 
-    C_STRUCTURES = r"""
+    C_DEFINITIONS = r"""
         struct SQUASHFS3_SUPER_BLOCK
         {
             char   s_magic[4];
@@ -72,13 +71,7 @@ class SquashFSv3Handler(_SquashFSBase):
             int64  lookup_table_start;
         };
     """
-
-    def __init__(self):
-        self.cparser_le = cstruct()
-        self.cparser_le.load(self.C_STRUCTURES)
-
-        self.cparser_be = cstruct(endian=">")
-        self.cparser_be.load(self.C_STRUCTURES)
+    HEADER_STRUCT = "SQUASHFS3_SUPER_BLOCK"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -87,11 +80,10 @@ class SquashFSv3Handler(_SquashFSBase):
         # read the magic and derive endianness from it
         magic_bytes = file.read(4)
         magic = struct.unpack(">I", magic_bytes)[0]
-        cparser = self.cparser_be if magic == BIG_ENDIAN_MAGIC else self.cparser_le
+        endian = Endian.BIG if magic == BIG_ENDIAN_MAGIC else Endian.LITTLE
 
         file.seek(start_offset)
-        header = cparser.SQUASHFS3_SUPER_BLOCK(file)
-        logger.debug("Header parsed", header=header)
+        header = self.parse_header(file, endian)
 
         size = round_up(header.bytes_used, PAD_SIZE)
         end_offset = start_offset + size
@@ -114,7 +106,7 @@ class SquashFSv4Handler(_SquashFSBase):
             $squashfs_v4_magic_le
     """
 
-    C_STRUCTURES = r"""
+    C_DEFINITIONS = r"""
         struct SQUASHFS4_SUPER_BLOCK
         {
             char   s_magic[4];
