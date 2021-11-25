@@ -9,8 +9,8 @@ from ...models import StructHandler, UnknownChunk, ValidChunk
 
 logger = get_logger()
 
-PAD_SIZE = 4096
-BIG_ENDIAN_MAGIC = 0x73717368
+PAD_SIZE = 4_096
+BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
 
 class _SquashFSBase(StructHandler):
