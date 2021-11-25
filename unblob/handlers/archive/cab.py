@@ -3,12 +3,12 @@ from typing import List, Union
 
 from structlog import get_logger
 
-from ...models import Handler, UnknownChunk, ValidChunk
+from ...models import StructHandler, UnknownChunk, ValidChunk
 
 logger = get_logger()
 
 
-class CABHandler(Handler):
+class CABHandler(StructHandler):
     NAME = "cab"
 
     YARA_RULE = r"""
@@ -18,7 +18,7 @@ class CABHandler(Handler):
             $magic
     """
 
-    C_STRUCTURES = r"""
+    C_DEFINITIONS = r"""
         struct cab_header
         {
             u1  signature[4];  /* cabinet file signature contains the characters 'M','S','C','F' (bytes 0x4D, 0x53, 0x43, 0x46). */
