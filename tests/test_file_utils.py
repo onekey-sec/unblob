@@ -3,7 +3,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from unblob.file_utils import Endian, LimitedStartReader, StructParser, round_up
+from unblob.file_utils import (
+    Endian,
+    LimitedStartReader,
+    StructParser,
+    convert_int32,
+    round_up,
+)
 
 
 @pytest.mark.parametrize(
@@ -87,3 +93,38 @@ class TestStructParser:
         fake_file = io.BytesIO(test_content)
         header2 = parser.parse("squashfs_header", fake_file, Endian.LITTLE)
         assert header2.inodes == 0x04_03_02_01
+
+
+class TestConvertInt32:
+    @pytest.mark.parametrize(
+        "value, endian, expected",
+        (
+            (b"\x00\x00\x00\x00", Endian.LITTLE, 0x0),
+            (b"\x00\x00\x00\x00", Endian.BIG, 0x0),
+            (b"\xff\xff\xff\xff", Endian.LITTLE, 0xFFFFFFFF),
+            (b"\xff\xff\xff\xff", Endian.BIG, 0xFFFFFFFF),
+            (b"\x10\x00\x00\x00", Endian.LITTLE, 0x10),
+            (b"\x10\x00\x00\x00", Endian.BIG, 0x10000000),
+        ),
+    )
+    def test_convert_int32(self, value, endian, expected):
+        assert convert_int32(value, endian) == expected
+
+    @pytest.mark.parametrize(
+        "value, endian",
+        (
+            (b"", Endian.LITTLE),
+            (b"", Endian.BIG),
+            (b"\x00", Endian.LITTLE),
+            (b"\x00", Endian.BIG),
+            (b"\x00\x00", Endian.LITTLE),
+            (b"\x00\x00", Endian.BIG),
+            (b"\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff\xff", Endian.BIG),
+        ),
+    )
+    def test_convert_invalid_values(self, value, endian):
+        with pytest.raises(ValueError):
+            convert_int32(value, endian)
