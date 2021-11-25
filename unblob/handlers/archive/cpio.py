@@ -4,7 +4,7 @@ from typing import List, Union
 from structlog import get_logger
 
 from ...file_utils import round_up, snull
-from ...models import Handler, UnknownChunk, ValidChunk
+from ...models import StructHandler, UnknownChunk, ValidChunk
 
 logger = get_logger()
 
@@ -12,7 +12,7 @@ CPIO_TRAILER_NAME = b"TRAILER!!!"
 MAX_LINUX_PATH_LENGTH = 0x1000
 
 
-class _CPIOHandlerBase(Handler):
+class _CPIOHandlerBase(StructHandler):
     """A common base for all CPIO formats
     The format should be parsed the same, there are small differences how to calculate
     file and filename sizes padding and conversion from octal / hex.
@@ -95,7 +95,7 @@ class BinaryHandler(_CPIOHandlerBase):
             $cpio_binary_magic
     """
 
-    C_STRUCTURES = r"""
+    C_DEFINITIONS = r"""
         struct old_cpio_header
         {
             ushort c_magic;
@@ -134,7 +134,7 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
         condition:
             $cpio_portable_old_ascii_magic
     """
-    C_STRUCTURES = r"""
+    C_DEFINITIONS = r"""
         struct old_ascii_header
         {
             char c_magic[6];
@@ -163,8 +163,8 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
         return int(header.c_namesize, 8)
 
 
-class _NewASCIICommon(Handler):
-    C_STRUCTURES = r"""
+class _NewASCIICommon(StructHandler):
+    C_DEFINITIONS = r"""
         struct new_ascii_header
         {
             char c_magic[6];

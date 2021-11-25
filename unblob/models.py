@@ -1,11 +1,13 @@
 import abc
+import functools
 import io
 from typing import List, Optional, Union
 
 import attr
 import yara
-from dissect.cstruct import cstruct
 from structlog import get_logger
+
+from .file_utils import Endian, StructParser
 
 logger = get_logger()
 
@@ -94,24 +96,6 @@ class Handler(abc.ABC):
     # (e.g. tar magic is in the middle of the header)
     YARA_MATCH_OFFSET: int = 0
 
-    C_STRUCTURES: Optional[str] = None
-
-    # One of the C_STRUCTURES used to parse the file's header
-    HEADER_STRUCT: Optional[str] = None
-
-    def __init__(self):
-        if self.C_STRUCTURES:
-            self.cparser = cstruct()
-            self.cparser.load(self.C_STRUCTURES)
-
-            if self.HEADER_STRUCT:
-                self._header_parser = getattr(self.cparser, self.HEADER_STRUCT)
-
-    def parse_header(self, file: io.BufferedIOBase):
-        header = self._header_parser(file)
-        logger.debug("Header parsed", header=header)
-        return header
-
     @abc.abstractmethod
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -122,3 +106,18 @@ class Handler(abc.ABC):
     @abc.abstractmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
         """Make the extract command with the external tool, which can be passed for subprocess.run."""
+
+
+class StructHandler(Handler):
+    C_DEFINITIONS: str
+    # A struct from the C_DEFINITIONS used to parse the file's header
+    HEADER_STRUCT: str
+
+    def __init__(self):
+        struct_parser = StructParser(self.C_DEFINITIONS)
+        self._header_parser = functools.partial(struct_parser.parse, self.HEADER_STRUCT)
+
+    def parse_header(self, file: io.BufferedIOBase, endian=Endian.LITTLE):
+        header = self._header_parser(file, endian)
+        logger.debug("Header parsed", header=header)
+        return header
