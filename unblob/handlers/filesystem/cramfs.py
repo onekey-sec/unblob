@@ -1,11 +1,11 @@
 import binascii
 import io
-from typing import List, Union
+from typing import List, Optional
 
 from dissect.cstruct import Instance
 
 from ...file_utils import Endian, convert_int32
-from ...models import StructHandler, UnknownChunk, ValidChunk
+from ...models import StructHandler, ValidChunk
 
 BIG_ENDIAN_MAGIC = 0x28_CD_3D_45
 
@@ -40,7 +40,7 @@ class CramFSHandler(StructHandler):
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
         endian = self._get_endian(file)
         header = self.parse_header(file, endian)
         valid_signature = header.signature == b"Compressed ROMFS"
@@ -49,10 +49,6 @@ class CramFSHandler(StructHandler):
             return ValidChunk(
                 start_offset=start_offset,
                 end_offset=start_offset + header.size,
-            )
-        else:
-            return UnknownChunk(
-                start_offset=start_offset, reason="Invalid CramFS header"
             )
 
     def _get_endian(self, file: io.BufferedIOBase) -> Endian:

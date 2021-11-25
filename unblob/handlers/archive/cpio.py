@@ -1,10 +1,10 @@
 import io
-from typing import List, Union
+from typing import List, Optional
 
 from structlog import get_logger
 
 from ...file_utils import round_up, snull
-from ...models import StructHandler, UnknownChunk, ValidChunk
+from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -22,7 +22,7 @@ class _CPIOHandlerBase(StructHandler):
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
         offset = start_offset
         while True:
             file.seek(offset)
@@ -33,9 +33,7 @@ class _CPIOHandlerBase(StructHandler):
 
             # heuristics 1: check the filename
             if c_namesize > MAX_LINUX_PATH_LENGTH:
-                return UnknownChunk(
-                    start_offset=start_offset, reason="Invalid CPIO header"
-                )
+                return
 
             if c_namesize > 0:
                 file.seek(offset + len(header))
@@ -43,9 +41,7 @@ class _CPIOHandlerBase(StructHandler):
 
                 # heuristics 2: check that filename is null-byte terminated
                 if not tmp_filename.endswith(b"\x00"):
-                    return UnknownChunk(
-                        start_offset=start_offset, reason="Invalid CPIO header"
-                    )
+                    return
 
                 filename = snull(tmp_filename)
 
