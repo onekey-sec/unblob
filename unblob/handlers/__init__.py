@@ -1,23 +1,23 @@
-from typing import Dict, List
+from typing import Dict, List, Type
 
 from ..models import Handler
-from .archive import cab, cpio, tar, zip
-from .filesystem.squashfs import squashfs_v3, squashfs_v4
+from .archive import ar, cab, cpio, tar
+from .filesystem import squashfs
 
 
-def _make_handler_map(*handlers: Handler) -> Dict[str, Handler]:
-    return {h.NAME: h for h in handlers}
+def _make_handler_map(*handlers: Type[Handler]) -> Dict[str, Handler]:
+    return {h.NAME: h() for h in handlers}
 
 
 _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
     _make_handler_map(
-        squashfs_v3,
-        squashfs_v4,
+        squashfs.SquashFSv3Handler,
+        squashfs.SquashFSv4Handler,
     ),
     _make_handler_map(
-        cab,
-        zip,
-        tar,
+        ar.ARHandler,
+        cab.CABHandler,
+        tar.TarHandler,
         cpio.PortableASCIIHandler,
         cpio.PortableASCIIWithCRCHandler,
         cpio.PortableOldASCIIHandler,
