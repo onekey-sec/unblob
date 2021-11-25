@@ -44,5 +44,5 @@ def process_file(
         size=format_hex(file_size),
         _absolute_path=is_initial_file,
     )
-    for new_path in extract_with_priority(root, path, extract_root):
+    for new_path in extract_with_priority(root, path, extract_root, file_size):
         process_file(extract_root, new_path, extract_root, depth - 1)
