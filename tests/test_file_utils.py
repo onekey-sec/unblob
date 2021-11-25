@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from unblob.file_utils import LimitedStartReader, round_up
+from unblob.file_utils import Endian, LimitedStartReader, StructParser, round_up
 
 
 @pytest.mark.parametrize(
@@ -66,3 +66,24 @@ class TestLimitedStartReader:
         reader = LimitedStartReader(fake_file, 5)
         with pytest.raises(TypeError):
             reader.write(b"something")
+
+
+class TestStructParser:
+    def test_parse_correct_endianness(self):
+        test_content = b"\x01\x02\x03\x04"
+        fake_file = io.BytesIO(test_content)
+
+        definitions = r"""
+        struct squashfs_header
+        {
+            uint32 inodes;
+        }
+        """
+        parser = StructParser(definitions)
+
+        header = parser.parse("squashfs_header", fake_file, Endian.BIG)
+        assert header.inodes == 0x01_02_03_04
+
+        fake_file = io.BytesIO(test_content)
+        header2 = parser.parse("squashfs_header", fake_file, Endian.LITTLE)
+        assert header2.inodes == 0x04_03_02_01
