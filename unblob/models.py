@@ -61,15 +61,12 @@ class Chunk:
         return self.range_hex
 
 
-@attr.define
+@attr.define(repr=False)
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
 
-    def __repr__(self):
-        return self.range_hex
 
-
-@attr.define
+@attr.define(repr=False)
 class UnknownChunk(Chunk):
     """Gaps between valid chunks or otherwise unknown chunks.
 
@@ -82,9 +79,6 @@ class UnknownChunk(Chunk):
 
     reason: str
     end_offset: Optional[int] = None
-
-    def __repr__(self):
-        return self.range_hex
 
 
 class Handler(abc.ABC):
