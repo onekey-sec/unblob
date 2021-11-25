@@ -2,7 +2,7 @@ from typing import Dict, List, Type
 
 from ..models import Handler
 from .archive import ar, cab, cpio, tar
-from .filesystem import squashfs
+from .filesystem import cramfs, squashfs
 
 
 def _make_handler_map(*handlers: Type[Handler]) -> Dict[str, Handler]:
@@ -11,6 +11,7 @@ def _make_handler_map(*handlers: Type[Handler]) -> Dict[str, Handler]:
 
 _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
     _make_handler_map(
+        cramfs.CramFSHandler,
         squashfs.SquashFSv3Handler,
         squashfs.SquashFSv4Handler,
     ),
