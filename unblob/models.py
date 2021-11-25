@@ -44,8 +44,7 @@ class Chunk:
 
     @property
     def range_hex(self) -> str:
-        end_offset = f"0x{self.end_offset:x}" if self.end_offset is not None else ""
-        return f"0x{self.start_offset:x}-{end_offset}"
+        return f"0x{self.start_offset:x}-0x{self.end_offset:x}"
 
     @property
     def range_dec(self) -> str:
@@ -76,9 +75,6 @@ class UnknownChunk(Chunk):
     These are not extracted, just logged for information purposes and further analysis,
     like most common bytest (like \x00 and \xFF), ASCII strings, high entropy, etc.
     """
-
-    reason: str
-    end_offset: Optional[int] = None
 
 
 class Handler(abc.ABC):
