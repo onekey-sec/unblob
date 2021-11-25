@@ -16,7 +16,9 @@ from .models import Chunk, UnknownChunk
 logger = get_logger()
 
 
-def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk]:
+def search_chunks_by_priority(
+    path: Path, file: io.BufferedReader, file_size: int
+) -> List[Chunk]:
     all_chunks = []
 
     for priority_level, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
@@ -38,9 +40,15 @@ def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk
                 real_offset = offset + handler.YARA_MATCH_OFFSET
                 limited_reader = LimitedStartReader(file, real_offset)
                 chunk = handler.calculate_chunk(limited_reader, real_offset)
+
                 # We found some random bytes this handler couldn't parse
                 if chunk is None:
                     continue
+
+                if chunk.end_offset >= file_size:
+                    logger.error("Chunk overflows file", chunk=chunk)
+                    continue
+
                 chunk.handler = handler
                 log = logger.bind(chunk=chunk, handler=handler.NAME)
                 log.info("Found valid chunk")
@@ -110,7 +118,7 @@ def extract_with_priority(
 ) -> Generator[Path, None, None]:
 
     with path.open("rb") as file:
-        all_chunks = search_chunks_by_priority(path, file)
+        all_chunks = search_chunks_by_priority(path, file, file_size)
         if not all_chunks:
             return
 
