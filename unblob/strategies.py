@@ -10,7 +10,7 @@ from .file_utils import LimitedStartReader
 from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
 from .logging import format_hex
-from .models import Chunk, UnknownChunk
+from .models import Chunk
 
 logger = get_logger()
 
@@ -37,11 +37,11 @@ def search_chunks_by_priority(path: Path, file: io.BufferedReader) -> List[Chunk
                 real_offset = offset + handler.YARA_MATCH_OFFSET
                 limited_reader = LimitedStartReader(file, real_offset)
                 chunk = handler.calculate_chunk(limited_reader, real_offset)
+                # We found some random bytes this handler couldn't parse
+                if chunk is None:
+                    continue
                 chunk.handler = handler
                 log = logger.bind(chunk=chunk, handler=handler.NAME)
-                if isinstance(chunk, UnknownChunk):
-                    log.info("Found unknown chunk")
-                    continue
                 log.info("Found valid chunk")
                 all_chunks.append(chunk)
 
