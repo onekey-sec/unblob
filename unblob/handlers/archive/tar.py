@@ -5,7 +5,7 @@ from typing import List, Union
 from structlog import get_logger
 
 from ...file_utils import snull
-from ...models import Handler, UnknownChunk, ValidChunk
+from ...models import StructHandler, UnknownChunk, ValidChunk
 
 logger = get_logger()
 
@@ -34,7 +34,7 @@ def _get_tar_end_offset(file: io.BufferedIOBase):
     return end_offset
 
 
-class TarHandler(Handler):
+class TarHandler(StructHandler):
     NAME = "tar"
 
     YARA_RULE = r"""
@@ -49,7 +49,7 @@ class TarHandler(Handler):
     # to get to the start of the file.
     YARA_MATCH_OFFSET = -MAGIC_OFFSET
 
-    C_STRUCTURES = r"""
+    C_DEFINITIONS = r"""
         struct posix_header
         {                       /* byte offset */
             char name[100];     /*   0 */
