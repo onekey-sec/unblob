@@ -1,7 +1,7 @@
 import abc
 import functools
 import io
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import attr
 import yara
@@ -12,9 +12,9 @@ from .file_utils import Endian, StructParser
 logger = get_logger()
 
 # The state transitions are:
-#                                      ┌──► ValidChunk
-# file ──► YaraMatchResult ──► Chunk ──┤
-#                                      └──► UnknownChunk
+#
+# file ──► YaraMatchResult ──► Chunk ──► ValidChunk
+#
 
 
 @attr.define
@@ -99,7 +99,7 @@ class Handler(abc.ABC):
     @abc.abstractmethod
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 
     @staticmethod
