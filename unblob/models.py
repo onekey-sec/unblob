@@ -1,9 +1,13 @@
+import abc
 import io
 from typing import List, Optional, Union
 
 import attr
 import yara
-from typing_extensions import Protocol
+from dissect.cstruct import cstruct
+from structlog import get_logger
+
+logger = get_logger()
 
 # The state transitions are:
 #                                      ┌──► ValidChunk
@@ -81,21 +85,40 @@ class UnknownChunk(Chunk):
         return self.range_hex
 
 
-class Handler(Protocol):
+class Handler(abc.ABC):
     """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
 
     NAME: str
     YARA_RULE: str
     # We need this, because not every match reflects the actual start
     # (e.g. tar magic is in the middle of the header)
-    YARA_MATCH_OFFSET: int
+    YARA_MATCH_OFFSET: int = 0
 
-    @staticmethod
+    C_STRUCTURES: Optional[str] = None
+
+    # One of the C_STRUCTURES used to parse the file's header
+    HEADER_STRUCT: Optional[str] = None
+
+    def __init__(self):
+        if self.C_STRUCTURES:
+            self.cparser = cstruct()
+            self.cparser.load(self.C_STRUCTURES)
+
+            if self.HEADER_STRUCT:
+                self._header_parser = getattr(self.cparser, self.HEADER_STRUCT)
+
+    def parse_header(self, file: io.BufferedIOBase):
+        header = self._header_parser(file)
+        logger.debug("Header parsed", header=header)
+        return header
+
+    @abc.abstractmethod
     def calculate_chunk(
-        file: io.BufferedIOBase, start_offset: int
+        self, file: io.BufferedIOBase, start_offset: int
     ) -> Union[ValidChunk, UnknownChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 
     @staticmethod
+    @abc.abstractmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
         """Make the extract command with the external tool, which can be passed for subprocess.run."""
