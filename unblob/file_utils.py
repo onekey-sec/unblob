@@ -1,8 +1,14 @@
 import enum
 import io
 import math
+import struct
 
 from dissect.cstruct import cstruct
+
+
+class Endian(enum.Enum):
+    LITTLE = "<"
+    BIG = ">"
 
 
 def snull(content: bytes):
@@ -13,6 +19,14 @@ def snull(content: bytes):
 def round_up(size: int, alignment: int):
     """Round up size to the alignment boundary."""
     return alignment * math.ceil(size / alignment)
+
+
+def convert_int32(value: bytes, endian: Endian) -> int:
+    """Convert 4 byte integer to a Python int."""
+    try:
+        return struct.unpack(f"{endian.value}I", value)[0]
+    except struct.error:
+        raise ValueError("Not an int32")
 
 
 class LimitedStartReader(io.BufferedIOBase):
@@ -48,11 +62,6 @@ class LimitedStartReader(io.BufferedIOBase):
 
     def readinto1(self, *args, **kwargs):
         return self._file.readinto1(*args, **kwargs)
-
-
-class Endian(enum.Enum):
-    LITTLE = "<"
-    BIG = ">"
 
 
 class StructParser:
