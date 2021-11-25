@@ -1,6 +1,6 @@
 import io
 import itertools
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 from pathlib import Path
 from typing import Generator, List
 
@@ -31,7 +31,8 @@ def search_chunks_by_priority(
         for result in yara_results:
             handler = result.handler
             match = result.match
-            for offset, identifier, string_data in match.strings:
+            sorted_matches = sorted(match.strings, key=itemgetter(0), reverse=True)
+            for offset, identifier, string_data in sorted_matches:
                 logger.info(
                     "Calculating chunk for YARA match",
                     start_offset=format_hex(offset),
