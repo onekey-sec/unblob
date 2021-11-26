@@ -1,7 +1,7 @@
 from typing import Dict, List, Type
 
 from ..models import Handler
-from .archive import ar, arc, arj, cab, cpio, rar, sevenzip, tar, zip
+from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, tar, zip
 from .filesystem import cramfs, fat, squashfs, ubi
 
 
@@ -31,5 +31,6 @@ _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
         sevenzip.SevenZipHandler,
         rar.RarHandler,
         zip.ZIPHandler,
+        dmg.DMGHandler,
     ),
 ]
