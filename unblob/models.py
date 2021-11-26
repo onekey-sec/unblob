@@ -1,5 +1,4 @@
 import abc
-import functools
 import io
 from typing import List, Optional
 
@@ -104,10 +103,17 @@ class StructHandler(Handler):
     HEADER_STRUCT: str
 
     def __init__(self):
-        struct_parser = StructParser(self.C_DEFINITIONS)
-        self._header_parser = functools.partial(struct_parser.parse, self.HEADER_STRUCT)
+        self._struct_parser = StructParser(self.C_DEFINITIONS)
+
+    @property
+    def cparser_le(self):
+        return self._struct_parser.cparser_le
+
+    @property
+    def cparser_be(self):
+        return self._struct_parser.cparser_be
 
     def parse_header(self, file: io.BufferedIOBase, endian=Endian.LITTLE):
-        header = self._header_parser(file, endian)
+        header = self._struct_parser.parse(self.HEADER_STRUCT, file, endian)
         logger.debug("Header parsed", header=header)
         return header
