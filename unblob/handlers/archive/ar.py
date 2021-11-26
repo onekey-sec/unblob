@@ -1,11 +1,11 @@
 import io
 import os
-from typing import List, Union
+from typing import List, Optional
 
 import arpy
 from structlog import get_logger
 
-from ...models import Handler, UnknownChunk, ValidChunk
+from ...models import Handler, ValidChunk
 
 logger = get_logger()
 
@@ -26,7 +26,7 @@ class ARHandler(Handler):
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
 
         ar = arpy.Archive(fileobj=file)  # type: ignore
 

@@ -1,9 +1,9 @@
 import io
-from typing import List, Union
+from typing import List, Optional
 
 from structlog import get_logger
 
-from ...models import StructHandler, UnknownChunk, ValidChunk
+from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -48,14 +48,11 @@ class CABHandler(StructHandler):
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
         header = self.parse_header(file)
 
         if header.cbCabinet < len(header):
-            return UnknownChunk(
-                start_offset=start_offset,
-                reason=f"CAB header file size ({header.cbCabinet}) is less than header size.",
-            )
+            return
 
         return ValidChunk(
             start_offset=start_offset,
