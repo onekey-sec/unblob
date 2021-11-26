@@ -45,7 +45,7 @@ def search_chunks_by_priority(
                 if chunk is None:
                     continue
 
-                if chunk.end_offset >= file_size:
+                if chunk.end_offset > file_size or chunk.start_offset < 0:
                     logger.error("Chunk overflows file", chunk=chunk)
                     continue
 
@@ -84,29 +84,29 @@ def calculate_unknown_chunks(chunks: List[Chunk], file_size: int) -> List[Unknow
         return []
 
     if not chunks:
-        return [UnknownChunk(0, file_size - 1)]
+        return [UnknownChunk(0, file_size)]
 
     unknown_chunks = []
 
     first = sorted_by_offset[0]
     if first.start_offset != 0:
-        unknown_chunk = UnknownChunk(0, first.start_offset - 1)
+        unknown_chunk = UnknownChunk(0, first.start_offset)
         unknown_chunks.append(unknown_chunk)
 
     for chunk, next_chunk in pairwise(sorted_by_offset):
         diff = next_chunk.start_offset - chunk.end_offset
-        if diff != 1:
+        if diff != 0:
             unknown_chunk = UnknownChunk(
-                start_offset=chunk.end_offset + 1,
-                end_offset=next_chunk.start_offset - 1,
+                start_offset=chunk.end_offset,
+                end_offset=next_chunk.start_offset,
             )
             unknown_chunks.append(unknown_chunk)
 
     last = sorted_by_offset[-1]
-    if last.end_offset < file_size - 1:
+    if last.end_offset < file_size:
         unknown_chunk = UnknownChunk(
-            start_offset=last.end_offset + 1,
-            end_offset=file_size - 1,
+            start_offset=last.end_offset,
+            end_offset=file_size,
         )
         unknown_chunks.append(unknown_chunk)
 

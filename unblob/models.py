@@ -33,13 +33,12 @@ class Chunk:
     """Chunk of a Blob, have start and end offset, but still can be invalid."""
 
     start_offset: int
-    # This is the last byte included
     end_offset: int
     handler: "Handler" = attr.ib(init=False, eq=False)
 
     @property
     def size(self) -> int:
-        return self.end_offset - self.start_offset + 1
+        return self.end_offset - self.start_offset
 
     @property
     def range_hex(self) -> str:
