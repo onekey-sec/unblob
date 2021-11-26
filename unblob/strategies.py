@@ -55,6 +55,10 @@ def search_chunks_by_priority(
                 log.info("Found valid chunk")
                 all_chunks.append(chunk)
 
+                if chunk.size == file_size:
+                    log.info("This Chunk represents the whole file")
+                    return [chunk]
+
     return all_chunks
 
 
