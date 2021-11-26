@@ -1,6 +1,7 @@
 import enum
 import io
 import math
+import os
 import struct
 
 from dissect.cstruct import cstruct
@@ -73,7 +74,7 @@ class StructParser:
         self.__cparser_be = None
 
     @property
-    def _cparser_le(self):
+    def cparser_le(self):
         if self.__cparser_le is None:
             # Default endianness is little
             self.__cparser_le = cstruct()
@@ -81,13 +82,13 @@ class StructParser:
         return self.__cparser_le
 
     @property
-    def _cparser_be(self):
+    def cparser_be(self):
         if self.__cparser_be is None:
             self.__cparser_be = cstruct(endian=">")
             self.__cparser_be.load(self._definitions)
         return self.__cparser_be
 
     def parse(self, struct_name: str, file: io.BufferedIOBase, endian: Endian):
-        cparser = self._cparser_le if endian is Endian.LITTLE else self._cparser_be
+        cparser = self.cparser_le if endian is Endian.LITTLE else self.cparser_be
         struct_parser = getattr(cparser, struct_name)
         return struct_parser(file)
