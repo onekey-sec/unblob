@@ -16,7 +16,7 @@ from .models import Chunk, UnknownChunk
 logger = get_logger()
 
 
-def search_chunks_by_priority(
+def search_chunks_by_priority(  # noqa: C901
     path: Path, file: io.BufferedReader, file_size: int
 ) -> List[Chunk]:
     all_chunks = []
