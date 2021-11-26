@@ -64,6 +64,9 @@ def search_chunks_by_priority(  # noqa: C901
 
 def remove_inner_chunks(chunks: List[Chunk]):
     """Remove all chunks from the list which are within another bigger chunks."""
+    if not chunks:
+        return []
+
     chunks_by_size = sorted(chunks, key=attrgetter("size"), reverse=True)
     outer_chunks = [chunks_by_size[0]]
     for chunk in chunks_by_size[1:]:
@@ -124,9 +127,6 @@ def extract_with_priority(
 
     with path.open("rb") as file:
         all_chunks = search_chunks_by_priority(path, file, file_size)
-        if not all_chunks:
-            return
-
         outer_chunks = remove_inner_chunks(all_chunks)
         unknown_chunks = calculate_unknown_chunks(outer_chunks, file_size)
         if unknown_chunks:
