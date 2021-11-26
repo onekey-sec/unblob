@@ -8,6 +8,7 @@ from unblob.file_utils import (
     LimitedStartReader,
     StructParser,
     convert_int32,
+    find_first,
     round_up,
 )
 
@@ -128,3 +129,17 @@ class TestConvertInt32:
     def test_convert_invalid_values(self, value, endian):
         with pytest.raises(ValueError):
             convert_int32(value, endian)
+
+
+@pytest.mark.parametrize(
+    "content, pattern, expected_position",
+    (
+        pytest.param(b"", b"not-found-pattern", -1, id="not_found"),
+        pytest.param(b"pattern_12345", b"pattern", 0, id="pattern_at_beginning"),
+        pytest.param(b"01234_pattern", b"pattern", 6, id="pattern_at_the_end"),
+        pytest.param(b"01234_pattern5678", b"pattern", 6, id="pattern_in_middle"),
+    ),
+)
+def test_find_first(content, pattern, expected_position):
+    fake_file = io.BytesIO(content)
+    assert find_first(fake_file, pattern) == expected_position
