@@ -59,7 +59,7 @@ def extract_with_command(
         )
         if res.returncode != 0:
             logger.error("Extract command failed", stdout=res.stdout, stderr=res.stderr)
-            raise ExtractionFailed
+
     except FileNotFoundError:
         logger.exception(
             "FileNotFoundError - Can't run extract command. Is the extractor installed?"

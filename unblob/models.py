@@ -1,7 +1,6 @@
 import abc
-import functools
 import io
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import attr
 import yara
@@ -12,9 +11,9 @@ from .file_utils import Endian, StructParser
 logger = get_logger()
 
 # The state transitions are:
-#                                      ┌──► ValidChunk
-# file ──► YaraMatchResult ──► Chunk ──┤
-#                                      └──► UnknownChunk
+#
+# file ──► YaraMatchResult ──► Chunk ──► ValidChunk
+#
 
 
 @attr.define
@@ -44,8 +43,7 @@ class Chunk:
 
     @property
     def range_hex(self) -> str:
-        end_offset = f"0x{self.end_offset:x}" if self.end_offset is not None else ""
-        return f"0x{self.start_offset:x}-{end_offset}"
+        return f"0x{self.start_offset:x}-0x{self.end_offset:x}"
 
     @property
     def range_dec(self) -> str:
@@ -61,15 +59,12 @@ class Chunk:
         return self.range_hex
 
 
-@attr.define
+@attr.define(repr=False)
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
 
-    def __repr__(self):
-        return self.range_hex
 
-
-@attr.define
+@attr.define(repr=False)
 class UnknownChunk(Chunk):
     """Gaps between valid chunks or otherwise unknown chunks.
 
@@ -79,12 +74,6 @@ class UnknownChunk(Chunk):
     These are not extracted, just logged for information purposes and further analysis,
     like most common bytest (like \x00 and \xFF), ASCII strings, high entropy, etc.
     """
-
-    reason: str
-    end_offset: Optional[int] = None
-
-    def __repr__(self):
-        return self.range_hex
 
 
 class Handler(abc.ABC):
@@ -99,7 +88,7 @@ class Handler(abc.ABC):
     @abc.abstractmethod
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 
     @staticmethod
@@ -114,10 +103,17 @@ class StructHandler(Handler):
     HEADER_STRUCT: str
 
     def __init__(self):
-        struct_parser = StructParser(self.C_DEFINITIONS)
-        self._header_parser = functools.partial(struct_parser.parse, self.HEADER_STRUCT)
+        self._struct_parser = StructParser(self.C_DEFINITIONS)
+
+    @property
+    def cparser_le(self):
+        return self._struct_parser.cparser_le
+
+    @property
+    def cparser_be(self):
+        return self._struct_parser.cparser_be
 
     def parse_header(self, file: io.BufferedIOBase, endian=Endian.LITTLE):
-        header = self._header_parser(file, endian)
+        header = self._struct_parser.parse(self.HEADER_STRUCT, file, endian)
         logger.debug("Header parsed", header=header)
         return header

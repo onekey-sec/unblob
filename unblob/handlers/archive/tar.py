@@ -1,11 +1,11 @@
 import io
 import tarfile
-from typing import List, Union
+from typing import List, Optional
 
 from structlog import get_logger
 
 from ...file_utils import snull
-from ...models import StructHandler, UnknownChunk, ValidChunk
+from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -75,16 +75,13 @@ class TarHandler(StructHandler):
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
         header = self.parse_header(file)
         header_size = snull(header.size)
         try:
             int(header_size, 8)
-        except ValueError as exc:
-            return UnknownChunk(
-                start_offset=start_offset,
-                reason=f"Size field isn't octal: {header_size} (ValueError: {exc})",
-            )
+        except ValueError:
+            return
 
         file.seek(start_offset)
         end_offset = _get_tar_end_offset(file)
