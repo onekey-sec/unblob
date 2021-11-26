@@ -1,9 +1,12 @@
 import enum
 import io
 import math
+import os
 import struct
 
 from dissect.cstruct import cstruct
+
+from .logging import format_hex
 
 
 class Endian(enum.Enum):
@@ -27,6 +30,34 @@ def convert_int32(value: bytes, endian: Endian) -> int:
         return struct.unpack(f"{endian.value}I", value)[0]
     except struct.error:
         raise ValueError("Not an int32")
+
+
+def find_first(
+    file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000
+) -> int:
+    """Search for the pattern and return the position where it starts.
+    Returns -1 if not found.
+    """
+    if chunk_size < len(pattern):
+        chunk_hex = format_hex(chunk_size)
+        raise ValueError(
+            f"Chunk size ({chunk_hex}) shouldn't be shorter than pattern's ({pattern}) length ({len(pattern)})!"
+        )
+
+    compensation = len(pattern) - 1
+    bytes_searched = 0
+    while True:
+        # Prepend the padding from the last chunk, to make sure that we find the pattern,
+        # even if it straddles the chunk boundary.
+        data = file.read(chunk_size)
+        if data == b"":
+            # We've reached the end of the stream.
+            return -1
+        marker = data.find(pattern)
+        if marker != -1:
+            return marker + bytes_searched
+        file.seek(-compensation, os.SEEK_CUR)
+        bytes_searched += chunk_size - compensation
 
 
 class LimitedStartReader(io.BufferedIOBase):
@@ -73,7 +104,7 @@ class StructParser:
         self.__cparser_be = None
 
     @property
-    def _cparser_le(self):
+    def cparser_le(self):
         if self.__cparser_le is None:
             # Default endianness is little
             self.__cparser_le = cstruct()
@@ -81,13 +112,13 @@ class StructParser:
         return self.__cparser_le
 
     @property
-    def _cparser_be(self):
+    def cparser_be(self):
         if self.__cparser_be is None:
             self.__cparser_be = cstruct(endian=">")
             self.__cparser_be.load(self._definitions)
         return self.__cparser_be
 
     def parse(self, struct_name: str, file: io.BufferedIOBase, endian: Endian):
-        cparser = self._cparser_le if endian is Endian.LITTLE else self._cparser_be
+        cparser = self.cparser_le if endian is Endian.LITTLE else self.cparser_be
         struct_parser = getattr(cparser, struct_name)
         return struct_parser(file)
