@@ -17,6 +17,7 @@ typing-extensions = "^4.0.0"
 attrs = "^21.2.0"
 structlog = "^21.2.0"
 arpy = "^2.2.0"
+rarfile = "^4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
