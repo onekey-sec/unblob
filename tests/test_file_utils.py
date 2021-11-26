@@ -143,3 +143,15 @@ class TestConvertInt32:
 def test_find_first(content, pattern, expected_position):
     fake_file = io.BytesIO(content)
     assert find_first(fake_file, pattern) == expected_position
+
+
+def test_find_first_big_chunksize():
+    fake_file = io.BytesIO(b"0123456789_pattern")
+    pos = find_first(fake_file, b"pattern", chunk_size=0x10)
+    assert pos == 11
+
+
+def test_find_first_smaller_chunksize_than_pattern_doesnt_hang():
+    fake_file = io.BytesIO(b"0123456789_pattern")
+    with pytest.raises(ValueError):
+        find_first(fake_file, b"pattern", chunk_size=0x5)

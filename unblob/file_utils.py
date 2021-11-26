@@ -1,9 +1,12 @@
 import enum
 import io
 import math
+import os
 import struct
 
 from dissect.cstruct import cstruct
+
+from .logging import format_hex
 
 
 class Endian(enum.Enum):
@@ -35,6 +38,12 @@ def find_first(
     """Search for the pattern and return the position where it starts.
     Returns -1 if not found.
     """
+    if chunk_size < len(pattern):
+        chunk_hex = format_hex(chunk_size)
+        raise ValueError(
+            f"Chunk size ({chunk_hex}) shouldn't be shorter than pattern's ({pattern}) length ({len(pattern)})!"
+        )
+
     compensation = len(pattern) - 1
     bytes_searched = 0
     while True:
