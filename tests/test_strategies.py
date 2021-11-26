@@ -1,7 +1,7 @@
 import pytest
 
-from unblob.models import Chunk
-from unblob.strategies import remove_inner_chunks
+from unblob.models import Chunk, UnknownChunk
+from unblob.strategies import calculate_unknown_chunks, remove_inner_chunks
 
 
 @pytest.mark.parametrize(
@@ -62,3 +62,24 @@ from unblob.strategies import remove_inner_chunks
 )
 def test_remove_inner_chunks(chunks, expected, explanation):
     assert expected == remove_inner_chunks(chunks), explanation
+
+
+@pytest.mark.parametrize(
+    "chunks, file_size, expected",
+    [
+        ([], 0, []),
+        ([], 10, [UnknownChunk(0, 0x9)]),
+        ([Chunk(0x0, 0x5)], 6, []),
+        ([Chunk(0x0, 0x5), Chunk(0x6, 0xA)], 11, []),
+        ([Chunk(0x0, 0x5), Chunk(0x6, 0xA)], 13, [UnknownChunk(0xB, 0xC)]),
+        ([Chunk(0x3, 0x5)], 6, [UnknownChunk(0x0, 0x2)]),
+        ([Chunk(0x0, 0x5), Chunk(0x7, 0xA)], 11, [UnknownChunk(0x6, 0x6)]),
+        (
+            [Chunk(0x8, 0xA), Chunk(0x0, 0x5), Chunk(0xF, 0x14)],
+            21,
+            [UnknownChunk(0x6, 0x7), UnknownChunk(0xB, 0xE)],
+        ),
+    ],
+)
+def test_calculate_unknown_chunks(chunks, file_size, expected):
+    assert expected == calculate_unknown_chunks(chunks, file_size)

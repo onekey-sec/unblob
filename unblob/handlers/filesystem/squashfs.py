@@ -1,10 +1,10 @@
 import io
-from typing import List, Union
+from typing import List, Optional
 
 from structlog import get_logger
 
 from ...file_utils import Endian, convert_int32, round_up
-from ...models import StructHandler, UnknownChunk, ValidChunk
+from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -74,7 +74,7 @@ class SquashFSv3Handler(_SquashFSBase):
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
 
         # read the magic and derive endianness from it
         magic_bytes = file.read(4)
@@ -133,7 +133,7 @@ class SquashFSv4Handler(_SquashFSBase):
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
-    ) -> Union[ValidChunk, UnknownChunk]:
+    ) -> Optional[ValidChunk]:
         header = self.parse_header(file)
         size = round_up(header.bytes_used, PAD_SIZE)
         end_offset = start_offset + size
