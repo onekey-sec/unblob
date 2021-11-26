@@ -22,11 +22,11 @@ class RarHandler(Handler):
 
     YARA_RULE = r"""
         strings:
-            $rar_magic_v4 = { 52 61 72 21 1A 07 00 }
-            $rar_magic_v5 = { 52 61 72 21 1A 07 01 00 }
+            // RAR v4.x ends with 00, RAR v5.x ends with 01 00
+            $rar_magic = { 52 61 72 21 1A 07 ( 00 | 01 00 ) }
 
         condition:
-            $rar_magic_v4 or $rar_magic_v5
+            $rar_magic
     """
 
     def calculate_chunk(
