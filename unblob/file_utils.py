@@ -30,6 +30,28 @@ def convert_int32(value: bytes, endian: Endian) -> int:
         raise ValueError("Not an int32")
 
 
+def find_first(
+    file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000
+) -> int:
+    """Search for the pattern and return the position where it starts.
+    Returns -1 if not found.
+    """
+    compensation = len(pattern) - 1
+    bytes_searched = 0
+    while True:
+        # Prepend the padding from the last chunk, to make sure that we find the pattern,
+        # even if it straddles the chunk boundary.
+        data = file.read(chunk_size)
+        if data == b"":
+            # We've reached the end of the stream.
+            return -1
+        marker = data.find(pattern)
+        if marker != -1:
+            return marker + bytes_searched
+        file.seek(-compensation, os.SEEK_CUR)
+        bytes_searched += chunk_size - compensation
+
+
 class LimitedStartReader(io.BufferedIOBase):
     """Wrapper for open files, which
     enforces that seekeng earlier than the start offset is not possible.
