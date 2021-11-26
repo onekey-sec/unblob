@@ -72,7 +72,14 @@ def remove_inner_chunks(chunks: List[Chunk]):
     for chunk in chunks_by_size[1:]:
         if not any(outer.contains(chunk) for outer in outer_chunks):
             outer_chunks.append(chunk)
-    logger.info("Removed inner chunks", outer_chunk_count=len(outer_chunks))
+
+    outer_count = len(outer_chunks)
+    removed_count = len(chunks) - outer_count
+    logger.info(
+        "Removed inner chunks",
+        outer_chunk_count=outer_count,
+        removed_inner_chunk_count=removed_count,
+    )
     return outer_chunks
 
 
