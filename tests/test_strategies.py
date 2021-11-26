@@ -7,6 +7,8 @@ from unblob.strategies import calculate_unknown_chunks, remove_inner_chunks
 @pytest.mark.parametrize(
     "chunks, expected, explanation",
     [
+        (None, [], "None as chunks (No chunk found)"),
+        ([], [], "Empty list as chunks (No chunk found)"),
         (
             [
                 Chunk(1, 2),
