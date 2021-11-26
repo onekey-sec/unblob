@@ -1,7 +1,7 @@
 from typing import Dict, List, Type
 
 from ..models import Handler
-from .archive import ar, cab, cpio, tar, zip
+from .archive import ar, cab, cpio, stuffit, tar
 from .filesystem import cramfs, squashfs
 
 
@@ -18,6 +18,10 @@ _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
     _make_handler_map(
         ar.ARHandler,
         cab.CABHandler,
+        stuffit.StuffIt5Handler,
+        stuffit.StuffItDeluxeHandler,
+        stuffit.StuffItSITHandler,
+        stuffit.StuffItXHandler,
         tar.TarHandler,
         cpio.PortableASCIIHandler,
         cpio.PortableASCIIWithCRCHandler,
