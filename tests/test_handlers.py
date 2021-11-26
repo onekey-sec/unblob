@@ -35,7 +35,15 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         root=input_dir, path=input_dir, extract_root=tmp_path, depth=DEFAULT_DEPTH
     )
 
-    diff_command = ["diff", "-r", "-u", str(output_dir), str(tmp_path)]
+    diff_command = [
+        "diff",
+        "-r",
+        "-u",
+        "-x",
+        ".gitkeep",
+        str(output_dir),
+        str(tmp_path),
+    ]
     try:
         subprocess.run(diff_command, capture_output=True, check=True, text=True)
     except subprocess.CalledProcessError as exc:
