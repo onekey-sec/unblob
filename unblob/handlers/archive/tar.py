@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import snull
+from ...file_utils import round_up, snull
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -30,8 +30,9 @@ def _get_tar_end_offset(file: io.BufferedIOBase):
     tf = tarfile.TarFile(mode="r", fileobj=file)
     last_member = tf.getmembers()[-1]
     last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
-    end_offset = last_member.offset + HEADER_SIZE + last_file_size + END_BLOCK_SIZE
-    return end_offset
+    last_offset = last_member.offset + HEADER_SIZE + last_file_size + END_BLOCK_SIZE
+    padded_end_offset = round_up(last_offset, tarfile.RECORDSIZE)
+    return padded_end_offset
 
 
 class TarHandler(StructHandler):
@@ -85,7 +86,6 @@ class TarHandler(StructHandler):
 
         file.seek(start_offset)
         end_offset = _get_tar_end_offset(file)
-
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
 
     @staticmethod
