@@ -27,12 +27,11 @@ def test_round_up(size, alignment, result):
     assert round_up(size, alignment) == result
 
 
-@pytest.fixture()
-def fake_file() -> io.BytesIO:
-    return io.BytesIO(b"0123456789abcdefghijklmnopqrst")
-
-
 class TestLimitedStartReader:
+    @pytest.fixture
+    def fake_file(self) -> io.BytesIO:
+        return io.BytesIO(b"0123456789abcdefghijklmnopqrst")
+
     def test_seek_forward(self, fake_file):
         reader = LimitedStartReader(fake_file, 5)
         reader.seek(10)
