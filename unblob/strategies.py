@@ -1,4 +1,3 @@
-import io
 import itertools
 from operator import attrgetter, itemgetter
 from pathlib import Path
@@ -16,9 +15,7 @@ from .models import Chunk, UnknownChunk
 logger = get_logger()
 
 
-def search_chunks_by_priority(  # noqa: C901
-    path: Path, file: io.BufferedReader, file_size: int
-) -> List[Chunk]:
+def search_chunks_by_priority(path: Path, file_size: int) -> List[Chunk]:  # noqa: C901
     all_chunks = []
 
     for priority_level, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
@@ -39,7 +36,7 @@ def search_chunks_by_priority(  # noqa: C901
                     identifier=identifier,
                 )
                 real_offset = offset + handler.YARA_MATCH_OFFSET
-                limited_reader = LimitedStartReader(file, real_offset)
+                limited_reader = LimitedStartReader(path, real_offset)
                 chunk = handler.calculate_chunk(limited_reader, real_offset)
 
                 # We found some random bytes this handler couldn't parse
@@ -132,13 +129,13 @@ def extract_with_priority(
     root: Path, path: Path, extract_root: Path, file_size: int
 ) -> Generator[Path, None, None]:
 
-    with path.open("rb") as file:
-        all_chunks = search_chunks_by_priority(path, file, file_size)
-        outer_chunks = remove_inner_chunks(all_chunks)
-        unknown_chunks = calculate_unknown_chunks(outer_chunks, file_size)
-        if unknown_chunks:
-            logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+    all_chunks = search_chunks_by_priority(path, file_size)
+    outer_chunks = remove_inner_chunks(all_chunks)
+    unknown_chunks = calculate_unknown_chunks(outer_chunks, file_size)
+    if unknown_chunks:
+        logger.warning("Found unknown Chunks", chunks=unknown_chunks)
 
+    with path.open("rb") as file:
         for chunk in outer_chunks:
             extract_dir = make_extract_dir(root, path, extract_root)
             carved_path = carve_chunk_to_file(extract_dir, file, chunk)

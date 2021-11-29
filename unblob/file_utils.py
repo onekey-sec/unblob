@@ -2,6 +2,7 @@ import enum
 import io
 import math
 import os
+import pathlib
 import struct
 
 from dissect.cstruct import cstruct
@@ -65,10 +66,13 @@ class LimitedStartReader(io.BufferedIOBase):
     enforces that seekeng earlier than the start offset is not possible.
     """
 
-    def __init__(self, file: io.BufferedIOBase, start: int):
-        self._file = file
+    def __init__(self, path: pathlib.Path, start: int) -> None:
+        self._file = path.open("rb")
         self._start = start
         self._file.seek(start)
+
+    def __del__(self) -> None:
+        self._file.close()
 
     def seek(self, offset: int, whence=io.SEEK_SET):
         new_pos = self._file.seek(offset, whence)
