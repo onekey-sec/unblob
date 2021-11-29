@@ -19,6 +19,7 @@ class _CPIOHandlerBase(StructHandler):
     """
 
     _PAD_ALIGN: int
+    _FILE_PAD_ALIGN: int = 512
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -55,6 +56,10 @@ class _CPIOHandlerBase(StructHandler):
             # 4-byte boundary already, but if we are not for some reason, then we just
             # need to round up again.
             offset += self._pad_content(header, c_filesize, c_namesize)
+
+        # Add padding that could exists between the cpio trailer and the end-of-file.
+        # cpio aligns the file to 512 bytes
+        offset = round_up(offset, self._FILE_PAD_ALIGN)
 
         return ValidChunk(
             start_offset=start_offset,
