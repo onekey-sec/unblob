@@ -1,5 +1,4 @@
 import io
-import itertools
 from operator import attrgetter, itemgetter
 from pathlib import Path
 from typing import Generator, List
@@ -10,6 +9,7 @@ from .extractor import carve_chunk_to_file, extract_with_command, make_extract_d
 from .file_utils import LimitedStartReader
 from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
+from .iter_utils import pairwise
 from .logging import format_hex
 from .models import Chunk, UnknownChunk
 
@@ -35,9 +35,8 @@ def search_chunks_by_priority(  # noqa: C901
             for offset, identifier, string_data in sorted_matches:
                 real_offset = offset + handler.YARA_MATCH_OFFSET
 
-                for chunk in all_chunks:
-                    if chunk.contains_offset(real_offset):
-                        continue
+                if any(chunk.contains_offset(real_offset) for chunk in all_chunks):
+                    continue
 
                 logger.info(
                     "Calculating chunk for YARA match",
@@ -46,8 +45,14 @@ def search_chunks_by_priority(  # noqa: C901
                     identifier=identifier,
                 )
                 limited_reader = LimitedStartReader(file, real_offset)
-                chunk = handler.calculate_chunk(limited_reader, real_offset)
 
+                try:
+                    chunk = handler.calculate_chunk(limited_reader, real_offset)
+                except Exception as exc:
+                    logger.error(
+                        "Unhandled Exception during chunk calculation", exc_info=exc
+                    )
+                    continue
                 # We found some random bytes this handler couldn't parse
                 if chunk is None:
                     continue
@@ -83,14 +88,6 @@ def remove_inner_chunks(chunks: List[Chunk]):
         removed_inner_chunk_count=removed_count,
     )
     return outer_chunks
-
-
-def pairwise(iterable):
-    # Copied from Python 3.10
-    # pairwise('ABCDEFG') --> AB BC CD DE EF FG
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
 
 
 def calculate_unknown_chunks(chunks: List[Chunk], file_size: int) -> List[UnknownChunk]:
