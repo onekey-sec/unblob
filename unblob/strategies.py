@@ -46,8 +46,14 @@ def search_chunks_by_priority(  # noqa: C901
                     identifier=identifier,
                 )
                 limited_reader = LimitedStartReader(file, real_offset)
-                chunk = handler.calculate_chunk(limited_reader, real_offset)
 
+                try:
+                    chunk = handler.calculate_chunk(limited_reader, real_offset)
+                except Exception as exc:
+                    logger.error(
+                        "Unhandled Exception during chunk calculation", exc_info=exc
+                    )
+                    continue
                 # We found some random bytes this handler couldn't parse
                 if chunk is None:
                     continue
