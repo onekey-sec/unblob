@@ -1,5 +1,4 @@
 import io
-import itertools
 from operator import attrgetter, itemgetter
 from pathlib import Path
 from typing import Generator, List
@@ -10,6 +9,7 @@ from .extractor import carve_chunk_to_file, extract_with_command, make_extract_d
 from .file_utils import LimitedStartReader
 from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
+from .iter_utils import pairwise
 from .logging import format_hex
 from .models import Chunk, UnknownChunk
 
@@ -83,14 +83,6 @@ def remove_inner_chunks(chunks: List[Chunk]):
         removed_inner_chunk_count=removed_count,
     )
     return outer_chunks
-
-
-def pairwise(iterable):
-    # Copied from Python 3.10
-    # pairwise('ABCDEFG') --> AB BC CD DE EF FG
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b)
 
 
 def calculate_unknown_chunks(chunks: List[Chunk], file_size: int) -> List[UnknownChunk]:
