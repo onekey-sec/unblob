@@ -17,6 +17,8 @@ attrs = "^21.2.0"
 structlog = "^21.2.0"
 arpy = "^2.2.0"
 rarfile = "^4.0"
+ubi-reader = "^0.7.0"
+python-lzo = "^1.12"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"

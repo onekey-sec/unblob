@@ -56,6 +56,11 @@ def find_first(
         marker = data.find(pattern)
         if marker != -1:
             return marker + bytes_searched
+        if len(data) <= len(pattern):
+            # The length that we read from the file is the same length or less than as the pattern
+            # we're looking for, and we didn't find the pattern in there. If we don't return -1
+            # here, we'll end up in an infinite loop.
+            return -1
         file.seek(-compensation, os.SEEK_CUR)
         bytes_searched += chunk_size - compensation
 
@@ -122,3 +127,16 @@ class StructParser:
         cparser = self.cparser_le if endian is Endian.LITTLE else self.cparser_be
         struct_parser = getattr(cparser, struct_name)
         return struct_parser(file)
+
+
+def get_endian(
+    file: io.BufferedIOBase, big_endian_magic: int, read_bytes: int = 4
+) -> Endian:
+    """Read the magic and derive endianness from it by comparing the big endian magic.
+    It reads read_bytes number of bytes and seeks back after that.
+    """
+    magic_bytes = file.read(read_bytes)
+    file.seek(-1 * read_bytes, io.SEEK_CUR)
+    magic = convert_int32(magic_bytes, Endian.BIG)
+    endian = Endian.BIG if magic == big_endian_magic else Endian.LITTLE
+    return endian

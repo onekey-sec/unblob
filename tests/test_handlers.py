@@ -37,14 +37,19 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
 
     diff_command = [
         "diff",
-        "-r",
-        "-u",
-        "-x",
+        "--recursive",
+        "--unified",
+        # Non-unicode files would produce garbage output
+        # showing file names which are different should be helpful
+        "--brief",
+        "--exclude",
         ".gitkeep",
         str(output_dir),
         str(tmp_path),
     ]
+
     try:
         subprocess.run(diff_command, capture_output=True, check=True, text=True)
     except subprocess.CalledProcessError as exc:
-        pytest.fail(exc.stdout)
+        runnable_diff_command = " ".join(diff_command)
+        pytest.fail(f"\nDiff command: {runnable_diff_command}\n{exc.stdout}\n")
