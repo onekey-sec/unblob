@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from dissect.cstruct import Instance
 
-from ...file_utils import Endian, convert_int32
+from ...file_utils import Endian, convert_int32, get_endian
 from ...models import StructHandler, ValidChunk
 
 BIG_ENDIAN_MAGIC = 0x28_CD_3D_45
@@ -41,7 +41,7 @@ class CramFSHandler(StructHandler):
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
-        endian = self._get_endian(file)
+        endian = get_endian(file, BIG_ENDIAN_MAGIC)
         header = self.parse_header(file, endian)
         valid_signature = header.signature == b"Compressed ROMFS"
 
@@ -50,13 +50,6 @@ class CramFSHandler(StructHandler):
                 start_offset=start_offset,
                 end_offset=start_offset + header.size,
             )
-
-    def _get_endian(self, file: io.BufferedIOBase) -> Endian:
-        magic_bytes = file.read(4)
-        magic = convert_int32(magic_bytes, Endian.BIG)
-        endian = Endian.BIG if magic == BIG_ENDIAN_MAGIC else Endian.LITTLE
-        file.seek(-4, io.SEEK_CUR)
-        return endian
 
     def _is_crc_valid(
         self,
