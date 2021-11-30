@@ -33,12 +33,13 @@ def search_chunks_by_priority(  # noqa: C901
             match = result.match
             sorted_matches = sorted(match.strings, key=itemgetter(0))
             for offset, identifier, string_data in sorted_matches:
+                real_offset = offset + handler.YARA_MATCH_OFFSET
                 logger.info(
                     "Calculating chunk for YARA match",
                     start_offset=format_hex(offset),
+                    real_offset=format_hex(real_offset),
                     identifier=identifier,
                 )
-                real_offset = offset + handler.YARA_MATCH_OFFSET
                 limited_reader = LimitedStartReader(file, real_offset)
                 chunk = handler.calculate_chunk(limited_reader, real_offset)
 
