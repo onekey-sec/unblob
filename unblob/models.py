@@ -54,6 +54,9 @@ class Chunk:
             and self.end_offset >= other.end_offset
         )
 
+    def contains_offset(self, offset: int) -> bool:
+        return self.start_offset <= offset < self.end_offset
+
     def __repr__(self):
         return self.range_hex
 
