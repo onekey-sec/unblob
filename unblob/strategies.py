@@ -31,7 +31,7 @@ def search_chunks_by_priority(  # noqa: C901
         for result in yara_results:
             handler = result.handler
             match = result.match
-            sorted_matches = sorted(match.strings, key=itemgetter(0), reverse=True)
+            sorted_matches = sorted(match.strings, key=itemgetter(0))
             for offset, identifier, string_data in sorted_matches:
                 logger.info(
                     "Calculating chunk for YARA match",
