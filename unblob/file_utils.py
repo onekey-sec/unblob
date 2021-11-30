@@ -56,6 +56,11 @@ def find_first(
         marker = data.find(pattern)
         if marker != -1:
             return marker + bytes_searched
+        if len(data) <= len(pattern):
+            # The length that we read from the file is the same length or less than as the pattern
+            # we're looking for, and we didn't find the pattern in there. If we don't return -1
+            # here, we'll end up in an infinite loop.
+            return -1
         file.seek(-compensation, os.SEEK_CUR)
         bytes_searched += chunk_size - compensation
 
