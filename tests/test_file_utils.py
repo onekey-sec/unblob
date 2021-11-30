@@ -135,6 +135,7 @@ class TestConvertInt32:
     "content, pattern, expected_position",
     (
         pytest.param(b"", b"not-found-pattern", -1, id="not_found"),
+        pytest.param(b"some", b"not-found", -1, id="smaller_data_than_pattern"),
         pytest.param(b"pattern_12345", b"pattern", 0, id="pattern_at_beginning"),
         pytest.param(b"01234_pattern", b"pattern", 6, id="pattern_at_the_end"),
         pytest.param(b"01234_pattern5678", b"pattern", 6, id="pattern_in_middle"),
