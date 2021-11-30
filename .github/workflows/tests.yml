@@ -21,7 +21,7 @@ jobs:
 
       - name: Install 3rd party from apt
         run: |
-            sudo apt install unar
+            sudo apt install unar zlib1g-dev liblzo2-dev
 
       - name: Run pytest
         # TODO: Dummy coverage (branch: 0%) is needed for the pass rate. Increase this
