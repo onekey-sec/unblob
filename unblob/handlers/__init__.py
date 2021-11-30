@@ -2,7 +2,7 @@ from typing import Dict, List, Type
 
 from ..models import Handler
 from .archive import ar, arc, cab, cpio, rar, sevenzip, tar, zip
-from .filesystem import cramfs, squashfs, ubi
+from .filesystem import cramfs, fat, squashfs, ubi
 
 
 def _make_handler_map(*handlers: Type[Handler]) -> Dict[str, Handler]:
@@ -12,6 +12,7 @@ def _make_handler_map(*handlers: Type[Handler]) -> Dict[str, Handler]:
 _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
     _make_handler_map(
         cramfs.CramFSHandler,
+        fat.FATHandler,
         squashfs.SquashFSv3Handler,
         squashfs.SquashFSv4Handler,
         ubi.UBIHandler,
