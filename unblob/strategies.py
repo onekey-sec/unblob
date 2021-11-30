@@ -35,9 +35,8 @@ def search_chunks_by_priority(  # noqa: C901
             for offset, identifier, string_data in sorted_matches:
                 real_offset = offset + handler.YARA_MATCH_OFFSET
 
-                for chunk in all_chunks:
-                    if chunk.contains_offset(real_offset):
-                        continue
+                if any(chunk.contains_offset(real_offset) for chunk in all_chunks):
+                    continue
 
                 logger.info(
                     "Calculating chunk for YARA match",
