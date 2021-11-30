@@ -31,14 +31,20 @@ def search_chunks_by_priority(  # noqa: C901
         for result in yara_results:
             handler = result.handler
             match = result.match
-            sorted_matches = sorted(match.strings, key=itemgetter(0), reverse=True)
+            sorted_matches = sorted(match.strings, key=itemgetter(0))
             for offset, identifier, string_data in sorted_matches:
+                real_offset = offset + handler.YARA_MATCH_OFFSET
+
+                for chunk in all_chunks:
+                    if chunk.contains_offset(real_offset):
+                        continue
+
                 logger.info(
                     "Calculating chunk for YARA match",
                     start_offset=format_hex(offset),
+                    real_offset=format_hex(real_offset),
                     identifier=identifier,
                 )
-                real_offset = offset + handler.YARA_MATCH_OFFSET
                 limited_reader = LimitedStartReader(file, real_offset)
                 chunk = handler.calculate_chunk(limited_reader, real_offset)
 
@@ -54,10 +60,6 @@ def search_chunks_by_priority(  # noqa: C901
                 log = logger.bind(chunk=chunk, handler=handler.NAME)
                 log.info("Found valid chunk")
                 all_chunks.append(chunk)
-
-                if chunk.size == file_size:
-                    log.info("This Chunk represents the whole file")
-                    return [chunk]
 
     return all_chunks
 
