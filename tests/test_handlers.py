@@ -39,6 +39,9 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         "diff",
         "--recursive",
         "--unified",
+        # Non-unicode files would produce garbage output
+        # showing file names which are different should be helpful
+        "--brief",
         "--exclude",
         ".gitkeep",
         str(output_dir),
