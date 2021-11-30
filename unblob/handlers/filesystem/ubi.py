@@ -1,5 +1,4 @@
 import io
-import os
 import statistics
 from typing import List, Optional
 
@@ -135,7 +134,7 @@ class UBIHandler(Handler):
         while True:
             start_find = file.tell()
             offset = find_first(file, self._UBI_EC_HEADER)
-            file.seek(offset + len(self._UBI_EC_HEADER), os.SEEK_CUR)
+            file.seek(offset + len(self._UBI_EC_HEADER) + start_find)
             if offset == -1:
                 break
             all_ubi_eraseblock_offsets.append(start_find + offset)
