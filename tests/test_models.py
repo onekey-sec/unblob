@@ -20,3 +20,15 @@ class TestChunk:
     def test_range_hex(self):
         chunk = UnknownChunk(start_offset=3, end_offset=10)
         assert chunk.range_hex == "0x3-0xa"
+
+    @pytest.mark.parametrize(
+        "chunk, offset, expected",
+        [
+            pytest.param(Chunk(0x1, 0x2), 0x0, False, id="offset_before_chunk"),
+            pytest.param(Chunk(0x0, 0x2), 0x0, True, id="offset_start_of_chunk"),
+            pytest.param(Chunk(0x0, 0x2), 0x1, True, id="offset_inside_chunk"),
+            pytest.param(Chunk(0x0, 0x2), 0x2, False, id="offset_after"),
+        ],
+    )
+    def test_contains_offset(self, chunk, offset, expected):
+        assert expected is chunk.contains_offset(offset)
