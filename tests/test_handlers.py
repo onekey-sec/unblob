@@ -7,18 +7,23 @@ Each of the test folders should contain 2 things:
 - The expected output in the __output__ folder.
 """
 
+import inspect
 import subprocess
 from pathlib import Path
 
 import pytest
 
+from unblob import handlers
 from unblob.processing import DEFAULT_DEPTH, process_file
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
 TEST_INPUT_DIRS = list(TEST_DATA_PATH.glob("**/__input__"))
 TEST_CASE_DIRS = [p.parent for p in TEST_INPUT_DIRS]
 TEST_OUTPUT_DIRS = [p / "__output__" for p in TEST_CASE_DIRS]
-TEST_IDS = [p.name for p in TEST_CASE_DIRS]
+TEST_IDS = [
+    f"{str(p.relative_to(TEST_DATA_PATH)).replace('/', '.')}" for p in TEST_CASE_DIRS
+]
+HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
 
 
 @pytest.mark.parametrize(
@@ -53,3 +58,30 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
     except subprocess.CalledProcessError as exc:
         runnable_diff_command = " ".join(diff_command)
         pytest.fail(f"\nDiff command: {runnable_diff_command}\n{exc.stdout}\n")
+
+
+@pytest.mark.parametrize(
+    "handler",
+    (
+        pytest.param(handler, id=handler.NAME)
+        for handler_map in handlers._ALL_MODULES_BY_PRIORITY
+        for handler in handler_map.values()
+    ),
+)
+def test_missing_handlers_integrations_tests(handler):
+    handler_module_path = Path(inspect.getfile(handler.__class__))
+    handler_test_path = handler_module_path.relative_to(
+        HANDLERS_PACKAGE_PATH
+    ).with_suffix("")
+
+    if handler.NAME == handler_test_path.name:
+        # when there is 1 handler class in the handler module, with the same NAME as the module
+        expected_test_path = handler_test_path
+    else:
+        expected_test_path = handler_test_path.joinpath(handler.NAME)
+
+    test_path = TEST_DATA_PATH.joinpath(expected_test_path)
+    if not test_path.exists():
+        pytest.fail(
+            f"Missing test for handler: {handler.NAME}. Searched in: {test_path}"
+        )
