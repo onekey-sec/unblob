@@ -2,7 +2,7 @@ from typing import Dict, List, Type
 
 from ..models import Handler
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, tar, zip
-from .filesystem import cramfs, fat, squashfs, ubi
+from .filesystem import cramfs, fat, iso9660, squashfs, ubi
 
 
 def _make_handler_map(*handlers: Type[Handler]) -> Dict[str, Handler]:
@@ -32,5 +32,6 @@ _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
         rar.RarHandler,
         zip.ZIPHandler,
         dmg.DMGHandler,
+        iso9660.ISO9660FSHandler,
     ),
 ]
