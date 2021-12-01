@@ -26,6 +26,7 @@ class ARCHandler(StructHandler):
                 - our time definition allowes times between 00:00 and 24:60.
             */
             $arc_magic = /\x1A[\x00-\x07][\S]{12}[\x00|\xf0-\xff][\x00-\xff]{4}[\x00-\x8d][\x00-\x8f][\x00-\xc7][\x00-\x9f]/
+
         condition:
             $arc_magic
     """
@@ -53,7 +54,13 @@ class ARCHandler(StructHandler):
         offset = start_offset
         while True:
             file.seek(offset)
-            if file.read(2) == END_HEADER:
+            try:
+                read_bytes = file.read(2)
+            except EOFError:
+                logger.warning("Potential ARC header is missing")
+                return
+
+            if read_bytes == END_HEADER:
                 offset += 2
                 break
             file.seek(offset)
