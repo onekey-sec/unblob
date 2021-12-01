@@ -119,6 +119,9 @@ class FATHandler(StructHandler):
             logger.debug("FAT32 header parsed", header=header)
             sector_count = header.TotSec32
 
+        if sector_count == 0x0:
+            sector_count = header.common.TotSectors
+
         size = header.common.BytesPerSec * sector_count
 
         return ValidChunk(
