@@ -54,18 +54,8 @@ class FATHandler(StructHandler):
             uint16 NumHeads;    // Number of heads for interrupt 0x13
         }
 
-        // BIOS params for FAT12.
-        struct fat12_bootsec {
-            bios_param_common common;
-
-            uint16 NumHidden;
-
-            char bootstrap[480];
-            uint16 signature;
-        }
-
         // BIOS params for FAT16.
-        struct fat16_bootsec {
+        struct fat12_16_bootsec {
             bios_param_common common;
 
             uint32 NumHidden;
@@ -73,9 +63,9 @@ class FATHandler(StructHandler):
             uint8 DrvNum;
             uint8 Reserved1;
             uint8 BootSig; // If it's 0x29 (or 0x28 on NT), means that the next 3 fields are present
-            // char VolID[4];
-            // char VolLab[11];
-            // char FileSysType[8];
+            char VolID[4];
+            char VolLab[11];
+            char FileSysType[8]; // Filesystem type (E.g. "FAT12   ", "FAT16   ", "FAT     ", or all zero.)
         }
 
         // BIOS params for FAT32.
@@ -107,19 +97,11 @@ class FATHandler(StructHandler):
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
-        header = self.cparser_le.bios_param_common(file)
+        header = self.cparser_le.fat12_16_bootsec(file)
         logger.debug("FAT header parsed", header=header)
 
-        file.seek(start_offset)
-        if header.FATSz16 == 0x0 and header.TotSectors == 0x0:
-            logger.debug("FATSz16 is null and TotSec16 is null, assuming FAT32")
-            header = self.cparser_le.fat32_bootsec(file)
-            sector_count = header.TotSec32
-
-        else:
+        if header.FileSysType in (b"FAT12   ", b"FAT16   "):
             logger.debug("Assuming FAT12/16")
-            header = self.cparser_le.fat16_bootsec(file)
-            logger.debug("fat16_bootsec header parsed", header=header)
             if header.common.TotSectors == 0:
                 logger.debug(
                     "Null TotSectors, so we'll use NumSectors from the FAT16 extended header."
@@ -129,6 +111,13 @@ class FATHandler(StructHandler):
             else:
                 logger.debug("Non-null TotSectors, this is may be FAT12")
                 sector_count = header.common.TotSectors
+
+        else:
+            logger.debug("Assuming FAT32")
+            file.seek(start_offset)
+            header = self.cparser_le.fat32_bootsec(file)
+            logger.debug("FAT32 header parsed", header=header)
+            sector_count = header.TotSec32
 
         size = header.common.BytesPerSec * sector_count
 
