@@ -2,7 +2,6 @@ from pathlib import Path
 
 from structlog import get_logger
 
-from .logging import format_hex
 from .strategies import extract_with_priority
 
 logger = get_logger()
@@ -17,9 +16,9 @@ def process_file(
     max_depth: int,
     current_depth: int = 0,
 ):
-    is_initial_file = current_depth == 0
     log = logger.bind(path=path)
-    log.info("Start processing file", _absolute_path=is_initial_file)
+    init_path = path if current_depth != 0 else str(path)
+    log.info("Start processing file", path=init_path)
 
     if current_depth >= max_depth:
         log.info("Reached maximum depth, stop further processing")
@@ -40,10 +39,6 @@ def process_file(
         log.info("Ignoring empty file")
         return
 
-    log.info(
-        "Calculated file size",
-        size=format_hex(file_size),
-        _absolute_path=is_initial_file,
-    )
+    log.info("Calculated file size", size=file_size, path=init_path)
     for new_path in extract_with_priority(root, path, extract_root, file_size):
         process_file(extract_root, new_path, extract_root, max_depth, current_depth + 1)

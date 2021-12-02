@@ -8,6 +8,7 @@ Each of the test folders should contain 2 things:
 """
 
 import inspect
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -59,7 +60,7 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
     try:
         subprocess.run(diff_command, capture_output=True, check=True, text=True)
     except subprocess.CalledProcessError as exc:
-        runnable_diff_command = " ".join(diff_command)
+        runnable_diff_command = shlex.join(diff_command)
         pytest.fail(f"\nDiff command: {runnable_diff_command}\n{exc.stdout}\n")
 
 

@@ -12,7 +12,7 @@ logger = get_logger()
 
 # The state transitions are:
 #
-# file ──► YaraMatchResult ──► Chunk ──► ValidChunk
+# file ──► YaraMatchResult ──► ValidChunk
 #
 
 
@@ -34,7 +34,6 @@ class Chunk:
 
     start_offset: int
     end_offset: int
-    handler: "Handler" = attr.ib(init=False, eq=False)
 
     @property
     def size(self) -> int:
@@ -48,7 +47,7 @@ class Chunk:
     def range_dec(self) -> str:
         return f"{self.start_offset} - {self.end_offset}"
 
-    def contains(self, other: "Chunk"):
+    def contains(self, other: "Chunk") -> bool:
         return (
             self.start_offset < other.start_offset
             and self.end_offset >= other.end_offset
@@ -57,13 +56,15 @@ class Chunk:
     def contains_offset(self, offset: int) -> bool:
         return self.start_offset <= offset < self.end_offset
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.range_hex
 
 
 @attr.define(repr=False)
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
+
+    handler: "Handler" = attr.ib(init=False, eq=False)
 
 
 @attr.define(repr=False)
