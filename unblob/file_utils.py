@@ -2,6 +2,7 @@ import enum
 import io
 import math
 import os
+import shutil
 import struct
 from typing import Iterator
 
@@ -71,7 +72,7 @@ def iterate_file(
     start_offset: int,
     size: int,
     # default buffer size in shutil for unix based systems
-    buffer_size: int = 64 * 1024,
+    buffer_size: int = shutil.COPY_BUFSIZE,  # type: ignore
 ) -> Iterator[bytes]:
 
     if buffer_size <= 0:
