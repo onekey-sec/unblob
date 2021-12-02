@@ -38,7 +38,7 @@ def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=len(files))
     for path in files:
-        process_file(path.parent, path, extract_root, depth)
+        process_file(path.parent, path, extract_root, max_depth=depth)
 
 
 def main():
