@@ -10,7 +10,6 @@ from .file_utils import LimitedStartReader
 from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
 from .iter_utils import pairwise
-from .logging import format_hex
 from .models import UnknownChunk, ValidChunk
 
 logger = get_logger()
@@ -40,8 +39,8 @@ def search_chunks_by_priority(  # noqa: C901
 
                 logger.info(
                     "Calculating chunk for YARA match",
-                    start_offset=format_hex(offset),
-                    real_offset=format_hex(real_offset),
+                    start_offset=offset,
+                    real_offset=real_offset,
                     identifier=identifier,
                 )
                 limited_reader = LimitedStartReader(file, real_offset)

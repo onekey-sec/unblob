@@ -20,6 +20,9 @@ def pretty_print_types(extract_root: Path):
             elif isinstance(value, Instance):
                 event_dict[key] = dumpstruct(value, output="string")
 
+            elif isinstance(value, int):
+                event_dict[key] = format_hex(value)
+
         return event_dict
 
     return convert_type

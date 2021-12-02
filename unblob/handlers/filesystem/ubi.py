@@ -6,7 +6,6 @@ from structlog import get_logger
 
 from ...file_utils import find_first, get_endian
 from ...iter_utils import get_intervals
-from ...logging import format_hex
 from ...models import Handler, StructHandler, ValidChunk
 
 logger = get_logger()
@@ -164,7 +163,7 @@ class UBIHandler(Handler):
         except PEBSizeNotFound:
             return
 
-        logger.debug("Guessed UBI PEB size", size=format_hex(peb_size))
+        logger.debug("Guessed UBI PEB size", size=peb_size)
 
         file.seek(start_offset)
         # We don't want to parse headers, because we don't know what third party tools are doing,
