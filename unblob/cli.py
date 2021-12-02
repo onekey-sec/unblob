@@ -43,15 +43,20 @@ def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
 
 def main():
     try:
-        ctx = cli.make_context("unblob", sys.argv[1:])
-    except click.ClickException as e:
-        e.show()
-        sys.exit(e.exit_code)
-    except click.exceptions.Exit as e:
-        sys.exit(e.exit_code)
+        try:
+            ctx = cli.make_context("unblob", sys.argv[1:])
+        except click.ClickException as e:
+            e.show()
+            sys.exit(e.exit_code)
+        except click.exceptions.Exit as e:
+            sys.exit(e.exit_code)
 
-    with ctx:
-        cli.invoke(ctx)
+        with ctx:
+            cli.invoke(ctx)
+    except SystemExit as e:
+        sys.exit(e.code)
+    except Exception:
+        logger.exception("Unhandled exception during unblob")
 
 
 if __name__ == "__main__":
