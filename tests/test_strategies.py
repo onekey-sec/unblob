@@ -73,7 +73,7 @@ def test_remove_inner_chunks(
     "chunks, file_size, expected",
     [
         ([], 0, []),
-        ([], 10, [UnknownChunk(0, 0xA)]),
+        ([], 10, []),
         ([ValidChunk(0x0, 0x5)], 5, []),
         ([ValidChunk(0x0, 0x5), ValidChunk(0x5, 0xA)], 10, []),
         ([ValidChunk(0x0, 0x5), ValidChunk(0x5, 0xA)], 12, [UnknownChunk(0xA, 0xC)]),

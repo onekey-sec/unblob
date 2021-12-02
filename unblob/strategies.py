@@ -94,13 +94,10 @@ def calculate_unknown_chunks(
     chunks: List[ValidChunk], file_size: int
 ) -> List[UnknownChunk]:
     """Calculate the empty gaps between chunks."""
-    sorted_by_offset = sorted(chunks, key=attrgetter("start_offset"))
-
-    if file_size == 0:
+    if not chunks or file_size == 0:
         return []
 
-    if not chunks:
-        return [UnknownChunk(0, file_size)]
+    sorted_by_offset = sorted(chunks, key=attrgetter("start_offset"))
 
     unknown_chunks = []
 
