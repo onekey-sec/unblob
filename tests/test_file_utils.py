@@ -1,4 +1,5 @@
 import io
+from typing import List
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,6 +10,7 @@ from unblob.file_utils import (
     StructParser,
     convert_int32,
     find_first,
+    iterate_file,
     round_up,
 )
 
@@ -156,3 +158,44 @@ def test_find_first_smaller_chunksize_than_pattern_doesnt_hang():
     fake_file = io.BytesIO(b"0123456789_pattern")
     with pytest.raises(ValueError):
         find_first(fake_file, b"pattern", chunk_size=0x5)
+
+
+@pytest.mark.parametrize(
+    "content, start_offset, size, buffer_size, expected",
+    (
+        pytest.param(b"", 0, 1, 10, [], id="empty_file"),
+        pytest.param(b"0123456789", 0, 6, 3, [b"012", b"345"], id="from_start"),
+        pytest.param(b"0123456789", 0, 0, 3, [], id="zero_size"),
+        pytest.param(b"0123456789", 0, 5, 3, [b"012", b"34"], id="size_buffersize"),
+        pytest.param(b"0123456789", 0, 5, 100, [b"01234"], id="big_buffersize"),
+        pytest.param(b"0123456789", 0, 10, 10, [b"0123456789"], id="real_all"),
+        pytest.param(b"0123456789", 0, 10, 100, [b"0123456789"], id="big_buffersize"),
+        pytest.param(b"0123456789", 0, 100, 10, [b"0123456789"], id="big_size"),
+        pytest.param(b"0123456789", 5, 3, 2, [b"56", b"7"], id="middle_offset"),
+        pytest.param(b"0123456789", 10, 3, 2, [], id="offset_bigger_than_file"),
+    ),
+)
+def test_iterate_file(
+    content: bytes,
+    start_offset: int,
+    size: int,
+    buffer_size: int,
+    expected: List[bytes],
+):
+    file = io.BytesIO(content)
+    assert list(iterate_file(file, start_offset, size, buffer_size)) == expected
+
+
+@pytest.mark.parametrize(
+    "content, start_offset, size, buffer_size",
+    (
+        pytest.param(b"012345", 0, 3, -1, id="negative_buffer_size"),
+        pytest.param(b"012345", 0, 3, 0, id="zero_buffer_size"),
+    ),
+)
+def test_iterate_file_errors(
+    content: bytes, start_offset: int, size: int, buffer_size: int
+):
+    file = io.BytesIO(content)
+    with pytest.raises(ValueError):
+        list(iterate_file(file, start_offset, size, buffer_size))

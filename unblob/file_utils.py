@@ -3,6 +3,7 @@ import io
 import math
 import os
 import struct
+from typing import Iterator
 
 from dissect.cstruct import cstruct
 
@@ -63,6 +64,36 @@ def find_first(
             return -1
         file.seek(-compensation, os.SEEK_CUR)
         bytes_searched += chunk_size - compensation
+
+
+def iterate_file(
+    file: io.BufferedIOBase,
+    start_offset: int,
+    size: int,
+    # default buffer size in shutil for unix based systems
+    buffer_size: int = 64 * 1024,
+) -> Iterator[bytes]:
+
+    if buffer_size <= 0:
+        raise ValueError(
+            "The file needs to be read until a specific size, so buffer_size must be greater than 0"
+        )
+
+    read_bytes = 0
+    file.seek(start_offset)
+    file_read = file.read
+    while read_bytes < size:
+        remaining = size - read_bytes
+        if remaining < buffer_size:
+            buffer_size = remaining
+        read_bytes += buffer_size
+        data = file_read(buffer_size)
+
+        if data == b"":
+            # We've reached the end of the stream.
+            break
+
+        yield data
 
 
 class LimitedStartReader(io.BufferedIOBase):
