@@ -62,12 +62,7 @@ def extract_with_command(
             logger.error("Extract command failed", stdout=res.stdout, stderr=res.stderr)
 
     except FileNotFoundError:
-        logger.exception(
-            "FileNotFoundError - Can't run extract command. Is the extractor installed?"
-        )
-        raise
-    except Exception:
-        logger.exception("Unhandled exception while trying to run extraction")
+        logger.error("Can't run extract command. Is the extractor installed?")
         raise
 
     return content_dir
