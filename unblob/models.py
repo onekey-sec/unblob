@@ -34,7 +34,6 @@ class Chunk:
 
     start_offset: int
     end_offset: int
-    handler: "Handler" = attr.ib(init=False, eq=False)
 
     @property
     def size(self) -> int:
@@ -64,6 +63,8 @@ class Chunk:
 @attr.define(repr=False)
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
+
+    handler: "Handler" = attr.ib(init=False, eq=False)
 
 
 @attr.define(repr=False)
