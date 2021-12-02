@@ -16,6 +16,19 @@ class Endian(enum.Enum):
     BIG = ">"
 
 
+def bits(file: io.BufferedIOBase) -> Iterator[int]:
+    """bit-wise reading of file in little-endian mode"""
+    try:
+        cur_bytes = file.read(8)
+        while cur_bytes:
+            for b in cur_bytes:
+                for i in range(7, -1, -1):
+                    yield (b >> i) & 1
+            cur_bytes = file.read(8)
+    except EOFError:
+        yield 2
+
+
 def snull(content: bytes):
     """Strip null bytes from the end of the string."""
     return content.rstrip(b"\x00")

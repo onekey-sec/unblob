@@ -1,0 +1,118 @@
+import io
+from typing import List, Optional
+
+from structlog import get_logger
+
+from ...file_utils import Endian, bits, round_up
+from ...models import StructHandler, ValidChunk
+
+logger = get_logger()
+
+BLOCK_HEADER_HI = 0x00003141
+BLOCK_HEADER_LO = 0x59265359
+
+COMPRESSED_MAGIC_LENGTH = 6 * 8
+
+BLOCK_ENDMARK_HI = 0x00001772
+BLOCK_ENDMARK_LO = 0x45385090
+
+FOOTER_SIZE = 10  # 6 bytes magic + 4 bytes CRC
+
+
+class BZip2Handler(StructHandler):
+
+    NAME = "bzip2"
+
+    YARA_RULE = r"""
+        strings:
+            // magic + version + block_size + compressed_magic
+            $magic = /\x42\x5a\x68[\x31-\x39]\x31\x41\x59\x26\x53\x59/
+        condition:
+            $magic
+    """
+
+    C_DEFINITIONS = r"""
+        struct bzip2_header {
+            char magic[2];              // 'BZ' signature/magic number
+            uint8 version;              // 'h' for Bzip2 ('H'uffman coding), '0' for Bzip1 (deprecated)
+            uint8 hundred_k_blocksize;  // '1'..'9' block-size 100 kB-900 kB (uncompressed)
+            char compressed_magic[8];   // 0x314159265359 (BCD (pi))
+            uint32 crc;                 // checksum for this block
+            uint8 randomised;           // 0=>normal, 1=>randomised (deprecated)
+        };
+    """
+    HEADER_STRUCT = "bzip2_header"
+
+    def calculate_chunk(
+        self, file: io.BufferedIOBase, start_offset: int
+    ) -> Optional[ValidChunk]:
+
+        self.parse_header(file, Endian.BIG)
+        end_offset = self.bzip2_recover(file, start_offset)
+
+        return ValidChunk(start_offset=start_offset, end_offset=end_offset)
+
+    def bzip2_recover(self, file: io.BufferedIOBase, start_offset: int):  # noqa: C901
+        """Emulate the behavior of bzip2recover, matching on compressed magic and end of stream
+        magic to identify the end offset of the whole bzip2 chunk.
+        """
+
+        bits_read = 0
+        buff_hi = 0
+        buff_lo = 0
+        curr_block = 0
+        current_block_start = 0
+        current_block_end = 0
+
+        file.seek(start_offset)
+
+        for b in bits(file):
+            bits_read += 1
+            if b == 2:
+                if (bits_read >= current_block_start) and (
+                    bits_read - current_block_start >= 40
+                ):
+                    current_block_end = bits_read - 1
+                    if curr_block > 0:
+                        logger.debug(
+                            "bzip2_recover (incomplete block)",
+                            block_id=curr_block,
+                            block_start=current_block_start,
+                            block_end=current_block_end,
+                        )
+                else:
+                    curr_block -= 1
+                break
+
+            buff_hi = (buff_hi << 1) | (buff_lo >> 31)
+            buff_hi = buff_hi & 0xFFFFFFFF
+            buff_lo = (buff_lo << 1) | (b & 1)
+            buff_lo = buff_lo & 0xFFFFFFFF
+
+            if (
+                (buff_hi & 0x0000FFFF) == BLOCK_HEADER_HI and buff_lo == BLOCK_HEADER_LO
+            ) or (
+                (buff_hi & 0x0000FFFF) == BLOCK_ENDMARK_HI
+                and buff_lo == BLOCK_ENDMARK_LO
+            ):
+                if bits_read > COMPRESSED_MAGIC_LENGTH + 1:
+                    current_block_end = bits_read - (COMPRESSED_MAGIC_LENGTH + 1)
+
+                if curr_block > 0 and (current_block_end - current_block_start) >= 130:
+                    logger.debug(
+                        "bzip2_recover (complete block)",
+                        block_id=curr_block,
+                        block_start=current_block_start,
+                        block_end=current_block_end,
+                    )
+
+                curr_block += 1
+                current_block_start = bits_read
+
+        # blocks are counted in bits but we need an offset in bytes
+        end_block_offset = int(round_up(current_block_end, 8) // 8)
+        return end_block_offset + FOOTER_SIZE
+
+    @staticmethod
+    def make_extract_command(inpath: str, outdir: str) -> List[str]:
+        return ["7z", "x", "-y", inpath, f"-o{outdir}"]
