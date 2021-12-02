@@ -10,6 +10,7 @@ from .file_utils import LimitedStartReader
 from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
 from .iter_utils import pairwise
+from .logging import noformat
 from .models import UnknownChunk, ValidChunk
 
 logger = get_logger()
@@ -21,11 +22,11 @@ def search_chunks_by_priority(  # noqa: C901
     all_chunks = []
 
     for priority_level, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
-        logger.info("Starting priority level", priority_level=priority_level)
+        logger.info("Starting priority level", priority_level=noformat(priority_level))
         yara_results = search_chunks(handlers, path)
 
         if yara_results:
-            logger.info("Found YARA results", count=len(yara_results))
+            logger.info("Found YARA results", count=noformat(len(yara_results)))
 
         for result in yara_results:
             handler = result.handler

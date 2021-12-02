@@ -9,13 +9,27 @@ def format_hex(value: int):
     return f"0x{value:x}"
 
 
+class noformat:
+    """Keep the value from formatting,
+    even if it would match one of the types in pretty_print_types processor.
+    """
+
+    def __init__(self, value):
+        self._value = value
+
+    def get(self):
+        return self._value
+
+
 def pretty_print_types(extract_root: Path):
     def convert_type(logger, method_name: str, event_dict: structlog.types.EventDict):
-        use_absolute_path = event_dict.pop("_absolute_path", False)
         for key, value in event_dict.items():
-            if isinstance(value, Path):
-                path = value if use_absolute_path else value.relative_to(extract_root)
-                event_dict[key] = str(path)
+            if isinstance(value, noformat):
+                event_dict[key] = value.get()
+
+            elif isinstance(value, Path):
+                rel_path = value.relative_to(extract_root)
+                event_dict[key] = str(rel_path)
 
             elif isinstance(value, Instance):
                 event_dict[key] = dumpstruct(value, output="string")
