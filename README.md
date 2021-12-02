@@ -13,9 +13,18 @@ We are using [poetry](https://python-poetry.org/) for managing dependencies.
 
 ### Testing
 
-We are using pytest for running our test suite.
+We are using pytest for running our test suite.\
+We have big integration files in the `tests/integration` directory,
+we are using [Git LFS to track them](https://git-lfs.github.com/).
+You need to install Git LFS first to be able to run the whole test suite:
 
-To run all the tests, run `python -m pytest tests/` in the activated virtualenv.
+```console
+$ sudo apt install git-lfs
+$ git lfs install
+```
+
+After you installed Git LFS, you can run all tests, with
+`python -m pytest tests/` in the activated virtualenv.
 
 ### Linting
 
