@@ -53,6 +53,7 @@ def search_chunks_by_priority(  # noqa: C901
                         "Unhandled Exception during chunk calculation", exc_info=exc
                     )
                     continue
+
                 # We found some random bytes this handler couldn't parse
                 if chunk is None:
                     continue
@@ -62,8 +63,7 @@ def search_chunks_by_priority(  # noqa: C901
                     continue
 
                 chunk.handler = handler
-                log = logger.bind(chunk=chunk, handler=handler.NAME)
-                log.info("Found valid chunk")
+                logger.info("Found valid chunk", chunk=chunk, handler=handler.NAME)
                 all_chunks.append(chunk)
 
     return all_chunks
