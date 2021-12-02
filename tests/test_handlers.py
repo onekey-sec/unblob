@@ -49,6 +49,8 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         "diff",
         "--recursive",
         "--unified",
+        # fix for potential symlinks
+        "--no-dereference",
         # Non-unicode files would produce garbage output
         # showing file names which are different should be helpful
         "--brief",
