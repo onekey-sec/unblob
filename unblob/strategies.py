@@ -1,7 +1,7 @@
 import io
 from operator import attrgetter, itemgetter
 from pathlib import Path
-from typing import Generator, List
+from typing import Iterator, List
 
 from structlog import get_logger
 
@@ -11,14 +11,14 @@ from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
 from .iter_utils import pairwise
 from .logging import format_hex
-from .models import Chunk, UnknownChunk
+from .models import UnknownChunk, ValidChunk
 
 logger = get_logger()
 
 
 def search_chunks_by_priority(  # noqa: C901
     path: Path, file: io.BufferedReader, file_size: int
-) -> List[Chunk]:
+) -> List[ValidChunk]:
     all_chunks = []
 
     for priority_level, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
@@ -69,7 +69,7 @@ def search_chunks_by_priority(  # noqa: C901
     return all_chunks
 
 
-def remove_inner_chunks(chunks: List[Chunk]):
+def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
     """Remove all chunks from the list which are within another bigger chunks."""
     if not chunks:
         return []
@@ -90,7 +90,9 @@ def remove_inner_chunks(chunks: List[Chunk]):
     return outer_chunks
 
 
-def calculate_unknown_chunks(chunks: List[Chunk], file_size: int) -> List[UnknownChunk]:
+def calculate_unknown_chunks(
+    chunks: List[ValidChunk], file_size: int
+) -> List[UnknownChunk]:
     """Calculate the empty gaps between chunks."""
     sorted_by_offset = sorted(chunks, key=attrgetter("start_offset"))
 
@@ -129,7 +131,7 @@ def calculate_unknown_chunks(chunks: List[Chunk], file_size: int) -> List[Unknow
 
 def extract_with_priority(
     root: Path, path: Path, extract_root: Path, file_size: int
-) -> Generator[Path, None, None]:
+) -> Iterator[Path]:
 
     with path.open("rb") as file:
         all_chunks = search_chunks_by_priority(path, file, file_size)

@@ -12,7 +12,7 @@ logger = get_logger()
 
 # The state transitions are:
 #
-# file ──► YaraMatchResult ──► Chunk ──► ValidChunk
+# file ──► YaraMatchResult ──► ValidChunk
 #
 
 
@@ -48,7 +48,7 @@ class Chunk:
     def range_dec(self) -> str:
         return f"{self.start_offset} - {self.end_offset}"
 
-    def contains(self, other: "Chunk"):
+    def contains(self, other: "Chunk") -> bool:
         return (
             self.start_offset < other.start_offset
             and self.end_offset >= other.end_offset
@@ -57,7 +57,7 @@ class Chunk:
     def contains_offset(self, offset: int) -> bool:
         return self.start_offset <= offset < self.end_offset
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.range_hex
 
 
