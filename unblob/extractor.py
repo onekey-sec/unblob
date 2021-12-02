@@ -5,6 +5,7 @@ from pathlib import Path
 
 from structlog import get_logger
 
+from .file_utils import iterate_file
 from .models import Chunk, Handler
 
 logger = get_logger()
@@ -34,10 +35,11 @@ def carve_chunk_to_file(
     chunk_name = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
     logger.info("Extracting chunk", chunk=chunk, extract_dir=extract_dir)
     carved_file_path = extract_dir / chunk_name
-    file.seek(chunk.start_offset)
-    # FIXME: use iterators, don't read the whole file to memory
-    carved_chunk = file.read(chunk.size)
-    carved_file_path.write_bytes(carved_chunk)
+
+    with carved_file_path.open("wb") as f:
+        for data in iterate_file(file, chunk.start_offset, chunk.size):
+            f.write(data)
+
     return carved_file_path
 
 
