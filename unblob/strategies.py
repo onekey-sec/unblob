@@ -12,6 +12,7 @@ from .handlers import _ALL_MODULES_BY_PRIORITY
 from .iter_utils import pairwise
 from .logging import noformat
 from .models import UnknownChunk, ValidChunk
+from .state import exit_code_var
 
 logger = get_logger()
 
@@ -49,6 +50,7 @@ def search_chunks_by_priority(  # noqa: C901
                 try:
                     chunk = handler.calculate_chunk(limited_reader, real_offset)
                 except Exception as exc:
+                    exit_code_var.set(1)
                     logger.error(
                         "Unhandled Exception during chunk calculation", exc_info=exc
                     )
@@ -59,6 +61,7 @@ def search_chunks_by_priority(  # noqa: C901
                     continue
 
                 if chunk.end_offset > file_size or chunk.start_offset < 0:
+                    exit_code_var.set(1)
                     logger.error("Chunk overflows file", chunk=chunk)
                     continue
 
