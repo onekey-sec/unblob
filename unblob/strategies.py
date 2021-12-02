@@ -142,6 +142,7 @@ def extract_with_priority(
 
         for chunk in outer_chunks:
             extract_dir = make_extract_dir(root, path, extract_root)
-            carved_path = carve_chunk_to_file(extract_dir, file, chunk)
+            filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
+            carved_path = carve_chunk_to_file(extract_dir, filename, file, chunk)
             extracted = extract_with_command(extract_dir, carved_path, chunk.handler)
             yield extracted

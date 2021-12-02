@@ -29,12 +29,11 @@ def make_extract_dir(root: Path, path: Path, extract_root: Path) -> Path:
 
 
 def carve_chunk_to_file(
-    extract_dir: Path, file: io.BufferedReader, chunk: Chunk
+    extract_dir: Path, filename: str, file: io.BufferedReader, chunk: Chunk
 ) -> Path:
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
-    chunk_name = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
-    logger.info("Extracting chunk", chunk=chunk, extract_dir=extract_dir)
-    carved_file_path = extract_dir / chunk_name
+    carved_file_path = extract_dir / filename
+    logger.info("Extracting chunk", path=carved_file_path, chunk=chunk)
 
     with carved_file_path.open("wb") as f:
         for data in iterate_file(file, chunk.start_offset, chunk.size):
