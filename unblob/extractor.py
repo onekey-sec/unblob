@@ -7,7 +7,7 @@ from typing import Iterator, List
 from structlog import get_logger
 
 from .file_utils import iterate_file
-from .models import Chunk, Handler, ValidChunk
+from .models import Chunk, Handler, UnknownChunk, ValidChunk
 from .state import exit_code_var
 
 logger = get_logger()
@@ -69,6 +69,18 @@ def extract_with_command(
         raise
 
     return content_dir
+
+
+def carve_unknown_chunks(
+    extract_dir: Path, file: io.BufferedIOBase, unknown_chunks: List[UnknownChunk]
+):
+    if not unknown_chunks:
+        return
+
+    logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+    for chunk in unknown_chunks:
+        filename = f"{chunk.start_offset}-{chunk.end_offset}.unknown"
+        carve_chunk_to_file(extract_dir, filename, file, chunk)
 
 
 def extract_valid_chunks(
