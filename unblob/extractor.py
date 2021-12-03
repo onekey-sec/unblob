@@ -30,18 +30,11 @@ def make_extract_dir(root: Path, path: Path, extract_root: Path) -> Path:
     return extract_dir.expanduser().resolve()
 
 
-def carve_chunk_to_file(
-    extract_dir: Path, filename: str, file: io.BufferedIOBase, chunk: Chunk
-) -> Path:
+def carve_chunk_to_file(carve_path: Path, file: io.BufferedIOBase, chunk: Chunk):
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
-    carved_file_path = extract_dir / filename
-    logger.info("Extracting chunk", path=carved_file_path, chunk=chunk)
-
-    with carved_file_path.open("wb") as f:
+    with carve_path.open("wb") as f:
         for data in iterate_file(file, chunk.start_offset, chunk.size):
             f.write(data)
-
-    return carved_file_path
 
 
 def extract_with_command(
@@ -80,7 +73,9 @@ def carve_unknown_chunks(
     logger.warning("Found unknown Chunks", chunks=unknown_chunks)
     for chunk in unknown_chunks:
         filename = f"{chunk.start_offset}-{chunk.end_offset}.unknown"
-        carve_chunk_to_file(extract_dir, filename, file, chunk)
+        carve_path = extract_dir / filename
+        logger.info("Extracting unknown chunk", path=carve_path, chunk=chunk)
+        carve_chunk_to_file(carve_path, file, chunk)
 
 
 def extract_valid_chunks(
@@ -88,6 +83,8 @@ def extract_valid_chunks(
 ) -> Iterator[Path]:
     for chunk in valid_chunks:
         filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
-        carved_path = carve_chunk_to_file(extract_dir, filename, file, chunk)
-        extracted = extract_with_command(extract_dir, carved_path, chunk.handler)
+        carve_path = extract_dir / filename
+        logger.info("Extracting valid chunk", path=carve_path, chunk=chunk)
+        carve_chunk_to_file(carve_path, file, chunk)
+        extracted = extract_with_command(extract_dir, carve_path, chunk.handler)
         yield extracted
