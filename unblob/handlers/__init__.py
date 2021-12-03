@@ -2,6 +2,7 @@ from typing import Dict, List, Type
 
 from ..models import Handler
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, tar, zip
+from .compression import lzo
 from .filesystem import cramfs, fat, iso9660, squashfs, ubi
 
 
@@ -33,5 +34,8 @@ _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
         zip.ZIPHandler,
         dmg.DMGHandler,
         iso9660.ISO9660FSHandler,
+    ),
+    _make_handler_map(
+        lzo.LZOHandler,
     ),
 ]
