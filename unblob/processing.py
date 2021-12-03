@@ -17,8 +17,7 @@ def process_file(
     current_depth: int = 0,
 ):
     log = logger.bind(path=path)
-    init_path = path if current_depth != 0 else str(path)
-    log.info("Start processing file", path=init_path)
+    log.info("Start processing file")
 
     if current_depth >= max_depth:
         log.info("Reached maximum depth, stop further processing")
@@ -39,6 +38,6 @@ def process_file(
         log.info("Ignoring empty file")
         return
 
-    log.info("Calculated file size", size=file_size, path=init_path)
+    log.info("Calculated file size", size=file_size)
     for new_path in extract_with_priority(root, path, extract_root, file_size):
         process_file(extract_root, new_path, extract_root, max_depth, current_depth + 1)

@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Any
 
 import structlog
 from dissect.cstruct import Instance, dumpstruct
@@ -21,21 +22,30 @@ class noformat:
         return self._value
 
 
+def _format_message(value: Any, extract_root: Path) -> Any:
+    if isinstance(value, noformat):
+        return value.get()
+
+    elif isinstance(value, Path):
+        try:
+            return str(value.relative_to(extract_root))
+        except ValueError:
+            # original files given to unblob may not be relative to extract_root
+            return str(value)
+
+    elif isinstance(value, Instance):
+        return dumpstruct(value, output="string")
+
+    elif isinstance(value, int):
+        return format_hex(value)
+
+    return value
+
+
 def pretty_print_types(extract_root: Path):
     def convert_type(logger, method_name: str, event_dict: structlog.types.EventDict):
         for key, value in event_dict.items():
-            if isinstance(value, noformat):
-                event_dict[key] = value.get()
-
-            elif isinstance(value, Path):
-                rel_path = value.relative_to(extract_root)
-                event_dict[key] = str(rel_path)
-
-            elif isinstance(value, Instance):
-                event_dict[key] = dumpstruct(value, output="string")
-
-            elif isinstance(value, int):
-                event_dict[key] = format_hex(value)
+            event_dict[key] = _format_message(value, extract_root)
 
         return event_dict
 
