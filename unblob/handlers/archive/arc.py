@@ -36,7 +36,7 @@ class ARCHandler(StructHandler):
         int8 archive_marker;
         int8 header_type;
         char    name[13];		/* file name */
-        long size;		/* size of file, in bytes */
+        ulong size;		/* size of file, in bytes */
         ushort date;	/* creation date */
         ushort time;	/* creation time */
         short crc;	/* cyclic redundancy check */
@@ -54,11 +54,7 @@ class ARCHandler(StructHandler):
         offset = start_offset
         while True:
             file.seek(offset)
-            try:
-                read_bytes = file.read(2)
-            except EOFError:
-                logger.warning("Potential ARC header is missing")
-                return
+            read_bytes = file.read(2)
 
             if read_bytes == END_HEADER:
                 offset += 2
