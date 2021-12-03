@@ -17,11 +17,11 @@ def process_file(
     current_depth: int = 0,
 ):
     log = logger.bind(path=path)
-    log.info("Start processing file")
-
     if current_depth >= max_depth:
         log.info("Reached maximum depth, stop further processing")
         return
+
+    log.info("Start processing file")
 
     if path.is_dir():
         log.info("Found directory")
