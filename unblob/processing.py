@@ -3,7 +3,12 @@ from pathlib import Path
 
 from structlog import get_logger
 
-from .strategies import extract_with_priority
+from .extractor import extract_valid_chunks, make_extract_dir
+from .strategies import (
+    calculate_unknown_chunks,
+    remove_inner_chunks,
+    search_chunks_by_priority,
+)
 
 logger = get_logger()
 
@@ -43,5 +48,15 @@ def process_file(
 
     log.info("Calculated file size", size=size)
 
-    for new_path in extract_with_priority(root, path, extract_root, size):
-        process_file(extract_root, new_path, extract_root, max_depth, current_depth + 1)
+    with path.open("rb") as file:
+        all_chunks = search_chunks_by_priority(path, file, size)
+        outer_chunks = remove_inner_chunks(all_chunks)
+        unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
+        if unknown_chunks:
+            logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+
+        extract_dir = make_extract_dir(root, path, extract_root)
+        for new_path in extract_valid_chunks(extract_dir, file, outer_chunks):
+            process_file(
+                extract_root, new_path, extract_root, max_depth, current_depth + 1
+            )

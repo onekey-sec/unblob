@@ -2,11 +2,12 @@ import io
 import shlex
 import subprocess
 from pathlib import Path
+from typing import Iterator, List
 
 from structlog import get_logger
 
 from .file_utils import iterate_file
-from .models import Chunk, Handler
+from .models import Chunk, Handler, ValidChunk
 from .state import exit_code_var
 
 logger = get_logger()
@@ -30,7 +31,7 @@ def make_extract_dir(root: Path, path: Path, extract_root: Path) -> Path:
 
 
 def carve_chunk_to_file(
-    extract_dir: Path, filename: str, file: io.BufferedReader, chunk: Chunk
+    extract_dir: Path, filename: str, file: io.BufferedIOBase, chunk: Chunk
 ) -> Path:
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
     carved_file_path = extract_dir / filename
@@ -68,3 +69,13 @@ def extract_with_command(
         raise
 
     return content_dir
+
+
+def extract_valid_chunks(
+    extract_dir: Path, file: io.BufferedIOBase, valid_chunks: List[ValidChunk]
+) -> Iterator[Path]:
+    for chunk in valid_chunks:
+        filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
+        carved_path = carve_chunk_to_file(extract_dir, filename, file, chunk)
+        extracted = extract_with_command(extract_dir, carved_path, chunk.handler)
+        yield extracted

@@ -1,11 +1,10 @@
 import io
 from operator import attrgetter, itemgetter
 from pathlib import Path
-from typing import Iterator, List
+from typing import List
 
 from structlog import get_logger
 
-from .extractor import carve_chunk_to_file, extract_with_command, make_extract_dir
 from .file_utils import LimitedStartReader
 from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
@@ -127,22 +126,3 @@ def calculate_unknown_chunks(
         unknown_chunks.append(unknown_chunk)
 
     return unknown_chunks
-
-
-def extract_with_priority(
-    root: Path, path: Path, extract_root: Path, file_size: int
-) -> Iterator[Path]:
-
-    with path.open("rb") as file:
-        all_chunks = search_chunks_by_priority(path, file, file_size)
-        outer_chunks = remove_inner_chunks(all_chunks)
-        unknown_chunks = calculate_unknown_chunks(outer_chunks, file_size)
-        if unknown_chunks:
-            logger.warning("Found unknown Chunks", chunks=unknown_chunks)
-
-        for chunk in outer_chunks:
-            extract_dir = make_extract_dir(root, path, extract_root)
-            filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
-            carved_path = carve_chunk_to_file(extract_dir, filename, file, chunk)
-            extracted = extract_with_command(extract_dir, carved_path, chunk.handler)
-            yield extracted
