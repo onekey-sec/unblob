@@ -7,6 +7,7 @@ from structlog import get_logger
 
 from .file_utils import iterate_file
 from .models import Chunk, Handler
+from .state import exit_code_var
 
 logger = get_logger()
 
@@ -59,15 +60,11 @@ def extract_with_command(
             cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if res.returncode != 0:
+            exit_code_var.set(1)
             logger.error("Extract command failed", stdout=res.stdout, stderr=res.stderr)
 
     except FileNotFoundError:
-        logger.exception(
-            "FileNotFoundError - Can't run extract command. Is the extractor installed?"
-        )
-        raise
-    except Exception:
-        logger.exception("Unhandled exception while trying to run extraction")
+        logger.error("Can't run extract command. Is the extractor installed?")
         raise
 
     return content_dir
