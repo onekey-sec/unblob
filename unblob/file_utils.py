@@ -4,7 +4,7 @@ import math
 import os
 import shutil
 import struct
-from typing import Iterator
+from typing import Iterator, Tuple
 
 from dissect.cstruct import cstruct
 
@@ -36,12 +36,39 @@ def round_up(size: int, alignment: int):
     return alignment * math.ceil(size / alignment)
 
 
+def convert_int8(value: bytes, endian: Endian) -> int:
+    """Convert 1 byte integer to a Python int."""
+    try:
+        return struct.unpack(f"{endian.value}B", value)[0]
+    except struct.error:
+        raise ValueError("Not an int8")
+
+
 def convert_int32(value: bytes, endian: Endian) -> int:
     """Convert 4 byte integer to a Python int."""
     try:
         return struct.unpack(f"{endian.value}I", value)[0]
     except struct.error:
         raise ValueError("Not an int32")
+
+
+def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
+    """Decodes multi-bytes integer into integer size and integer value.
+
+    Multibyte integers of static length are stored in little endian byte order.
+
+    When smaller values are more likely than bigger values (for example file sizes),
+    multibyte integers are encoded in a variable-length representation:
+        - Numbers in the range [0, 127] are copied as is, and take one byte of space.
+        - Bigger numbers will occupy two or more bytes. All but the last byte of the multibyte
+         representation have the highest (eighth) bit set.
+    """
+    value = 0
+    for size, byte in enumerate(data):
+        value |= (byte & 0x7F) << (size * 7)
+        if not byte & 0x80:
+            return (size + 1, value)
+    raise ValueError("Multibyte integer decoding failed.")
 
 
 def find_first(
@@ -75,6 +102,15 @@ def find_first(
             return -1
         file.seek(-compensation, os.SEEK_CUR)
         bytes_searched += chunk_size - compensation
+
+
+def iterate_patterns(file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000):
+    """Iterate on the file searching for pattern until all occurences has been found."""
+    while True:
+        match = find_first(file, pattern, chunk_size)
+        if match == -1:
+            return
+        yield match
 
 
 def iterate_file(

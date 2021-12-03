@@ -8,9 +8,12 @@ from unblob.file_utils import (
     Endian,
     LimitedStartReader,
     StructParser,
+    convert_int8,
     convert_int32,
+    decode_multibyte_integer,
     find_first,
     iterate_file,
+    iterate_patterns,
     round_up,
 )
 
@@ -98,6 +101,39 @@ class TestStructParser:
         assert header2.inodes == 0x04_03_02_01
 
 
+class TestConvertInt8:
+    @pytest.mark.parametrize(
+        "value, endian, expected",
+        (
+            (b"\x00", Endian.LITTLE, 0x0),
+            (b"\x00", Endian.BIG, 0x0),
+            (b"\xff", Endian.LITTLE, 0xFF),
+            (b"\xff", Endian.BIG, 0xFF),
+            (b"\x10", Endian.LITTLE, 0x10),
+            (b"\x10", Endian.BIG, 0x10),
+        ),
+    )
+    def test_convert_int8(self, value, endian, expected):
+        assert convert_int8(value, endian) == expected
+
+    @pytest.mark.parametrize(
+        "value, endian",
+        (
+            (b"", Endian.LITTLE),
+            (b"", Endian.BIG),
+            (b"\x00\x00", Endian.LITTLE),
+            (b"\x00\x00", Endian.BIG),
+            (b"\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff\xff", Endian.BIG),
+        ),
+    )
+    def test_convert_invalid_values(self, value, endian):
+        with pytest.raises(ValueError):
+            convert_int8(value, endian)
+
+
 class TestConvertInt32:
     @pytest.mark.parametrize(
         "value, endian, expected",
@@ -133,6 +169,36 @@ class TestConvertInt32:
             convert_int32(value, endian)
 
 
+class TestMultibytesInteger:
+    @pytest.mark.parametrize(
+        "value, expected",
+        (
+            (b"\x00", (1, 0)),
+            (b"\x01", (1, 1)),
+            (b"\x01\x00", (1, 1)),
+            (b"\x7f", (1, 127)),
+            (b"\x7f\x00", (1, 127)),
+            (b"\xff\x00", (2, 127)),
+            (b"\x80\x08\x00", (2, 1024)),
+            (b"\xff\xff\xff\xff\xff\xff\xff\x7f", (8, 0xFFFFFFFFFFFFFF)),
+        ),
+    )
+    def test_decode_multibyte_integer(self, value, expected):
+        assert decode_multibyte_integer(value) == expected
+
+    @pytest.mark.parametrize(
+        "value",
+        (
+            (b""),
+            (b"\xff"),
+            (b"\xff\xff\xff"),
+        ),
+    )
+    def test_decode_invalid_values(self, value):
+        with pytest.raises(ValueError):
+            decode_multibyte_integer(value)
+
+
 @pytest.mark.parametrize(
     "content, pattern, expected_position",
     (
@@ -158,6 +224,18 @@ def test_find_first_smaller_chunksize_than_pattern_doesnt_hang():
     fake_file = io.BytesIO(b"0123456789_pattern")
     with pytest.raises(ValueError):
         find_first(fake_file, b"pattern", chunk_size=0x5)
+
+
+@pytest.mark.parametrize(
+    "content, pattern, expected",
+    (
+        (b"", b"", []),
+        (b"abcdef abcdef", b"abcdef", [0, 6]),
+    ),
+)
+def test_iterate_patterns(content: bytes, pattern: bytes, expected: List[int]):
+    file = io.BytesIO(content)
+    assert list(iterate_patterns(file, pattern)) == expected
 
 
 @pytest.mark.parametrize(
