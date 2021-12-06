@@ -3,7 +3,7 @@ from typing import List
 import pytest
 
 from unblob.models import UnknownChunk, ValidChunk
-from unblob.strategies import calculate_unknown_chunks, remove_inner_chunks
+from unblob.processing import calculate_unknown_chunks, remove_inner_chunks
 
 
 @pytest.mark.parametrize(
