@@ -1,8 +1,14 @@
+import stat
 from pathlib import Path
 
 from structlog import get_logger
 
-from .strategies import extract_with_priority
+from .extractor import carve_unknown_chunks, extract_valid_chunks, make_extract_dir
+from .strategies import (
+    calculate_unknown_chunks,
+    remove_inner_chunks,
+    search_chunks_by_priority,
+)
 
 logger = get_logger()
 
@@ -17,27 +23,41 @@ def process_file(
     current_depth: int = 0,
 ):
     log = logger.bind(path=path)
-    log.info("Start processing file")
-
     if current_depth >= max_depth:
         log.info("Reached maximum depth, stop further processing")
         return
 
-    if path.is_dir():
+    log.info("Start processing file")
+
+    statres = path.lstat()
+    mode, size = statres.st_mode, statres.st_size
+
+    if stat.S_ISDIR(mode):
         log.info("Found directory")
         for path in path.iterdir():
             process_file(root, path, extract_root, max_depth, current_depth + 1)
         return
 
-    if path.is_symlink():
+    elif stat.S_ISLNK(mode):
         log.info("Ignoring symlink")
         return
 
-    file_size = path.stat().st_size
-    if file_size == 0:
+    elif size == 0:
         log.info("Ignoring empty file")
         return
 
-    log.info("Calculated file size", size=file_size)
-    for new_path in extract_with_priority(root, path, extract_root, file_size):
-        process_file(extract_root, new_path, extract_root, max_depth, current_depth + 1)
+    log.info("Calculated file size", size=size)
+
+    with path.open("rb") as file:
+        all_chunks = search_chunks_by_priority(path, file, size)
+        outer_chunks = remove_inner_chunks(all_chunks)
+        unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
+        if not outer_chunks and not unknown_chunks:
+            return
+
+        extract_dir = make_extract_dir(root, path, extract_root)
+        carve_unknown_chunks(extract_dir, file, unknown_chunks)
+        for new_path in extract_valid_chunks(extract_dir, file, outer_chunks):
+            process_file(
+                extract_root, new_path, extract_root, max_depth, current_depth + 1
+            )
