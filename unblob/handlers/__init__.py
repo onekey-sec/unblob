@@ -1,17 +1,12 @@
-from typing import Dict, List, Type
+from typing import List, Tuple, Type
 
 from ..models import Handler
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, tar, zip
 from .compression import lzo
 from .filesystem import cramfs, fat, iso9660, squashfs, ubi
 
-
-def _make_handler_map(*handlers: Type[Handler]) -> Dict[str, Handler]:
-    return {h.NAME: h() for h in handlers}
-
-
-_ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
-    _make_handler_map(
+ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
+    (
         cramfs.CramFSHandler,
         fat.FATHandler,
         squashfs.SquashFSv3Handler,
@@ -19,7 +14,7 @@ _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
         ubi.UBIHandler,
         ubi.UBIFSHandler,
     ),
-    _make_handler_map(
+    (
         ar.ARHandler,
         arc.ARCHandler,
         arj.ARJHandler,
@@ -35,7 +30,5 @@ _ALL_MODULES_BY_PRIORITY: List[Dict[str, Handler]] = [
         dmg.DMGHandler,
         iso9660.ISO9660FSHandler,
     ),
-    _make_handler_map(
-        lzo.LZOHandler,
-    ),
+    (lzo.LZOHandler,),
 ]

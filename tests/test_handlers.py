@@ -11,10 +11,12 @@ import inspect
 import shlex
 import subprocess
 from pathlib import Path
+from typing import Type
 
 import pytest
 
 from unblob import handlers
+from unblob.models import Handler
 from unblob.processing import DEFAULT_DEPTH, process_file
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
@@ -68,12 +70,12 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
     "handler",
     (
         pytest.param(handler, id=handler.NAME)
-        for handler_map in handlers._ALL_MODULES_BY_PRIORITY
-        for handler in handler_map.values()
+        for handlers_in_priority in handlers.ALL_HANDLERS_BY_PRIORITY
+        for handler in handlers_in_priority
     ),
 )
-def test_missing_handlers_integrations_tests(handler):
-    handler_module_path = Path(inspect.getfile(handler.__class__))
+def test_missing_handlers_integrations_tests(handler: Type[Handler]):
+    handler_module_path = Path(inspect.getfile(handler))
     handler_test_path = handler_module_path.relative_to(
         HANDLERS_PACKAGE_PATH
     ).with_suffix("")

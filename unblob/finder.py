@@ -6,13 +6,13 @@ import io
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Type
 
 import yara
 from structlog import get_logger
 
 from .file_utils import LimitedStartReader
-from .handlers import _ALL_MODULES_BY_PRIORITY
+from .handlers import ALL_HANDLERS_BY_PRIORITY
 from .logging import noformat
 from .models import Handler, ValidChunk, YaraMatchResult
 from .state import exit_code_var
@@ -38,10 +38,11 @@ def search_chunks_by_priority(  # noqa: C901
     """
     all_chunks = []
 
-    for priority_level, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
+    for priority_level, handler_classes in enumerate(ALL_HANDLERS_BY_PRIORITY, start=1):
         logger.info("Starting priority level", priority_level=noformat(priority_level))
-        yara_rules = make_yara_rules(tuple(handlers.values()))
-        yara_results = search_yara_patterns(yara_rules, handlers, path)
+        yara_rules = make_yara_rules(handler_classes)
+        handler_map = make_handler_map(handler_classes)
+        yara_results = search_yara_patterns(yara_rules, handler_map, path)
 
         for result in yara_results:
             handler, match = result.handler, result.match
@@ -90,7 +91,7 @@ def search_chunks_by_priority(  # noqa: C901
 
 
 @lru_cache
-def make_yara_rules(handlers: Tuple[Handler, ...]):
+def make_yara_rules(handlers: Tuple[Type[Handler], ...]):
     """Make yara.Rule by concatenating all handlers yara rules and compiling them."""
     all_yara_rules = "\n".join(
         _YARA_RULE_TEMPLATE.format(NAME=h.NAME, YARA_RULE=h.YARA_RULE.strip())
@@ -101,8 +102,13 @@ def make_yara_rules(handlers: Tuple[Handler, ...]):
     return compiled_rules
 
 
+@lru_cache
+def make_handler_map(handler_classes: Tuple[Type[Handler], ...]) -> Dict[str, Handler]:
+    return {h.NAME: h() for h in handler_classes}
+
+
 def search_yara_patterns(
-    yara_rules: yara.Rule, handlers: Dict[str, Handler], full_path: Path
+    yara_rules: yara.Rule, handler_map: Dict[str, Handler], full_path: Path
 ) -> List[YaraMatchResult]:
     """Search with the compiled YARA rules and identify the handler which defined the rule."""
     # YARA uses a memory mapped file internally when given a path
@@ -110,7 +116,7 @@ def search_yara_patterns(
 
     yara_results = []
     for match in yara_matches:
-        handler = handlers[match.rule]
+        handler = handler_map[match.rule]
         yara_res = YaraMatchResult(handler=handler, match=match)
         yara_results.append(yara_res)
 

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from unblob.finder import make_yara_rules, search_yara_patterns
+from unblob.finder import make_handler_map, make_yara_rules, search_yara_patterns
 from unblob.models import Handler
 
 
@@ -58,3 +58,16 @@ def test_search_yara_patterns(tmp_path: Path):
 
     assert result2.handler is handler2
     assert result2.match.strings == [(10, "$tar_magic", b"ustar")]
+
+
+def test_make_handler_map():
+    handler_map = make_handler_map(tuple([TestHandler1, TestHandler2]))
+    assert isinstance(handler_map["handler1"], TestHandler1)
+    assert isinstance(handler_map["handler2"], TestHandler2)
+
+
+def test_make_handler_map_instances_are_cached():
+    handler_map1 = make_handler_map(tuple([TestHandler1, TestHandler2]))
+    handler_map2 = make_handler_map(tuple([TestHandler1, TestHandler2]))
+    assert handler_map1["handler1"] is handler_map2["handler1"]
+    assert handler_map1["handler2"] is handler_map2["handler2"]
