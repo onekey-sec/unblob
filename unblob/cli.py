@@ -6,7 +6,7 @@ from typing import Tuple
 import click
 from structlog import get_logger
 
-from .logging import configure_logger
+from .logging import configure_logger, noformat
 from .processing import DEFAULT_DEPTH, process_file
 from .state import exit_code_var
 
@@ -37,7 +37,7 @@ logger = get_logger()
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
 def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
     configure_logger(verbose, extract_root)
-    logger.info("Start processing files", count=len(files))
+    logger.info("Start processing files", count=noformat(len(files)))
     for path in files:
         root = path if path.is_dir() else path.parent
         process_file(root, path, extract_root, max_depth=depth)

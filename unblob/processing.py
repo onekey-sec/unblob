@@ -8,6 +8,7 @@ from structlog import get_logger
 from .extractor import carve_unknown_chunks, extract_valid_chunks, make_extract_dir
 from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
+from .logging import noformat
 from .models import UnknownChunk, ValidChunk
 
 logger = get_logger()
@@ -78,8 +79,8 @@ def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
     removed_count = len(chunks) - outer_count
     logger.info(
         "Removed inner chunks",
-        outer_chunk_count=outer_count,
-        removed_inner_chunk_count=removed_count,
+        outer_chunk_count=noformat(outer_count),
+        removed_inner_chunk_count=noformat(removed_count),
     )
     return outer_chunks
 
