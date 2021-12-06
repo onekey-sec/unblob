@@ -1,74 +1,98 @@
 import io
-from operator import attrgetter, itemgetter
+import stat
+from operator import attrgetter
 from pathlib import Path
 from typing import List
 
 from structlog import get_logger
 
-from .file_utils import LimitedStartReader
+from .extractor import carve_unknown_chunks, extract_valid_chunks, make_extract_dir
 from .finder import search_chunks
 from .handlers import _ALL_MODULES_BY_PRIORITY
 from .iter_utils import pairwise
 from .logging import noformat
 from .models import UnknownChunk, ValidChunk
-from .state import exit_code_var
 
 logger = get_logger()
 
 
-def search_chunks_by_priority(  # noqa: C901
-    path: Path, file: io.BufferedReader, file_size: int
-) -> List[ValidChunk]:
-    all_chunks = []
+class Strategy:
+    def __init__(self, root: Path, extract_root: Path):
+        self._root = root
+        self._extract_root = extract_root
 
-    for priority_level, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
-        logger.info("Starting priority level", priority_level=noformat(priority_level))
-        yara_results = search_chunks(handlers, path)
 
-        if yara_results:
-            logger.info("Found YARA results", count=noformat(len(yara_results)))
+class LinearStrategy:
+    def process_file(self, path: Path):
+        pass
 
-        for result in yara_results:
-            handler = result.handler
-            match = result.match
-            sorted_matches = sorted(match.strings, key=itemgetter(0))
-            for offset, identifier, string_data in sorted_matches:
-                real_offset = offset + handler.YARA_MATCH_OFFSET
 
-                if any(chunk.contains_offset(real_offset) for chunk in all_chunks):
-                    continue
+class PriorityStrategy:
+    DEFAULT_DEPTH = 10
 
-                logger.info(
-                    "Calculating chunk for YARA match",
-                    start_offset=offset,
-                    real_offset=real_offset,
-                    identifier=identifier,
+    def process_file(
+        self,
+        root: Path,
+        path: Path,
+        extract_root: Path,
+        max_depth: int,
+        current_depth: int = 0,
+    ):
+        log = logger.bind(path=path)
+        if current_depth >= max_depth:
+            log.info("Reached maximum depth, stop further processing")
+            return
+
+        log.info("Start processing file")
+
+        statres = path.lstat()
+        mode, size = statres.st_mode, statres.st_size
+
+        if stat.S_ISDIR(mode):
+            log.info("Found directory")
+            for path in path.iterdir():
+                self.process_file(
+                    root, path, extract_root, max_depth, current_depth + 1
                 )
-                limited_reader = LimitedStartReader(file, real_offset)
+            return
 
-                try:
-                    chunk = handler.calculate_chunk(limited_reader, real_offset)
-                except Exception as exc:
-                    exit_code_var.set(1)
-                    logger.error(
-                        "Unhandled Exception during chunk calculation", exc_info=exc
-                    )
-                    continue
+        elif stat.S_ISLNK(mode):
+            log.info("Ignoring symlink")
+            return
 
-                # We found some random bytes this handler couldn't parse
-                if chunk is None:
-                    continue
+        elif size == 0:
+            log.info("Ignoring empty file")
+            return
 
-                if chunk.end_offset > file_size or chunk.start_offset < 0:
-                    exit_code_var.set(1)
-                    logger.error("Chunk overflows file", chunk=chunk)
-                    continue
+        log.info("Calculated file size", size=size)
 
-                chunk.handler = handler
-                logger.info("Found valid chunk", chunk=chunk, handler=handler.NAME)
-                all_chunks.append(chunk)
+        with path.open("rb") as file:
+            all_chunks = self._search_valid_chunks(path, file, size)
+            outer_chunks = remove_inner_chunks(all_chunks)
+            unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
+            if not outer_chunks and not unknown_chunks:
+                return
 
-    return all_chunks
+            extract_dir = make_extract_dir(root, path, extract_root)
+            carve_unknown_chunks(extract_dir, file, unknown_chunks)
+            for new_path in extract_valid_chunks(extract_dir, file, outer_chunks):
+                self.process_file(
+                    extract_root, new_path, extract_root, max_depth, current_depth + 1
+                )
+
+    def _search_valid_chunks(
+        self, path: Path, file: io.BufferedReader, size: int
+    ) -> List[ValidChunk]:
+        all_chunks = []
+        for priority_level, handlers in enumerate(_ALL_MODULES_BY_PRIORITY, start=1):
+            logger.info(
+                "Starting priority level", priority_level=noformat(priority_level)
+            )
+            handlers = tuple(h() for h in handlers)
+            chunks = search_chunks(handlers, path, file, size)
+            all_chunks.extend(chunks)
+
+        return all_chunks
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:

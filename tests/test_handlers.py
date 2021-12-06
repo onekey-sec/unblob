@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from unblob import handlers
-from unblob.processing import DEFAULT_DEPTH, process_file
+from unblob.strategies import PriorityStrategy
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
 TEST_INPUT_DIRS = list(TEST_DATA_PATH.glob("**/__input__"))
@@ -36,12 +36,12 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
     assert (
         list(input_dir.iterdir()) != []
     ), f"Integration test input dir should contain at least 1 file: {input_dir}"
-
-    process_file(
+    strategy = PriorityStrategy()
+    strategy.process_file(
         root=input_dir,
         path=input_dir,
         extract_root=tmp_path,
-        max_depth=DEFAULT_DEPTH,
+        max_depth=PriorityStrategy.DEFAULT_DEPTH,
     )
 
     diff_command = [
@@ -67,9 +67,9 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
 @pytest.mark.parametrize(
     "handler",
     (
-        pytest.param(handler, id=handler.NAME)
-        for handler_map in handlers._ALL_MODULES_BY_PRIORITY
-        for handler in handler_map.values()
+        pytest.param(handler(), id=handler.NAME)
+        for priority_list in handlers._ALL_MODULES_BY_PRIORITY
+        for handler in priority_list
     ),
 )
 def test_missing_handlers_integrations_tests(handler):

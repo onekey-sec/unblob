@@ -7,8 +7,8 @@ import click
 from structlog import get_logger
 
 from .logging import configure_logger
-from .processing import DEFAULT_DEPTH, process_file
 from .state import exit_code_var
+from .strategies import PriorityStrategy
 
 logger = get_logger()
 
@@ -31,16 +31,17 @@ logger = get_logger()
     "-d",
     "--depth",
     type=int,
-    default=DEFAULT_DEPTH,
+    default=PriorityStrategy.DEFAULT_DEPTH,
     help="Recursion depth. How deep should we extract containers.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
 def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=len(files))
+    strategy = PriorityStrategy()
     for path in files:
         root = path if path.is_dir() else path.parent
-        process_file(root, path, extract_root, max_depth=depth)
+        strategy.process_file(root, path, extract_root, max_depth=depth)
 
 
 def main():
