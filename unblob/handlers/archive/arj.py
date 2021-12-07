@@ -13,15 +13,11 @@ class ARJError(Exception):
 
 
 class ARJNullFile(ARJError):
-    """Raised for zero-sized ARJ files."""
+    """Zero-sized ARJ."""
 
 
 class ARJExtendedHeader(ARJError):
     """Main ARJ header contains extended_header, which we don't handle."""
-
-
-class ARJFileLengthError(ARJError):
-    """This is a zero-sized ARJ."""
 
 
 class ARJHandler(StructHandler):
@@ -150,11 +146,11 @@ class ARJHandler(StructHandler):
             self._read_arj_main_header(file, start_offset)
             end_of_arj = self._read_arj_files(file)
         except ARJError as exc:
-            logger.warning("Invalid ARJ file", message=exc.__doc__)
+            logger.warning("Invalid ARJ file", reason=exc.__doc__)
             return
         except EOFError:
             logger.warning(
-                "Invalid ARJ file", message="File ends before ARJ file resolves."
+                "Invalid ARJ file", reason="File ends before ARJ file resolves."
             )
             return
 
