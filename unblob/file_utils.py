@@ -97,6 +97,50 @@ def iterate_file(
         yield data
 
 
+def find_first_backwards(
+    file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000
+) -> int:
+    """Search _backwards_ for the pattern and return the position where it starts.
+    Returns -1 if not found.
+    """
+
+    if chunk_size < len(pattern):
+        chunk_hex = format_hex(chunk_size)
+        raise ValueError(
+            f"Chunk size ({chunk_hex}) shouldn't be shorter than pattern's ({pattern}) length ({len(pattern)})!"
+        )
+
+    compensation = len(pattern) - 1
+    bytes_searched = 0
+
+    rev_pattern = pattern[::-1]
+
+    while True:
+        # Seek backwards one chunk and read that chunk.
+        file.seek(-chunk_size, os.SEEK_CUR)
+        data = file.read(chunk_size)
+
+        # Reverse the data, and try find the reversed pattern in there.
+        rev_data = data[::-1]
+        found_offset = rev_data.find(rev_pattern)
+
+        if found_offset != -1:
+            # Need to wind the actual offset forwards by the length of the pattern, because we
+            # searched backwards.
+            found_offset = found_offset + len(pattern)
+            return bytes_searched + found_offset
+
+        if len(data) <= len(pattern):
+            # The length that we read from the file is the same length or less than as the pattern
+            # we're looking for, and we didn't find the pattern in there. If we don't return -1
+            # here, we'll end up in an infinite loop.
+            return -1
+
+        # Move the cursor forwards by the compensation amount.
+        file.seek(compensation, os.SEEK_CUR)
+        bytes_searched += chunk_size - compensation
+
+
 class LimitedStartReader(io.BufferedIOBase):
     """Wrapper for open files, which
     enforces that seekeng earlier than the start offset is not possible.
