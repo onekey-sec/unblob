@@ -60,7 +60,10 @@ class GZIPHandler(StructHandler):
 
             with gzip.open(file) as g:
                 g.seek(0, os.SEEK_END)
+            
             end_offset = file.tell()
+
+            gzip_size = end_offset - start_offset
 
         except gzip.BadGzipFile as gze:
 
