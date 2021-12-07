@@ -1,3 +1,6 @@
+"""
+File extraction related functions.
+"""
 import io
 import shlex
 import subprocess
