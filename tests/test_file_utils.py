@@ -10,6 +10,7 @@ from unblob.file_utils import (
     StructParser,
     convert_int8,
     convert_int32,
+    convert_int64,
     decode_multibyte_integer,
     find_first,
     iterate_file,
@@ -167,6 +168,47 @@ class TestConvertInt32:
     def test_convert_invalid_values(self, value, endian):
         with pytest.raises(ValueError):
             convert_int32(value, endian)
+
+
+class TestConvertInt64:
+    @pytest.mark.parametrize(
+        "value, endian, expected",
+        (
+            (b"\x00\x00\x00\x00\x00\x00\x00\x00", Endian.LITTLE, 0x0),
+            (b"\x00\x00\x00\x00\x00\x00\x00\x00", Endian.BIG, 0x0),
+            (b"\xff\xff\xff\xff\xff\xff\xff\xff", Endian.LITTLE, 0xFFFF_FFFF_FFFF_FFFF),
+            (b"\xff\xff\xff\xff\xff\xff\xff\xff", Endian.BIG, 0xFFFF_FFFF_FFFF_FFFF),
+            (b"\x10\x00\x00\x00\x00\x00\x00\x00", Endian.LITTLE, 0x10),
+            (b"\x10\x00\x00\x00\x00\x00\x00\x00", Endian.BIG, 0x1000_0000_0000_0000),
+        ),
+    )
+    def test_convert_int64(self, value, endian, expected):
+        assert convert_int64(value, endian) == expected
+
+    @pytest.mark.parametrize(
+        "value, endian",
+        (
+            (b"", Endian.LITTLE),
+            (b"", Endian.BIG),
+            (b"\x00", Endian.LITTLE),
+            (b"\x00", Endian.BIG),
+            (b"\x00\x00", Endian.LITTLE),
+            (b"\x00\x00", Endian.BIG),
+            (b"\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff\xff\xff\xff", Endian.BIG),
+        ),
+    )
+    def test_convert_invalid_values(self, value, endian):
+        with pytest.raises(ValueError):
+            convert_int64(value, endian)
 
 
 class TestMultibytesInteger:
