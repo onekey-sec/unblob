@@ -27,6 +27,6 @@ class TestCarveUnknownChunks:
         carve_unknown_chunks(tmp_path, test_file, chunks)
         written_path1 = tmp_path / "0-4.unknown"
         written_path2 = tmp_path / "4-9.unknown"
-        assert list(tmp_path.iterdir()) == [written_path1, written_path2]
+        assert sorted(tmp_path.iterdir()) == [written_path1, written_path2]
         assert written_path1.read_bytes() == content[:4]
         assert written_path2.read_bytes() == content[4:]
