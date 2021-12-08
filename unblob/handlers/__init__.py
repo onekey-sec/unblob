@@ -2,7 +2,7 @@ from typing import List, Tuple, Type
 
 from ..models import Handler
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, tar, zip
-from .compression import bzip2, lzip, lzo, xz
+from .compression import bzip2, lzip, lzma, lzo, xz
 from .filesystem import cramfs, fat, iso9660, squashfs, ubi
 
 ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
@@ -34,6 +34,7 @@ ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
         bzip2.BZip2Handler,
         lzip.LZipHandler,
         lzo.LZOHandler,
+        lzma.LZMAHandler,
         xz.XZHandler,
     ),
 ]
