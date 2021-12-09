@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import Endian, bits, round_up
+from ...file_utils import Endian, iterbits, round_up
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -66,23 +66,8 @@ class BZip2Handler(StructHandler):
 
         file.seek(start_offset)
 
-        for b in bits(file):
+        for b in iterbits(file):
             bits_read += 1
-            if b == 2:
-                if (bits_read >= current_block_start) and (
-                    bits_read - current_block_start >= 40
-                ):
-                    current_block_end = bits_read - 1
-                    if curr_block > 0:
-                        logger.debug(
-                            "bzip2_recover (incomplete block)",
-                            block_id=curr_block,
-                            block_start=current_block_start,
-                            block_end=current_block_end,
-                        )
-                else:
-                    curr_block -= 1
-                break
 
             buff_hi = (buff_hi << 1) | (buff_lo >> 31)
             buff_hi = buff_hi & 0xFFFFFFFF
