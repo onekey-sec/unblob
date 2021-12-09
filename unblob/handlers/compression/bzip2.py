@@ -48,19 +48,29 @@ class BZip2Handler(StructHandler):
     ) -> Optional[ValidChunk]:
 
         self.parse_header(file, Endian.BIG)
-        end_offset = self.bzip2_recover(file, start_offset)
+        end_block_offset = self.bzip2_recover(file, start_offset)
+        if end_block_offset == -1:
+            logger.warning("Couldn't find valid bzip2 content")
+            return
 
-        return ValidChunk(start_offset=start_offset, end_offset=end_offset)
+        return ValidChunk(
+            start_offset=start_offset,
+            end_offset=end_block_offset + FOOTER_SIZE,
+        )
 
-    def bzip2_recover(self, file: io.BufferedIOBase, start_offset: int):  # noqa: C901
+    def bzip2_recover(
+        self, file: io.BufferedIOBase, start_offset: int
+    ) -> int:  # noqa: C901
         """Emulate the behavior of bzip2recover, matching on compressed magic and end of stream
         magic to identify the end offset of the whole bzip2 chunk.
+        Count from absolute start_offset and returns absolute end_offset.
         """
 
         bits_read = 0
         buff_hi = 0
         buff_lo = 0
         curr_block = 0
+        blocks_found = 0
         current_block_start = 0
         current_block_end = 0
 
@@ -80,6 +90,7 @@ class BZip2Handler(StructHandler):
                 (buff_hi & 0x0000FFFF) == BLOCK_ENDMARK_HI
                 and buff_lo == BLOCK_ENDMARK_LO
             ):
+                blocks_found += 1
                 if bits_read > COMPRESSED_MAGIC_LENGTH + 1:
                     current_block_end = bits_read - (COMPRESSED_MAGIC_LENGTH + 1)
 
@@ -94,9 +105,12 @@ class BZip2Handler(StructHandler):
                 curr_block += 1
                 current_block_start = bits_read
 
+        if blocks_found < 2:
+            return -1
+
         # blocks are counted in bits but we need an offset in bytes
-        end_block_offset = int(round_up(current_block_end, 8) // 8)
-        return end_block_offset + FOOTER_SIZE
+        end_block_offset = round_up(current_block_end, 8) // 8
+        return start_offset + end_block_offset
 
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
