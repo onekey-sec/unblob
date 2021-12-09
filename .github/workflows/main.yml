@@ -46,4 +46,3 @@ jobs:
 
       - name: Run pytest
         run: poetry run pytest
-
