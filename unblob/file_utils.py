@@ -10,10 +10,20 @@ from dissect.cstruct import cstruct
 
 from .logging import format_hex
 
+DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
+
 
 class Endian(enum.Enum):
     LITTLE = "<"
     BIG = ">"
+
+
+def iterbits(file: io.BufferedIOBase) -> Iterator[int]:
+    """bit-wise reading of file in little-endian mode"""
+    while cur_bytes := file.read(DEFAULT_BUFSIZE):
+        for b in cur_bytes:
+            for i in range(7, -1, -1):
+                yield (b >> i) & 1
 
 
 def snull(content: bytes):
@@ -72,7 +82,7 @@ def iterate_file(
     start_offset: int,
     size: int,
     # default buffer size in shutil for unix based systems
-    buffer_size: int = shutil.COPY_BUFSIZE,  # type: ignore
+    buffer_size: int = DEFAULT_BUFSIZE,
 ) -> Iterator[bytes]:
 
     if buffer_size <= 0:
