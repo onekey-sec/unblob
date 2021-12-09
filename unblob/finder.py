@@ -67,6 +67,13 @@ def search_chunks_by_priority(  # noqa: C901
                 limited_reader = LimitedStartReader(file, real_offset)
                 try:
                     chunk = handler.calculate_chunk(limited_reader, real_offset)
+                except EOFError as exc:
+                    logger.debug(
+                        "File ends before header could be read",
+                        exc_info=exc,
+                        handler=handler.NAME,
+                    )
+                    continue
                 except Exception as exc:
                     exit_code_var.set(1)
                     logger.error(
