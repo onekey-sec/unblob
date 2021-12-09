@@ -1,0 +1,14 @@
+runs:
+  using: "composite"
+  steps:
+    - name: Install 3rd party from apt
+      run: sudo apt install unar zlib1g-dev liblzo2-dev lzop lziprecover
+      shell: bash
+
+    - name: Pip install poetry
+      run: python -m pip install --upgrade pip poetry
+      shell: bash
+
+    - name: Poetry install
+      run: poetry install
+      shell: bash
