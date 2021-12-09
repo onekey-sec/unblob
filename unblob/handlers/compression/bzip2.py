@@ -8,13 +8,12 @@ from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
-BLOCK_HEADER_HI = 0x00003141
-BLOCK_HEADER_LO = 0x59265359
+
+BLOCK_HEADER = 0x0000_3141_5926_5359
+BLOCK_ENDMARK = 0x0000_1772_4538_5090
 
 COMPRESSED_MAGIC_LENGTH = 6 * 8
 
-BLOCK_ENDMARK_HI = 0x00001772
-BLOCK_ENDMARK_LO = 0x45385090
 
 FOOTER_SIZE = 10  # 6 bytes magic + 4 bytes CRC
 
@@ -58,17 +57,14 @@ class BZip2Handler(StructHandler):
             end_offset=end_block_offset + FOOTER_SIZE,
         )
 
-    def bzip2_recover(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> int:  # noqa: C901
+    def bzip2_recover(self, file: io.BufferedIOBase, start_offset: int) -> int:
         """Emulate the behavior of bzip2recover, matching on compressed magic and end of stream
         magic to identify the end offset of the whole bzip2 chunk.
         Count from absolute start_offset and returns absolute end_offset.
         """
 
         bits_read = 0
-        buff_hi = 0
-        buff_lo = 0
+        buff = 0
         curr_block = 0
         blocks_found = 0
         current_block_start = 0
@@ -79,18 +75,11 @@ class BZip2Handler(StructHandler):
         for b in iterbits(file):
             bits_read += 1
 
-            buff_hi = (buff_hi << 1) | (buff_lo >> 31)
-            buff_hi = buff_hi & 0xFFFFFFFF
-            buff_lo = (buff_lo << 1) | (b & 1)
-            buff_lo = buff_lo & 0xFFFFFFFF
+            buff = (buff << 1 | b) & 0xFFFF_FFFF_FFFF
 
-            if (
-                (buff_hi & 0x0000FFFF) == BLOCK_HEADER_HI and buff_lo == BLOCK_HEADER_LO
-            ) or (
-                (buff_hi & 0x0000FFFF) == BLOCK_ENDMARK_HI
-                and buff_lo == BLOCK_ENDMARK_LO
-            ):
+            if buff == BLOCK_HEADER or buff == BLOCK_ENDMARK:
                 blocks_found += 1
+
                 if bits_read > COMPRESSED_MAGIC_LENGTH + 1:
                     current_block_end = bits_read - (COMPRESSED_MAGIC_LENGTH + 1)
 
