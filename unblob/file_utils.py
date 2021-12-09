@@ -10,6 +10,8 @@ from dissect.cstruct import cstruct
 
 from .logging import format_hex
 
+DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
+
 
 class Endian(enum.Enum):
     LITTLE = "<"
@@ -85,7 +87,7 @@ def iterate_file(
     start_offset: int,
     size: int,
     # default buffer size in shutil for unix based systems
-    buffer_size: int = shutil.COPY_BUFSIZE,  # type: ignore
+    buffer_size: int = DEFAULT_BUFSIZE,
 ) -> Iterator[bytes]:
 
     if buffer_size <= 0:
