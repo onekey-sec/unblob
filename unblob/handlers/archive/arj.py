@@ -148,11 +148,6 @@ class ARJHandler(StructHandler):
         except ARJError as exc:
             logger.warning("Invalid ARJ file", reason=exc.__doc__)
             return
-        except EOFError:
-            logger.warning(
-                "Invalid ARJ file", reason="File ends before ARJ file resolves."
-            )
-            return
 
         return ValidChunk(
             start_offset=start_offset,
