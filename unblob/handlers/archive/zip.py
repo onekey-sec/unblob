@@ -113,7 +113,7 @@ class ZIPHandler(StructHandler):
 
         file.seek(start_offset)
 
-        zip_end = find_first(file, EOCD_RECORD_HEADER) + start_offset
+        zip_end = find_first(file, EOCD_RECORD_HEADER)
 
         if zip_end == -1:
             raise MissingEOCDHeader
