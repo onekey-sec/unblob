@@ -74,8 +74,10 @@ def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
 def find_first(
     file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000
 ) -> int:
-    """Search for the pattern and return the position where it starts.
+    """Search for the pattern and return the absolute position of the start of the pattern in the file.
     Returns -1 if not found.
+    Seek the file pointer to the next byte of where we found the pattern or
+    seek back to the initial position when we did not find it.
     """
     if chunk_size < len(pattern):
         chunk_hex = format_hex(chunk_size)
@@ -83,23 +85,37 @@ def find_first(
             f"Chunk size ({chunk_hex}) shouldn't be shorter than pattern's ({pattern}) length ({len(pattern)})!"
         )
 
+    initial_position = file.tell()
+
     compensation = len(pattern) - 1
     bytes_searched = 0
     while True:
+        current_position = file.tell()
+
         # Prepend the padding from the last chunk, to make sure that we find the pattern,
         # even if it straddles the chunk boundary.
         data = file.read(chunk_size)
         if data == b"":
             # We've reached the end of the stream.
+            file.seek(initial_position)
             return -1
+
         marker = data.find(pattern)
         if marker != -1:
-            return marker + bytes_searched
-        if len(data) <= len(pattern):
+            found_pos = current_position + marker
+            # We want to seek past the found position to the next byte,
+            # so we can call find_first again without extra seek
+            # This might seek past the actual end of the file
+            file.seek(found_pos + len(pattern))
+            return found_pos
+
+        if len(data) < len(pattern):
             # The length that we read from the file is the same length or less than as the pattern
             # we're looking for, and we didn't find the pattern in there. If we don't return -1
             # here, we'll end up in an infinite loop.
+            file.seek(initial_position)
             return -1
+
         file.seek(-compensation, os.SEEK_CUR)
         bytes_searched += chunk_size - compensation
 

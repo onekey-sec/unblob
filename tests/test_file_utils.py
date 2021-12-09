@@ -199,38 +199,63 @@ class TestMultibytesInteger:
             decode_multibyte_integer(value)
 
 
-@pytest.mark.parametrize(
-    "content, pattern, expected_position",
-    (
-        pytest.param(b"", b"not-found-pattern", -1, id="not_found"),
-        pytest.param(b"some", b"not-found", -1, id="smaller_data_than_pattern"),
-        pytest.param(b"pattern_12345", b"pattern", 0, id="pattern_at_beginning"),
-        pytest.param(b"01234_pattern", b"pattern", 6, id="pattern_at_the_end"),
-        pytest.param(b"01234_pattern5678", b"pattern", 6, id="pattern_in_middle"),
-    ),
-)
-def test_find_first(content, pattern, expected_position):
-    fake_file = io.BytesIO(content)
-    assert find_first(fake_file, pattern) == expected_position
+class TestFindFirst:
+    @pytest.mark.parametrize(
+        "content, pattern, expected_position",
+        (
+            pytest.param(b"", b"not-found-pattern", -1, id="not_found"),
+            pytest.param(b"some", b"not-found", -1, id="smaller_data_than_pattern"),
+            pytest.param(b"pattern_12345", b"pattern", 0, id="pattern_at_beginning"),
+            pytest.param(b"01234_pattern", b"pattern", 6, id="pattern_at_the_end"),
+            pytest.param(b"01234_pattern5678", b"pattern", 6, id="pattern_in_middle"),
+        ),
+    )
+    def test_find_first(self, content: bytes, pattern: bytes, expected_position: int):
+        fake_file = io.BytesIO(content)
+        assert find_first(fake_file, pattern) == expected_position
 
+    def test_big_chunksize(self):
+        fake_file = io.BytesIO(b"0123456789_pattern")
+        pos = find_first(fake_file, b"pattern", chunk_size=0x10)
+        assert pos == 11
 
-def test_find_first_big_chunksize():
-    fake_file = io.BytesIO(b"0123456789_pattern")
-    pos = find_first(fake_file, b"pattern", chunk_size=0x10)
-    assert pos == 11
+    def test_smaller_chunksize_than_pattern_doesnt_hang(self):
+        fake_file = io.BytesIO(b"0123456789_pattern")
+        with pytest.raises(ValueError):
+            find_first(fake_file, b"pattern", chunk_size=0x5)
 
+    def test_equal_chunksize_read(self):
+        fake_file = io.BytesIO(b"0123456pattern")
+        pos = find_first(fake_file, b"pattern", chunk_size=0x7)
+        assert pos == 7
 
-def test_find_first_smaller_chunksize_than_pattern_doesnt_hang():
-    fake_file = io.BytesIO(b"0123456789_pattern")
-    with pytest.raises(ValueError):
-        find_first(fake_file, b"pattern", chunk_size=0x5)
+    @pytest.mark.parametrize(
+        "content, pattern, expected_pointer_position",
+        (
+            pytest.param(b"", b"not-found-pattern", 0, id="not_found"),
+            pytest.param(b"some", b"not-found", 0, id="smaller_data_than_pattern"),
+            pytest.param(b"pattern_12345", b"pattern", 7, id="pattern_at_beginning"),
+            pytest.param(b"01234_pattern", b"pattern", 13, id="pattern_at_the_end"),
+            pytest.param(b"01234_pattern5678", b"pattern", 13, id="pattern_in_middle"),
+        ),
+    )
+    def test_find_first_set_file_pointer(
+        self, content: bytes, pattern: bytes, expected_pointer_position: int
+    ):
+        fake_file = io.BytesIO(content)
+        find_first(fake_file, pattern)
+        assert fake_file.tell() == expected_pointer_position
 
 
 @pytest.mark.parametrize(
     "content, pattern, expected",
     (
         (b"", b"", []),
-        (b"abcdef abcdef", b"abcdef", [0, 6]),
+        (b"abcdef 123", b"abcdef", [0]),
+        (b"abcdef abc", b"abcdef", [0]),
+        (b"abcdef abcdef", b"abcdef", [0, 7]),
+        (b"abcd", b"abcd", [0]),
+        (b"abcdef abcdef", b"not-found", []),
     ),
 )
 def test_iterate_patterns(content: bytes, pattern: bytes, expected: List[int]):

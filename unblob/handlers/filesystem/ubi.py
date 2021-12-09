@@ -131,12 +131,10 @@ class UBIHandler(Handler):
         # cause an issue if we had a blob containing multiple UBI images, with different PEB sizes.
         all_ubi_eraseblock_offsets = []
         while True:
-            start_find = file.tell()
             offset = find_first(file, self._UBI_EC_HEADER)
-            file.seek(offset + len(self._UBI_EC_HEADER) + start_find)
             if offset == -1:
                 break
-            all_ubi_eraseblock_offsets.append(start_find + offset)
+            all_ubi_eraseblock_offsets.append(offset)
 
         offset_intervals = get_intervals(all_ubi_eraseblock_offsets)
         if not offset_intervals:
