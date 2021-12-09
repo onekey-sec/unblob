@@ -67,7 +67,6 @@ class BZip2Handler(StructHandler):
         buff = 0
         curr_block = 0
         blocks_found = 0
-        current_block_start = 0
         current_block_end = 0
 
         file.seek(start_offset)
@@ -79,20 +78,12 @@ class BZip2Handler(StructHandler):
 
             if buff == BLOCK_HEADER or buff == BLOCK_ENDMARK:
                 blocks_found += 1
-
-                if bits_read > COMPRESSED_MAGIC_LENGTH + 1:
-                    current_block_end = bits_read - (COMPRESSED_MAGIC_LENGTH + 1)
-
-                if curr_block > 0 and (current_block_end - current_block_start) >= 130:
-                    logger.debug(
-                        "bzip2_recover (complete block)",
-                        block_id=curr_block,
-                        block_start=current_block_start,
-                        block_end=current_block_end,
-                    )
+                # This can be negative, but we don't care, because we also count found blocks
+                # and in the case we didn't found both of them, we don't use this value
+                # When there are two blocks found, this will reflect the correct end
+                current_block_end = bits_read - (COMPRESSED_MAGIC_LENGTH + 1)
 
                 curr_block += 1
-                current_block_start = bits_read
 
         if blocks_found < 2:
             return -1

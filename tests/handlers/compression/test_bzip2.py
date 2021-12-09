@@ -17,6 +17,7 @@ def shift_left(value: bytes, bits: int) -> bytes:
 @pytest.mark.parametrize(
     "content, start_offset, expected_end_offset",
     (
+        pytest.param(b"123", 0, -1, id="shorter_than_block"),
         pytest.param(b"asdfasdf", 0, -1, id="not_found"),
         pytest.param(BLOCK_HEADER + b"123" + BLOCK_ENDMARK, 0, 9, id="aligned_to_zero"),
         pytest.param(
