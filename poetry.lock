@@ -196,6 +196,17 @@ docs = ["Sphinx (>=4)", "furo (>=2021.7.5b38)", "proselint (>=0.10.2)", "sphinx-
 test = ["appdirs (==1.4.4)", "pytest (>=6)", "pytest-cov (>=2.7)", "pytest-mock (>=3.6)"]
 
 [[package]]
+name = "plotext"
+version = "4.1.5"
+description = "plotext plots directly on terminal"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.extras]
+image = ["pillow (>=8.4)"]
+
+[[package]]
 name = "pluggy"
 version = "1.0.0"
 description = "plugin and hook calling mechanisms for python"
@@ -432,7 +443,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "ffe9987608cea86289af4f4b3ecbfddcd4e89606d21b63d7e8c08ef91c7efaa1"
+content-hash = "cbb70ba541d2367667f28704be10d4ec881916a6dc4f391c3c6b05af21bb159e"
 
 [metadata.files]
 arpy = [
@@ -548,6 +559,10 @@ packaging = [
 platformdirs = [
     {file = "platformdirs-2.4.0-py3-none-any.whl", hash = "sha256:8868bbe3c3c80d42f20156f22e7131d2fb321f5bc86a2a345375c6481a67021d"},
     {file = "platformdirs-2.4.0.tar.gz", hash = "sha256:367a5e80b3d04d2428ffa76d33f124cf11e8fff2acdaa9b43d545f5c7d661ef2"},
+]
+plotext = [
+    {file = "plotext-4.1.5-py3-none-any.whl", hash = "sha256:60395f4f764194f04681a1abd70379410f1da756a697a9727b0e64a862c62de0"},
+    {file = "plotext-4.1.5.tar.gz", hash = "sha256:ba0a2870f55b4bbc75a06228b4779bdfd2608f1f43ceb4f8851d9f9a63923ef8"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
