@@ -1,7 +1,6 @@
-# unblob - extract anything
+# unblob
 
-unblob is an alternative to binwalk to inspect and/or extract any kind of
-file format.
+unblob is a tool for getting information out of any kind of binary blob.
 
 ## Development
 
