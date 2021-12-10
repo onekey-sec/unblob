@@ -65,6 +65,17 @@ def get_help_text():
     show_default=True,
     help="Recursion depth. How deep should we extract containers.",
 )
+@click.option(
+    "-n",
+    "--entropy-depth",
+    type=click.IntRange(0),
+    default=1,
+    show_default=True,
+    help=(
+        "Entropy calculation depth. How deep should we calculate entropy for unknown files? "
+        "1 means input files only, 0 turns it off."
+    ),
+)
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
 @click.option(
     "--show-external-dependencies",
@@ -74,12 +85,20 @@ def get_help_text():
     expose_value=False,
     is_eager=True,
 )
-def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
+def cli(
+    files: Tuple[Path],
+    extract_root: Path,
+    depth: int,
+    entropy_depth: int,
+    verbose: bool,
+):
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=noformat(len(files)))
     for path in files:
         root = path if path.is_dir() else path.parent
-        process_file(root, path, extract_root, max_depth=depth)
+        process_file(
+            root, path, extract_root, max_depth=depth, entropy_depth=entropy_depth
+        )
 
 
 def main():

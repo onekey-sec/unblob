@@ -68,16 +68,21 @@ def extract_with_command(
 
 def carve_unknown_chunks(
     extract_dir: Path, file: io.BufferedIOBase, unknown_chunks: List[UnknownChunk]
-):
+) -> List[Path]:
     if not unknown_chunks:
-        return
+        return []
 
+    carved_paths = []
     logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+
     for chunk in unknown_chunks:
         filename = f"{chunk.start_offset}-{chunk.end_offset}.unknown"
         carve_path = extract_dir / filename
         logger.info("Extracting unknown chunk", path=carve_path, chunk=chunk)
         carve_chunk_to_file(carve_path, file, chunk)
+        carved_paths.append(carve_path)
+
+    return carved_paths
 
 
 def extract_valid_chunks(
