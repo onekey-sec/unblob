@@ -10,6 +10,7 @@ from unblob.file_utils import (
     StructParser,
     convert_int8,
     convert_int32,
+    convert_int64,
     decode_multibyte_integer,
     find_first,
     iterate_file,
@@ -113,7 +114,7 @@ class TestConvertInt8:
             (b"\x10", Endian.BIG, 0x10),
         ),
     )
-    def test_convert_int8(self, value, endian, expected):
+    def test_convert_int8(self, value: bytes, endian: Endian, expected: int):
         assert convert_int8(value, endian) == expected
 
     @pytest.mark.parametrize(
@@ -129,7 +130,7 @@ class TestConvertInt8:
             (b"\xff\xff\xff\xff\xff", Endian.BIG),
         ),
     )
-    def test_convert_invalid_values(self, value, endian):
+    def test_convert_invalid_values(self, value: bytes, endian: Endian):
         with pytest.raises(ValueError):
             convert_int8(value, endian)
 
@@ -146,7 +147,7 @@ class TestConvertInt32:
             (b"\x10\x00\x00\x00", Endian.BIG, 0x10000000),
         ),
     )
-    def test_convert_int32(self, value, endian, expected):
+    def test_convert_int32(self, value: bytes, endian: Endian, expected: int):
         assert convert_int32(value, endian) == expected
 
     @pytest.mark.parametrize(
@@ -164,9 +165,50 @@ class TestConvertInt32:
             (b"\xff\xff\xff\xff\xff", Endian.BIG),
         ),
     )
-    def test_convert_invalid_values(self, value, endian):
+    def test_convert_invalid_values(self, value: bytes, endian: Endian):
         with pytest.raises(ValueError):
             convert_int32(value, endian)
+
+
+class TestConvertInt64:
+    @pytest.mark.parametrize(
+        "value, endian, expected",
+        (
+            (b"\x00\x00\x00\x00\x00\x00\x00\x00", Endian.LITTLE, 0x0),
+            (b"\x00\x00\x00\x00\x00\x00\x00\x00", Endian.BIG, 0x0),
+            (b"\xff\xff\xff\xff\xff\xff\xff\xff", Endian.LITTLE, 0xFFFF_FFFF_FFFF_FFFF),
+            (b"\xff\xff\xff\xff\xff\xff\xff\xff", Endian.BIG, 0xFFFF_FFFF_FFFF_FFFF),
+            (b"\x10\x00\x00\x00\x00\x00\x00\x00", Endian.LITTLE, 0x10),
+            (b"\x10\x00\x00\x00\x00\x00\x00\x00", Endian.BIG, 0x1000_0000_0000_0000),
+        ),
+    )
+    def test_convert_int64(self, value: bytes, endian: Endian, expected: int):
+        assert convert_int64(value, endian) == expected
+
+    @pytest.mark.parametrize(
+        "value, endian",
+        (
+            (b"", Endian.LITTLE),
+            (b"", Endian.BIG),
+            (b"\x00", Endian.LITTLE),
+            (b"\x00", Endian.BIG),
+            (b"\x00\x00", Endian.LITTLE),
+            (b"\x00\x00", Endian.BIG),
+            (b"\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff\xff\xff\xff", Endian.BIG),
+        ),
+    )
+    def test_convert_invalid_values(self, value: bytes, endian: Endian):
+        with pytest.raises(ValueError):
+            convert_int64(value, endian)
 
 
 class TestMultibytesInteger:
@@ -183,7 +225,7 @@ class TestMultibytesInteger:
             (b"\xff\xff\xff\xff\xff\xff\xff\x7f", (8, 0xFFFFFFFFFFFFFF)),
         ),
     )
-    def test_decode_multibyte_integer(self, value, expected):
+    def test_decode_multibyte_integer(self, value: bytes, expected: int):
         assert decode_multibyte_integer(value) == expected
 
     @pytest.mark.parametrize(
@@ -194,7 +236,7 @@ class TestMultibytesInteger:
             (b"\xff\xff\xff"),
         ),
     )
-    def test_decode_invalid_values(self, value):
+    def test_decode_invalid_values(self, value: bytes):
         with pytest.raises(ValueError):
             decode_multibyte_integer(value)
 

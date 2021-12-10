@@ -52,6 +52,14 @@ def convert_int32(value: bytes, endian: Endian) -> int:
         raise ValueError("Not an int32")
 
 
+def convert_int64(value: bytes, endian: Endian) -> int:
+    """Convert 8 byte integer to a Python int."""
+    try:
+        return struct.unpack(f"{endian.value}Q", value)[0]
+    except struct.error:
+        raise ValueError("Not an int64")
+
+
 def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
     """Decodes multi-bytes integer into integer size and integer value.
 

@@ -15,7 +15,7 @@ jobs:
 
       - name: Install 3rd party from apt
         run: |
-            sudo apt install unar zlib1g-dev liblzo2-dev lzop
+            sudo apt install unar zlib1g-dev liblzo2-dev lzop lziprecover
 
       - name: Install dependencies
         run: |
