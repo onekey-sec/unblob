@@ -4,8 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from unblob.file_utils import find_first
-
+from ...file_utils import DEFAULT_BUFSIZE
 from ...models import Handler, ValidChunk
 
 logger = get_logger()
@@ -26,25 +25,16 @@ class LZMAHandler(Handler):
     ) -> Optional[ValidChunk]:
 
         decompressor = lzma.LZMADecompressor(format=lzma.FORMAT_ALONE)
+
         try:
-            decompressor.decompress(file.read())
+            while not decompressor.eof:
+                decompressor.decompress(file.read(DEFAULT_BUFSIZE))
         except lzma.LZMAError:
             return
 
-        # unused_data contains data found after the end of the compressed stream, if any.
-        # we can search for that needle within the file to find the end offset :)
-        if decompressor.unused_data != b"":
-            file.seek(start_offset)
-            end_offset = find_first(
-                file,
-                decompressor.unused_data[0:16],
-            )
-        else:
-            file.seek(0, io.SEEK_END)
-            end_offset = file.tell()
-
         return ValidChunk(
-            start_offset=start_offset, end_offset=start_offset + end_offset
+            start_offset=start_offset,
+            end_offset=file.tell() - len(decompressor.unused_data),
         )
 
     @staticmethod
