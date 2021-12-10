@@ -114,7 +114,7 @@ class TestConvertInt8:
             (b"\x10", Endian.BIG, 0x10),
         ),
     )
-    def test_convert_int8(self, value, endian, expected):
+    def test_convert_int8(self, value: bytes, endian: Endian, expected: int):
         assert convert_int8(value, endian) == expected
 
     @pytest.mark.parametrize(
@@ -130,7 +130,7 @@ class TestConvertInt8:
             (b"\xff\xff\xff\xff\xff", Endian.BIG),
         ),
     )
-    def test_convert_invalid_values(self, value, endian):
+    def test_convert_invalid_values(self, value: bytes, endian: Endian):
         with pytest.raises(ValueError):
             convert_int8(value, endian)
 
@@ -147,7 +147,7 @@ class TestConvertInt32:
             (b"\x10\x00\x00\x00", Endian.BIG, 0x10000000),
         ),
     )
-    def test_convert_int32(self, value, endian, expected):
+    def test_convert_int32(self, value: bytes, endian: Endian, expected: int):
         assert convert_int32(value, endian) == expected
 
     @pytest.mark.parametrize(
@@ -165,7 +165,7 @@ class TestConvertInt32:
             (b"\xff\xff\xff\xff\xff", Endian.BIG),
         ),
     )
-    def test_convert_invalid_values(self, value, endian):
+    def test_convert_invalid_values(self, value: bytes, endian: Endian):
         with pytest.raises(ValueError):
             convert_int32(value, endian)
 
@@ -182,7 +182,7 @@ class TestConvertInt64:
             (b"\x10\x00\x00\x00\x00\x00\x00\x00", Endian.BIG, 0x1000_0000_0000_0000),
         ),
     )
-    def test_convert_int64(self, value, endian, expected):
+    def test_convert_int64(self, value: bytes, endian: Endian, expected: int):
         assert convert_int64(value, endian) == expected
 
     @pytest.mark.parametrize(
@@ -206,7 +206,7 @@ class TestConvertInt64:
             (b"\xff\xff\xff\xff\xff\xff\xff", Endian.BIG),
         ),
     )
-    def test_convert_invalid_values(self, value, endian):
+    def test_convert_invalid_values(self, value: bytes, endian: Endian):
         with pytest.raises(ValueError):
             convert_int64(value, endian)
 
@@ -225,7 +225,7 @@ class TestMultibytesInteger:
             (b"\xff\xff\xff\xff\xff\xff\xff\x7f", (8, 0xFFFFFFFFFFFFFF)),
         ),
     )
-    def test_decode_multibyte_integer(self, value, expected):
+    def test_decode_multibyte_integer(self, value: bytes, expected: int):
         assert decode_multibyte_integer(value) == expected
 
     @pytest.mark.parametrize(
@@ -236,7 +236,7 @@ class TestMultibytesInteger:
             (b"\xff\xff\xff"),
         ),
     )
-    def test_decode_invalid_values(self, value):
+    def test_decode_invalid_values(self, value: bytes):
         with pytest.raises(ValueError):
             decode_multibyte_integer(value)
 
