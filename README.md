@@ -7,9 +7,13 @@ unblob is a tool for getting information out of any kind of binary blob.
 Unblob can be used right away from a `docker` container: \
 `ghcr.io/iot-inspector/unblob:latest`
 
+The `--pull always` option is recommended, because the project is currently under heavy development, so we expect frequent changes.
+
+
 ```shell
 docker run \
   --rm \
+  --pull always \
   -v /path/to/out/dir/on/host:/data/output \
   -v /path/to/files/on/host:/data/input \
 ghcr.io/iot-inspector/unblob:latest /data/input/path/to/file
@@ -17,7 +21,7 @@ ghcr.io/iot-inspector/unblob:latest /data/input/path/to/file
 
 Help on usage:
 ```shell
-docker run --rm ghcr.io/iot-inspector/unblob:latest --help
+docker run --rm --pull always ghcr.io/iot-inspector/unblob:latest --help
 ```
 
 
