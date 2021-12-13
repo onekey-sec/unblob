@@ -1,0 +1,11 @@
+[package]
+name = "unblob-rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "unblob"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = "0.15.1"
