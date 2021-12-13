@@ -1,0 +1,49 @@
+name: Publish Docker image
+
+on:
+  push:
+    branches: ['main']
+
+env:
+  DOCKER_IMAGE: ghcr.io/iot-inspector/unblob:latest
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Setup git lfs
+        uses: ./.github/actions/setup-git-lfs
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ${{ env.DOCKER_IMAGE }}
+
+      - name: Check unblob - help
+        run: docker run --rm ${{ env.DOCKER_IMAGE }} --help
+
+      - name: Check unblob - run for a file with --verbose
+        run: docker run --rm -v "$(pwd)"/tests/integration/archive/zip/regular:/test ${{ env.DOCKER_IMAGE }} -v -e /tmp /test
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}

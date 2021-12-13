@@ -1,0 +1,48 @@
+name: Main
+
+on: [push, pull_request]
+
+jobs:
+  check_pre_commit:
+    name: Check - pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+
+      - name: Check pre-commit hook
+        uses: pre-commit/action@v2.0.3
+
+
+  check_pyright:
+    name: Check - pyright
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Setup 3rd party dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Check - pyright
+        run: PYRIGHT_PYTHON_FORCE_VERSION=1.1.188 poetry run pyright .
+
+
+  run_tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Setup 3rd party dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Setup git lfs
+        uses: ./.github/actions/setup-git-lfs
+
+      - name: Run pytest
+        run: poetry run pytest
