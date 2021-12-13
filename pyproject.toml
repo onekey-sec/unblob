@@ -36,7 +36,7 @@ profile = "black"
 unblob = "unblob.cli:main"
 
 [tool.pytest.ini_options]
-addopts = "--cov=. --cov-branch --cov-fail-under=90"
+addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
