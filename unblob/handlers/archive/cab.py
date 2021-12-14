@@ -13,9 +13,9 @@ class CABHandler(StructHandler):
 
     YARA_RULE = r"""
         strings:
-            $magic = { 4D 53 43 46 00 00 00 00 } // MSCF, then reserved dword
+            $cab_magic = { 4D 53 43 46 00 00 00 00 } // MSCF, then reserved dword
         condition:
-            $magic
+            $cab_magic
     """
 
     C_DEFINITIONS = r"""

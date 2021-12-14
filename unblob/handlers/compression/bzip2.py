@@ -25,9 +25,9 @@ class BZip2Handler(StructHandler):
     YARA_RULE = r"""
         strings:
             // magic + version + block_size + compressed_magic
-            $magic = /\x42\x5a\x68[\x31-\x39]\x31\x41\x59\x26\x53\x59/
+            $bzip2_magic = /\x42\x5a\x68[\x31-\x39]\x31\x41\x59\x26\x53\x59/
         condition:
-            $magic
+            $bzip2_magic
     """
 
     C_DEFINITIONS = r"""
