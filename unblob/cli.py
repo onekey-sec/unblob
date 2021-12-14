@@ -35,15 +35,35 @@ logger = get_logger()
     help="Recursion depth. How deep should we extract containers.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
-def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
+def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool) -> int:
+    return unblob(files=files, extract_root=extract_root, depth=depth, verbose=verbose)
+
+
+def unblob(
+    files: Tuple[Path],
+    extract_root: Path,
+    depth: int = DEFAULT_DEPTH,
+    verbose: bool = False,
+) -> int:
+    """Calls unblob for a files.
+
+    Returns with zero for success, non-zero integer in case of error(s).
+    """
     configure_logger(verbose, extract_root)
+
     logger.info("Start processing files", count=noformat(len(files)))
-    for path in files:
-        root = path if path.is_dir() else path.parent
-        process_file(root, path, extract_root, max_depth=depth)
+    try:
+        for path in files:
+            root = path if path.is_dir() else path.parent
+            process_file(root, path, extract_root, max_depth=depth)
+    except Exception:
+        logger.exception("Unhandled exception during unblob")
+        return 1
+
+    return exit_code_var.get(0)
 
 
-def main():
+def main() -> None:
     try:
         # Click argument parsing
         ctx = cli.make_context("unblob", sys.argv[1:])
@@ -56,14 +76,8 @@ def main():
         logger.exception("Unhandled exception during unblob")
         sys.exit(1)
 
-    try:
-        with ctx:
-            cli.invoke(ctx)
-    except Exception:
-        logger.exception("Unhandled exception during unblob")
-        sys.exit(1)
-
-    sys.exit(exit_code_var.get(0))
+    rc = cli.invoke(ctx)
+    sys.exit(rc)
 
 
 if __name__ == "__main__":
