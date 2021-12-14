@@ -15,9 +15,8 @@ from typing import Type
 
 import pytest
 
-from unblob import handlers
+from unblob import handlers, unblob
 from unblob.models import Handler
-from unblob.processing import DEFAULT_DEPTH, process_file
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
 TEST_INPUT_DIRS = list(TEST_DATA_PATH.glob("**/__input__"))
@@ -39,12 +38,7 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         list(input_dir.iterdir()) != []
     ), f"Integration test input dir should contain at least 1 file: {input_dir}"
 
-    process_file(
-        root=input_dir,
-        path=input_dir,
-        extract_root=tmp_path,
-        max_depth=DEFAULT_DEPTH,
-    )
+    unblob(files=input_dir, extract_root=tmp_path, verbose=True)
 
     diff_command = [
         "diff",
