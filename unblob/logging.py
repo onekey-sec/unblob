@@ -53,6 +53,13 @@ def pretty_print_types(extract_root: Path):
 
 
 def configure_logger(verbose: bool, extract_root: Path):
+    if structlog.is_configured:
+        # If used as a library, with already configured structlog, we still need our types to be prettyly printed
+        processors = structlog.get_config().get("processors", [])
+        processors.insert(0, pretty_print_types(extract_root))
+        structlog.configure(processors=processors)
+        return
+
     log_level = logging.DEBUG if verbose else logging.INFO
     processors = [
         structlog.stdlib.add_log_level,
