@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
 import click
 from structlog import get_logger
@@ -40,7 +40,7 @@ def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool) -> in
 
 
 def unblob(
-    files: Tuple[Path],
+    files: Union[Path, Tuple[Path]],
     extract_root: Path,
     depth: int = DEFAULT_DEPTH,
     verbose: bool = False,
@@ -51,6 +51,8 @@ def unblob(
     """
     configure_logger(verbose, extract_root)
 
+    if not isinstance(files, Tuple):
+        files = (files,)
     logger.info("Start processing files", count=noformat(len(files)))
     try:
         for path in files:
