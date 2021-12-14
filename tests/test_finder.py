@@ -17,9 +17,9 @@ class TestHandler1(_BaseTestHandler):
     NAME = "handler1"
     YARA_RULE = r"""
         strings:
-            $magic = { 21 3C }
+            $handler1_magic = { 21 3C }
         condition:
-            $magic
+            $handler1_magic
     """
 
 
@@ -37,7 +37,7 @@ def test_make_yara_rules():
     rules = make_yara_rules(tuple([TestHandler1, TestHandler2]))
     matches = rules.match(data=b"!<        ustar")
     assert len(matches) == 2
-    assert matches[0].strings == [(0, "$magic", b"!<")]
+    assert matches[0].strings == [(0, "$handler1_magic", b"!<")]
     assert matches[1].strings == [(10, "$tar_magic", b"ustar")]
 
 
@@ -54,7 +54,7 @@ def test_search_yara_patterns(tmp_path: Path):
     result1, result2 = results
 
     assert result1.handler is handler1
-    assert result1.match.strings == [(0, "$magic", b"!<")]
+    assert result1.match.strings == [(0, "$handler1_magic", b"!<")]
 
     assert result2.handler is handler2
     assert result2.match.strings == [(10, "$tar_magic", b"ustar")]

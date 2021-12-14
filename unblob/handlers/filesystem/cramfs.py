@@ -16,10 +16,10 @@ class CramFSHandler(StructHandler):
 
     YARA_RULE = r"""
         strings:
-            $magic_be = { 28 CD 3D 45 }
-            $magic_le = { 45 3D CD 28 }
+            $cramfs_magic_be = { 28 CD 3D 45 }
+            $cramfs_magic_le = { 45 3D CD 28 }
         condition:
-            $magic_le or $magic_be
+            $cramfs_magic_be or $cramfs_magic_le
     """
 
     C_DEFINITIONS = r"""

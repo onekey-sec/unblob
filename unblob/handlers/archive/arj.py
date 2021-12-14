@@ -25,9 +25,9 @@ class ARJHandler(StructHandler):
 
     YARA_RULE = r"""
         strings:
-            $magic = { 60 EA [5] 0? [2] 0? } //
+            $arj_magic = { 60 EA [5] 0? [2] 0? }
         condition:
-            $magic
+            $arj_magic
     """
 
     # https://docs.fileformat.com/compression/arj/

@@ -15,9 +15,9 @@ class DMGHandler(StructHandler):
     YARA_RULE = r"""
         strings:
             // 'koly' magic, followed by version from 1 to 4, followed by fixed header size of 512
-            $magic = { 6b 6f 6c 79 00 00 00 04 00 00 02 00 }
+            $dmg_magic = { 6b 6f 6c 79 00 00 00 04 00 00 02 00 }
         condition:
-            $magic
+            $dmg_magic
     """
 
     C_DEFINITIONS = r"""
