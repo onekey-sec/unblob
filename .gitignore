@@ -1,2 +1,5 @@
 /*_extract/
 *__pycache__*
+/target/
+*.egg-info/
+*.so
