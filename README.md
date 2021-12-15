@@ -33,6 +33,14 @@ We are using [poetry](https://python-poetry.org/) for managing dependencies.
 
 `poetry install` will install all required dependencies in a virtualenv.
 
+### Rust extension module (optional)
+
+Unblob has an optional Rust extension for performance intensive
+processing. Building it is entirely optional and requires
+`[rustup](https://rustup.rs/)` to be installed on the host system. Run
+`UNBLOB_BUILD_RUST_EXTENSION=1 poetry install` to build and install
+the extension. Set `RUST_DEBUG=1` to build it in debug mode.
+
 ### Testing
 
 We are using pytest for running our test suite.\
