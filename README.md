@@ -53,6 +53,14 @@ $ sudo apt install git-lfs
 $ git lfs install
 ```
 
+If you have cloned the repository prior to installing Git LFS, you
+need to run the following commands once:
+
+```console
+$ git lfs pull
+$ git lfs checkout
+```
+
 After you installed Git LFS, you can run all tests, with
 `python -m pytest tests/` in the activated virtualenv.
 
