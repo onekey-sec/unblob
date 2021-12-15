@@ -17,6 +17,12 @@ jobs:
       - name: Setup git lfs
         uses: ./.github/actions/setup-git-lfs
 
+      - name: Setup 3rd party dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Poetry build
+        run: UNBLOB_BUILD_RUST_EXTENSION=1 poetry build --format wheel
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
