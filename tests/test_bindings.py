@@ -1,11 +1,26 @@
 import pytest
 from pytest import approx
 
-import unblob._py
-import unblob._rust
+import unblob._py as python_binding
+
+try:
+    import unblob._rust as rust_binding
+except ModuleNotFoundError:
+    rust_binding = None
 
 
-@pytest.fixture(params=[unblob._rust, unblob._py])
+@pytest.fixture(
+    params=[
+        pytest.param(python_binding, id="Python"),
+        pytest.param(
+            rust_binding,
+            id="Rust",
+            marks=pytest.mark.skipif(
+                rust_binding is None, reason="Rust binding is not present"
+            ),
+        ),
+    ]
+)
 def binding(request):
     yield request.param
 
