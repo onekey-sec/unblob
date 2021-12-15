@@ -20,6 +20,15 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
 
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: default
+          toolchain: 1.57.0
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v1
+
       - name: Check pre-commit hook
         uses: pre-commit/action@v2.0.3
 
