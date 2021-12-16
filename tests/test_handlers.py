@@ -68,11 +68,7 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
 
 @pytest.mark.parametrize(
     "handler",
-    (
-        pytest.param(handler, id=handler.NAME)
-        for handlers_in_priority in handlers.ALL_HANDLERS_BY_PRIORITY
-        for handler in handlers_in_priority
-    ),
+    (pytest.param(handler, id=handler.NAME) for handler in handlers.ALL_HANDLERS),
 )
 def test_missing_handlers_integrations_tests(handler: Type[Handler]):
     handler_module_path = Path(inspect.getfile(handler))

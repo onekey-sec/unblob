@@ -44,3 +44,7 @@ ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
         xz.XZHandler,
     ),
 ]
+
+ALL_HANDLERS = [
+    handler for handlers in ALL_HANDLERS_BY_PRIORITY for handler in handlers
+]
