@@ -21,6 +21,9 @@ arpy = "^2.2.0"
 rarfile = "^4.0"
 ubi-reader = "^0.7.0"
 python-lzo = "^1.12"
+cstruct = "2.1"
+jefferson = { git = "https://github.com/IoT-Inspector/jefferson.git", rev = "216eee6c56d338e5a14a0af5d07f1117cff92b3b" }
+
 
 [tool.poetry.dev-dependencies]
 lark = "^1.0.0"
