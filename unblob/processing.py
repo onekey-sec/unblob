@@ -4,6 +4,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import List
 
+import plotext as plt
 from structlog import get_logger
 
 from .extractor import carve_unknown_chunks, extract_valid_chunks, make_extract_dir
@@ -27,6 +28,7 @@ def process_file(  # noqa: C901
     extract_root: Path,
     max_depth: int,
     entropy_depth: int,
+    verbose: bool = False,
     current_depth: int = 0,
 ):
     log = logger.bind(path=path)
@@ -43,7 +45,13 @@ def process_file(  # noqa: C901
         log.info("Found directory")
         for path in path.iterdir():
             process_file(
-                root, path, extract_root, max_depth, entropy_depth, current_depth + 1
+                root,
+                path,
+                extract_root,
+                max_depth,
+                entropy_depth,
+                verbose,
+                current_depth + 1,
             )
         return
 
@@ -65,7 +73,7 @@ def process_file(  # noqa: C901
             # we don't consider whole files as unknown chunks, but we still want to
             # calculate entropy for whole files which produced no valid chunks
             if current_depth < entropy_depth:
-                calculate_entropy(path)
+                calculate_entropy(path, draw_plot=verbose)
             return
 
         extract_dir = make_extract_dir(root, path, extract_root)
@@ -73,7 +81,7 @@ def process_file(  # noqa: C901
         carved_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
         if current_depth < entropy_depth:
             for carved_path in carved_paths:
-                calculate_entropy(carved_path)
+                calculate_entropy(carved_path, draw_plot=verbose)
 
         for new_path in extract_valid_chunks(extract_dir, file, outer_chunks):
             process_file(
@@ -82,6 +90,7 @@ def process_file(  # noqa: C901
                 extract_root,
                 max_depth,
                 entropy_depth,
+                verbose,
                 current_depth + 1,
             )
 
@@ -143,7 +152,7 @@ def calculate_unknown_chunks(
     return unknown_chunks
 
 
-def calculate_entropy(path: Path):
+def calculate_entropy(path: Path, *, draw_plot: bool):
     """Calculate and log shannon entropy divided by 8 for the file in 1mB chunks.
 
     Shannon entropy returns the amount of information (in bits) of some numeric
@@ -173,3 +182,26 @@ def calculate_entropy(path: Path):
         highest=max(percentages),
         lowest=min(percentages),
     )
+
+    if draw_plot:
+        draw_entropy_plot(percentages)
+
+
+def draw_entropy_plot(percentages: List[float]):
+    plt.clear_data()
+    plt.colorless()
+    plt.title("Entropy distribution")
+    plt.xlabel("mB")
+    plt.ylabel("entropy %")
+
+    plt.scatter(percentages, marker="dot")
+    # 16 height leaves no gaps between the lines
+    plt.plot_size(100, 16)
+    plt.ylim(0, 100)
+    # Draw ticks every 1Mb on the x axis.
+    plt.xticks(range(len(percentages) + 1))
+    # Always show 0% and 100%
+    plt.yticks(range(0, 101, 10))
+
+    # New line so that chart title will be aligned correctly in the next line
+    logger.debug("Entropy chart", chart="\n" + plt.build())

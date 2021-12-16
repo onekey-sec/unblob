@@ -97,7 +97,12 @@ def cli(
     for path in files:
         root = path if path.is_dir() else path.parent
         process_file(
-            root, path, extract_root, max_depth=depth, entropy_depth=entropy_depth
+            root,
+            path,
+            extract_root,
+            max_depth=depth,
+            entropy_depth=entropy_depth,
+            verbose=verbose,
         )
 
 
