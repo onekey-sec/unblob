@@ -24,6 +24,9 @@ class noformat:
     def get(self):
         return self._value
 
+    def __repr__(self) -> str:
+        return repr(self._value)
+
 
 def _format_message(value: Any, extract_root: Path) -> Any:
     if isinstance(value, noformat):
