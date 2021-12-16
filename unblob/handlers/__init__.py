@@ -3,7 +3,7 @@ from typing import List, Tuple, Type
 from ..models import Handler
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
 from .compression import bzip2, compress, gzip, lz4, lzh, lzip, lzma, lzo, xz
-from .filesystem import cramfs, extfs, fat, iso9660, jffs2, ntfs, squashfs, ubi
+from .filesystem import cramfs, extfs, fat, iso9660, jffs2, ntfs, squashfs, ubi, yaffs
 
 ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
     (
@@ -17,6 +17,8 @@ ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
         squashfs.SquashFSv4Handler,
         ubi.UBIHandler,
         ubi.UBIFSHandler,
+        yaffs.YAFFSHandler,
+        yaffs.YAFFS2Handler,
     ),
     (
         ar.ARHandler,
