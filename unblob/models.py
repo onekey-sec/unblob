@@ -99,6 +99,11 @@ class Handler(abc.ABC):
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
         """Make the extract command with the external tool, which can be passed for subprocess.run."""
 
+    @classmethod
+    def _get_extract_command(cls) -> str:
+        """Returns which (usually 3rd party CLI) command is used for extraction."""
+        return cls.make_extract_command.__code__.co_consts[1]
+
 
 class StructHandler(Handler):
     C_DEFINITIONS: str

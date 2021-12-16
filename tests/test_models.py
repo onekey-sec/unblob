@@ -1,6 +1,6 @@
 import pytest
 
-from unblob.models import Chunk, UnknownChunk
+from unblob.models import Chunk, Handler, UnknownChunk
 
 
 class TestChunk:
@@ -32,3 +32,19 @@ class TestChunk:
     )
     def test_contains_offset(self, chunk, offset, expected):
         assert expected is chunk.contains_offset(offset)
+
+
+class TestHandler:
+    class DummyHandler(Handler):
+        NAME = "name"
+        YARA_RULE = "yara_rule"
+
+        def calculate_chunk(self, *args, **kwargs):
+            pass
+
+        @staticmethod
+        def make_extract_command(*args, **kwargs):
+            return ["testcommand", "with", "some", "-test", "arguments"]
+
+    def test_get_extract_command(self):
+        assert self.DummyHandler._get_extract_command() == "testcommand"

@@ -6,6 +6,8 @@ from typing import Tuple
 import click
 from structlog import get_logger
 
+from .dependencies import get_dependencies, pretty_format_dependencies
+from .handlers import ALL_HANDLERS
 from .logging import configure_logger, noformat
 from .processing import DEFAULT_DEPTH, process_file
 from .state import exit_code_var
@@ -13,7 +15,34 @@ from .state import exit_code_var
 logger = get_logger()
 
 
-@click.command()
+def show_external_dependencies(
+    ctx: click.Context, param: click.Option, value: bool
+) -> None:
+    if not value or ctx.resilient_parsing:
+        return
+
+    dependencies = get_dependencies(ALL_HANDLERS)
+    text = pretty_format_dependencies(dependencies)
+    exit_code = 0 if all(dep.is_installed for dep in dependencies) else 1
+
+    click.echo(text)
+    ctx.exit(code=exit_code)
+
+
+def get_help_text():
+    dependencies = get_dependencies(ALL_HANDLERS)
+    lines = [
+        "A tool for getting information out of any kind of binary blob.",
+        "",
+        "You also need these extractor commands to be able to extract the supported file types:",
+        ", ".join(dep.command for dep in dependencies),
+        "",
+        "NOTE: Some older extractors might not be compatible.",
+    ]
+    return "\n".join(lines)
+
+
+@click.command(help=get_help_text())
 @click.argument(
     "files",
     nargs=-1,
@@ -35,6 +64,14 @@ logger = get_logger()
     help="Recursion depth. How deep should we extract containers.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
+@click.option(
+    "--show-external-dependencies",
+    help="Shows commands needs to be available for unblob to work properly",
+    is_flag=True,
+    callback=show_external_dependencies,
+    expose_value=False,
+    is_eager=True,
+)
 def cli(files: Tuple[Path], extract_root: Path, depth: int, verbose: bool):
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=noformat(len(files)))
