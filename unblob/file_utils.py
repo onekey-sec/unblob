@@ -44,6 +44,14 @@ def convert_int8(value: bytes, endian: Endian) -> int:
         raise ValueError("Not an int8")
 
 
+def convert_int16(value: bytes, endian: Endian) -> int:
+    """Convert 2 byte integer to a Python int."""
+    try:
+        return struct.unpack(f"{endian.value}H", value)[0]
+    except struct.error:
+        raise ValueError("Not an int16")
+
+
 def convert_int32(value: bytes, endian: Endian) -> int:
     """Convert 4 byte integer to a Python int."""
     try:

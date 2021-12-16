@@ -9,6 +9,7 @@ from unblob.file_utils import (
     LimitedStartReader,
     StructParser,
     convert_int8,
+    convert_int16,
     convert_int32,
     convert_int64,
     decode_multibyte_integer,
@@ -133,6 +134,39 @@ class TestConvertInt8:
     def test_convert_invalid_values(self, value: bytes, endian: Endian):
         with pytest.raises(ValueError):
             convert_int8(value, endian)
+
+
+class TestConvertInt16:
+    @pytest.mark.parametrize(
+        "value, endian, expected",
+        (
+            (b"\x00\x00", Endian.LITTLE, 0x0),
+            (b"\x00\x00", Endian.BIG, 0x0),
+            (b"\xff\xff", Endian.LITTLE, 0xFFFF),
+            (b"\xff\xff", Endian.BIG, 0xFFFF),
+            (b"\x10\x00", Endian.LITTLE, 0x10),
+            (b"\x10\x00", Endian.BIG, 0x1000),
+        ),
+    )
+    def test_convert_int16(self, value: bytes, endian: Endian, expected: int):
+        assert convert_int16(value, endian) == expected
+
+    @pytest.mark.parametrize(
+        "value, endian",
+        (
+            (b"", Endian.LITTLE),
+            (b"", Endian.BIG),
+            (b"\xff", Endian.LITTLE),
+            (b"\xff", Endian.BIG),
+            (b"\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff", Endian.BIG),
+            (b"\xff\xff\xff\xff", Endian.LITTLE),
+            (b"\xff\xff\xff\xff", Endian.BIG),
+        ),
+    )
+    def test_convert_invalid_values(self, value: bytes, endian: Endian):
+        with pytest.raises(ValueError):
+            convert_int16(value, endian)
 
 
 class TestConvertInt32:
