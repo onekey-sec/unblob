@@ -52,6 +52,11 @@ def search_chunks_by_priority(  # noqa: C901
             for offset, identifier, string_data in sorted_match_strings:
                 real_offset = offset + handler.YARA_MATCH_OFFSET
 
+                # Skip chunk calculation if the match is found too early in the file,
+                # leading to a negative real offset once YARA_MATCH_OFFSET is applied.
+                if real_offset < 0:
+                    continue
+
                 # Skip chunk calculation if this would start inside another one,
                 # similar to remove_inner_chunks, but before we even begin calculating.
                 if any(chunk.contains_offset(real_offset) for chunk in all_chunks):
