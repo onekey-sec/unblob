@@ -8,6 +8,9 @@ from ...models import StructHandler, ValidChunk
 logger = get_logger()
 
 
+VALID_NT_SIGNATURES = [0x28, 0x29]
+
+
 class FATHandler(StructHandler):
 
     NAME = "fat"
@@ -118,6 +121,9 @@ class FATHandler(StructHandler):
             header = self.cparser_le.fat32_bootsec(file)
             logger.debug("FAT32 header parsed", header=header)
             sector_count = header.TotSec32
+
+        if header.BootSig not in VALID_NT_SIGNATURES:
+            return
 
         if sector_count == 0x0:
             sector_count = header.common.TotSectors
