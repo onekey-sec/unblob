@@ -23,6 +23,7 @@ ubi-reader = "^0.7.0"
 python-lzo = "^1.12"
 
 [tool.poetry.dev-dependencies]
+lark = "^1.0.0"
 pytest = "^6.2.4"
 pyright = "^0.0.12"
 pre-commit = "^2.15.0"

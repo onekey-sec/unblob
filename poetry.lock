@@ -129,6 +129,19 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "lark"
+version = "1.0.0"
+description = "a modern parsing library"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.extras]
+atomic_cache = ["atomicwrites"]
+nearley = ["js2py"]
+regex = ["regex"]
+
+[[package]]
 name = "nodeenv"
 version = "1.6.0"
 description = "Node.js virtual environment builder"
@@ -381,7 +394,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c20d5ac77feced16d39a845109f40aab9ff75b0f1adcccb70f672a7dc954e5d2"
+content-hash = "b3663d45d1926a5a2239856d84088fd0ef130d410da2d43ce01afbf0576fec83"
 
 [metadata.files]
 arpy = [
@@ -479,6 +492,10 @@ identify = [
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
+]
+lark = [
+    {file = "lark-1.0.0-py2.py3-none-any.whl", hash = "sha256:10818563b44e18ea264b5013a80fe04406999ad51bacc74214f69f13d95af6e1"},
+    {file = "lark-1.0.0.tar.gz", hash = "sha256:2269dee215e6c689d5ce9d34fdc6e749d0c1c763add3fc7935938ebd7da159cb"},
 ]
 nodeenv = [
     {file = "nodeenv-1.6.0-py2.py3-none-any.whl", hash = "sha256:621e6b7076565ddcacd2db0294c0381e01fd28945ab36bcf00f41c5daf63bef7"},
