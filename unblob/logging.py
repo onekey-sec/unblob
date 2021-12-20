@@ -69,5 +69,4 @@ def configure_logger(verbose: bool, extract_root: Path):
     structlog.configure(
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         processors=processors,
-        cache_logger_on_first_use=True,
     )
