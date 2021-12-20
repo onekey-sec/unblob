@@ -17,6 +17,12 @@ jobs:
       - name: Setup git lfs
         uses: ./.github/actions/setup-git-lfs
 
+      - name: Setup 3rd party dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Poetry build
+        run: UNBLOB_BUILD_RUST_EXTENSION=1 poetry build --format wheel
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -37,6 +43,9 @@ jobs:
 
       - name: Check unblob - help
         run: docker run --rm ${{ env.DOCKER_IMAGE }} --help
+
+      - name: Check unblob - show-external-dependencies
+        run: docker run --rm ${{ env.DOCKER_IMAGE }} --show-external-dependencies
 
       - name: Check unblob - run for a file with --verbose
         run: docker run --rm -v "$(pwd)"/tests/integration/archive/zip/regular:/test ${{ env.DOCKER_IMAGE }} -v -e /tmp /test
