@@ -1,19 +1,11 @@
 from pathlib import Path
 
+from conftest import TestHandler
+
 from unblob.finder import make_handler_map, make_yara_rules, search_yara_patterns
-from unblob.models import Handler
 
 
-class _BaseTestHandler(Handler):
-    def calculate_chunk(self, *args, **kwargs):
-        pass
-
-    @staticmethod
-    def make_extract_command(*args, **kwargs):
-        return []
-
-
-class TestHandler1(_BaseTestHandler):
+class TestHandler1(TestHandler):
     NAME = "handler1"
     YARA_RULE = r"""
         strings:
@@ -23,7 +15,7 @@ class TestHandler1(_BaseTestHandler):
     """
 
 
-class TestHandler2(_BaseTestHandler):
+class TestHandler2(TestHandler):
     NAME = "handler2"
     YARA_RULE = r"""
         strings:
