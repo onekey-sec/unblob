@@ -31,6 +31,11 @@ def snull(content: bytes):
     return content.rstrip(b"\x00")
 
 
+def round_down(size: int, alignment: int):
+    """Round down size to the alignment boundary."""
+    return alignment * math.floor(size / alignment)
+
+
 def round_up(size: int, alignment: int):
     """Round up size to the alignment boundary."""
     return alignment * math.ceil(size / alignment)

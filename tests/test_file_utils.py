@@ -17,8 +17,23 @@ from unblob.file_utils import (
     get_endian,
     iterate_file,
     iterate_patterns,
+    round_down,
     round_up,
 )
+
+
+@pytest.mark.parametrize(
+    "size, alignment, result",
+    (
+        (0, 5, 0),
+        (1, 10, 0),
+        (12, 10, 10),
+        (29, 10, 20),
+        (1, 512, 0),
+    ),
+)
+def test_round_down(size, alignment, result):
+    assert round_down(size, alignment) == result
 
 
 @pytest.mark.parametrize(

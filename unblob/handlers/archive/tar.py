@@ -4,24 +4,13 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import round_up, snull
+from ...file_utils import round_down, round_up, snull
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
 
 BLOCK_SIZE = HEADER_SIZE = 512
-
-# Because the header of the tar file doesn't necessarily
-# contain the size of the whole tar block (because "Physically,
-# an archive consists of a series of file entries terminated
-# by an end-of-archive entry, which consists of two 512 blocks
-# of zero bytes.") - we need to parse the concurrent tar chunks,
-# and then return the size of the total file once we reach the
-# blocks of NULLs.
-# https://www.gnu.org/software/tar/manual/html_node/Standard.html
-END_BLOCK_SIZE = BLOCK_SIZE * 2
-END_BLOCK = b"\x00" * END_BLOCK_SIZE
 
 MAGIC_OFFSET = 257
 
@@ -30,9 +19,20 @@ def _get_tar_end_offset(file: io.BufferedIOBase):
     tf = tarfile.TarFile(mode="r", fileobj=file)
     last_member = tf.getmembers()[-1]
     last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
-    last_offset = last_member.offset + HEADER_SIZE + last_file_size + END_BLOCK_SIZE
+    last_offset = last_member.offset + HEADER_SIZE + last_file_size
     padded_end_offset = round_up(last_offset, tarfile.RECORDSIZE)
-    return padded_end_offset
+
+    file.seek(last_offset)
+    padding_len = padded_end_offset - last_offset
+    padding = file.read(padding_len)
+
+    first_nonzero = len(padding)
+    for i, b in enumerate(padding):
+        if b != 0:
+            first_nonzero = i
+            break
+
+    return round_down(last_offset + first_nonzero, BLOCK_SIZE)
 
 
 class TarHandler(StructHandler):

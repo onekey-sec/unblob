@@ -5,7 +5,7 @@ from helpers import unhex
 
 from unblob.handlers.archive.tar import _get_tar_end_offset
 
-TAR_BLOCK = unhex(
+TAR_CONTENTS = unhex(
     """\
 00000000  74 65 73 74 2f 66 6f 6f  2e 64 61 74 00 00 00 00  |test/foo.dat....|
 00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
@@ -33,26 +33,51 @@ TAR_BLOCK = unhex(
 """
 )
 
-PADDED_TO_DEFAULT_BLOCKING_FACTOR = unhex(
+PADDING_TO_DEFAULT_BLOCKING_FACTOR = unhex(
     """\
 00000400  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 *
 00002800"""
 )
 
+PADDING_AFTER_END_OF_ARCHIVE = unhex(
+    """\
+00000400  00 00 00 00 00 00 00 00  FF FF FF FF FF FF FF FF  |................|
+"""
+)
+
 
 @pytest.mark.parametrize(
-    "contents",
+    "contents, expected_length, message",
     (
         pytest.param(
-            TAR_BLOCK + PADDED_TO_DEFAULT_BLOCKING_FACTOR,
+            TAR_CONTENTS + PADDING_TO_DEFAULT_BLOCKING_FACTOR,
+            len(TAR_CONTENTS + PADDING_TO_DEFAULT_BLOCKING_FACTOR),
+            "File end should be the same when archive is created using default parameters",
             id="padded-to-default-blocking-factor",
         ),
-        pytest.param(TAR_BLOCK, id="not-padded"),
+        pytest.param(
+            TAR_CONTENTS + 2 * PADDING_TO_DEFAULT_BLOCKING_FACTOR,
+            len(TAR_CONTENTS + PADDING_TO_DEFAULT_BLOCKING_FACTOR),
+            "File end shouldn't go over the default BLOCKING_FACTOR (RECORDSIZE) even when it is zeroed",
+            id="padded-over-than-default-blocking-factor",
+        ),
+        pytest.param(
+            TAR_CONTENTS,
+            len(TAR_CONTENTS),
+            "File end should be at the last block's end when end-of-file marker is missing",
+            id="not-padded",
+        ),
+        pytest.param(
+            TAR_CONTENTS + PADDING_AFTER_END_OF_ARCHIVE,
+            len(TAR_CONTENTS),
+            "File end shouldn't include partial zero filled blocks",
+            id="padded-after-end",
+        ),
     ),
 )
-def test_offset(contents: bytes):
+def test_offset(contents: bytes, expected_length: int, message: str):
     f = io.BytesIO(contents)
 
     offset = _get_tar_end_offset(f)
-    assert offset == len(contents)
+    assert offset == expected_length, message
