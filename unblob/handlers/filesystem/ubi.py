@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import find_first, get_endian
+from ...file_utils import get_endian, iterate_patterns
 from ...iter_utils import get_intervals
 from ...models import Handler, StructHandler, ValidChunk
 
@@ -129,12 +129,7 @@ class UBIHandler(Handler):
         # Since we don't know the PEB size, we need to guess it. At the moment we just find the
         # most common interval between every erase block header we find in the image. This _might_
         # cause an issue if we had a blob containing multiple UBI images, with different PEB sizes.
-        all_ubi_eraseblock_offsets = []
-        while True:
-            offset = find_first(file, self._UBI_EC_HEADER)
-            if offset == -1:
-                break
-            all_ubi_eraseblock_offsets.append(offset)
+        all_ubi_eraseblock_offsets = list(iterate_patterns(file, self._UBI_EC_HEADER))
 
         offset_intervals = get_intervals(all_ubi_eraseblock_offsets)
         if not offset_intervals:
