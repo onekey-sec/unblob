@@ -27,8 +27,10 @@ class LZMAHandler(Handler):
         decompressor = lzma.LZMADecompressor(format=lzma.FORMAT_ALONE)
 
         try:
-            while not decompressor.eof:
-                decompressor.decompress(file.read(DEFAULT_BUFSIZE))
+            data = file.read(DEFAULT_BUFSIZE)
+            while data and not decompressor.eof:
+                decompressor.decompress(data)
+                data = file.read(DEFAULT_BUFSIZE)
         except lzma.LZMAError:
             return
 
