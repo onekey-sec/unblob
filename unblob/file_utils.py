@@ -147,7 +147,9 @@ def iterate_patterns(file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 
         match = find_first(file, pattern, chunk_size)
         if match == -1:
             return
+        pos = file.tell()
         yield match
+        file.seek(pos)
 
 
 def iterate_file(
