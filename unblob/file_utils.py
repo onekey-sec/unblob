@@ -239,14 +239,15 @@ class StructParser:
         return struct_parser(file)
 
 
-def get_endian(
-    file: io.BufferedIOBase, big_endian_magic: int, read_bytes: int = 4
-) -> Endian:
-    """Read the magic and derive endianness from it by comparing the big endian magic.
-    It reads read_bytes number of bytes and seeks back after that.
+def get_endian(file: io.BufferedIOBase, big_endian_magic: int) -> Endian:
+    """Reads a four bytes magic and derive endianness from it by
+    comparing it with the big endian magic. It reads four bytes and
+    seeks back after that.
     """
-    magic_bytes = file.read(read_bytes)
-    file.seek(-1 * read_bytes, io.SEEK_CUR)
+    if big_endian_magic > 0xFF_FF_FF_FF:
+        raise ValueError("big_endian_magic is larger than a 32 bit integer.")
+    magic_bytes = file.read(4)
+    file.seek(-4, io.SEEK_CUR)
     magic = convert_int32(magic_bytes, Endian.BIG)
     endian = Endian.BIG if magic == big_endian_magic else Endian.LITTLE
     return endian

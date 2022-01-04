@@ -14,6 +14,7 @@ from unblob.file_utils import (
     convert_int64,
     decode_multibyte_integer,
     find_first,
+    get_endian,
     iterate_file,
     iterate_patterns,
     round_up,
@@ -378,3 +379,29 @@ def test_iterate_file_errors(
     file = io.BytesIO(content)
     with pytest.raises(ValueError):
         list(iterate_file(file, start_offset, size, buffer_size))
+
+
+class TestGetEndian:
+    @pytest.mark.parametrize(
+        "content, big_endian_magic, expected",
+        (
+            pytest.param(
+                b"\xff\x00\x00\x10", 0x100000FF, Endian.LITTLE, id="valid_little_endian"
+            ),
+            pytest.param(
+                b"\x10\x00\x00\xff", 0x100000FF, Endian.BIG, id="valid_big_endian"
+            ),
+        ),
+    )
+    def test_get_endian(self, content: bytes, big_endian_magic: int, expected: Endian):
+        file = io.BytesIO(content)
+        assert get_endian(file, big_endian_magic) == expected
+
+    @pytest.mark.parametrize(
+        "content, big_endian_magic",
+        (pytest.param(b"\x00\x00\x00\x01", 0xFF_FF_FF_FF_FF, id="larger_than_32bit"),),
+    )
+    def test_get_endian_errors(self, content: bytes, big_endian_magic: int):
+        file = io.BytesIO(content)
+        with pytest.raises(ValueError):
+            get_endian(file, big_endian_magic)
