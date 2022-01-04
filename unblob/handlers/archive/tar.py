@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import round_up, snull
+from ...file_utils import round_down, round_up, snull
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -12,27 +12,39 @@ logger = get_logger()
 
 BLOCK_SIZE = HEADER_SIZE = 512
 
-# Because the header of the tar file doesn't necessarily
-# contain the size of the whole tar block (because "Physically,
-# an archive consists of a series of file entries terminated
-# by an end-of-archive entry, which consists of two 512 blocks
-# of zero bytes.") - we need to parse the concurrent tar chunks,
-# and then return the size of the total file once we reach the
-# blocks of NULLs.
-# https://www.gnu.org/software/tar/manual/html_node/Standard.html
-END_BLOCK_SIZE = BLOCK_SIZE * 2
-END_BLOCK = b"\x00" * END_BLOCK_SIZE
-
 MAGIC_OFFSET = 257
 
 
 def _get_tar_end_offset(file: io.BufferedIOBase):
+    # First find the end of the last entry in the file
+    last_offset = _get_end_of_last_tar_entry(file)
+
+    # Then find where the final zero blocks end
+    return _find_end_of_padding(file, find_from=last_offset)
+
+
+def _get_end_of_last_tar_entry(file: io.BufferedIOBase) -> int:
     tf = tarfile.TarFile(mode="r", fileobj=file)
     last_member = tf.getmembers()[-1]
     last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
-    last_offset = last_member.offset + HEADER_SIZE + last_file_size + END_BLOCK_SIZE
-    padded_end_offset = round_up(last_offset, tarfile.RECORDSIZE)
-    return padded_end_offset
+    return last_member.offset + HEADER_SIZE + last_file_size
+
+
+def _find_end_of_padding(file: io.BufferedIOBase, *, find_from: int) -> int:
+    file.seek(find_from)
+    find_to = round_up(find_from, tarfile.RECORDSIZE)
+    padding_len = find_to - find_from
+    padding = file.read(padding_len)
+
+    first_nonzero = find_from + len(padding)
+    for i, b in enumerate(padding, find_from):
+        if b != 0:
+            first_nonzero = i
+            break
+
+    # if the first nonzero would be inside a possible next chunk, we
+    # round it down
+    return round_down(first_nonzero, BLOCK_SIZE)
 
 
 class TarHandler(StructHandler):
