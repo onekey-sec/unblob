@@ -124,8 +124,8 @@ class ARJHandler(StructHandler):
 
             file.seek(start + file_header.first_hdr_size + len(basic_header))
             self._read_headers(file)
-            # Read past the file contents
-            file.read(file_header.compressed_size)
+            # Seek past the file contents
+            file.seek(file_header.compressed_size, io.SEEK_CUR)
 
     def _read_headers(self, file):
         metadata = self.cparser_le.metadata(file)

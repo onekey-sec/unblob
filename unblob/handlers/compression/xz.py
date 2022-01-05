@@ -34,7 +34,7 @@ def read_multibyte_int(file: io.BufferedIOBase) -> Tuple[int, int]:
     data = bytearray(file.read(MAX_MBI_LEN))
     file.seek(-MAX_MBI_LEN, io.SEEK_CUR)
     size, mbi = decode_multibyte_integer(data)
-    file.read(size)
+    file.seek(size, io.SEEK_CUR)
     return size, mbi
 
 
@@ -52,7 +52,7 @@ class XZHandler(Handler):
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
 
-        file.read(MAGIC_BYTES_SIZE)
+        file.seek(MAGIC_BYTES_SIZE, io.SEEK_CUR)
         stream_flags = file.read(FLAG_LEN)
         file.seek(start_offset)
 
