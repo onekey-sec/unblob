@@ -67,7 +67,7 @@ class _LZ4HandlerBase(Handler):
         return ["lz4", "--decompress", inpath, f"{outdir}/{outfile}"]
 
     def _skip_magic_bytes(self, file: io.BufferedIOBase):
-        file.read(MAGIC_LEN)
+        file.seek(MAGIC_LEN, io.SEEK_CUR)
 
 
 class LegacyFrameHandler(_LZ4HandlerBase):
@@ -98,7 +98,7 @@ class LegacyFrameHandler(_LZ4HandlerBase):
                 file.seek(-4, io.SEEK_CUR)
                 break
 
-            file.read(block_compressed_size)
+            file.seek(block_compressed_size, io.SEEK_CUR)
 
         end_offset = file.tell()
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
@@ -120,7 +120,7 @@ class SkippableFrameHandler(_LZ4HandlerBase):
     ) -> Optional[ValidChunk]:
         self._skip_magic_bytes(file)
         frame_size = convert_int32(file.read(FRAME_SIZE_LEN), Endian.LITTLE)
-        file.read(frame_size)
+        file.seek(frame_size, io.SEEK_CUR)
         end_offset = file.tell()
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
 
@@ -151,12 +151,12 @@ class DefaultFrameHandler(_LZ4HandlerBase):
         logger.debug("Parsed FLG", **flg.as_dict())
 
         # skip BD (max blocksize), only useful for decoders that needs to allocate memory
-        file.read(BD_LEN)
+        file.seek(BD_LEN, io.SEEK_CUR)
 
         if flg.content_size:
-            file.read(CONTENT_SIZE_LEN)
+            file.seek(CONTENT_SIZE_LEN, io.SEEK_CUR)
         if flg.dictid:
-            file.read(DICTID_LEN)
+            file.seek(DICTID_LEN, io.SEEK_CUR)
 
         header_checksum = convert_int8(file.read(HC_LEN), Endian.LITTLE)
         logger.debug("Header checksum (HC) read", header_checksum=header_checksum)
@@ -167,15 +167,15 @@ class DefaultFrameHandler(_LZ4HandlerBase):
             logger.debug("block_size", block_size=block_size)
             if block_size == END_MARK:
                 break
-            file.read(block_size)
+            file.seek(block_size, io.SEEK_CUR)
             if flg.block_checksum:
-                file.read(BLOCK_CHECKSUM_LEN)
+                file.seek(BLOCK_CHECKSUM_LEN, io.SEEK_CUR)
 
         # 4. we reached the endmark (0x00000000)
 
         # 5. if frame descriptor mentions CRC, we add CRC
         if flg.content_checksum:
-            file.read(CONTENT_CHECKSUM_LEN)
+            file.seek(CONTENT_CHECKSUM_LEN, io.SEEK_CUR)
 
         end_offset = file.tell()
 
