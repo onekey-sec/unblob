@@ -29,7 +29,7 @@ class LZipHandler(Handler):
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
 
-        file.read(HEADER_LEN)
+        file.seek(HEADER_LEN, io.SEEK_CUR)
         # quite the naive idea but it works
         # the idea is to read 8 bytes uint64 every 2 bytes alignment
         # until we end up reading the Member Size field which corresponds
