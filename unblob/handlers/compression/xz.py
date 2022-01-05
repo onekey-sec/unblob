@@ -61,7 +61,7 @@ class XZHandler(Handler):
             if (footer_offset - start_offset) % 4 != 0:
                 continue
 
-            end_offset = start_offset + footer_offset + CRC32_LEN
+            end_offset = footer_offset + CRC32_LEN
 
             file.seek(footer_offset - BACKWARD_SIZE_LEN)
 

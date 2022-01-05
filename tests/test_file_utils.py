@@ -322,21 +322,22 @@ class TestFindFirst:
         assert pos == 7
 
     @pytest.mark.parametrize(
-        "content, pattern, expected_pointer_position",
+        "content, pattern, initial_pointer_position",
         (
             pytest.param(b"", b"not-found-pattern", 0, id="not_found"),
-            pytest.param(b"some", b"not-found", 0, id="smaller_data_than_pattern"),
-            pytest.param(b"pattern_12345", b"pattern", 7, id="pattern_at_beginning"),
-            pytest.param(b"01234_pattern", b"pattern", 13, id="pattern_at_the_end"),
-            pytest.param(b"01234_pattern5678", b"pattern", 13, id="pattern_in_middle"),
+            pytest.param(b"some", b"not-found", 1, id="smaller_data_than_pattern"),
+            pytest.param(b"pattern_12345", b"pattern", 0, id="pattern_at_beginning"),
+            pytest.param(b"01234_pattern", b"pattern", 2, id="pattern_at_the_end"),
+            pytest.param(b"01234_pattern5678", b"pattern", 3, id="pattern_in_middle"),
         ),
     )
-    def test_find_first_set_file_pointer(
-        self, content: bytes, pattern: bytes, expected_pointer_position: int
+    def test_find_first_keeps_file_pointer_intact(
+        self, content: bytes, pattern: bytes, initial_pointer_position: int
     ):
         fake_file = io.BytesIO(content)
+        fake_file.seek(initial_pointer_position)
         find_first(fake_file, pattern)
-        assert fake_file.tell() == expected_pointer_position
+        assert fake_file.tell() == initial_pointer_position
 
 
 @pytest.mark.parametrize(

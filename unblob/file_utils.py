@@ -100,6 +100,20 @@ def find_first(
     Seek the file pointer to the next byte of where we found the pattern or
     seek back to the initial position when we did not find it.
     """
+    try:
+        return next(iterate_patterns(file, pattern, chunk_size))
+    except StopIteration:
+        return -1
+
+
+def iterate_patterns(
+    file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000
+) -> Iterator[int]:
+    """Iterate on the file searching for pattern until all occurences has been found.
+
+    Seek the file pointer to the next byte of where we found the pattern or
+    seek back to the initial position when the iterator is exhausted.
+    """
     if chunk_size < len(pattern):
         chunk_hex = format_hex(chunk_size)
         raise ValueError(
@@ -110,44 +124,41 @@ def find_first(
 
     compensation = len(pattern) - 1
     bytes_searched = 0
-    while True:
-        current_position = file.tell()
+    try:
+        while True:
+            current_position = file.tell()
 
-        # Prepend the padding from the last chunk, to make sure that we find the pattern,
-        # even if it straddles the chunk boundary.
-        data = file.read(chunk_size)
-        if data == b"":
-            # We've reached the end of the stream.
-            file.seek(initial_position)
-            return -1
+            # Prepend the padding from the last chunk, to make sure that we find the pattern,
+            # even if it straddles the chunk boundary.
+            data = file.read(chunk_size)
+            if data == b"":
+                # We've reached the end of the stream.
+                return
 
-        marker = data.find(pattern)
-        if marker != -1:
-            found_pos = current_position + marker
-            # We want to seek past the found position to the next byte,
-            # so we can call find_first again without extra seek
-            # This might seek past the actual end of the file
-            file.seek(found_pos + len(pattern))
-            return found_pos
+            if len(data) < len(pattern):
+                # The length that we read from the file is the same
+                # length or less than as the pattern we're looking
+                # for, and we didn't find the pattern in there.
+                return
 
-        if len(data) < len(pattern):
-            # The length that we read from the file is the same length or less than as the pattern
-            # we're looking for, and we didn't find the pattern in there. If we don't return -1
-            # here, we'll end up in an infinite loop.
-            file.seek(initial_position)
-            return -1
+            marker = data.find(pattern)
+            while marker != -1:
+                found_pos = current_position + marker
+                # Reset the file pointer so that calling code cannot
+                # depend on the side-effect of this iterator advancing
+                # it.
+                file.seek(initial_position)
+                yield found_pos
+                # We want to seek past the found position to the next byte,
+                # so we can call find_first again without extra seek
+                # This might seek past the actual end of the file
+                file.seek(found_pos + len(pattern))
+                marker = data.find(pattern, marker + len(pattern))
 
-        file.seek(-compensation, os.SEEK_CUR)
-        bytes_searched += chunk_size - compensation
-
-
-def iterate_patterns(file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000):
-    """Iterate on the file searching for pattern until all occurences has been found."""
-    while True:
-        match = find_first(file, pattern, chunk_size)
-        if match == -1:
-            return
-        yield match
+            file.seek(-compensation, os.SEEK_CUR)
+            bytes_searched += chunk_size - compensation
+    finally:
+        file.seek(initial_position)
 
 
 def iterate_file(
