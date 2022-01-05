@@ -81,7 +81,7 @@ class LZHHandler(StructHandler):
             header_size = header.header_size + PADDING_LEN
 
         file.seek(-len(header), io.SEEK_CUR)
-        file.read(header_size + header.compressed_size)
+        file.seek(header_size + header.compressed_size, io.SEEK_CUR)
         end_offset = file.tell()
 
         # LZH files are null terminated, so we have to handle the case where
