@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from structlog import get_logger
 
+from unblob.file_utils import snull
+
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -25,7 +27,7 @@ class ARCHandler(StructHandler):
                 - our date definition allows dates between the 1980 and 15/12/2050 (that should be enough).
                 - our time definition allowes times between 00:00 and 24:60.
             */
-            $arc_magic = /\x1A[\x00-\x07][\S]{12}[\x00|\xf0-\xff][\x00-\xff]{4}[\x00-\x8d][\x00-\x8f][\x00-\xc7][\x00-\x9f]/
+            $arc_magic = /\x1A[\x01-\x07][\S]{12}[\x00|\xf0-\xff][\x00-\xff]{4}[\x00-\x8d][\x00-\x8f][\x00-\xc7][\x00-\x9f]/
 
         condition:
             $arc_magic
@@ -40,11 +42,19 @@ class ARCHandler(StructHandler):
         ushort date;	/* creation date */
         ushort time;	/* creation time */
         short crc;	/* cyclic redundancy check */
-        long length;	/* true file length */
+        ulong length;	/* true file length */
     };
     """
 
     HEADER_STRUCT = "heads"
+
+    def valid_name(self, name: bytes) -> bool:
+        try:
+            # we don't care about the terminating byte (null or unitialized)
+            snull(name[:-1]).decode("utf-8")
+        except UnicodeDecodeError:
+            return False
+        return True
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -61,6 +71,9 @@ class ARCHandler(StructHandler):
                 break
             file.seek(offset)
             header = self.parse_header(file)
+            if not self.valid_name(header.name):
+                return
+
             offset += len(header) + header.size
 
         return ValidChunk(

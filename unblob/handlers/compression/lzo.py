@@ -82,8 +82,8 @@ class LZOHandler(StructHandler):
             file.seek(start_offset)
             header = self.cparser_be.lzo_header_filter(file)
 
-        filename = file.read(header.filename_len)
-        logger.debug("LZO header parsed", header=header, filename=filename)
+        file.seek(header.filename_len, io.SEEK_CUR)
+        logger.debug("LZO header parsed", header=header)
 
         size_crc_header = self.cparser_be.lzo_size_crc(file)
         logger.debug("CRC header parsed", header=size_crc_header)

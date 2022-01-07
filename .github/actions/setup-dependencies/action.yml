@@ -5,6 +5,14 @@ runs:
       run: sudo apt install unar zlib1g-dev liblzo2-dev lzop lziprecover
       shell: bash
 
+    - name: Install 7zip
+      run: |
+        sudo apt remove -y p7zip
+        curl -s https://www.7-zip.org/a/7z2107-linux-x64.tar.xz --output - | tar Jxvf - 7zzs
+        sudo mv 7zzs /usr/local/bin/7z
+        sudo chmod +x /usr/local/bin/7z
+      shell: bash
+
     - name: Restore pip cache
       uses: actions/cache@v2
       with:
