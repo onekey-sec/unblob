@@ -421,3 +421,11 @@ class TestGetEndian:
         file = io.BytesIO(content)
         with pytest.raises(ValueError):
             get_endian(file, big_endian_magic)
+
+    def test_get_endian_resets_the_file_pointer(self):
+        file = io.BytesIO(bytes.fromhex("FFFF 0000"))
+        file.seek(-1, io.SEEK_END)
+        pos = file.tell()
+        with pytest.raises(ValueError):
+            get_endian(file, 0xFFFF_0000)
+        assert file.tell() == pos
