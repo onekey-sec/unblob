@@ -154,4 +154,4 @@ class ZIPHandler(StructHandler):
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
         # empty password with -p will make sure the command will not hang
-        return ["7z", "x", "-p", "", "-y", inpath, f"-o{outdir}"]
+        return ["7z", "x", "-p", "-y", inpath, f"-o{outdir}"]
