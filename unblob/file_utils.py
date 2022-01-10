@@ -263,7 +263,18 @@ def get_endian(file: io.BufferedIOBase, big_endian_magic: int) -> Endian:
     if big_endian_magic > 0xFF_FF_FF_FF:
         raise ValueError("big_endian_magic is larger than a 32 bit integer.")
     magic_bytes = file.read(4)
-    file.seek(-4, io.SEEK_CUR)
+    file.seek(-len(magic_bytes), io.SEEK_CUR)
     magic = convert_int32(magic_bytes, Endian.BIG)
     endian = Endian.BIG if magic == big_endian_magic else Endian.LITTLE
     return endian
+
+
+def read_until_past(file: io.BufferedIOBase, pattern: bytes):
+    """Read until the bytes are not 0x00 or 0xff."""
+    while True:
+        next_byte = file.read(1)
+        if next_byte == b"":
+            # We've hit the EoF
+            return file.tell()
+        if next_byte not in pattern:
+            return file.tell() - 1
