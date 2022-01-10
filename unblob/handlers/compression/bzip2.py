@@ -65,7 +65,6 @@ class BZip2Handler(StructHandler):
 
         bits_read = 0
         buff = 0
-        curr_block = 0
         blocks_found = 0
         current_block_end = 0
 
@@ -78,12 +77,9 @@ class BZip2Handler(StructHandler):
 
             if buff == BLOCK_HEADER or buff == BLOCK_ENDMARK:
                 blocks_found += 1
-                # This can be negative, but we don't care, because we also count found blocks
-                # and in the case we didn't found both of them, we don't use this value
-                # When there are two blocks found, this will reflect the correct end
-                current_block_end = bits_read - (COMPRESSED_MAGIC_LENGTH + 1)
 
-                curr_block += 1
+                # Cannot be negative, we already found at least one block.
+                current_block_end = bits_read - COMPRESSED_MAGIC_LENGTH
 
         if blocks_found < 2:
             return -1
