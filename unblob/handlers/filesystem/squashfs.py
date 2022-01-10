@@ -96,8 +96,14 @@ class SquashFSv4Handler(_SquashFSBase):
             */
             $squashfs_v4_magic_le = { 68 73 71 73 [24] 04 00 }
 
+            /**
+            00000000  73 71 73 68 00 00 27 81  01 b3 a9 5d 00 01 00 00  |sqsh..'....]....|
+            00000010  00 00 01 80 00 04 00 10  02 c0 00 01 00 04 00 00  |................|
+            */
+            $squashfs_v4_magic_be = { 73 71 73 68 [24] 00 04 }
+
         condition:
-            $squashfs_v4_magic_le
+            $squashfs_v4_magic_le or $squashfs_v4_magic_be
     """
 
     C_DEFINITIONS = r"""
@@ -129,7 +135,8 @@ class SquashFSv4Handler(_SquashFSBase):
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
-        header = self.parse_header(file)
+        endian = get_endian(file, BIG_ENDIAN_MAGIC)
+        header = self.parse_header(file, endian)
         size = round_up(header.bytes_used, PAD_SIZE)
         end_offset = start_offset + size
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
