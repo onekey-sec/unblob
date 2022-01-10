@@ -32,6 +32,7 @@ pyright = "^0.0.12"
 pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
 setuptools-rust = "^1.1.2"
+pytest-benchmark = {version = "^3.4.1", extras = ["histogram"]}
 
 [tool.isort]
 profile = "black"
