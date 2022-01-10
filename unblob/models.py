@@ -30,10 +30,20 @@ class YaraMatchResult:
 
 @attr.define
 class Chunk:
-    """Chunk of a Blob, have start and end offset, but still can be invalid."""
+    """
+    Chunk of a Blob, have start and end offset, but still can be invalid.
+
+    For an array ``b``, a chunk ``c`` represents the slice:
+    ::
+
+        b[c.start_offset:c.end_offset]
+    """
 
     start_offset: int
+    """The index of the first byte of the chunk"""
+
     end_offset: int
+    """The index of the first byte after the end of the chunk"""
 
     @property
     def size(self) -> int:

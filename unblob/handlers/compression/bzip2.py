@@ -60,7 +60,8 @@ class BZip2Handler(StructHandler):
     def bzip2_recover(self, file: io.BufferedIOBase, start_offset: int) -> int:
         """Emulate the behavior of bzip2recover, matching on compressed magic and end of stream
         magic to identify the end offset of the whole bzip2 chunk.
-        Count from absolute start_offset and returns absolute end_offset.
+        Count from absolute start_offset and returns absolute end_offset
+        (first byte after the chunk ends).
         """
 
         bits_read = 0
