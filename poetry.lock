@@ -82,6 +82,14 @@ tomli = {version = "*", optional = true, markers = "extra == \"toml\""}
 toml = ["tomli"]
 
 [[package]]
+name = "cstruct"
+version = "2.1"
+description = "C-style structs for Python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "dissect.cstruct"
 version = "2.0"
 description = "Structure parsing in Python made easy."
@@ -127,6 +135,21 @@ description = "iniconfig: brain-dead simple config-ini parsing"
 category = "dev"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "jefferson"
+version = "0.3"
+description = ""
+category = "main"
+optional = false
+python-versions = "*"
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/IoT-Inspector/jefferson.git"
+reference = "216eee6c56d338e5a14a0af5d07f1117cff92b3b"
+resolved_reference = "216eee6c56d338e5a14a0af5d07f1117cff92b3b"
 
 [[package]]
 name = "lark"
@@ -394,7 +417,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b3663d45d1926a5a2239856d84088fd0ef130d410da2d43ce01afbf0576fec83"
+content-hash = "4ce7fb75dd8eacb9ff7d9fa4855310fe538fdb4973f994cfa639660986c4f2bd"
 
 [metadata.files]
 arpy = [
@@ -473,6 +496,10 @@ coverage = [
     {file = "coverage-6.2-pp36.pp37.pp38-none-any.whl", hash = "sha256:5829192582c0ec8ca4a2532407bc14c2f338d9878a10442f5d03804a95fac9de"},
     {file = "coverage-6.2.tar.gz", hash = "sha256:e2cad8093172b7d1595b4ad66f24270808658e11acf43a8f95b41276162eb5b8"},
 ]
+cstruct = [
+    {file = "cstruct-2.1-py2.py3-none-any.whl", hash = "sha256:ed4449bc672a37abbc0ecfbdaf4c26aa6ab1bafe7dfdb83eab2953cdbb153cf4"},
+    {file = "cstruct-2.1.tar.gz", hash = "sha256:9c2741f46fb12613a4f746369ec0a7b3b1f25712178c567437902d446f7c3648"},
+]
 "dissect.cstruct" = [
     {file = "dissect.cstruct-2.0-py3-none-any.whl", hash = "sha256:e150abcc7500a279126ebf1a0f87c34d857e126ac3d65a980844bfb3296a5492"},
     {file = "dissect.cstruct-2.0.tar.gz", hash = "sha256:4f1d3911da99270213feed0a0b22e70670b04fe53b16d95d2e04bafcd338f547"},
@@ -493,6 +520,7 @@ iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
 ]
+jefferson = []
 lark = [
     {file = "lark-1.0.0-py2.py3-none-any.whl", hash = "sha256:10818563b44e18ea264b5013a80fe04406999ad51bacc74214f69f13d95af6e1"},
     {file = "lark-1.0.0.tar.gz", hash = "sha256:2269dee215e6c689d5ce9d34fdc6e749d0c1c763add3fc7935938ebd7da159cb"},
