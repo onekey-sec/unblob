@@ -47,6 +47,7 @@ def get_help_text():
     "files",
     nargs=-1,
     type=click.Path(path_type=Path, exists=True, resolve_path=True),
+    required=True,
 )
 @click.option(
     "-e",
