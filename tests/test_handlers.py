@@ -9,6 +9,7 @@ Each of the test folders should contain 2 things:
 
 import inspect
 import shlex
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Type
@@ -34,16 +35,28 @@ HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
     zip(TEST_INPUT_DIRS, TEST_OUTPUT_DIRS),
     ids=TEST_IDS,
 )
-def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
+def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path, benchmark):
     assert (
         list(input_dir.iterdir()) != []
     ), f"Integration test input dir should contain at least 1 file: {input_dir}"
 
-    process_file(
-        root=input_dir,
-        path=input_dir,
-        extract_root=tmp_path,
-        max_depth=DEFAULT_DEPTH,
+    extract_dir = tmp_path.joinpath("extract")
+
+    def setup_benchmark():
+        shutil.rmtree(extract_dir, ignore_errors=True)
+        extract_dir.mkdir()
+
+    benchmark.pedantic(
+        setup=setup_benchmark,
+        target=process_file,
+        kwargs=dict(
+            root=input_dir,
+            path=input_dir,
+            extract_root=extract_dir,
+            max_depth=DEFAULT_DEPTH,
+        ),
+        rounds=50,
+        warmup_rounds=1,
     )
 
     diff_command = [
@@ -56,7 +69,7 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         "--exclude",
         ".gitkeep",
         str(output_dir),
-        str(tmp_path),
+        str(extract_dir),
     ]
 
     try:
