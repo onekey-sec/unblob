@@ -1,0 +1,37 @@
+size := "50" # MiB
+
+all: bzip2 lz4 lz4-legacy lzh lzma lzo xz
+
+_random_to_stdout SIZE:
+    #!/usr/bin/env python
+    import random
+    import sys
+
+
+    random.seed(977)
+    sys.stdout.buffer.write(random.randbytes({{ SIZE }} * 1024 * 1024))
+
+
+_save-stdout NAME +COMMAND:
+    mkdir -p {{ NAME }}
+    just _random_to_stdout {{ size }} | {{ COMMAND }} > {{ NAME }}/{{ size }}
+
+bzip2: (_save-stdout "compression/bzip2" "bzip2 -c")
+
+lz4-legacy: (_save-stdout "compression/lz4-legacy" "lz4 -z -l")
+
+lz4: (_save-stdout "compression/lz4" "lz4 -z")
+
+lzo: (_save-stdout "compression/lzo" "lzop")
+
+lzma: (_save-stdout "compression/lzma" "xz --format=lzma -z")
+
+lzh:
+    #!/bin/sh
+    set -euo pipefail
+    mkdir -p lzh
+    f=$(mktemp)
+    trap "rm $f" EXIT INT TERM
+    just _random_to_stdout {{ size }} > $f && lha -c lzh/{{ size }} $f
+
+xz: (_save-stdout "xz" "xz -z")
