@@ -40,7 +40,7 @@ class SquashFSv3Handler(_SquashFSBase):
     """
 
     C_DEFINITIONS = r"""
-        struct SQUASHFS3_SUPER_BLOCK
+        typedef struct squashfs3_super_block
         {
             char   s_magic[4];
             uint32 inodes;
@@ -68,9 +68,9 @@ class SquashFSv3Handler(_SquashFSBase):
             int64  directory_table_start;
             int64  fragment_table_start;
             int64  lookup_table_start;
-        };
+        } squashfs3_super_block_t;
     """
-    HEADER_STRUCT = "SQUASHFS3_SUPER_BLOCK"
+    HEADER_STRUCT = "squashfs3_super_block_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -101,7 +101,7 @@ class SquashFSv4Handler(_SquashFSBase):
     """
 
     C_DEFINITIONS = r"""
-        struct SQUASHFS4_SUPER_BLOCK
+        typedef struct squashfs4_super_block
         {
             char   s_magic[4];
             uint32 inodes;
@@ -122,9 +122,9 @@ class SquashFSv4Handler(_SquashFSBase):
             int64  directory_table_start;
             int64  fragment_table_start;
             int64  lookup_table_start;
-        };
+        } squashfs4_super_block_t;
     """
-    HEADER_STRUCT = "SQUASHFS4_SUPER_BLOCK"
+    HEADER_STRUCT = "squashfs4_super_block_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int

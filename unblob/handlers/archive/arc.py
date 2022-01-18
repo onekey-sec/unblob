@@ -34,7 +34,7 @@ class ARCHandler(StructHandler):
     """
 
     C_DEFINITIONS = r"""
-    struct heads {			/* archive entry header format */
+    typedef struct arc_head {			/* archive entry header format */
         int8 archive_marker;
         int8 header_type;
         char    name[13];		/* file name */
@@ -43,10 +43,10 @@ class ARCHandler(StructHandler):
         ushort time;	/* creation time */
         short crc;	/* cyclic redundancy check */
         ulong length;	/* true file length */
-    };
+    } arc_head_t;
     """
 
-    HEADER_STRUCT = "heads"
+    HEADER_STRUCT = "arc_head_t"
 
     def valid_name(self, name: bytes) -> bool:
         try:

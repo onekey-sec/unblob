@@ -97,22 +97,22 @@ class BinaryHandler(_CPIOHandlerBase):
     """
 
     C_DEFINITIONS = r"""
-        struct old_cpio_header
+        typedef struct old_cpio_header
         {
-            ushort c_magic;
-            ushort c_dev;
-            ushort c_ino;
-            ushort c_mode;
-            ushort c_uid;
-            ushort c_gid;
-            ushort c_nlink;
-            ushort c_rdev;
-            ushort c_mtimes[2];
-            ushort c_namesize;
-            ushort c_filesize[2];
-        };
+            uint16 c_magic;
+            uint16 c_dev;
+            uint16 c_ino;
+            uint16 c_mode;
+            uint16 c_uid;
+            uint16 c_gid;
+            uint16 c_nlink;
+            uint16 c_rdev;
+            uint16 c_mtimes[2];
+            uint16 c_namesize;
+            uint16 c_filesize[2];
+        } old_cpio_header_t;
     """
-    HEADER_STRUCT = "old_cpio_header"
+    HEADER_STRUCT = "old_cpio_header_t"
 
     _PAD_ALIGN = 2
 
@@ -136,7 +136,7 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
             $cpio_portable_old_ascii_magic
     """
     C_DEFINITIONS = r"""
-        struct old_ascii_header
+        typedef struct old_ascii_header
         {
             char c_magic[6];
             char c_dev[6];
@@ -149,9 +149,9 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
             char c_mtime[11];
             char c_namesize[6];
             char c_filesize[11];
-        };
+        } old_ascii_header_t;
     """
-    HEADER_STRUCT = "old_ascii_header"
+    HEADER_STRUCT = "old_ascii_header_t"
 
     _PAD_ALIGN = 2
 
@@ -166,7 +166,7 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
 
 class _NewASCIICommon(StructHandler):
     C_DEFINITIONS = r"""
-        struct new_ascii_header
+        typedef struct new_ascii_header
         {
             char c_magic[6];
             char c_ino[8];
@@ -182,9 +182,9 @@ class _NewASCIICommon(StructHandler):
             char c_rdev_min[8];
             char c_namesize[8];
             char c_chksum[8];
-        };
+        } new_ascii_header_t;
     """
-    HEADER_STRUCT = "new_ascii_header"
+    HEADER_STRUCT = "new_ascii_header_t"
 
     _PAD_ALIGN = 4
 

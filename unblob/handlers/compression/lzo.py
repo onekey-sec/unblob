@@ -22,7 +22,7 @@ class LZOHandler(StructHandler):
     """
 
     C_DEFINITIONS = r"""
-        struct lzo_header_no_filter
+        typedef struct lzo_header_no_filter
         {
             char magic[9];
             uint16 version;
@@ -40,9 +40,9 @@ class LZOHandler(StructHandler):
             so we don't know what's the exact filename char array length
             at parsing time. Filename parsing is handled in calculate_chunk */
             //char filename[];
-        }
+        } lzo_header_no_filter_t;
 
-        struct lzo_header_filter
+        typedef struct lzo_header_filter
         {
             char magic[9];
             uint16 version;
@@ -60,15 +60,15 @@ class LZOHandler(StructHandler):
             so we don't know what's the exact filename char array length
             at parsing time. Filename parsing is handled in calculate_chunk */
             //char filename[];
-        }
+        } lzo_header_filter_t;
 
-        struct lzo_size_crc {
+        typedef struct lzo_size_crc {
             uint32 original_crc;        // (CRC32 if flags & F_H_CRC32 else Adler32)
             uint32 uncompressed_size;
             uint32 compressed_size;
             uint32 uncompressed_crc;
             uint32 compressed_crc;      // (only if flags & F_ADLER32_C or flags & F_CRC32_C)
-        }
+        } lzo_size_crc_t;
     """
     HEADER_STRUCT = "lzo_header"
 
@@ -76,16 +76,16 @@ class LZOHandler(StructHandler):
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
 
-        header = self.cparser_be.lzo_header_no_filter(file)
+        header = self.cparser_be.lzo_header_no_filter_t(file)
 
         if header.flags & F_H_FILTER:
             file.seek(start_offset)
-            header = self.cparser_be.lzo_header_filter(file)
+            header = self.cparser_be.lzo_header_filter_t(file)
 
         file.seek(header.filename_len, io.SEEK_CUR)
         logger.debug("LZO header parsed", header=header)
 
-        size_crc_header = self.cparser_be.lzo_size_crc(file)
+        size_crc_header = self.cparser_be.lzo_size_crc_t(file)
         logger.debug("CRC header parsed", header=size_crc_header)
 
         end_offset = (

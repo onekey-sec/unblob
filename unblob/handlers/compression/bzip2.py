@@ -31,16 +31,16 @@ class BZip2Handler(StructHandler):
     """
 
     C_DEFINITIONS = r"""
-        struct bzip2_header {
+        typedef struct bzip2_header {
             char magic[2];              // 'BZ' signature/magic number
             uint8 version;              // 'h' for Bzip2 ('H'uffman coding), '0' for Bzip1 (deprecated)
             uint8 hundred_k_blocksize;  // '1'..'9' block-size 100 kB-900 kB (uncompressed)
             char compressed_magic[8];   // 0x314159265359 (BCD (pi))
             uint32 crc;                 // checksum for this block
             uint8 randomised;           // 0=>normal, 1=>randomised (deprecated)
-        };
+        } bzip2_header_t;
     """
-    HEADER_STRUCT = "bzip2_header"
+    HEADER_STRUCT = "bzip2_header_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int

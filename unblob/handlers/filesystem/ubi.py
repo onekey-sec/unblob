@@ -36,58 +36,50 @@ class UBIFSHandler(StructHandler):
     """
 
     C_DEFINITIONS = r"""
-        typedef uint64 __le64;
-        typedef uint32 __le32;
-        typedef uint16 __le16;
-        typedef uint8 __u8;
+        typedef struct ubifs_ch {
+            uint32 magic;
+            uint32 crc;
+            uint64 sqnum;
+            uint32 len;
+            uint8 node_type;
+            uint8 group_type;
+            uint8 padding[2];
+        } ubifs_ch_t;
 
-        #define UBIFS_MAX_HASH_LEN 64
-        #define UBIFS_MAX_HMAC_LEN 64
-
-        struct ubifs_ch {
-            __le32 magic;
-            __le32 crc;
-            __le64 sqnum;
-            __le32 len;
-            __u8 node_type;
-            __u8 group_type;
-            __u8 padding[2];
-        };
-
-        struct ubifs_sb_node {
-            struct ubifs_ch ch;
-            __u8 padding[2];
-            __u8 key_hash;
-            __u8 key_fmt;
-            __le32 flags;
-            __le32 min_io_size;
-            __le32 leb_size;
-            __le32 leb_cnt;
-            __le32 max_leb_cnt;
-            __le64 max_bud_bytes;
-            __le32 log_lebs;
-            __le32 lpt_lebs;
-            __le32 orph_lebs;
-            __le32 jhead_cnt;
-            __le32 fanout;
-            __le32 lsave_cnt;
-            __le32 fmt_version;
-            __le16 default_compr;
-            __u8 padding1[2];
-            __le32 rp_uid;
-            __le32 rp_gid;
-            __le64 rp_size;
-            __le32 time_gran;
-            __u8 uuid[16];
-            __le32 ro_compat_version;
-            __u8 hmac[UBIFS_MAX_HMAC_LEN];
-            __u8 hmac_wkm[UBIFS_MAX_HMAC_LEN];
-            __le16 hash_algo;
-            __u8 hash_mst[UBIFS_MAX_HASH_LEN];
-            __u8 padding2[3774];
-        };
+        typedef struct ubifs_sb_node {
+            ubifs_ch_t ch;
+            uint8 padding[2];
+            uint8 key_hash;
+            uint8 key_fmt;
+            uint32 flags;
+            uint32 min_io_size;
+            uint32 leb_size;
+            uint32 leb_cnt;
+            uint32 max_leb_cnt;
+            uint64 max_bud_bytes;
+            uint32 log_lebs;
+            uint32 lpt_lebs;
+            uint32 orph_lebs;
+            uint32 jhead_cnt;
+            uint32 fanout;
+            uint32 lsave_cnt;
+            uint32 fmt_version;
+            uint16 default_compr;
+            uint8 padding1[2];
+            uint32 rp_uid;
+            uint32 rp_gid;
+            uint64 rp_size;
+            uint32 time_gran;
+            uint8 uuid[16];
+            uint32 ro_compat_version;
+            uint8 hmac[64];
+            uint8 hmac_wkm[64];
+            uint16 hash_algo;
+            uint8 hash_mst[64];
+            uint8 padding2[3774];
+        } ubifs_sb_node_t;
     """
-    HEADER_STRUCT = "ubifs_sb_node"
+    HEADER_STRUCT = "ubifs_sb_node_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int

@@ -22,7 +22,7 @@ class DMGHandler(StructHandler):
 
     C_DEFINITIONS = r"""
         // source: http://newosxbook.com/DMG.html
-        typedef struct {
+        typedef struct dmg_header {
             char     Signature[4];          // Magic ('koly')
             uint32 Version;               // Current version is 4
             uint32 HeaderSize;            // sizeof(this), always 512
@@ -55,9 +55,9 @@ class DMGHandler(StructHandler):
             uint32 reserved3;             // 0
             uint32 reserved4;             // 0
 
-        } UDIFResourceFile;
+        } dmg_header_t;
     """
-    HEADER_STRUCT = "UDIFResourceFile"
+    HEADER_STRUCT = "dmg_header_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int

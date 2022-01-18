@@ -55,15 +55,15 @@ class StuffItSITHandler(_StuffItHandlerBase):
     """
 
     C_DEFINITIONS = r"""
-        struct sit_header
+        typedef struct sit_header
         {
             char signature[4];
             uint16 num_files;
             uint32 archive_length;
             char signature2[4];
-        };
+        } sit_header_t;
     """
-    HEADER_STRUCT = "sit_header"
+    HEADER_STRUCT = "sit_header_t"
 
 
 class StuffIt5Handler(_StuffItHandlerBase):
@@ -78,7 +78,7 @@ class StuffIt5Handler(_StuffItHandlerBase):
     """
 
     C_DEFINITIONS = r"""
-        struct stuffit5_header
+        typedef struct stuffit5_header
         {
             char signature[80];
             uint32 unknown;
@@ -86,6 +86,6 @@ class StuffIt5Handler(_StuffItHandlerBase):
             uint32 entry_offset;
             uint16 num_root_dir_entries;
             uint32 first_entry_offset;
-        };
+        } stuffit5_header_t;
     """
-    HEADER_STRUCT = "stuffit5_header"
+    HEADER_STRUCT = "stuffit5_header_t"

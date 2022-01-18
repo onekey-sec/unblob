@@ -37,7 +37,7 @@ class LZHHandler(StructHandler):
     )
 
     C_DEFINITIONS = r"""
-        struct lzh_default_header {
+        typedef struct lzh_default_header {
             uint8 header_size;          // excludes extended headers size
             uint8 header_checksum;
             char method_id[5];
@@ -46,9 +46,9 @@ class LZHHandler(StructHandler):
             uint32 timestamp;
             uint8 fd_attribute;
             uint8 level_identifier;
-        };
+        } lzh_default_header_t;
 
-        struct level_2_header {
+        typedef struct level_2_header {
             uint16 header_size; // includes all extended headers
             char method_id[5];
             uint32 compressed_size;     // excludes all extended headers
@@ -56,9 +56,9 @@ class LZHHandler(StructHandler):
             uint32 timestamp;
             uint8 fd_attribute;
             uint8 level_identifier;
-        };
+        } level_2_header_t;
     """
-    HEADER_STRUCT = "lzh_default_header"
+    HEADER_STRUCT = "lzh_default_header_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int

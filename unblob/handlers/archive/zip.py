@@ -30,13 +30,7 @@ class ZIPHandler(StructHandler):
     """
 
     C_DEFINITIONS = r"""
-        struct pk_generic
-        {
-            uint32 magic;
-            uint16 version;
-        }
-
-        struct local_file_header
+        typedef struct local_file_header
         {
             uint32 local_file_header_signature;
             uint16 version_needed_to_extract;
@@ -51,33 +45,9 @@ class ZIPHandler(StructHandler):
             uint16 extra_field_length;
             char file_name[file_name_length];
             char extra_field[extra_field_length];
-        }
+        } local_file_header_t;
 
-        struct central_directory_header
-        {
-            uint32 cd_header_signature; //
-            uint16 version_made_by;
-            uint16 min_version_to_extract;
-            uint16 gp_bitflag;
-            uint16 compression_method;
-            uint16 last_mod_file_time;
-            uint16 last_mod_file_date;
-            uint32 crc32;
-            uint32 compressed_size;
-            uint32 uncompressed_size;
-            uint16 file_name_length;
-            uint16 extra_field_length;
-            uint16 file_comment_length;
-            uint16 disk_number_start;
-            uint16 internal_file_attributes;
-            uint32 external_file_attributes;
-            uint32 offset_local_header;
-            char file_name[file_name_length];
-            char extra_field[extra_field_length];
-            char file_comment[file_comment_length];
-        }
-
-        struct end_of_central_directory
+        typedef struct end_of_central_directory
         {
             uint32 end_of_central_signature;
             uint16 disk_number;
@@ -88,17 +58,9 @@ class ZIPHandler(StructHandler):
             uint32 offset_of_cd;
             uint16 comment_len;
             char zip_file_comment[comment_len];
-        }
-
-        struct streaming_data
-        {
-            uint32 magic;
-            uint32 unk1;
-            uint32 unk2;
-            uint32 unk3;
-        }
+        } end_of_central_directory_t;
     """
-    HEADER_STRUCT = "local_file_header"
+    HEADER_STRUCT = "local_file_header_t"
 
     def _calculate_zipfile_end(self, file: io.BufferedIOBase, start_offset: int) -> int:
         # If we just pass a file with multiple ZIP files in it to zipfile.ZipFile, it seems
@@ -119,7 +81,7 @@ class ZIPHandler(StructHandler):
             raise MissingEOCDHeader
 
         file.seek(zip_end)
-        self.cparser_le.end_of_central_directory(file)
+        self.cparser_le.end_of_central_directory_t(file)
         return file.tell()
 
     def calculate_chunk(

@@ -33,14 +33,14 @@ class ARJHandler(StructHandler):
     # https://docs.fileformat.com/compression/arj/
     # https://github.com/tripsin/unarj/blob/master/UNARJ.H#L203
     C_DEFINITIONS = r"""
-        struct basic_header {
+        typedef struct basic_header {
             uint16 id;
             uint16 size;
-        };
+        } basic_header_t;
 
-        struct arj_header
+        typedef struct arj_header
         {
-            basic_header header;
+            basic_header_t header;
             uint8 first_hdr_size; // size up to "extra data"
             uint8 archive_version;
             uint8 min_version;
@@ -57,10 +57,10 @@ class ARJHandler(StructHandler):
             uint16 reserved2;
             uint16 security_env_length;
             uint16 host_data;
-        };
+        } arj_header_t;
 
-        struct file_header {
-            basic_header header;
+        typedef struct file_header {
+            basic_header_t header;
             uint8 first_hdr_size; // size up to "extra data"
             uint8 archive_version;
             uint8 min_version;
@@ -76,21 +76,21 @@ class ARJHandler(StructHandler):
             uint16 entryname_pos_in_filename;
             uint16 file_access_mode;
             uint16 host_data;
-        };
+        } file_header_t;
 
-        struct metadata {
+        typedef struct metadata {
             char filename[];
             char comment[];
             uint32 crc;
-        };
+        } metadata_t;
 
-        struct extended_header {
-            ushort size;
+        typedef struct extended_header {
+            uint16 size;
             // More would go here if there were an extended header
-        }
+        } extended_header_t;
     """
 
-    HEADER_STRUCT = "arj_header"
+    HEADER_STRUCT = "arj_header_t"
 
     def _read_arj_main_header(self, file: io.BufferedIOBase, start_offset: int) -> int:
         basic_header = self.cparser_le.basic_header(file)
@@ -120,7 +120,7 @@ class ARJHandler(StructHandler):
                 return file.tell()
 
             file.seek(start)
-            file_header = self.cparser_le.file_header(file)
+            file_header = self.cparser_le.file_header_t(file)
 
             file.seek(start + file_header.first_hdr_size + len(basic_header))
             self._read_headers(file)
@@ -128,12 +128,12 @@ class ARJHandler(StructHandler):
             file.seek(file_header.compressed_size, io.SEEK_CUR)
 
     def _read_headers(self, file):
-        metadata = self.cparser_le.metadata(file)
+        metadata = self.cparser_le.metadata_t(file)
         logger.debug("Metadata header parsed", header=metadata)
 
         # Lack of support for extended header is ok given that no versions of ARJ use the extended header.
         # Source: 'ARJ TECHNICAL INFORMATION', September 2001
-        extended_header = self.cparser_le.extended_header(file)
+        extended_header = self.cparser_le.extended_header_t(file)
         logger.debug("Extended header parsed", header=extended_header)
         if extended_header.size != 0:
             raise ARJExtendedHeader
