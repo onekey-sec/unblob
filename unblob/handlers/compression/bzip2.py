@@ -14,8 +14,10 @@ BLOCK_ENDMARK = 0x0000_1772_4538_5090
 
 COMPRESSED_MAGIC_LENGTH = 6 * 8
 
+BLOCK_ENDMARK_SHIFTED = BLOCK_ENDMARK << COMPRESSED_MAGIC_LENGTH
 
-FOOTER_SIZE = 10  # 6 bytes magic + 4 bytes CRC
+
+FOOTER_SIZE = 4  # 4 bytes CRC
 
 
 class BZip2Handler(StructHandler):
@@ -66,23 +68,28 @@ class BZip2Handler(StructHandler):
 
         bits_read = 0
         buff = 0
-        blocks_found = 0
         current_block_end = 0
+        start_block_found = False
+        end_block_found = False
 
         file.seek(start_offset)
 
         for b in iterbits(file):
             bits_read += 1
 
-            buff = (buff << 1 | b) & 0xFFFF_FFFF_FFFF
+            buff = (buff << 1 | b) & 0xFFFF_FFFF_FFFF_FFFF_FFFF_FFFF
 
-            if buff == BLOCK_HEADER or buff == BLOCK_ENDMARK:
-                blocks_found += 1
+            if buff & 0xFFFF_FFFF_FFFF == BLOCK_HEADER:
+                start_block_found = True
+            elif buff & 0xFFFF_FFFF_FFFF == BLOCK_ENDMARK:
+                end_block_found = True
+                current_block_end = bits_read
+            elif buff & 0xFFFF_FFFF_FFFF_0000_0000_0000 == BLOCK_ENDMARK_SHIFTED:
+                if buff & 0xFFFF_FFFF_FFFF == BLOCK_HEADER:
+                    continue
+                break
 
-                # Cannot be negative, we already found at least one block.
-                current_block_end = bits_read - COMPRESSED_MAGIC_LENGTH
-
-        if blocks_found < 2:
+        if not (start_block_found and end_block_found):
             return -1
 
         # blocks are counted in bits but we need an offset in bytes
