@@ -27,10 +27,14 @@ class _CPIOHandlerBase(StructHandler):
         offset = start_offset
         while True:
             file.seek(offset)
+
             header = self.parse_header(file)
 
-            c_filesize = self._calculate_file_size(header)
-            c_namesize = self._calculate_name_size(header)
+            try:
+                c_filesize = self._calculate_file_size(header)
+                c_namesize = self._calculate_name_size(header)
+            except ValueError:
+                return
 
             # heuristics 1: check the filename
             if c_namesize > MAX_LINUX_PATH_LENGTH:
