@@ -92,7 +92,11 @@ class LegacyFrameHandler(_LZ4HandlerBase):
             if raw_bsize == b"":  # EOF
                 break
 
-            block_compressed_size = convert_int32(raw_bsize, Endian.LITTLE)
+            try:
+                block_compressed_size = convert_int32(raw_bsize, Endian.LITTLE)
+            except ValueError:
+                return
+
             if block_compressed_size in FRAME_MAGICS:
                 # next magic, read too far
                 file.seek(-4, io.SEEK_CUR)
@@ -119,7 +123,10 @@ class SkippableFrameHandler(_LZ4HandlerBase):
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
         self._skip_magic_bytes(file)
-        frame_size = convert_int32(file.read(FRAME_SIZE_LEN), Endian.LITTLE)
+        try:
+            frame_size = convert_int32(file.read(FRAME_SIZE_LEN), Endian.LITTLE)
+        except ValueError:
+            return
         file.seek(frame_size, io.SEEK_CUR)
         end_offset = file.tell()
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
@@ -158,12 +165,18 @@ class DefaultFrameHandler(_LZ4HandlerBase):
         if flg.dictid:
             file.seek(DICTID_LEN, io.SEEK_CUR)
 
-        header_checksum = convert_int8(file.read(HC_LEN), Endian.LITTLE)
+        try:
+            header_checksum = convert_int8(file.read(HC_LEN), Endian.LITTLE)
+        except ValueError:
+            return
         logger.debug("Header checksum (HC) read", header_checksum=header_checksum)
 
         # 3. we read block by block until we hit the endmarker
         while True:
-            block_size = convert_int32(file.read(BLOCK_SIZE_LEN), Endian.LITTLE)
+            try:
+                block_size = convert_int32(file.read(BLOCK_SIZE_LEN), Endian.LITTLE)
+            except ValueError:
+                return
             logger.debug("block_size", block_size=block_size)
             if block_size == END_MARK:
                 break
