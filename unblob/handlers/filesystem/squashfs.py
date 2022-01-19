@@ -61,13 +61,13 @@ class SquashFSv3Handler(_SquashFSBase):
             uint32 block_size;
             uint32 fragments;
             uint32 fragment_table_start_2;
-            int64  bytes_used;
-            int64  uid_start;
-            int64  guid_start;
-            int64  inode_table_start;
-            int64  directory_table_start;
-            int64  fragment_table_start;
-            int64  lookup_table_start;
+            uint64  bytes_used;
+            uint64  uid_start;
+            uint64  guid_start;
+            uint64  inode_table_start;
+            uint64  directory_table_start;
+            uint64  fragment_table_start;
+            uint64  lookup_table_start;
         } squashfs3_super_block_t;
     """
     HEADER_STRUCT = "squashfs3_super_block_t"
@@ -115,13 +115,13 @@ class SquashFSv4Handler(_SquashFSBase):
             uint16 s_major;
             uint16 s_minor;
             uint64 root_inode;
-            int64  bytes_used;
-            int64  id_table_start;
-            int64  xattr_id_table_start;
-            int64  inode_table_start;
-            int64  directory_table_start;
-            int64  fragment_table_start;
-            int64  lookup_table_start;
+            uint64  bytes_used;
+            uint64  id_table_start;
+            uint64  xattr_id_table_start;
+            uint64  inode_table_start;
+            uint64  directory_table_start;
+            uint64  fragment_table_start;
+            uint64  lookup_table_start;
         } squashfs4_super_block_t;
     """
     HEADER_STRUCT = "squashfs4_super_block_t"
