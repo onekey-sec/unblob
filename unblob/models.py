@@ -1,5 +1,6 @@
 import abc
 import io
+from pathlib import Path
 from typing import List, Optional
 
 import attr
@@ -14,6 +15,17 @@ logger = get_logger()
 #
 # file ──► YaraMatchResult ──► ValidChunk
 #
+
+
+@attr.define
+class Task:
+    root: Path
+    path: Path
+    extract_root: Path
+    max_depth: int
+    current_depth: int
+    entropy_depth: int
+    verbose: bool
 
 
 @attr.define

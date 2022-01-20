@@ -1,3 +1,4 @@
+import multiprocessing
 import stat
 import statistics
 from operator import attrgetter
@@ -13,7 +14,7 @@ from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
-from .models import UnknownChunk, ValidChunk
+from .models import Task, UnknownChunk, ValidChunk
 
 logger = get_logger()
 
@@ -31,27 +32,75 @@ def process_file(  # noqa: C901
     verbose: bool = False,
     current_depth: int = 0,
 ):
-    log = logger.bind(path=path)
-    if current_depth >= max_depth:
+    task_queue = multiprocessing.JoinableQueue()
+    task_queue.put(
+        Task(
+            root=root,
+            path=path,
+            extract_root=extract_root,
+            max_depth=max_depth,
+            current_depth=current_depth,
+            entropy_depth=entropy_depth,
+            verbose=verbose,
+        )
+    )
+
+    process_num = multiprocessing.cpu_count()
+    worker_processes = [
+        multiprocessing.Process(target=_process_task_queue, args=(task_queue,))
+        for _ in range(process_num)
+    ]
+
+    for p in worker_processes:
+        p.start()
+
+    logger.debug(
+        "Workers started",
+        process_num=noformat(process_num),
+        pids=[p.pid for p in worker_processes],
+    )
+
+    task_queue.join()
+
+    for p in worker_processes:
+        p.terminate()
+        p.join()
+
+
+def _process_task_queue(task_queue: multiprocessing.JoinableQueue):
+    while True:
+        logger.debug("Waiting for Task")
+        task = task_queue.get()
+        try:
+            _process_task(task_queue, task)
+        finally:
+            task_queue.task_done()
+
+
+def _process_task(task_queue: multiprocessing.JoinableQueue, task: Task):
+    log = logger.bind(path=task.path)
+    if task.current_depth >= task.max_depth:
         log.info("Reached maximum depth, stop further processing")
         return
 
     log.info("Start processing file")
 
-    statres = path.lstat()
+    statres = task.path.lstat()
     mode, size = statres.st_mode, statres.st_size
 
     if stat.S_ISDIR(mode):
         log.info("Found directory")
-        for path in path.iterdir():
-            process_file(
-                root,
-                path,
-                extract_root,
-                max_depth,
-                entropy_depth,
-                verbose,
-                current_depth + 1,
+        for path in task.path.iterdir():
+            task_queue.put(
+                Task(
+                    root=task.root,
+                    path=path,
+                    extract_root=task.extract_root,
+                    max_depth=task.max_depth,
+                    entropy_depth=task.entropy_depth,
+                    verbose=task.verbose,
+                    current_depth=task.current_depth + 1,
+                )
             )
         return
 
@@ -65,34 +114,36 @@ def process_file(  # noqa: C901
 
     log.info("Calculated file size", size=size)
 
-    with path.open("rb") as file:
-        all_chunks = search_chunks_by_priority(path, file, size)
+    with task.path.open("rb") as file:
+        all_chunks = search_chunks_by_priority(task.path, file, size)
         outer_chunks = remove_inner_chunks(all_chunks)
         unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
         if not outer_chunks and not unknown_chunks:
             # we don't consider whole files as unknown chunks, but we still want to
             # calculate entropy for whole files which produced no valid chunks
-            if current_depth < entropy_depth:
-                calculate_entropy(path, draw_plot=verbose)
+            if task.current_depth < task.entropy_depth:
+                calculate_entropy(task.path, draw_plot=task.verbose)
             return
 
-        extract_dir = make_extract_dir(root, path, extract_root)
+        extract_dir = make_extract_dir(task.root, task.path, task.extract_root)
 
         carved_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
-        if current_depth < entropy_depth:
+        if task.current_depth < task.entropy_depth:
             for carved_path in carved_paths:
-                calculate_entropy(carved_path, draw_plot=verbose)
+                calculate_entropy(carved_path, draw_plot=task.verbose)
 
         for chunk in outer_chunks:
             new_path = extract_valid_chunk(extract_dir, file, chunk)
-            process_file(
-                extract_root,
-                new_path,
-                extract_root,
-                max_depth,
-                entropy_depth,
-                verbose,
-                current_depth + 1,
+            task_queue.put(
+                Task(
+                    root=task.extract_root,
+                    path=new_path,
+                    extract_root=task.extract_root,
+                    max_depth=task.max_depth,
+                    entropy_depth=task.entropy_depth,
+                    verbose=task.verbose,
+                    current_depth=task.current_depth + 1,
+                )
             )
 
 
