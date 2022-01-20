@@ -8,6 +8,7 @@ WORKDIR /data/output
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     unar \
+    git \
     gcc \
     zlib1g-dev \
     liblzo2-dev \

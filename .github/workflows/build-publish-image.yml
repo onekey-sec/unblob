@@ -1,8 +1,12 @@
-name: Publish Docker image
+name: Build Docker image
 
 on:
   push:
-    branches: ['main']
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '**'
 
 env:
   DOCKER_IMAGE: ghcr.io/iot-inspector/unblob:latest
@@ -51,6 +55,7 @@ jobs:
         run: docker run --rm -v "$(pwd)"/tests/integration/archive/zip/regular:/test ${{ env.DOCKER_IMAGE }} -v -e /tmp /test
 
       - name: Build and push
+        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
         uses: docker/build-push-action@v2
         with:
           context: .
