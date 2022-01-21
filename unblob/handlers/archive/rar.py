@@ -35,7 +35,7 @@ class RarHandler(Handler):
 
         try:
             rar_file = rarfile.RarFile(file)
-        except rarfile.Error:
+        except (rarfile.Error, ValueError):
             return
 
         # RarFile have the side effect of moving the file pointer
