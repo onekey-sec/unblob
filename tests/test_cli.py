@@ -149,7 +149,6 @@ def test_archive_success(
     assert "warning" not in result.output
     process_file_mock.assert_called_once_with(
         in_path,
-        in_path,
         tmp_path,
         max_depth=expected_depth,
         entropy_depth=expected_entropy_depth,
@@ -187,14 +186,12 @@ def test_archive_multiple_files(tmp_path: Path):
     assert process_file_mock.call_args_list == [
         mock.call(
             in_path_1,
-            in_path_1,
             tmp_path,
             max_depth=DEFAULT_DEPTH,
             entropy_depth=1,
             verbose=False,
         ),
         mock.call(
-            in_path_2,
             in_path_2,
             tmp_path,
             max_depth=DEFAULT_DEPTH,

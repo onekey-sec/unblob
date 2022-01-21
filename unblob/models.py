@@ -21,7 +21,7 @@ logger = get_logger()
 class Task:
     root: Path
     path: Path
-    current_depth: int
+    depth: int
 
 
 @attr.define

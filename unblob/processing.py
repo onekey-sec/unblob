@@ -24,20 +24,20 @@ DEFAULT_DEPTH = 10
 # TODO: this function became too complex when adding entropy calculation, but
 # it will be simplified in a separate branch, because the refactor is very complex
 def process_file(  # noqa: C901
-    root: Path,
     path: Path,
     extract_root: Path,
     max_depth: int,
     entropy_depth: int,
     verbose: bool = False,
-    current_depth: int = 0,
 ):
+
+    root = path if path.is_dir() else path.parent
     task_queue = multiprocessing.JoinableQueue()
     task_queue.put(
         Task(
             root=root,
             path=path,
-            current_depth=current_depth,
+            depth=0,
         )
     )
 
@@ -89,7 +89,7 @@ def _process_task(
     task_queue: multiprocessing.JoinableQueue, task: Task, config: ProcessingConfig
 ):
     log = logger.bind(path=task.path)
-    if task.current_depth >= config.max_depth:
+    if task.depth >= config.max_depth:
         log.info("Reached maximum depth, stop further processing")
         return
 
@@ -105,7 +105,7 @@ def _process_task(
                 Task(
                     root=task.root,
                     path=path,
-                    current_depth=task.current_depth + 1,
+                    depth=task.depth + 1,
                 )
             )
         return
@@ -127,14 +127,14 @@ def _process_task(
         if not outer_chunks and not unknown_chunks:
             # we don't consider whole files as unknown chunks, but we still want to
             # calculate entropy for whole files which produced no valid chunks
-            if task.current_depth < config.entropy_depth:
+            if task.depth < config.entropy_depth:
                 calculate_entropy(task.path, draw_plot=config.verbose)
             return
 
         extract_dir = make_extract_dir(task.root, task.path, config.extract_root)
 
         carved_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
-        if task.current_depth < config.entropy_depth:
+        if task.depth < config.entropy_depth:
             for carved_path in carved_paths:
                 calculate_entropy(carved_path, draw_plot=config.verbose)
 
@@ -144,7 +144,7 @@ def _process_task(
                 Task(
                     root=config.extract_root,
                     path=new_path,
-                    current_depth=task.current_depth + 1,
+                    depth=task.depth + 1,
                 )
             )
 

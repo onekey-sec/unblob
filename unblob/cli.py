@@ -95,9 +95,7 @@ def cli(
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=noformat(len(files)))
     for path in files:
-        root = path if path.is_dir() else path.parent
         process_file(
-            root,
             path,
             extract_root,
             max_depth=depth,

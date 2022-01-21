@@ -40,7 +40,6 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
     ), f"Integration test input dir should contain at least 1 file: {input_dir}"
 
     process_file(
-        root=input_dir,
         path=input_dir,
         extract_root=tmp_path,
         max_depth=DEFAULT_DEPTH,
