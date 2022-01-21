@@ -84,6 +84,19 @@ class ZIPHandler(StructHandler):
         self.cparser_le.end_of_central_directory_t(file)
         return file.tell()
 
+    def is_valid(self, zip_chunk: io.BytesIO) -> bool:
+        has_encrypted_files = False
+        try:
+            with zipfile.ZipFile(zip_chunk) as zip:
+                for zipinfo in zip.infolist():
+                    if zipinfo.flag_bits & ENCRYPTED_FLAG:
+                        has_encrypted_files = True
+            if has_encrypted_files:
+                logger.warning("There are encrypted files in the ZIP")
+            return True
+        except (zipfile.BadZipFile, UnicodeDecodeError, ValueError):
+            return False
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -96,20 +109,12 @@ class ZIPHandler(StructHandler):
             end_of_zip = self._calculate_zipfile_end(file, start_offset)
         except MissingEOCDHeader:
             return
-
         file.seek(start_offset)
 
-        has_encrypted_files = False
-
         zip_content = file.read(end_of_zip - start_offset)
-        this_zip_chunk = io.BytesIO(zip_content)
-        with zipfile.ZipFile(this_zip_chunk) as zip:
-            for zipinfo in zip.infolist():
-                if zipinfo.flag_bits & ENCRYPTED_FLAG:
-                    has_encrypted_files = True
 
-        if has_encrypted_files:
-            logger.warning("There are encrypted files in the ZIP")
+        if not self.is_valid(io.BytesIO(zip_content)):
+            return
 
         return ValidChunk(start_offset=start_offset, end_offset=end_of_zip)
 
