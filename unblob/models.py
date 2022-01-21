@@ -21,9 +21,13 @@ logger = get_logger()
 class Task:
     root: Path
     path: Path
+    current_depth: int
+
+
+@attr.define
+class ProcessingConfig:
     extract_root: Path
     max_depth: int
-    current_depth: int
     entropy_depth: int
     verbose: bool
 

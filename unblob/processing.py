@@ -14,7 +14,7 @@ from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
-from .models import Task, UnknownChunk, ValidChunk
+from .models import ProcessingConfig, Task, UnknownChunk, ValidChunk
 
 logger = get_logger()
 
@@ -37,17 +37,23 @@ def process_file(  # noqa: C901
         Task(
             root=root,
             path=path,
-            extract_root=extract_root,
-            max_depth=max_depth,
             current_depth=current_depth,
-            entropy_depth=entropy_depth,
-            verbose=verbose,
         )
+    )
+
+    config = ProcessingConfig(
+        extract_root=extract_root,
+        max_depth=max_depth,
+        entropy_depth=entropy_depth,
+        verbose=verbose,
     )
 
     process_num = multiprocessing.cpu_count()
     worker_processes = [
-        multiprocessing.Process(target=_process_task_queue, args=(task_queue,))
+        multiprocessing.Process(
+            target=_process_task_queue,
+            args=(task_queue, config),
+        )
         for _ in range(process_num)
     ]
 
@@ -67,19 +73,23 @@ def process_file(  # noqa: C901
         p.join()
 
 
-def _process_task_queue(task_queue: multiprocessing.JoinableQueue):
+def _process_task_queue(
+    task_queue: multiprocessing.JoinableQueue, config: ProcessingConfig
+):
     while True:
         logger.debug("Waiting for Task")
         task = task_queue.get()
         try:
-            _process_task(task_queue, task)
+            _process_task(task_queue, task, config)
         finally:
             task_queue.task_done()
 
 
-def _process_task(task_queue: multiprocessing.JoinableQueue, task: Task):
+def _process_task(
+    task_queue: multiprocessing.JoinableQueue, task: Task, config: ProcessingConfig
+):
     log = logger.bind(path=task.path)
-    if task.current_depth >= task.max_depth:
+    if task.current_depth >= config.max_depth:
         log.info("Reached maximum depth, stop further processing")
         return
 
@@ -95,10 +105,6 @@ def _process_task(task_queue: multiprocessing.JoinableQueue, task: Task):
                 Task(
                     root=task.root,
                     path=path,
-                    extract_root=task.extract_root,
-                    max_depth=task.max_depth,
-                    entropy_depth=task.entropy_depth,
-                    verbose=task.verbose,
                     current_depth=task.current_depth + 1,
                 )
             )
@@ -121,27 +127,23 @@ def _process_task(task_queue: multiprocessing.JoinableQueue, task: Task):
         if not outer_chunks and not unknown_chunks:
             # we don't consider whole files as unknown chunks, but we still want to
             # calculate entropy for whole files which produced no valid chunks
-            if task.current_depth < task.entropy_depth:
-                calculate_entropy(task.path, draw_plot=task.verbose)
+            if task.current_depth < config.entropy_depth:
+                calculate_entropy(task.path, draw_plot=config.verbose)
             return
 
-        extract_dir = make_extract_dir(task.root, task.path, task.extract_root)
+        extract_dir = make_extract_dir(task.root, task.path, config.extract_root)
 
         carved_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
-        if task.current_depth < task.entropy_depth:
+        if task.current_depth < config.entropy_depth:
             for carved_path in carved_paths:
-                calculate_entropy(carved_path, draw_plot=task.verbose)
+                calculate_entropy(carved_path, draw_plot=config.verbose)
 
         for chunk in outer_chunks:
             new_path = extract_valid_chunk(extract_dir, file, chunk)
             task_queue.put(
                 Task(
-                    root=task.extract_root,
+                    root=config.extract_root,
                     path=new_path,
-                    extract_root=task.extract_root,
-                    max_depth=task.max_depth,
-                    entropy_depth=task.entropy_depth,
-                    verbose=task.verbose,
                     current_depth=task.current_depth + 1,
                 )
             )
