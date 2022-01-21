@@ -138,7 +138,7 @@ def search_yara_patterns(
 ) -> List[YaraMatchResult]:
     """Search with the compiled YARA rules and identify the handler which defined the rule."""
     # YARA uses a memory mapped file internally when given a path
-    yara_matches: List[yara.Match] = yara_rules.match(str(full_path), timeout=60)
+    yara_matches: List[yara.Match] = yara_rules.match(full_path.as_posix(), timeout=60)
 
     yara_results = []
     for match in yara_matches:

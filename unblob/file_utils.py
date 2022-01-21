@@ -4,6 +4,7 @@ import math
 import os
 import shutil
 import struct
+from pathlib import Path
 from typing import Iterator, Tuple
 
 from dissect.cstruct import cstruct
@@ -287,3 +288,11 @@ def read_until_past(file: io.BufferedIOBase, pattern: bytes):
             return file.tell()
         if next_byte not in pattern:
             return file.tell() - 1
+
+
+def valid_path(path: Path) -> bool:
+    try:
+        path.as_posix().encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True

@@ -26,11 +26,11 @@ def test_format_message_dont_care_root_path(value: Any, expected: str):
 @pytest.mark.parametrize(
     "value, extract_root, expected",
     (
-        (Path("/a/b/c"), Path("/"), "a/b/c"),
-        (Path("/a/b/c"), Path("/a/b"), "c"),
-        (Path("/a/b/c"), Path(""), "/a/b/c"),
-        (Path("/a/b/c"), Path("qwe"), "/a/b/c"),
-        (Path("/a/b/c"), Path("/q/w/e"), "/a/b/c"),
+        (Path("/a/b/c"), Path("/"), b"a/b/c"),
+        (Path("/a/b/c"), Path("/a/b"), b"c"),
+        (Path("/a/b/c"), Path(""), b"/a/b/c"),
+        (Path("/a/b/c"), Path("qwe"), b"/a/b/c"),
+        (Path("/a/b/c"), Path("/q/w/e"), b"/a/b/c"),
     ),
 )
 def test_format_message_root_path(value: Path, extract_root: Path, expected: str):
