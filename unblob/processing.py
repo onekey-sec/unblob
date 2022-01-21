@@ -19,6 +19,7 @@ from .models import ProcessingConfig, Task, UnknownChunk, ValidChunk
 logger = get_logger()
 
 DEFAULT_DEPTH = 10
+DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 
 
 # TODO: this function became too complex when adding entropy calculation, but
@@ -26,9 +27,10 @@ DEFAULT_DEPTH = 10
 def process_file(  # noqa: C901
     path: Path,
     extract_root: Path,
-    max_depth: int,
     entropy_depth: int,
     verbose: bool = False,
+    max_depth: int = DEFAULT_DEPTH,
+    process_num: int = DEFAULT_PROCESS_NUM,
 ):
 
     root = path if path.is_dir() else path.parent
@@ -48,7 +50,6 @@ def process_file(  # noqa: C901
         verbose=verbose,
     )
 
-    process_num = multiprocessing.cpu_count()
     worker_processes = [
         multiprocessing.Process(
             target=_process_task_queue,

@@ -17,7 +17,7 @@ import pytest
 
 from unblob import handlers
 from unblob.models import Handler
-from unblob.processing import DEFAULT_DEPTH, process_file
+from unblob.processing import process_file
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
 TEST_INPUT_DIRS = list(TEST_DATA_PATH.glob("**/__input__"))
@@ -42,7 +42,6 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
     process_file(
         path=input_dir,
         extract_root=tmp_path,
-        max_depth=DEFAULT_DEPTH,
         entropy_depth=0,
     )
 
