@@ -36,10 +36,9 @@ class _JFFS2Base(StructHandler):
     C_DEFINITIONS = r"""
         typedef struct jffs2_unknown_node
         {
-            /* All start like this */
             uint16 magic;
             uint16 nodetype;
-            uint32 totlen; /* So we can skip over nodes we don't grok */
+            uint32 totlen;
             uint32 hdr_crc;
         } jffs2_unknown_node_t;
     """

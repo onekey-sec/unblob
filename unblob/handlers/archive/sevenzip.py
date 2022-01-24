@@ -36,12 +36,11 @@ class SevenZipHandler(StructHandler):
         strings:
             // '7', 'z', 0xBC, 0xAF, 0x27, 0x1C
             $sevenzip_magic = { 37 7A BC AF 27 1C }
-
         condition:
             $sevenzip_magic
     """
     C_DEFINITIONS = r"""
-        struct sevenzip_header {
+        typedef struct sevenzip_header {
             char magic[6];
             uint8 version_maj;
             uint8 version_min;
@@ -49,13 +48,9 @@ class SevenZipHandler(StructHandler):
             uint64 next_header_offset;
             uint64 next_header_size;
             uint32 next_header_crc;
-        }
-
-        struct header_db {
-            char property_id;
-        }
+        } sevenzip_header_t;
     """
-    HEADER_STRUCT = "sevenzip_header"
+    HEADER_STRUCT = "sevenzip_header_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int

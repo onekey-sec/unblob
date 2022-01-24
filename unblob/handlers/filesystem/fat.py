@@ -31,7 +31,7 @@ class FATHandler(StructHandler):
 
     C_DEFINITIONS = r"""
         // Common between FAT12, FAT16 and FAT32.
-        struct bios_param_common {
+        typedef struct bios_param_common {
             char JmpBoot[3];     // An x86 JMP - e.g. EB 3C 90 ("One finds either eb xx 90, or e9 xx xx.")
             char OEMName[8];     // OEM name/version (E.g. "IBM  3.3", "IBM 20.0", "MSDOS5.0", "MSWIN4.0".)
             // "BIOS Parameter Block" starts here
@@ -55,12 +55,11 @@ class FATHandler(StructHandler):
                                     // FATSz32 contains the FAT size count.
             uint16 SecPerTrk;   // Sectors per track for interrupt 0x13.
             uint16 NumHeads;    // Number of heads for interrupt 0x13
-        }
+        } bios_param_common_t;
 
         // BIOS params for FAT16.
-        struct fat12_16_bootsec {
-            bios_param_common common;
-
+        typedef struct fat12_16_bootsec {
+            bios_param_common_t common;
             uint32 NumHidden;
             uint32 NumSectors;
             uint8 DrvNum;
@@ -69,12 +68,11 @@ class FATHandler(StructHandler):
             char VolID[4];
             char VolLab[11];
             char FileSysType[8]; // Filesystem type (E.g. "FAT12   ", "FAT16   ", "FAT     ", or all zero.)
-        }
+        } fat12_16_bootsec_t;
 
         // BIOS params for FAT32.
-        struct fat32_bootsec {
-            bios_param_common common;
-
+        typedef struct fat32_bootsec {
+            bios_param_common_t common;
             uint32 Num_Hidden;
             uint32 TotSec32;
             uint32 FATSz32;
@@ -90,17 +88,17 @@ class FATHandler(StructHandler):
             char VolID[4];
             char VolLab[11];
             char FileSysType[8];
-        }
+        } fat32_bootsec_t;
 
-        struct fat_unknown {
-            bios_param_common common;
-        }
+        typedef struct fat_unknown {
+            bios_param_common_t common;
+        } fat_unknown_t;
     """
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
-        header = self.cparser_le.fat12_16_bootsec(file)
+        header = self.cparser_le.fat12_16_bootsec_t(file)
         logger.debug("FAT header parsed", header=header)
 
         if header.FileSysType in (b"FAT12   ", b"FAT16   "):
@@ -118,7 +116,7 @@ class FATHandler(StructHandler):
         else:
             logger.debug("Assuming FAT32")
             file.seek(start_offset)
-            header = self.cparser_le.fat32_bootsec(file)
+            header = self.cparser_le.fat32_bootsec_t(file)
             logger.debug("FAT32 header parsed", header=header)
             sector_count = header.TotSec32
 

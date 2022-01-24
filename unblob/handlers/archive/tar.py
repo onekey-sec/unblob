@@ -63,7 +63,7 @@ class TarHandler(StructHandler):
     YARA_MATCH_OFFSET = -MAGIC_OFFSET
 
     C_DEFINITIONS = r"""
-        struct posix_header
+        typedef struct posix_header
         {                       /* byte offset */
             char name[100];     /*   0 */
             char mode[8];       /* 100 */
@@ -82,9 +82,9 @@ class TarHandler(StructHandler):
             char devminor[8];   /* 337 */
             char prefix[155];   /* 345 */
                                 /* 500 */
-        };
+        } posix_header_t;
     """
-    HEADER_STRUCT = "posix_header"
+    HEADER_STRUCT = "posix_header_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int

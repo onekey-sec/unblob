@@ -23,7 +23,7 @@ class CramFSHandler(StructHandler):
     """
 
     C_DEFINITIONS = r"""
-        struct cramfs_header {
+        typedef struct cramfs_header {
             uint32 magic;
             uint32 size;
             uint32 flags;
@@ -34,9 +34,9 @@ class CramFSHandler(StructHandler):
             uint32 fsid_blocks;
             uint32 fsid_files;
             char name[16];
-        }
+        } cramfs_header_t;
     """
-    HEADER_STRUCT = "cramfs_header"
+    HEADER_STRUCT = "cramfs_header_t"
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int

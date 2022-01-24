@@ -35,36 +35,36 @@ class EXTHandler(StructHandler):
     """
 
     C_DEFINITIONS = r"""
-        struct ext4_superblock {
-        char blank[0x400];              // Not a part of the spec. But we expect the magic to be at 0x438.
-        uint32 s_inodes_count;          // Total number of inodes in file system
-        uint32 s_blocks_count_lo;       // Total number of blocks in file system
-        uint32 s_r_blocks_count_lo;     // Number of blocks reserved for superuser (see offset 80)
-        uint32 s_free_blocks_count_lo;  // Total number of unallocated blocks
-        uint32 s_free_inodes_count;     // Total number of unallocated inodes
-        uint32 s_first_data_block;      // Block number of the block containing the superblock
-        uint32 s_log_block_size;        // log2 (block size) - 10  (In other words, the number to shift 1,024 to the left by to obtain the block size)
-        uint32 s_log_cluster_size;      // log2 (fragment size) - 10. (In other words, the number to shift 1,024 to the left by to obtain the fragment size)
-        uint32 s_blocks_per_group;      // Number of blocks in each block group
-        uint32 s_clusters_per_group;    // Number of fragments in each block group
-        uint32 s_inodes_per_group;      // Number of inodes in each block group
-        uint32 s_mtime;                 // Last mount time
-        uint32 s_wtime;                 // Last written time
-        uint16 s_mnt_count;             // Number of times the volume has been mounted since its last consistency check
-        uint16 s_max_mnt_count;         // Number of mounts allowed before a consistency check must be done
-        uint16 s_magic;                 // Ext signature (0xef53), used to help confirm the presence of Ext2 on a volume
-        uint16 s_state;                 // File system state (0x1 - clean or 0x2 - has errors)
-        uint16 s_errors;                // What to do when an error is detected (ignore/remount/kernel panic)
-        uint16 s_minor_rev_level;       // Minor portion of version (combine with Major portion below to construct full version field)
-        uint32 s_lastcheck;             // time of last consistency check
-        uint32 s_checkinterval;         // Interval between forced consistency checks
-        uint32 s_creator_os;            // Operating system ID from which the filesystem on this volume was created
-        uint32 s_rev_level;             // Major portion of version (combine with Minor portion above to construct full version field)
-        uint16 s_def_resuid;            // User ID that can use reserved blocks
-        uint16 s_def_resgid;            // Group ID that can use reserved blocks
-    }
+        typedef struct ext4_superblock {
+            char blank[0x400];              // Not a part of the spec. But we expect the magic to be at 0x438.
+            uint32 s_inodes_count;          // Total number of inodes in file system
+            uint32 s_blocks_count_lo;       // Total number of blocks in file system
+            uint32 s_r_blocks_count_lo;     // Number of blocks reserved for superuser (see offset 80)
+            uint32 s_free_blocks_count_lo;  // Total number of unallocated blocks
+            uint32 s_free_inodes_count;     // Total number of unallocated inodes
+            uint32 s_first_data_block;      // Block number of the block containing the superblock
+            uint32 s_log_block_size;        // log2 (block size) - 10  (In other words, the number to shift 1,024 to the left by to obtain the block size)
+            uint32 s_log_cluster_size;      // log2 (fragment size) - 10. (In other words, the number to shift 1,024 to the left by to obtain the fragment size)
+            uint32 s_blocks_per_group;      // Number of blocks in each block group
+            uint32 s_clusters_per_group;    // Number of fragments in each block group
+            uint32 s_inodes_per_group;      // Number of inodes in each block group
+            uint32 s_mtime;                 // Last mount time
+            uint32 s_wtime;                 // Last written time
+            uint16 s_mnt_count;             // Number of times the volume has been mounted since its last consistency check
+            uint16 s_max_mnt_count;         // Number of mounts allowed before a consistency check must be done
+            uint16 s_magic;                 // Ext signature (0xef53), used to help confirm the presence of Ext2 on a volume
+            uint16 s_state;                 // File system state (0x1 - clean or 0x2 - has errors)
+            uint16 s_errors;                // What to do when an error is detected (ignore/remount/kernel panic)
+            uint16 s_minor_rev_level;       // Minor portion of version (combine with Major portion below to construct full version field)
+            uint32 s_lastcheck;             // time of last consistency check
+            uint32 s_checkinterval;         // Interval between forced consistency checks
+            uint32 s_creator_os;            // Operating system ID from which the filesystem on this volume was created
+            uint32 s_rev_level;             // Major portion of version (combine with Minor portion above to construct full version field)
+            uint16 s_def_resuid;            // User ID that can use reserved blocks
+            uint16 s_def_resgid;            // Group ID that can use reserved blocks
+        } ext4_superblock_t;
     """
-    HEADER_STRUCT = "ext4_superblock"
+    HEADER_STRUCT = "ext4_superblock_t"
 
     YARA_MATCH_OFFSET = -MAGIC_OFFSET
 
