@@ -22,9 +22,10 @@ rarfile = "^4.0"
 ubi-reader = "^0.7.0"
 python-lzo = "^1.12"
 cstruct = "2.1"
-jefferson = { git = "https://github.com/IoT-Inspector/jefferson.git", rev = "216eee6c56d338e5a14a0af5d07f1117cff92b3b" }
+jefferson = { git = "https://github.com/IoT-Inspector/jefferson.git", rev = "41f654eac078cfec240428be457c054613a80851" }
 yaffshiv = { git = "https://github.com/IoT-Inspector/yaffshiv.git", rev = "24e6e453a36a02144ae2d159eb3229f9c6312828" }
 plotext = "^4.1.5"
+
 
 [tool.poetry.dev-dependencies]
 lark = "^1.0.0"
