@@ -115,4 +115,4 @@ class TarHandler(StructHandler):
 
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["tar", "xvf", inpath, "--directory", outdir]
+        return ["7z", "x", inpath, f"-o{outdir}"]
