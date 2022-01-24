@@ -1,6 +1,7 @@
 import multiprocessing
 import stat
 import statistics
+import sys
 from operator import attrgetter
 from pathlib import Path
 from typing import List
@@ -12,7 +13,7 @@ from .extractor import carve_unknown_chunks, extract_valid_chunk, make_extract_d
 from .file_utils import iterate_file
 from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
-from .logging import noformat
+from .logging import multiprocessing_breakpoint, noformat
 from .math import shannon_entropy
 from .models import ProcessingConfig, Task, UnknownChunk, ValidChunk
 
@@ -77,6 +78,9 @@ def process_file(  # noqa: C901
 def _process_task_queue(
     task_queue: multiprocessing.JoinableQueue, config: ProcessingConfig
 ):
+    # Set custom function to breakpoint() call in the sub-processes for easier debugging
+    sys.breakpointhook = multiprocessing_breakpoint
+
     while True:
         logger.debug("Waiting for Task")
         task = task_queue.get()
