@@ -7,7 +7,7 @@ from typing import List
 import plotext as plt
 from structlog import get_logger
 
-from .extractor import carve_unknown_chunks, extract_valid_chunks, make_extract_dir
+from .extractor import carve_unknown_chunks, extract_valid_chunk, make_extract_dir
 from .file_utils import iterate_file
 from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
@@ -83,7 +83,8 @@ def process_file(  # noqa: C901
             for carved_path in carved_paths:
                 calculate_entropy(carved_path, draw_plot=verbose)
 
-        for new_path in extract_valid_chunks(extract_dir, file, outer_chunks):
+        for chunk in outer_chunks:
+            new_path = extract_valid_chunk(extract_dir, file, chunk)
             process_file(
                 extract_root,
                 new_path,
