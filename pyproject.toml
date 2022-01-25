@@ -32,6 +32,7 @@ pyright = "^0.0.12"
 pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
 setuptools-rust = "^1.1.2"
+pytest-benchmark = {version = "^3.4.1", extras = ["histogram"]}
 
 [tool.isort]
 profile = "black"
@@ -40,7 +41,7 @@ profile = "black"
 unblob = "unblob.cli:main"
 
 [tool.pytest.ini_options]
-addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
+addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90 --benchmark-disable"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
