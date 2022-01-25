@@ -2,7 +2,7 @@ runs:
   using: "composite"
   steps:
     - name: Install 3rd party from apt
-      run: sudo apt install unar zlib1g-dev liblzo2-dev lzop lziprecover
+      run: sudo apt install unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg
       shell: bash
 
     - name: Install 7zip

@@ -7,17 +7,18 @@ RUN chown -R unblob /data
 WORKDIR /data/output
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    unar \
-    git \
+    curl \
     gcc \
-    zlib1g-dev \
+    git \
+    img2simg \
     liblzo2-dev \
+    lz4 \
     lziprecover \
     lzop \
-    lz4 \
-    xz-utils \
     squashfs-tools \
-    curl
+    unar \
+    xz-utils \
+    zlib1g-dev
 RUN curl -s https://www.7-zip.org/a/7z2107-linux-x64.tar.xz --output - \
     | tar -C /usr/local/bin --transform 's/7zzs/7z/' -Jxvf - 7zzs
 
