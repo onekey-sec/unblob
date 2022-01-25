@@ -17,39 +17,15 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import DEFAULT_BUFSIZE, read_until_past
+from ...file_utils import read_until_past
 from ...models import Handler, ValidChunk
+from ._gzip_reader import SingleMemberGzipReader
 
 logger = get_logger()
 
 GZIP2_CRC_LEN = 4
 GZIP2_SIZE_LEN = 4
 GZIP2_FOOTER_LEN = GZIP2_CRC_LEN + GZIP2_SIZE_LEN
-
-
-class SingleMemberGzipReader(gzip._GzipReader):
-    def read(self):
-        uncompress = b""
-
-        while True:
-            buf = self._fp.read(DEFAULT_BUFSIZE)
-
-            uncompress = self._decompressor.decompress(buf, DEFAULT_BUFSIZE)
-            self._fp.prepend(self._decompressor.unconsumed_tail)
-            self._fp.prepend(self._decompressor.unused_data)
-
-            if uncompress != b"":
-                break
-            if buf == b"":
-                raise EOFError(
-                    "Compressed file ended before the "
-                    "end-of-stream marker was reached"
-                )
-
-        self._add_read_data(uncompress)
-        self._pos += len(uncompress)
-
-        return uncompress
 
 
 class GZIPHandler(Handler):
@@ -73,18 +49,16 @@ class GZIPHandler(Handler):
     ) -> Optional[ValidChunk]:
 
         fp = SingleMemberGzipReader(file)
-        fp._init_read()
-        if not fp._read_gzip_header():
+        if not fp.read_header():
             return
 
         try:
-            while not fp._decompressor.eof:
-                fp.read()
+            fp.read_until_eof()
         except gzip.BadGzipFile as e:
             logger.warn(e)
             return
 
-        file.seek(GZIP2_FOOTER_LEN - len(fp._decompressor.unused_data), io.SEEK_CUR)
+        file.seek(GZIP2_FOOTER_LEN - len(fp.unused_data), io.SEEK_CUR)
 
         # Gzip files can be padded with zeroes
         end_offset = read_until_past(file, b"\x00")
