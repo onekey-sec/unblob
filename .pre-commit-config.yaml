@@ -30,6 +30,12 @@ repos:
       - id: isort
         name: Check isort
 
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: v2.3
+    hooks:
+      - id: vulture
+        name: Check vulture
+
   - repo: https://github.com/doublify/pre-commit-rust
     rev: v1.0
     hooks:

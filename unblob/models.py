@@ -53,10 +53,6 @@ class Chunk:
     def range_hex(self) -> str:
         return f"0x{self.start_offset:x}-0x{self.end_offset:x}"
 
-    @property
-    def range_dec(self) -> str:
-        return f"{self.start_offset} - {self.end_offset}"
-
     def contains(self, other: "Chunk") -> bool:
         return (
             self.start_offset < other.start_offset

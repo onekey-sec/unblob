@@ -43,6 +43,10 @@ unblob = "unblob.cli:main"
 [tool.pytest.ini_options]
 addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
 
+[tool.vulture]
+paths = ["unblob/"]
+exclude = ["unblob/_py/"]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

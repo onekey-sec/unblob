@@ -16,7 +16,7 @@ logger = get_logger()
 
 
 def show_external_dependencies(
-    ctx: click.Context, param: click.Option, value: bool
+    ctx: click.Context, _param: click.Option, value: bool
 ) -> None:
     if not value or ctx.resilient_parsing:
         return

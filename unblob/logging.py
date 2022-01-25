@@ -43,7 +43,7 @@ def _format_message(value: Any, extract_root: Path) -> Any:
 
 
 def pretty_print_types(extract_root: Path):
-    def convert_type(logger, method_name: str, event_dict: structlog.types.EventDict):
+    def convert_type(_logger, _method_name: str, event_dict: structlog.types.EventDict):
         for key, value in event_dict.items():
             event_dict[key] = _format_message(value, extract_root)
 

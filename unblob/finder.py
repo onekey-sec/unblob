@@ -49,7 +49,7 @@ def search_chunks_by_priority(  # noqa: C901
 
             by_offset = itemgetter(0)
             sorted_match_strings = sorted(match.strings, key=by_offset)
-            for offset, identifier, string_data in sorted_match_strings:
+            for offset, identifier, _string_data in sorted_match_strings:
                 real_offset = offset + handler.YARA_MATCH_OFFSET
 
                 # Skip chunk calculation if the match is found too early in the file,
