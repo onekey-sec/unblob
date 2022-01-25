@@ -18,14 +18,27 @@ MAGIC_OFFSET = 257
 def _get_tar_end_offset(file: io.BufferedIOBase):
     # First find the end of the last entry in the file
     last_offset = _get_end_of_last_tar_entry(file)
-
+    if last_offset == -1:
+        return last_offset
     # Then find where the final zero blocks end
     return _find_end_of_padding(file, find_from=last_offset)
 
 
 def _get_end_of_last_tar_entry(file: io.BufferedIOBase) -> int:
-    tf = tarfile.TarFile(mode="r", fileobj=file)
-    last_member = tf.getmembers()[-1]
+
+    try:
+        tf = tarfile.TarFile(mode="r", fileobj=file)
+    except tarfile.TarError:
+        return -1
+    try:
+        members = tf.getmembers()
+    except tarfile.TarError:
+        # recover what's already been parsed
+        members = tf.members  # type: ignore
+
+    if not members:
+        return -1
+    last_member = members[-1]
     last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
     return last_member.offset + HEADER_SIZE + last_file_size
 
@@ -98,6 +111,8 @@ class TarHandler(StructHandler):
 
         file.seek(start_offset)
         end_offset = _get_tar_end_offset(file)
+        if end_offset == -1:
+            return
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
 
     @staticmethod
