@@ -60,8 +60,9 @@ def get_help_text():
 @click.option(
     "-d",
     "--depth",
-    type=int,
     default=DEFAULT_DEPTH,
+    type=click.IntRange(1),
+    show_default=True,
     help="Recursion depth. How deep should we extract containers.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
