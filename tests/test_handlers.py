@@ -44,7 +44,7 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         path=input_dir,
         extract_root=tmp_path,
         max_depth=DEFAULT_DEPTH,
-        entropy_depth=1,
+        entropy_depth=0,
     )
 
     diff_command = [
