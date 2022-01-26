@@ -84,10 +84,10 @@ class ZIPHandler(StructHandler):
         self.cparser_le.end_of_central_directory_t(file)
         return file.tell()
 
-    def is_valid(self, zip_chunk: io.BytesIO) -> bool:
+    def is_valid(self, file: io.BufferedIOBase) -> bool:
         has_encrypted_files = False
         try:
-            with zipfile.ZipFile(zip_chunk) as zip:
+            with zipfile.ZipFile(file) as zip:  # type: ignore
                 for zipinfo in zip.infolist():
                     if zipinfo.flag_bits & ENCRYPTED_FLAG:
                         has_encrypted_files = True
@@ -111,9 +111,7 @@ class ZIPHandler(StructHandler):
             return
         file.seek(start_offset)
 
-        zip_content = file.read(end_of_zip - start_offset)
-
-        if not self.is_valid(io.BytesIO(zip_content)):
+        if not self.is_valid(file):
             return
 
         return ValidChunk(start_offset=start_offset, end_offset=end_of_zip)
