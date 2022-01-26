@@ -167,8 +167,11 @@ def calculate_entropy(path: Path, *, draw_plot: bool):
     file_size = path.stat().st_size
     logger.info("Calculating entropy for file", path=path, size=file_size)
 
-    # Smaller chuk size would be very slow to calculate. This takes ~ 3sec for a 4,5 GB file.
-    buffer_size = 1024 * 1024
+    # Smaller chuk size would be very slow to calculate.
+    # 1Mb chunk size takes ~ 3sec for a 4,5 GB file.
+    buffer_size = calculate_buffer_size(
+        file_size, chunk_count=80, min_limit=1024, max_limit=1024 * 1024
+    )
 
     with path.open("rb") as file:
         for chunk in iterate_file(file, 0, file_size, buffer_size=buffer_size):
@@ -185,6 +188,17 @@ def calculate_entropy(path: Path, *, draw_plot: bool):
 
     if draw_plot:
         draw_entropy_plot(percentages)
+
+
+def calculate_buffer_size(
+    file_size, *, chunk_count: int, min_limit: int, max_limit: int
+) -> int:
+    """Split the file into even sized chunks, limited by lower and upper values."""
+    # We don't care about floating point precision here
+    buffer_size = file_size // chunk_count
+    buffer_size = max(min_limit, buffer_size)
+    buffer_size = min(buffer_size, max_limit)
+    return buffer_size
 
 
 def draw_entropy_plot(percentages: List[float]):
