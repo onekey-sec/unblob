@@ -1,0 +1,31 @@
+name: Rebase Pull Request
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  rebase-pull-request:
+    if: ${{ github.event.label.name == 'autorebase' }}
+    name: Rebase Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.TRY_STUFF }} # make sure to fetch every commit, # otherwise it will fail to push refs to dest repo
+          fetch-depth: 0
+
+      - name: Setup git lfs
+        uses: ./.github/actions/setup-git-lfs
+
+      - name: Automatic rebase
+        uses: cirrus-actions/rebase@da0cb1c13f1c2de36c0464f58d9088a1db2b062d
+        env:
+          GITHUB_TOKEN: ${{ secrets.TRY_STUFF }}
+
+      - name: Remove label
+        if: always() # make sure this always run even if some bad thing happened before this step
+        uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          labels: autorebase
