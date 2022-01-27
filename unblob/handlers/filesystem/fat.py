@@ -1,7 +1,10 @@
 import io
 from typing import List, Optional
 
+from dissect.cstruct import Instance
 from structlog import get_logger
+
+from unblob.file_utils import InvalidInputFormat
 
 from ...models import StructHandler, ValidChunk
 
@@ -9,6 +12,7 @@ logger = get_logger()
 
 
 VALID_NT_SIGNATURES = [0x28, 0x29]
+VALID_MEDIAS = [0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF]
 
 
 class FATHandler(StructHandler):
@@ -95,33 +99,56 @@ class FATHandler(StructHandler):
         } fat_unknown_t;
     """
 
+    def valid_name(self, name: bytes) -> bool:
+        try:
+            name.decode("utf-8")
+        except UnicodeDecodeError:
+            return False
+        return True
+
+    def valid_fat32_header(self, header: Instance) -> bool:
+        if header.common.RootEntCnt != 0:
+            return False
+        if header.common.TotSectors != 0:
+            return False
+        if header.common.FATSz16 != 0:
+            return False
+        return True
+
+    def valid_header(self, header: Instance) -> bool:
+        if not self.valid_name(header.common.OEMName):
+            return False
+        if header.common.BytesPerSec % 2 != 0:
+            return False
+        if header.common.RsvdSecCnt == 0:
+            return False
+        if header.common.Media not in VALID_MEDIAS:
+            return False
+        if header.BootSig not in VALID_NT_SIGNATURES:
+            return False
+        if header.FileSysType not in (b"FAT12   ", b"FAT16   "):
+            return self.valid_fat32_header(header)
+        return True
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
         header = self.cparser_le.fat12_16_bootsec_t(file)
-        logger.debug("FAT header parsed", header=header)
 
         if header.FileSysType in (b"FAT12   ", b"FAT16   "):
-            logger.debug("Assuming FAT12/16")
             if header.common.TotSectors == 0:
-                logger.debug(
-                    "Null TotSectors, so we'll use NumSectors from the FAT16 extended header."
-                )
                 sector_count = header.NumSectors
-
             else:
-                logger.debug("Non-null TotSectors, this is may be FAT12")
                 sector_count = header.common.TotSectors
-
         else:
-            logger.debug("Assuming FAT32")
             file.seek(start_offset)
             header = self.cparser_le.fat32_bootsec_t(file)
-            logger.debug("FAT32 header parsed", header=header)
             sector_count = header.TotSec32
 
-        if header.BootSig not in VALID_NT_SIGNATURES:
-            return
+        if not self.valid_header(header):
+            raise InvalidInputFormat("Invalid FAT header.")
+
+        logger.debug("FAT header parsed", header=header)
 
         if sector_count == 0x0:
             sector_count = header.common.TotSectors
