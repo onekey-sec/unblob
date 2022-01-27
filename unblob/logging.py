@@ -1,4 +1,7 @@
 import logging
+import pdb
+import sys
+from os import getpid
 from pathlib import Path
 from typing import Any
 
@@ -52,6 +55,13 @@ def pretty_print_types(extract_root: Path):
     return convert_type
 
 
+def add_pid_to_log_message(
+    _logger, _method_name: str, event_dict: structlog.types.EventDict
+):
+    event_dict["pid"] = getpid()
+    return event_dict
+
+
 def configure_logger(verbose: bool, extract_root: Path):
     log_level = logging.DEBUG if verbose else logging.INFO
     processors = [
@@ -60,6 +70,7 @@ def configure_logger(verbose: bool, extract_root: Path):
             key="timestamp", fmt="%Y-%m-%d %H:%M.%S", utc=True
         ),
         pretty_print_types(extract_root),
+        add_pid_to_log_message,
         structlog.processors.UnicodeDecoder(),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
@@ -70,3 +81,18 @@ def configure_logger(verbose: bool, extract_root: Path):
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         processors=processors,
     )
+
+
+class _MultiprocessingPdb(pdb.Pdb):
+    def interaction(self, *args, **kwargs):
+        _stdin = sys.stdin
+        try:
+            sys.stdin = open("/dev/stdin")
+            pdb.Pdb.interaction(self, *args, **kwargs)
+        finally:
+            sys.stdin = _stdin
+
+
+def multiprocessing_breakpoint():
+    """Call this in Process forks instead of the builtin `breakpoint` function for debugging with PDB."""
+    return _MultiprocessingPdb().set_trace(frame=sys._getframe(1))

@@ -1,5 +1,7 @@
+import multiprocessing
 import stat
 import statistics
+import sys
 from operator import attrgetter
 from pathlib import Path
 from typing import List
@@ -11,47 +13,105 @@ from .extractor import carve_unknown_chunks, extract_valid_chunk, make_extract_d
 from .file_utils import iterate_file
 from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
-from .logging import noformat
+from .logging import multiprocessing_breakpoint, noformat
 from .math import shannon_entropy
-from .models import UnknownChunk, ValidChunk
+from .models import ProcessingConfig, Task, UnknownChunk, ValidChunk
 
 logger = get_logger()
 
 DEFAULT_DEPTH = 10
+DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
+
+
+def process_file(
+    path: Path,
+    extract_root: Path,
+    entropy_depth: int,
+    verbose: bool = False,
+    max_depth: int = DEFAULT_DEPTH,
+    process_num: int = DEFAULT_PROCESS_NUM,
+):
+
+    root = path if path.is_dir() else path.parent
+    task_queue = multiprocessing.JoinableQueue()
+    task_queue.put(
+        Task(
+            root=root,
+            path=path,
+            depth=0,
+        )
+    )
+
+    config = ProcessingConfig(
+        extract_root=extract_root,
+        max_depth=max_depth,
+        entropy_depth=entropy_depth,
+        verbose=verbose,
+    )
+
+    worker_processes = [
+        multiprocessing.Process(
+            target=_process_task_queue,
+            args=(task_queue, config),
+        )
+        for _ in range(process_num)
+    ]
+
+    for p in worker_processes:
+        p.start()
+
+    logger.debug(
+        "Workers started",
+        process_num=noformat(process_num),
+        pids=[p.pid for p in worker_processes],
+    )
+
+    task_queue.join()
+
+    for p in worker_processes:
+        p.terminate()
+        p.join()
+
+
+def _process_task_queue(
+    task_queue: multiprocessing.JoinableQueue, config: ProcessingConfig
+):
+    # Set custom function to breakpoint() call in the sub-processes for easier debugging
+    sys.breakpointhook = multiprocessing_breakpoint
+
+    while True:
+        logger.debug("Waiting for Task")
+        task = task_queue.get()
+        try:
+            _process_task(task_queue, task, config)
+        finally:
+            task_queue.task_done()
 
 
 # TODO: this function became too complex when adding entropy calculation, but
 # it will be simplified in a separate branch, because the refactor is very complex
-def process_file(  # noqa: C901
-    root: Path,
-    path: Path,
-    extract_root: Path,
-    max_depth: int,
-    entropy_depth: int,
-    verbose: bool = False,
-    current_depth: int = 0,
+def _process_task(  # noqa: C901
+    task_queue: multiprocessing.JoinableQueue, task: Task, config: ProcessingConfig
 ):
-    log = logger.bind(path=path)
-    if current_depth >= max_depth:
+    log = logger.bind(path=task.path)
+    if task.depth >= config.max_depth:
         log.info("Reached maximum depth, stop further processing")
         return
 
     log.info("Start processing file")
 
-    statres = path.lstat()
+    statres = task.path.lstat()
     mode, size = statres.st_mode, statres.st_size
 
     if stat.S_ISDIR(mode):
         log.info("Found directory")
-        for path in path.iterdir():
-            process_file(
-                root,
-                path,
-                extract_root,
-                max_depth,
-                entropy_depth,
-                verbose,
-                current_depth + 1,
+        for path in task.path.iterdir():
+            task_queue.put(
+                Task(
+                    root=task.root,
+                    path=path,
+                    depth=task.depth + 1,
+                )
             )
         return
 
@@ -65,34 +125,32 @@ def process_file(  # noqa: C901
 
     log.info("Calculated file size", size=size)
 
-    with path.open("rb") as file:
-        all_chunks = search_chunks_by_priority(path, file, size)
+    with task.path.open("rb") as file:
+        all_chunks = search_chunks_by_priority(task.path, file, size)
         outer_chunks = remove_inner_chunks(all_chunks)
         unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
         if not outer_chunks and not unknown_chunks:
             # we don't consider whole files as unknown chunks, but we still want to
             # calculate entropy for whole files which produced no valid chunks
-            if current_depth < entropy_depth:
-                calculate_entropy(path, draw_plot=verbose)
+            if task.depth < config.entropy_depth:
+                calculate_entropy(task.path, draw_plot=config.verbose)
             return
 
-        extract_dir = make_extract_dir(root, path, extract_root)
+        extract_dir = make_extract_dir(task.root, task.path, config.extract_root)
 
         carved_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
-        if current_depth < entropy_depth:
+        if task.depth < config.entropy_depth:
             for carved_path in carved_paths:
-                calculate_entropy(carved_path, draw_plot=verbose)
+                calculate_entropy(carved_path, draw_plot=config.verbose)
 
         for chunk in outer_chunks:
             new_path = extract_valid_chunk(extract_dir, file, chunk)
-            process_file(
-                extract_root,
-                new_path,
-                extract_root,
-                max_depth,
-                entropy_depth,
-                verbose,
-                current_depth + 1,
+            task_queue.put(
+                Task(
+                    root=config.extract_root,
+                    path=new_path,
+                    depth=task.depth + 1,
+                )
             )
 
 

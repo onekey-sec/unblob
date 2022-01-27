@@ -46,6 +46,7 @@ addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
 [tool.vulture]
 paths = ["unblob/"]
 exclude = ["unblob/_py/"]
+ignore_names = ["breakpointhook"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

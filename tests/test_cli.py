@@ -7,7 +7,7 @@ from click.testing import CliRunner
 from conftest import TestHandler
 
 import unblob.cli
-from unblob.processing import DEFAULT_DEPTH
+from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM
 
 
 class ExistingCommandHandler(TestHandler):
@@ -52,11 +52,31 @@ def test_show_external_dependencies_not_exists(monkeypatch):
     (
         pytest.param(["--help"], id="alone"),
         pytest.param(
-            ["--verbose", "--extract-dir", "unblob", "--depth", "2", "--help", "tests"],
+            [
+                "--verbose",
+                "--extract-dir",
+                "unblob",
+                "--depth",
+                "2",
+                "--process-num",
+                "2",
+                "--help",
+                "tests",
+            ],
             id="eager_1",
         ),
         pytest.param(
-            ["--verbose", "--extract-dir", "unblob", "--depth", "2", "tests", "--help"],
+            [
+                "--verbose",
+                "--extract-dir",
+                "unblob",
+                "--depth",
+                "2",
+                "--process-num",
+                "2",
+                "tests",
+                "--help",
+            ],
             id="eager_2",
         ),
     ),
@@ -78,9 +98,19 @@ def test_help(params):
         pytest.param(["--extract-dir", "unblob"], id="extract-dir"),
         pytest.param(["-d", "2"], id="d"),
         pytest.param(["--depth", "2"], id="depth"),
+        pytest.param(["-p", "2"], id="p"),
+        pytest.param(["--process-num", "2"], id="process-num"),
         pytest.param(
-            ["--verbose", "--extract-dir", "unblob", "--depth", "2"],
-            id="verbose+extract-dir+depth",
+            [
+                "--verbose",
+                "--extract-dir",
+                "unblob",
+                "--depth",
+                "2",
+                "--process-num",
+                "2",
+            ],
+            id="verbose+extract-dir+depth+process-num",
         ),
     ),
 )
@@ -113,18 +143,23 @@ def test_empty_dir_as_file(tmp_path: Path):
 
 
 @pytest.mark.parametrize(
-    "params, expected_depth, expected_entropy_depth, expected_verbosity",
+    "params, expected_depth, expected_entropy_depth, expected_process_num, expected_verbosity",
     (
-        pytest.param([], DEFAULT_DEPTH, 1, False, id="empty"),
-        pytest.param(["--verbose"], DEFAULT_DEPTH, 1, True, id="verbose"),
-        pytest.param(["--depth", "2"], 2, 1, False, id="depth"),
-        pytest.param(["--verbose", "--depth", "2"], 2, 1, True, id="verbose+depth"),
+        pytest.param([], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, False, id="empty"),
+        pytest.param(
+            ["--verbose"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, True, id="verbose"
+        ),
+        pytest.param(["--depth", "2"], 2, 1, DEFAULT_PROCESS_NUM, False, id="depth"),
+        pytest.param(
+            ["--process-num", "2"], DEFAULT_DEPTH, 1, 2, False, id="process-num"
+        ),
     ),
 )
 def test_archive_success(
     params,
     expected_depth: int,
     expected_entropy_depth: int,
+    expected_process_num: int,
     expected_verbosity: bool,
     tmp_path: Path,
 ):
@@ -149,11 +184,11 @@ def test_archive_success(
     assert "warning" not in result.output
     process_file_mock.assert_called_once_with(
         in_path,
-        in_path,
         tmp_path,
         max_depth=expected_depth,
         entropy_depth=expected_entropy_depth,
         verbose=expected_verbosity,
+        process_num=expected_process_num,
     )
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
 
@@ -187,18 +222,18 @@ def test_archive_multiple_files(tmp_path: Path):
     assert process_file_mock.call_args_list == [
         mock.call(
             in_path_1,
-            in_path_1,
             tmp_path,
             max_depth=DEFAULT_DEPTH,
             entropy_depth=1,
             verbose=False,
+            process_num=DEFAULT_PROCESS_NUM,
         ),
         mock.call(
             in_path_2,
-            in_path_2,
             tmp_path,
             max_depth=DEFAULT_DEPTH,
             entropy_depth=1,
             verbose=False,
+            process_num=DEFAULT_PROCESS_NUM,
         ),
     ]
