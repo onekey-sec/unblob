@@ -23,9 +23,7 @@ DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 
 
-# TODO: this function became too complex when adding entropy calculation, but
-# it will be simplified in a separate branch, because the refactor is very complex
-def process_file(  # noqa: C901
+def process_file(
     path: Path,
     extract_root: Path,
     entropy_depth: int,
@@ -90,7 +88,9 @@ def _process_task_queue(
             task_queue.task_done()
 
 
-def _process_task(
+# TODO: this function became too complex when adding entropy calculation, but
+# it will be simplified in a separate branch, because the refactor is very complex
+def _process_task(  # noqa: C901
     task_queue: multiprocessing.JoinableQueue, task: Task, config: ProcessingConfig
 ):
     log = logger.bind(path=task.path)
