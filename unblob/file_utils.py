@@ -134,7 +134,6 @@ def iterate_patterns(
     initial_position = file.tell()
 
     compensation = len(pattern) - 1
-    bytes_searched = 0
     try:
         while True:
             current_position = file.tell()
@@ -167,7 +166,6 @@ def iterate_patterns(
                 marker = data.find(pattern, marker + len(pattern))
 
             file.seek(-compensation, os.SEEK_CUR)
-            bytes_searched += chunk_size - compensation
     finally:
         file.seek(initial_position)
 

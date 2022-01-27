@@ -101,10 +101,6 @@ class UBIFSHandler(StructHandler):
         return ["ubireader_extract_files", inpath, "-o", outdir]
 
 
-class PEBSizeNotFound(Exception):
-    """Raised when we couldn't found the PEB size for UBI."""
-
-
 class UBIHandler(Handler):
     NAME = "ubi"
 

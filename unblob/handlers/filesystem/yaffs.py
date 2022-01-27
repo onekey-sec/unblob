@@ -16,11 +16,6 @@ VALID_PAGE_SIZES = [16384, 8192, 4096, 2048, 1024, 512]
 VALID_SPARE_SIZES = [512, 256, 128, 64, 32, 16]
 
 
-# These assume non-unicode YAFFS name lengths
-YAFFS_MAX_NAME_LENGTH = 255 - 2  # 2 bytes taken off for "checksum" bytes
-YAFFS_MAX_ALIAS_LENGTH = 159
-
-
 class YAFFS_OBJECT_TYPE(IntEnum):
     UNKNOWN = 0
     FILE = 1

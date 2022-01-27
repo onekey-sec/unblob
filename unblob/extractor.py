@@ -16,10 +16,6 @@ from .state import exit_code_var
 logger = get_logger()
 
 
-class ExtractionFailed(Exception):
-    pass
-
-
 APPEND_NAME = "_extract"
 
 

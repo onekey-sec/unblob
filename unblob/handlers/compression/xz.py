@@ -91,7 +91,7 @@ class XZHandler(Handler):
                 size, unpadded_size = read_multibyte_int(file)
                 index_size += size
 
-                size, uncompressed_size = read_multibyte_int(file)
+                size, _ = read_multibyte_int(file)
                 index_size += size
 
                 blocks_size += unpadded_size
