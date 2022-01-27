@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from structlog import get_logger
 
+from unblob.file_utils import InvalidInputFormat
+
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -99,7 +101,7 @@ class EXTHandler(StructHandler):
         )
 
         if not self.valid_header(header):
-            return
+            raise InvalidInputFormat("Invalid ExtFS header.")
 
         return ValidChunk(
             start_offset=start_offset,

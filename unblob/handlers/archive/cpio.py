@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import round_up, snull
+from ...file_utils import decode_int, round_up, snull
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -157,11 +157,11 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
 
     @staticmethod
     def _calculate_file_size(header) -> int:
-        return int(header.c_filesize, 8)
+        return decode_int(header.c_filesize, 8)
 
     @staticmethod
     def _calculate_name_size(header) -> int:
-        return int(header.c_namesize, 8)
+        return decode_int(header.c_namesize, 8)
 
 
 class _NewASCIICommon(StructHandler):
@@ -201,11 +201,11 @@ class PortableASCIIHandler(_NewASCIICommon, _CPIOHandlerBase):
 
     @staticmethod
     def _calculate_file_size(header) -> int:
-        return int(header.c_filesize, 16)
+        return decode_int(header.c_filesize, 16)
 
     @staticmethod
     def _calculate_name_size(header) -> int:
-        return int(header.c_namesize, 16)
+        return decode_int(header.c_namesize, 16)
 
 
 class PortableASCIIWithCRCHandler(_NewASCIICommon, _CPIOHandlerBase):
@@ -220,8 +220,8 @@ class PortableASCIIWithCRCHandler(_NewASCIICommon, _CPIOHandlerBase):
 
     @staticmethod
     def _calculate_file_size(header):
-        return int(header.c_filesize, 16)
+        return decode_int(header.c_filesize, 16)
 
     @staticmethod
     def _calculate_name_size(header):
-        return int(header.c_namesize, 16)
+        return decode_int(header.c_namesize, 16)

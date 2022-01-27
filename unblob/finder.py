@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple, Type
 import yara
 from structlog import get_logger
 
-from .file_utils import LimitedStartReader
+from .file_utils import InvalidInputFormat, LimitedStartReader
 from .handlers import ALL_HANDLERS_BY_PRIORITY
 from .logging import noformat
 from .models import Handler, ValidChunk, YaraMatchResult
@@ -72,6 +72,13 @@ def search_chunks_by_priority(  # noqa: C901
                 limited_reader = LimitedStartReader(file, real_offset)
                 try:
                     chunk = handler.calculate_chunk(limited_reader, real_offset)
+                except InvalidInputFormat as exc:
+                    logger.debug(
+                        "File format is invalid",
+                        exc_info=exc,
+                        handler=handler.NAME,
+                    )
+                    continue
                 except EOFError as exc:
                     logger.debug(
                         "File ends before header could be read",

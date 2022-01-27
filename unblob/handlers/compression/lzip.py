@@ -38,10 +38,7 @@ class LZipHandler(Handler):
 
         while True:
             file.seek(LZMA_ALIGNMENT, io.SEEK_CUR)
-            try:
-                member_size = convert_int64(file.read(8), Endian.LITTLE)
-            except ValueError:
-                return
+            member_size = convert_int64(file.read(8), Endian.LITTLE)
             if member_size == (file.tell() - start_offset):
                 end_offset = file.tell()
                 break

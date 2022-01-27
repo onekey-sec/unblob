@@ -2,6 +2,7 @@ import io
 
 import pytest
 
+from unblob.file_utils import InvalidInputFormat
 from unblob.handlers.compression.bzip2 import BZip2Handler
 
 BLOCK_HEADER = b"\x31\x41\x59\x26\x53\x59"
@@ -17,8 +18,6 @@ def shift_left(value: bytes, bits: int) -> bytes:
 @pytest.mark.parametrize(
     "content, start_offset, expected_end_offset",
     (
-        pytest.param(b"123", 0, -1, id="shorter_than_block"),
-        pytest.param(b"asdfasdf", 0, -1, id="not_found"),
         pytest.param(
             BLOCK_HEADER + b"123" + BLOCK_ENDMARK, 0, 15, id="aligned_to_zero"
         ),
@@ -34,8 +33,6 @@ def shift_left(value: bytes, bits: int) -> bytes:
             16,
             id="aligned_offset_empty_content",
         ),
-        pytest.param(b"0123" + BLOCK_HEADER, 0, -1, id="no_block_endmark"),
-        pytest.param(b"0123" + BLOCK_ENDMARK, 0, -1, id="no_block_header"),
         # extra byte when shifted
         pytest.param(
             shift_left(BLOCK_HEADER, 1) + b"123" + BLOCK_ENDMARK,
@@ -108,7 +105,6 @@ def shift_left(value: bytes, bits: int) -> bytes:
             30,
             id="two_bzip2_streams_followed_by_garbage_2",
         ),
-        # undefined behavior: (BLOCK_ENDMARK + BLOCK_HEADER, 0, -1),
     ),
 )
 def test_bzip2_recover(content: bytes, start_offset: int, expected_end_offset: int):
@@ -116,3 +112,20 @@ def test_bzip2_recover(content: bytes, start_offset: int, expected_end_offset: i
     fake_file = io.BytesIO(content)
     end_offset = handler.bzip2_recover(fake_file, start_offset)
     assert end_offset == expected_end_offset
+
+
+@pytest.mark.parametrize(
+    "content",
+    (
+        pytest.param(b"123", id="shorter_than_block"),
+        pytest.param(b"asdfasdf", id="not_found"),
+        pytest.param(b"0123" + BLOCK_HEADER, id="no_block_endmark"),
+        pytest.param(b"0123" + BLOCK_ENDMARK, id="no_block_header"),
+        # undefined behavior: (BLOCK_ENDMARK + BLOCK_HEADER),
+    ),
+)
+def test_bzip2_recover_error(content: bytes):
+    handler = BZip2Handler()
+    fake_file = io.BytesIO(content)
+    with pytest.raises(InvalidInputFormat):
+        handler.bzip2_recover(fake_file, 0)

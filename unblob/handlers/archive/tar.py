@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import round_down, round_up, snull
+from ...file_utils import decode_int, round_down, round_up, snull
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -104,10 +104,7 @@ class TarHandler(StructHandler):
     ) -> Optional[ValidChunk]:
         header = self.parse_header(file)
         header_size = snull(header.size)
-        try:
-            int(header_size, 8)
-        except ValueError:
-            return
+        decode_int(header_size, 8)
 
         file.seek(start_offset)
         end_offset = _get_tar_end_offset(file)

@@ -3,7 +3,13 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from unblob.file_utils import Endian, convert_int16, read_until_past, round_up
+from unblob.file_utils import (
+    Endian,
+    InvalidInputFormat,
+    convert_int16,
+    read_until_past,
+    round_up,
+)
 
 from ...models import StructHandler, ValidChunk
 
@@ -106,8 +112,7 @@ class _JFFS2Base(StructHandler):
             current_offset += node_len
 
         if current_offset > eof:
-            # corrupt file or last chunk isn't really jffs2
-            return
+            raise InvalidInputFormat("Corrupt file or last chunk isn't really JFFS2")
 
         return ValidChunk(
             start_offset=start_offset,

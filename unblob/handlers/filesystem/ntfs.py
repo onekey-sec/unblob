@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from structlog import get_logger
 
+from unblob.file_utils import InvalidInputFormat
+
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -66,7 +68,7 @@ class NTFSHandler(StructHandler):
 
         fsize = header.total_sectors * header.bytes_per_sector
         if fsize == 0:
-            return
+            raise InvalidInputFormat("NTFS header with null disk size.")
 
         end_offset = start_offset + len(header) + fsize
         return ValidChunk(

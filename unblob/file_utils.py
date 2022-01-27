@@ -13,6 +13,10 @@ from .logging import format_hex
 DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
 
 
+class InvalidInputFormat(Exception):
+    pass
+
+
 class Endian(enum.Enum):
     LITTLE = "<"
     BIG = ">"
@@ -45,32 +49,39 @@ def convert_int8(value: bytes, endian: Endian) -> int:
     """Convert 1 byte integer to a Python int."""
     try:
         return struct.unpack(f"{endian.value}B", value)[0]
-    except struct.error:
-        raise ValueError("Not an int8")
+    except struct.error as exc:
+        raise InvalidInputFormat from exc
 
 
 def convert_int16(value: bytes, endian: Endian) -> int:
     """Convert 2 byte integer to a Python int."""
     try:
         return struct.unpack(f"{endian.value}H", value)[0]
-    except struct.error:
-        raise ValueError("Not an int16")
+    except struct.error as exc:
+        raise InvalidInputFormat from exc
 
 
 def convert_int32(value: bytes, endian: Endian) -> int:
     """Convert 4 byte integer to a Python int."""
     try:
         return struct.unpack(f"{endian.value}I", value)[0]
-    except struct.error:
-        raise ValueError("Not an int32")
+    except struct.error as exc:
+        raise InvalidInputFormat from exc
 
 
 def convert_int64(value: bytes, endian: Endian) -> int:
     """Convert 8 byte integer to a Python int."""
     try:
         return struct.unpack(f"{endian.value}Q", value)[0]
-    except struct.error:
-        raise ValueError("Not an int64")
+    except struct.error as exc:
+        raise InvalidInputFormat from exc
+
+
+def decode_int(value: bytes, base: int) -> int:
+    try:
+        return int(value, base)
+    except ValueError as exc:
+        raise InvalidInputFormat from exc
 
 
 def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
@@ -89,7 +100,7 @@ def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
         value |= (byte & 0x7F) << (size * 7)
         if not byte & 0x80:
             return (size + 1, value)
-    raise ValueError("Multibyte integer decoding failed.")
+    raise InvalidInputFormat("Multibyte integer decoding failed.")
 
 
 def find_first(

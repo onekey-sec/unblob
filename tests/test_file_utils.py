@@ -6,6 +6,7 @@ import pytest
 
 from unblob.file_utils import (
     Endian,
+    InvalidInputFormat,
     LimitedStartReader,
     StructParser,
     convert_int8,
@@ -148,7 +149,7 @@ class TestConvertInt8:
         ),
     )
     def test_convert_invalid_values(self, value: bytes, endian: Endian):
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidInputFormat):
             convert_int8(value, endian)
 
 
@@ -181,7 +182,7 @@ class TestConvertInt16:
         ),
     )
     def test_convert_invalid_values(self, value: bytes, endian: Endian):
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidInputFormat):
             convert_int16(value, endian)
 
 
@@ -216,7 +217,7 @@ class TestConvertInt32:
         ),
     )
     def test_convert_invalid_values(self, value: bytes, endian: Endian):
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidInputFormat):
             convert_int32(value, endian)
 
 
@@ -257,7 +258,7 @@ class TestConvertInt64:
         ),
     )
     def test_convert_invalid_values(self, value: bytes, endian: Endian):
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidInputFormat):
             convert_int64(value, endian)
 
 
@@ -287,7 +288,7 @@ class TestMultibytesInteger:
         ),
     )
     def test_decode_invalid_values(self, value: bytes):
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidInputFormat):
             decode_multibyte_integer(value)
 
 
@@ -426,6 +427,6 @@ class TestGetEndian:
         file = io.BytesIO(bytes.fromhex("FFFF 0000"))
         file.seek(-1, io.SEEK_END)
         pos = file.tell()
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidInputFormat):
             get_endian(file, 0xFFFF_0000)
         assert file.tell() == pos
