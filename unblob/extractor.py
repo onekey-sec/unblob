@@ -5,7 +5,7 @@ import io
 import shlex
 import subprocess
 from pathlib import Path
-from typing import Iterator, List
+from typing import List
 
 from structlog import get_logger
 
@@ -68,25 +68,29 @@ def extract_with_command(
 
 def carve_unknown_chunks(
     extract_dir: Path, file: io.BufferedIOBase, unknown_chunks: List[UnknownChunk]
-):
+) -> List[Path]:
     if not unknown_chunks:
-        return
+        return []
 
+    carved_paths = []
     logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+
     for chunk in unknown_chunks:
         filename = f"{chunk.start_offset}-{chunk.end_offset}.unknown"
         carve_path = extract_dir / filename
         logger.info("Extracting unknown chunk", path=carve_path, chunk=chunk)
         carve_chunk_to_file(carve_path, file, chunk)
+        carved_paths.append(carve_path)
+
+    return carved_paths
 
 
-def extract_valid_chunks(
-    extract_dir: Path, file: io.BufferedIOBase, valid_chunks: List[ValidChunk]
-) -> Iterator[Path]:
-    for chunk in valid_chunks:
-        filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
-        carve_path = extract_dir / filename
-        logger.info("Extracting valid chunk", path=carve_path, chunk=chunk)
-        carve_chunk_to_file(carve_path, file, chunk)
-        extracted = extract_with_command(extract_dir, carve_path, chunk.handler)
-        yield extracted
+def extract_valid_chunk(
+    extract_dir: Path, file: io.BufferedIOBase, chunk: ValidChunk
+) -> Path:
+    filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
+    carve_path = extract_dir / filename
+    logger.info("Extracting valid chunk", path=carve_path, chunk=chunk)
+    carve_chunk_to_file(carve_path, file, chunk)
+    extracted = extract_with_command(extract_dir, carve_path, chunk.handler)
+    return extracted

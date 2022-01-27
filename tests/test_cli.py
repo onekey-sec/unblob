@@ -113,16 +113,20 @@ def test_empty_dir_as_file(tmp_path: Path):
 
 
 @pytest.mark.parametrize(
-    "params, expected_depth, expected_verbosity",
+    "params, expected_depth, expected_entropy_depth, expected_verbosity",
     (
-        pytest.param([], DEFAULT_DEPTH, False, id="empty"),
-        pytest.param(["--verbose"], DEFAULT_DEPTH, True, id="verbose"),
-        pytest.param(["--depth", "2"], 2, False, id="depth"),
-        pytest.param(["--verbose", "--depth", "2"], 2, True, id="verbose+depth"),
+        pytest.param([], DEFAULT_DEPTH, 1, False, id="empty"),
+        pytest.param(["--verbose"], DEFAULT_DEPTH, 1, True, id="verbose"),
+        pytest.param(["--depth", "2"], 2, 1, False, id="depth"),
+        pytest.param(["--verbose", "--depth", "2"], 2, 1, True, id="verbose+depth"),
     ),
 )
 def test_archive_success(
-    params, expected_depth: int, expected_verbosity: bool, tmp_path: Path
+    params,
+    expected_depth: int,
+    expected_entropy_depth: int,
+    expected_verbosity: bool,
+    tmp_path: Path,
 ):
     runner = CliRunner()
     in_path = (
@@ -144,7 +148,12 @@ def test_archive_success(
     assert "error" not in result.output
     assert "warning" not in result.output
     process_file_mock.assert_called_once_with(
-        in_path, in_path, tmp_path, max_depth=expected_depth
+        in_path,
+        in_path,
+        tmp_path,
+        max_depth=expected_depth,
+        entropy_depth=expected_entropy_depth,
+        verbose=expected_verbosity,
     )
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
 
@@ -176,6 +185,20 @@ def test_archive_multiple_files(tmp_path: Path):
     assert result.exit_code == 0
     assert process_file_mock.call_count == 2
     assert process_file_mock.call_args_list == [
-        mock.call(in_path_1, in_path_1, tmp_path, max_depth=DEFAULT_DEPTH),
-        mock.call(in_path_2, in_path_2, tmp_path, max_depth=DEFAULT_DEPTH),
+        mock.call(
+            in_path_1,
+            in_path_1,
+            tmp_path,
+            max_depth=DEFAULT_DEPTH,
+            entropy_depth=1,
+            verbose=False,
+        ),
+        mock.call(
+            in_path_2,
+            in_path_2,
+            tmp_path,
+            max_depth=DEFAULT_DEPTH,
+            entropy_depth=1,
+            verbose=False,
+        ),
     ]

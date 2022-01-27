@@ -111,6 +111,8 @@ def search_chunks_by_priority(  # noqa: C901
                 logger.info("Found valid chunk", chunk=chunk, handler=handler.NAME)
                 all_chunks.append(chunk)
 
+        logger.info("Ended priority level", priority_level=noformat(priority_level))
+
     return all_chunks
 
 
