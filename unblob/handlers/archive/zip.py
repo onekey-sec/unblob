@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import find_first
+from ...file_utils import InvalidInputFormat, find_first
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -13,10 +13,6 @@ logger = get_logger()
 MAXIMUM_VERSION = 0xFF
 EOCD_RECORD_HEADER = b"\x50\x4b\x05\x06"
 ENCRYPTED_FLAG = 0b0001
-
-
-class MissingEOCDHeader(Exception):
-    """Raised when the EOCD record header is missing from the ZIP."""
 
 
 class ZIPHandler(StructHandler):
@@ -78,7 +74,7 @@ class ZIPHandler(StructHandler):
         zip_end = find_first(file, EOCD_RECORD_HEADER)
 
         if zip_end == -1:
-            raise MissingEOCDHeader
+            raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
 
         file.seek(zip_end)
         self.cparser_le.end_of_central_directory_t(file)
@@ -105,14 +101,11 @@ class ZIPHandler(StructHandler):
         if header.version_needed_to_extract > MAXIMUM_VERSION:
             return
 
-        try:
-            end_of_zip = self._calculate_zipfile_end(file, start_offset)
-        except MissingEOCDHeader:
-            return
+        end_of_zip = self._calculate_zipfile_end(file, start_offset)
         file.seek(start_offset)
 
         if not self.is_valid(file):
-            return
+            raise InvalidInputFormat("Invalid ZIP header.")
 
         return ValidChunk(start_offset=start_offset, end_offset=end_of_zip)
 
