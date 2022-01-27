@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import DEFAULT_BUFSIZE
+from ...file_utils import DEFAULT_BUFSIZE, InvalidInputFormat
 from ...models import Handler, ValidChunk
 
 logger = get_logger()
@@ -31,8 +31,8 @@ class LZMAHandler(Handler):
             while data and not decompressor.eof:
                 decompressor.decompress(data)
                 data = file.read(DEFAULT_BUFSIZE)
-        except lzma.LZMAError:
-            return
+        except lzma.LZMAError as exc:
+            raise InvalidInputFormat from exc
 
         return ValidChunk(
             start_offset=start_offset,

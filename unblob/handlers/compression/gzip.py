@@ -17,7 +17,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import read_until_past
+from ...file_utils import InvalidInputFormat, read_until_past
 from ...models import Handler, ValidChunk
 from ._gzip_reader import SingleMemberGzipReader
 
@@ -55,8 +55,7 @@ class GZIPHandler(Handler):
         try:
             fp.read_until_eof()
         except gzip.BadGzipFile as e:
-            logger.warn(e)
-            return
+            raise InvalidInputFormat from e
 
         file.seek(GZIP2_FOOTER_LEN - len(fp.unused_data), io.SEEK_CUR)
 

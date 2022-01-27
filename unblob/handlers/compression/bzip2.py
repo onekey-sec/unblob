@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import Endian, iterbits, round_up
+from ...file_utils import Endian, InvalidInputFormat, iterbits, round_up
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -50,9 +50,6 @@ class BZip2Handler(StructHandler):
 
         self.parse_header(file, Endian.BIG)
         end_block_offset = self.bzip2_recover(file, start_offset)
-        if end_block_offset == -1:
-            logger.warning("Couldn't find valid bzip2 content")
-            return
 
         return ValidChunk(
             start_offset=start_offset,
@@ -90,7 +87,7 @@ class BZip2Handler(StructHandler):
                 break
 
         if not (start_block_found and end_block_found):
-            return -1
+            raise InvalidInputFormat("Couldn't find valid bzip2 content")
 
         # blocks are counted in bits but we need an offset in bytes
         end_block_offset = round_up(current_block_end, 8) // 8

@@ -34,7 +34,7 @@ from typing import List, Optional
 from dissect import cstruct
 from structlog import get_logger
 
-from ...file_utils import Endian, convert_int8, convert_int16
+from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int16
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -117,7 +117,7 @@ class UnixCompressHandler(StructHandler):
         buf >>= bits_per_symbol
         left = 16 - bits_per_symbol
         if prev > 255:
-            raise ValueError("Invalid Data: First code must be a literal")
+            raise InvalidInputFormat("Invalid Data: First code must be a literal")
 
         # Decode codes
         mark = 3  # start of compressed data
@@ -227,13 +227,13 @@ class UnixCompressHandler(StructHandler):
 
     def validate_header(self, header: cstruct.Instance) -> bool:
         if header.flags & 0x60:
-            raise ValueError(
+            raise InvalidInputFormat(
                 "Invalid Header Flags Byte: Flag byte contains invalid data"
             )
 
         max_ = header.flags & 0x1F
         if (max_ < 9) or (max_ > 16):
-            raise ValueError(
+            raise InvalidInputFormat(
                 "Invalid Header Flags Byte: Max code size bits out of range"
             )
         return True
@@ -245,11 +245,7 @@ class UnixCompressHandler(StructHandler):
         file.seek(0, io.SEEK_END)
         max_len = file.tell()
 
-        try:
-            end_offset = self.unlzw(file, start_offset, max_len)
-        except ValueError as exc:
-            logger.debug("Couldn't find valid Unix Compress content", exc=exc)
-            return
+        end_offset = self.unlzw(file, start_offset, max_len)
 
         return ValidChunk(
             start_offset=start_offset,

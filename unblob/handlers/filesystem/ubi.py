@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import get_endian, iterate_patterns
+from ...file_utils import InvalidInputFormat, get_endian, iterate_patterns
 from ...iter_utils import get_intervals
 from ...models import Handler, StructHandler, ValidChunk
 
@@ -125,7 +125,7 @@ class UBIHandler(Handler):
 
         offset_intervals = get_intervals(all_ubi_eraseblock_offsets)
         if not offset_intervals:
-            raise PEBSizeNotFound
+            raise InvalidInputFormat
 
         return statistics.mode(offset_intervals)
 
@@ -143,10 +143,8 @@ class UBIHandler(Handler):
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
-        try:
-            peb_size = self._guess_peb_size(file)
-        except PEBSizeNotFound:
-            return
+
+        peb_size = self._guess_peb_size(file)
 
         logger.debug("Guessed UBI PEB size", size=peb_size)
 

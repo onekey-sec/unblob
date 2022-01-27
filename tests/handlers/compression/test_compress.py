@@ -2,6 +2,7 @@ import io
 
 import pytest
 
+from unblob.file_utils import InvalidInputFormat
 from unblob.handlers.compression.compress import UnixCompressHandler
 
 
@@ -51,5 +52,5 @@ def test_unlzw(content: bytes, start_offset: int, expected_end_offset: int):
 def test_unlzw_errors(content: bytes, start_offset: int):
     handler = UnixCompressHandler()
     fake_file = io.BytesIO(content)
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidInputFormat):
         handler.unlzw(fake_file, start_offset, max_len=len(content))
