@@ -33,6 +33,8 @@ TAR_CONTENTS = unhex(
 """
 )
 
+TRUNCATED_TAR_CONTENTS = TAR_CONTENTS[:0x180]
+
 PADDING_TO_DEFAULT_BLOCKING_FACTOR = unhex(
     """\
 00000400  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
@@ -77,6 +79,30 @@ PADDING_AFTER_END_OF_ARCHIVE = unhex(
     ),
 )
 def test_offset(contents: bytes, expected_length: int, message: str):
+    f = io.BytesIO(contents)
+
+    offset = _get_tar_end_offset(f)
+    assert offset == expected_length, message
+
+
+@pytest.mark.parametrize(
+    "contents, expected_length, message",
+    (
+        pytest.param(
+            TRUNCATED_TAR_CONTENTS,
+            -1,
+            "File is truncated and no content can be recovered",
+            id="empty-truncated",
+        ),
+        pytest.param(
+            TAR_CONTENTS + TRUNCATED_TAR_CONTENTS,
+            len(TAR_CONTENTS),
+            "File is truncated but valid parts should be recovered",
+            id="truncated",
+        ),
+    ),
+)
+def test_truncated_files(contents: bytes, expected_length: int, message: str):
     f = io.BytesIO(contents)
 
     offset = _get_tar_end_offset(f)
