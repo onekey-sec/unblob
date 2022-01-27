@@ -13,6 +13,7 @@ library tries to read the next stream header.
 """
 import gzip
 import io
+import zlib
 from typing import List, Optional
 
 from structlog import get_logger
@@ -54,7 +55,7 @@ class GZIPHandler(Handler):
 
         try:
             fp.read_until_eof()
-        except gzip.BadGzipFile as e:
+        except (gzip.BadGzipFile, zlib.error) as e:
             raise InvalidInputFormat from e
 
         file.seek(GZIP2_FOOTER_LEN - len(fp.unused_data), io.SEEK_CUR)
