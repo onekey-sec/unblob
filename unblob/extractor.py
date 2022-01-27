@@ -36,6 +36,14 @@ def carve_chunk_to_file(carve_path: Path, file: io.BufferedIOBase, chunk: Chunk)
             f.write(data)
 
 
+def fix_permissions(outdir: Path):
+    for path in outdir.rglob("*"):
+        if path.is_dir():
+            path.chmod(0o775)
+        else:
+            path.chmod(0o664)
+
+
 def extract_with_command(
     extract_dir: Path, carved_path: Path, handler: Handler
 ) -> Path:
@@ -56,6 +64,7 @@ def extract_with_command(
             exit_code_var.set(1)
             logger.error("Extract command failed", stdout=res.stdout, stderr=res.stderr)
 
+        fix_permissions(outdir)
     except FileNotFoundError:
         logger.error(
             "Can't run extract command. Is the extractor installed?",
