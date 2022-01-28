@@ -4,6 +4,7 @@ import math
 import os
 import shutil
 import struct
+import sys
 from pathlib import Path
 from typing import Iterator, Tuple
 
@@ -212,6 +213,8 @@ class LimitedStartReader(io.BufferedIOBase):
         self._file.seek(start)
 
     def seek(self, offset: int, whence=io.SEEK_SET):
+        if (sys.maxsize < offset) or (offset < -(sys.maxsize + 1)):
+            raise InvalidInputFormat("File offset is greater than off_t (int64).")
         new_pos = self._file.seek(offset, whence)
         if new_pos < self._start:
             new_pos = self._file.seek(self._start, io.SEEK_SET)
