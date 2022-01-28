@@ -10,7 +10,7 @@ import plotext as plt
 from structlog import get_logger
 
 from .extractor import carve_unknown_chunks, extract_valid_chunk, make_extract_dir
-from .file_utils import iterate_file
+from .file_utils import iterate_file, valid_path
 from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
 from .logging import multiprocessing_breakpoint, noformat
@@ -101,6 +101,10 @@ def _process_task(  # noqa: C901
     log = logger.bind(path=task.path)
     if task.depth >= config.max_depth:
         log.info("Reached maximum depth, stop further processing")
+        return
+
+    if not valid_path(task.path):
+        log.warn("Path contains invalid characters, it won't be processed")
         return
 
     log.info("Start processing file")

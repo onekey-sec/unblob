@@ -58,11 +58,19 @@ def extract_with_command(
     logger.info("Running extract command", command=shlex.join(cmd))
     try:
         res = subprocess.run(
-            cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd,
+            encoding="utf-8",
+            errors="surrogateescape",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         if res.returncode != 0:
             exit_code_var.set(1)
-            logger.error("Extract command failed", stdout=res.stdout, stderr=res.stderr)
+            logger.error(
+                "Extract command failed",
+                stdout=res.stdout.encode("utf-8", errors="surrogateescape"),
+                stderr=res.stderr.encode("utf-8", errors="surrogateescape"),
+            )
 
         fix_permissions(outdir)
     except FileNotFoundError:

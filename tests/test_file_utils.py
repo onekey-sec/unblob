@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 from typing import List
 from unittest.mock import MagicMock
 
@@ -20,6 +21,7 @@ from unblob.file_utils import (
     iterate_patterns,
     round_down,
     round_up,
+    valid_path,
 )
 
 
@@ -430,3 +432,16 @@ class TestGetEndian:
         with pytest.raises(InvalidInputFormat):
             get_endian(file, 0xFFFF_0000)
         assert file.tell() == pos
+
+
+@pytest.mark.parametrize(
+    "content, expected",
+    (
+        pytest.param("some_random_file.txt", True, id="valid_unicode_path"),
+        pytest.param(
+            "some/random/file\udce4\udc94.txt", False, id="invalid_unicode_path"
+        ),
+    ),
+)
+def test_valid_path(content: str, expected: bool):
+    assert valid_path(Path(content)) == expected

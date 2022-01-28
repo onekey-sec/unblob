@@ -31,10 +31,11 @@ def _format_message(value: Any, extract_root: Path) -> Any:
 
     elif isinstance(value, Path):
         try:
-            return str(value.relative_to(extract_root))
+            new_value = value.relative_to(extract_root)
         except ValueError:
             # original files given to unblob may not be relative to extract_root
-            return str(value)
+            new_value = value
+        return new_value.as_posix().encode("utf-8", errors="surrogateescape")
 
     elif isinstance(value, Instance):
         return dumpstruct(value, output="string")
