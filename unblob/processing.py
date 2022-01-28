@@ -84,6 +84,11 @@ def _process_task_queue(
         task = task_queue.get()
         try:
             _process_task(task_queue, task, config)
+        except Exception:
+            # We cannot let exceptions escape this point, otherwise it
+            # would crash the subprocess and possibly halt processing
+            # altogether.
+            logger.exception("Unhandled error during processing Task")
         finally:
             task_queue.task_done()
 
