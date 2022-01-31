@@ -38,7 +38,9 @@ def carve_chunk_to_file(carve_path: Path, file: io.BufferedIOBase, chunk: Chunk)
 
 def fix_permissions(outdir: Path):
     for path in outdir.rglob("*"):
-        if path.is_dir():
+        if path.is_symlink():
+            continue
+        elif path.is_dir():
             path.chmod(0o775)
         else:
             path.chmod(0o664)
