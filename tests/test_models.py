@@ -1,5 +1,6 @@
 import pytest
 
+from unblob.file_utils import InvalidInputFormat
 from unblob.models import Chunk, Handler, UnknownChunk
 
 
@@ -32,6 +33,20 @@ class TestChunk:
     )
     def test_contains_offset(self, chunk, offset, expected):
         assert expected is chunk.contains_offset(offset)
+
+    @pytest.mark.parametrize(
+        "start_offset, end_offset",
+        [
+            pytest.param(-0x1, 0x5, id="negative_start_offset"),
+            pytest.param(-0x1, -0x5, id="negative_chunk"),
+            pytest.param(0x1, -0x5, id="negative_end_offset"),
+            pytest.param(0x5, 0x5, id="same_offset"),
+            pytest.param(0x6, 0x5, id="higher_start_offset"),
+        ],
+    )
+    def test_validation(self, start_offset, end_offset):
+        with pytest.raises(InvalidInputFormat):
+            Chunk(start_offset, end_offset)
 
 
 class TestHandler:

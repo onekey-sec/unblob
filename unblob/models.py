@@ -7,7 +7,7 @@ import attr
 import yara
 from structlog import get_logger
 
-from .file_utils import Endian, StructParser
+from .file_utils import Endian, InvalidInputFormat, StructParser
 
 logger = get_logger()
 
@@ -60,6 +60,14 @@ class Chunk:
 
     end_offset: int
     """The index of the first byte after the end of the chunk"""
+
+    def __attrs_post_init__(self):
+        if self.start_offset < 0 or self.end_offset < 0:
+            raise InvalidInputFormat(f"Chunk has negative offset: {self}")
+        if self.start_offset >= self.end_offset:
+            raise InvalidInputFormat(
+                f"Chunk has higher start_offset than end_offset: {self}"
+            )
 
     @property
     def size(self) -> int:
