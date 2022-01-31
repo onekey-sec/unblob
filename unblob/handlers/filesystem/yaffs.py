@@ -6,13 +6,13 @@ from typing import List, Optional
 import attr
 from structlog import get_logger
 
-from unblob.file_utils import Endian, get_endian, read_until_past
+from unblob.file_utils import Endian, InvalidInputFormat, get_endian, read_until_past
 
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
-VALID_PAGE_SIZES = [16384, 8192, 4096, 2048, 1024, 512]
+VALID_PAGE_SIZES = [512, 1024, 2048, 4096, 8192, 16384]
 VALID_SPARE_SIZES = [512, 256, 128, 64, 32, 16]
 
 
@@ -100,8 +100,11 @@ class _YAFFSBase(StructHandler):
     ):
 
         files = 0
+        file.seek(0, io.SEEK_END)
+        eof = file.tell()
+
         current_offset = start_offset
-        while True:
+        while current_offset < eof:
             file.seek(current_offset, io.SEEK_SET)
             try:
                 header = self.parse_header(file, config.endian)
@@ -128,7 +131,6 @@ class _YAFFSBase(StructHandler):
                 logger.debug("End of YAFFS section ?")
                 break
             current_offset += blocks * (config.page_size + config.spare_size)
-
         return files, current_offset
 
     def calculate_chunk(
@@ -152,7 +154,7 @@ class _YAFFSBase(StructHandler):
 
         # not a single file was found, false positive
         if total_files == 0:
-            return
+            raise InvalidInputFormat("Invalid YAFFS content.")
 
         # skip 0xFF padding
         file.seek(end_offset, io.SEEK_SET)

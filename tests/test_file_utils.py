@@ -1,4 +1,5 @@
 import io
+import sys
 from pathlib import Path
 from typing import List
 from unittest.mock import MagicMock
@@ -80,6 +81,16 @@ class TestLimitedStartReader:
         reader = LimitedStartReader(fake_file, 5)
         reader.seek(-1, io.SEEK_END)
         assert reader.tell() == len(fake_file.getvalue()) - 1
+
+    def test_seek_to_above_max_off_t(self, fake_file):
+        reader = LimitedStartReader(fake_file, 5)
+        with pytest.raises(InvalidInputFormat):
+            reader.seek(sys.maxsize + 1)
+
+    def test_seek_to_below_min_off_t(self, fake_file):
+        reader = LimitedStartReader(fake_file, 5)
+        with pytest.raises(InvalidInputFormat):
+            reader.seek(-(sys.maxsize + 2), io.SEEK_END)
 
     @pytest.mark.parametrize(
         "method_name",
