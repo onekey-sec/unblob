@@ -47,7 +47,7 @@ class UnixCompressHandler(StructHandler):
     YARA_RULE = r"""
         strings:
             // magic
-            $compress_magic = /[\x1f][\x9d][\x00-\xff]/
+            $compress_magic = { 1f 9d }
         condition:
             $compress_magic
     """
