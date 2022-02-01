@@ -97,14 +97,8 @@ def search_chunks_by_priority(  # noqa: C901
                 if chunk is None:
                     continue
 
-                if chunk.start_offset < 0 or chunk.end_offset < 0:
-                    exit_code_var.set(1)
-                    logger.error("Chunk has negative offset", chunk=chunk)
-                    continue
-
-                if chunk.end_offset > file_size or chunk.start_offset < 0:
-                    exit_code_var.set(1)
-                    logger.error("Chunk overflows file", chunk=chunk)
+                if chunk.end_offset > file_size:
+                    logger.debug("Chunk overflows file", chunk=chunk)
                     continue
 
                 chunk.handler = handler
