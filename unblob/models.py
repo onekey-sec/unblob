@@ -25,14 +25,6 @@ class Task:
 
 
 @attr.define
-class ProcessingConfig:
-    extract_root: Path
-    max_depth: int
-    entropy_depth: int
-    verbose: bool
-
-
-@attr.define
 class YaraMatchResult:
     """Results of a YARA match grouped by file types (handlers).
 
