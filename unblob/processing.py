@@ -16,6 +16,7 @@ from .logging import noformat
 from .math import shannon_entropy
 from .models import Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
+from .report import Report, UnknownError
 
 logger = get_logger()
 
@@ -30,7 +31,7 @@ def process_file(
     verbose: bool = False,
     max_depth: int = DEFAULT_DEPTH,
     process_num: int = DEFAULT_PROCESS_NUM,
-):
+) -> List[Report]:
 
     root = path if path.is_dir() else path.parent
     root_task = Task(
@@ -40,10 +41,12 @@ def process_file(
     )
 
     processor = Processor(extract_root, max_depth, entropy_depth, verbose)
+    all_reports = []
 
     def process_result(pool, result):
         for new_task in result.new_tasks:
             pool.submit(new_task)
+        all_reports.extend(result.reports)
 
     pool = make_pool(
         process_num=process_num,
@@ -54,6 +57,7 @@ def process_file(
     with pool:
         pool.submit(root_task)
         pool.process_until_done()
+    return all_reports
 
 
 class Processor:
@@ -73,7 +77,9 @@ class Processor:
 
     def _process_error(self, exc: Exception) -> TaskResult:
         result = TaskResult()
-        logger.exception("Unknown error happened")
+        error_report = UnknownError(exception=exc)
+        result.add_report(error_report)
+        logger.exception("Unknown error happened", exec_info=exc)
         return result
 
     def _process_task(self, task: Task) -> TaskResult:
@@ -120,7 +126,7 @@ class Processor:
 
     def _process_regular_file(self, task: Task, size: int, result: TaskResult):
         with task.path.open("rb") as file:
-            all_chunks = search_chunks_by_priority(task.path, file, size)
+            all_chunks = search_chunks_by_priority(task.path, file, size, result)
             outer_chunks = remove_inner_chunks(all_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
             if not outer_chunks and not unknown_chunks:
@@ -138,7 +144,7 @@ class Processor:
                     calculate_entropy(carved_path, draw_plot=self._verbose)
 
             for chunk in outer_chunks:
-                new_path = extract_valid_chunk(extract_dir, file, chunk)
+                new_path = extract_valid_chunk(extract_dir, file, chunk, result)
                 result.add_new_task(
                     Task(
                         root=self._extract_root,

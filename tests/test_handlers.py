@@ -39,7 +39,7 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         list(input_dir.iterdir()) != []
     ), f"Integration test input dir should contain at least 1 file: {input_dir}"
 
-    process_file(
+    all_reports = process_file(
         path=input_dir,
         extract_root=tmp_path,
         entropy_depth=0,
@@ -65,6 +65,8 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
     except subprocess.CalledProcessError as exc:
         runnable_diff_command = shlex.join(diff_command)
         pytest.fail(f"\nDiff command: {runnable_diff_command}\n{exc.stdout}\n")
+
+    assert all_reports == [], f"Unexpected error reports: {all_reports}"
 
 
 @pytest.mark.parametrize(

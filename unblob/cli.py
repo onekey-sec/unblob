@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import List, Tuple
 
 import click
 from structlog import get_logger
+
+from unblob.report import Report
 
 from .dependencies import get_dependencies, pretty_format_dependencies
 from .handlers import ALL_HANDLERS
 from .logging import configure_logger, noformat
 from .processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, process_file
-from .state import exit_code_var
 
 logger = get_logger()
 
@@ -101,11 +102,12 @@ def cli(
     entropy_depth: int,
     process_num: int,
     verbose: bool,
-):
+) -> List[Report]:
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=noformat(len(files)))
+    all_reports = []
     for path in files:
-        process_file(
+        report = process_file(
             path,
             extract_root,
             max_depth=depth,
@@ -113,6 +115,8 @@ def cli(
             verbose=verbose,
             process_num=process_num,
         )
+        all_reports.extend(report)
+    return all_reports
 
 
 def main():
@@ -130,12 +134,13 @@ def main():
 
     try:
         with ctx:
-            cli.invoke(ctx)
+            reports = cli.invoke(ctx)
     except Exception:
         logger.exception("Unhandled exception during unblob")
         sys.exit(1)
 
-    sys.exit(exit_code_var.get(0))
+    exit_code = 0 if not reports else 1
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ import yara
 from structlog import get_logger
 
 from .file_utils import Endian, InvalidInputFormat, StructParser
+from .report import Report
 
 logger = get_logger()
 
@@ -151,7 +152,11 @@ class StructHandler(Handler):
 
 class TaskResult:
     def __init__(self):
+        self._reports = []
         self._new_tasks = []
+
+    def add_report(self, report: Report):
+        self._reports.append(report)
 
     def add_new_task(self, task: Task):
         self._new_tasks.append(task)
@@ -159,3 +164,7 @@ class TaskResult:
     @property
     def new_tasks(self):
         return self._new_tasks
+
+    @property
+    def reports(self):
+        return self._reports
