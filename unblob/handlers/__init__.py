@@ -3,7 +3,18 @@ from typing import List, Tuple, Type
 from ..models import Handler
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
 from .compression import bzip2, compress, gzip, lz4, lzh, lzip, lzma, lzo, xz
-from .filesystem import cramfs, extfs, fat, iso9660, jffs2, ntfs, squashfs, ubi, yaffs
+from .filesystem import (
+    cramfs,
+    extfs,
+    fat,
+    iso9660,
+    jffs2,
+    ntfs,
+    romfs,
+    squashfs,
+    ubi,
+    yaffs,
+)
 from .filesystem.android import sparse
 
 ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
@@ -14,6 +25,7 @@ ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
         jffs2.JFFS2NewHandler,
         jffs2.JFFS2OldHandler,
         ntfs.NTFSHandler,
+        romfs.RomFSFSHandler,
         squashfs.SquashFSv3Handler,
         squashfs.SquashFSv4Handler,
         ubi.UBIHandler,
