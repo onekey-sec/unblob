@@ -1,7 +1,6 @@
 import multiprocessing
 import stat
 import statistics
-import sys
 from operator import attrgetter
 from pathlib import Path
 from typing import List
@@ -13,9 +12,10 @@ from .extractor import carve_unknown_chunks, extract_valid_chunk, make_extract_d
 from .file_utils import iterate_file, valid_path
 from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
-from .logging import multiprocessing_breakpoint, noformat
+from .logging import noformat
 from .math import shannon_entropy
-from .models import Task, UnknownChunk, ValidChunk
+from .models import Task, TaskResult, UnknownChunk, ValidChunk
+from .pool import make_pool
 
 logger = get_logger()
 
@@ -33,39 +33,27 @@ def process_file(
 ):
 
     root = path if path.is_dir() else path.parent
-    task_queue = multiprocessing.JoinableQueue()
-    task_queue.put(
-        Task(
-            root=root,
-            path=path,
-            depth=0,
-        )
+    root_task = Task(
+        root=root,
+        path=path,
+        depth=0,
     )
 
     processor = Processor(extract_root, max_depth, entropy_depth, verbose)
 
-    worker_processes = [
-        multiprocessing.Process(
-            target=processor._process_task_queue,
-            args=(task_queue,),
-        )
-        for _ in range(process_num)
-    ]
+    def process_result(pool, result):
+        for new_task in result.new_tasks:
+            pool.submit(new_task)
 
-    for p in worker_processes:
-        p.start()
-
-    logger.debug(
-        "Workers started",
-        process_num=noformat(process_num),
-        pids=[p.pid for p in worker_processes],
+    pool = make_pool(
+        process_num=process_num,
+        handler=processor.process_task,
+        result_callback=process_result,
     )
 
-    task_queue.join()
-
-    for p in worker_processes:
-        p.terminate()
-        p.join()
+    with pool:
+        pool.submit(root_task)
+        pool.process_until_done()
 
 
 class Processor:
@@ -77,38 +65,30 @@ class Processor:
         self._entropy_depth = entropy_depth
         self._verbose = verbose
 
-    def _process_task_queue(self, task_queue: multiprocessing.JoinableQueue):
-        # Set custom function to breakpoint() call in the sub-processes for easier debugging
-        sys.breakpointhook = multiprocessing_breakpoint
+    def process_task(self, task: Task) -> TaskResult:
+        try:
+            return self._process_task(task)
+        except Exception as exc:
+            return self._process_error(exc)
 
-        while True:
-            logger.debug("Waiting for Task")
-            task = task_queue.get()
-            try:
-                self._process_task(task_queue, task)
-            except Exception:
-                # We cannot let exceptions escape this point, otherwise it
-                # would crash the subprocess and possibly halt processing
-                # altogether.
-                logger.exception("Unhandled error during processing Task")
-            finally:
-                task_queue.task_done()
+    def _process_error(self, exc: Exception) -> TaskResult:
+        result = TaskResult()
+        logger.exception("Unknown error happened")
+        return result
 
     # TODO: this function became too complex when adding entropy calculation, but
     # it will be simplified in a separate branch, because the refactor is very complex
-    def _process_task(  # noqa: C901
-        self,
-        task_queue: multiprocessing.JoinableQueue,
-        task: Task,
-    ):
+    def _process_task(self, task: Task) -> TaskResult:  # noqa: C901
         log = logger.bind(path=task.path)
+        result = TaskResult()
+
         if task.depth >= self._max_depth:
             log.info("Reached maximum depth, stop further processing")
-            return
+            return result
 
         if not valid_path(task.path):
             log.warn("Path contains invalid characters, it won't be processed")
-            return
+            return result
 
         log.info("Start processing file")
 
@@ -118,22 +98,22 @@ class Processor:
         if stat.S_ISDIR(mode):
             log.info("Found directory")
             for path in task.path.iterdir():
-                task_queue.put(
+                result.add_new_task(
                     Task(
                         root=task.root,
                         path=path,
                         depth=task.depth + 1,
                     )
                 )
-            return
+            return result
 
         elif stat.S_ISLNK(mode):
             log.info("Ignoring symlink")
-            return
+            return result
 
         elif size == 0:
             log.info("Ignoring empty file")
-            return
+            return result
 
         log.info("Calculated file size", size=size)
 
@@ -146,7 +126,7 @@ class Processor:
                 # calculate entropy for whole files which produced no valid chunks
                 if task.depth < self._entropy_depth:
                     calculate_entropy(task.path, draw_plot=self._verbose)
-                return
+                return result
 
             extract_dir = make_extract_dir(task.root, task.path, self._extract_root)
 
@@ -157,13 +137,14 @@ class Processor:
 
             for chunk in outer_chunks:
                 new_path = extract_valid_chunk(extract_dir, file, chunk)
-                task_queue.put(
+                result.add_new_task(
                     Task(
                         root=self._extract_root,
                         path=new_path,
                         depth=task.depth + 1,
                     )
                 )
+        return result
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:

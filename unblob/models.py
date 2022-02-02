@@ -147,3 +147,15 @@ class StructHandler(Handler):
         header = self._struct_parser.parse(self.HEADER_STRUCT, file, endian)
         logger.debug("Header parsed", header=header)
         return header
+
+
+class TaskResult:
+    def __init__(self):
+        self._new_tasks = []
+
+    def add_new_task(self, task: Task):
+        self._new_tasks.append(task)
+
+    @property
+    def new_tasks(self):
+        return self._new_tasks
