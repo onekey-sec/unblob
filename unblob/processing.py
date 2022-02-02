@@ -76,9 +76,7 @@ class Processor:
         logger.exception("Unknown error happened")
         return result
 
-    # TODO: this function became too complex when adding entropy calculation, but
-    # it will be simplified in a separate branch, because the refactor is very complex
-    def _process_task(self, task: Task) -> TaskResult:  # noqa: C901
+    def _process_task(self, task: Task) -> TaskResult:
         log = logger.bind(path=task.path)
         result = TaskResult()
 
@@ -117,6 +115,10 @@ class Processor:
 
         log.info("Calculated file size", size=size)
 
+        self._process_regular_file(task, size, result)
+        return result
+
+    def _process_regular_file(self, task: Task, size: int, result: TaskResult):
         with task.path.open("rb") as file:
             all_chunks = search_chunks_by_priority(task.path, file, size)
             outer_chunks = remove_inner_chunks(all_chunks)
@@ -126,7 +128,7 @@ class Processor:
                 # calculate entropy for whole files which produced no valid chunks
                 if task.depth < self._entropy_depth:
                     calculate_entropy(task.path, draw_plot=self._verbose)
-                return result
+                return
 
             extract_dir = make_extract_dir(task.root, task.path, self._extract_root)
 
@@ -144,7 +146,6 @@ class Processor:
                         depth=task.depth + 1,
                     )
                 )
-        return result
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
