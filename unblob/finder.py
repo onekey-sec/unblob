@@ -14,8 +14,8 @@ from structlog import get_logger
 from .file_utils import InvalidInputFormat, LimitedStartReader
 from .handlers import ALL_HANDLERS_BY_PRIORITY
 from .logging import noformat
-from .models import Handler, ValidChunk, YaraMatchResult
-from .state import exit_code_var
+from .models import Handler, TaskResult, ValidChunk, YaraMatchResult
+from .report import CalculateChunkExceptionReport
 
 logger = get_logger()
 
@@ -29,7 +29,7 @@ rule {NAME}
 
 
 def search_chunks_by_priority(  # noqa: C901
-    path: Path, file: io.BufferedReader, file_size: int
+    path: Path, file: io.BufferedReader, file_size: int, task_result: TaskResult
 ) -> List[ValidChunk]:
     """Search all ValidChunks within the file.
     Collect all the registered handlers by priority, search for YARA patterns and run
@@ -87,9 +87,15 @@ def search_chunks_by_priority(  # noqa: C901
                     )
                     continue
                 except Exception as exc:
-                    exit_code_var.set(1)
+                    error_report = CalculateChunkExceptionReport(
+                        handler=handler.NAME,
+                        start_offset=real_offset,
+                        exception=exc,
+                    )
+                    task_result.add_report(error_report)
                     logger.error(
-                        "Unhandled Exception during chunk calculation", exc_info=exc
+                        "Unhandled Exception during chunk calculation",
+                        **error_report.asdict()
                     )
                     continue
 

@@ -10,8 +10,8 @@ from typing import List
 from structlog import get_logger
 
 from .file_utils import iterate_file
-from .models import Chunk, Handler, UnknownChunk, ValidChunk
-from .state import exit_code_var
+from .models import Chunk, Handler, TaskResult, UnknownChunk, ValidChunk
+from .report import ExtractCommandFailedReport
 
 logger = get_logger()
 
@@ -47,7 +47,7 @@ def fix_permissions(outdir: Path):
 
 
 def extract_with_command(
-    extract_dir: Path, carved_path: Path, handler: Handler
+    extract_dir: Path, carved_path: Path, handler: Handler, task_result: TaskResult
 ) -> Path:
     content_dir = extract_dir / (carved_path.name + APPEND_NAME)
     # We only extract every blob once, it's a mistake to extract the same blog again
@@ -57,7 +57,8 @@ def extract_with_command(
     outdir = content_dir.expanduser().resolve()
     cmd = handler.make_extract_command(str(inpath), str(outdir))
 
-    logger.info("Running extract command", command=shlex.join(cmd))
+    command = shlex.join(cmd)
+    logger.info("Running extract command", command=command)
     try:
         res = subprocess.run(
             cmd,
@@ -67,12 +68,19 @@ def extract_with_command(
             stderr=subprocess.PIPE,
         )
         if res.returncode != 0:
-            exit_code_var.set(1)
-            logger.error(
-                "Extract command failed",
-                stdout=res.stdout.encode("utf-8", errors="surrogateescape"),
-                stderr=res.stderr.encode("utf-8", errors="surrogateescape"),
+            stdout = res.stdout.encode("utf-8", errors="surrogateescape")
+            stderr = res.stderr.encode("utf-8", errors="surrogateescape")
+
+            error_report = ExtractCommandFailedReport(
+                handler=handler.NAME,
+                command=command,
+                stdout=stdout,
+                stderr=stderr,
+                exit_code=res.returncode,
             )
+
+            task_result.add_report(error_report)
+            logger.error("Extract command failed", **error_report.asdict())
 
         fix_permissions(outdir)
     except FileNotFoundError:
@@ -104,12 +112,11 @@ def carve_unknown_chunks(
     return carved_paths
 
 
-def extract_valid_chunk(
+def carve_valid_chunk(
     extract_dir: Path, file: io.BufferedIOBase, chunk: ValidChunk
 ) -> Path:
     filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
     carve_path = extract_dir / filename
     logger.info("Extracting valid chunk", path=carve_path, chunk=chunk)
     carve_chunk_to_file(carve_path, file, chunk)
-    extracted = extract_with_command(extract_dir, carve_path, chunk.handler)
-    return extracted
+    return carve_path
