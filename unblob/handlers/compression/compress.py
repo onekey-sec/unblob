@@ -31,7 +31,6 @@ import io
 from pathlib import Path
 from typing import List, Optional
 
-from dissect import cstruct
 from structlog import get_logger
 
 from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int16
@@ -46,8 +45,8 @@ class UnixCompressHandler(StructHandler):
 
     YARA_RULE = r"""
         strings:
-            // magic
-            $compress_magic = { 1f 9d }
+            // magic followed by valid flags bytes (!(flag & 0x60) && (9 <= (flag & 0x1F) <= 16))
+            $compress_magic = { 1f 9d ( 09 | 0A | 0B | 0C | 0D | 0E | 0F | 10 | 89 | 8A | 8B | 8C | 8D | 8E | 8F | 90 ) }
         condition:
             $compress_magic
     """
@@ -94,8 +93,6 @@ class UnixCompressHandler(StructHandler):
         prefix: List[int] = [0] * 65536  # index to LZW prefix string
 
         header = self.parse_header(file, Endian.LITTLE)
-
-        self.validate_header(header)
 
         max_ = header.flags & 0x1F
         if max_ == 9:
@@ -224,19 +221,6 @@ class UnixCompressHandler(StructHandler):
             return file.tell()
         else:
             return file.tell() - 1
-
-    def validate_header(self, header: cstruct.Instance) -> bool:
-        if header.flags & 0x60:
-            raise InvalidInputFormat(
-                "Invalid Header Flags Byte: Flag byte contains invalid data"
-            )
-
-        max_ = header.flags & 0x1F
-        if (max_ < 9) or (max_ > 16):
-            raise InvalidInputFormat(
-                "Invalid Header Flags Byte: Max code size bits out of range"
-            )
-        return True
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
