@@ -3,8 +3,6 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from unblob.file_utils import snull
-
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -22,12 +20,9 @@ class ARCHandler(StructHandler):
             The marker is followed by a one byte header type code, from 0x0 to 0x7.
             Then a null-byte or unitialized-byte terminated filename string of 13 bytes, the
             uninitialized byte is always set between 0xf0 and 0xff.
-
-            We use the YARA rule to match valid dates and times:
-                - our date definition allows dates between the 1980 and 15/12/2050 (that should be enough).
-                - our time definition allowes times between 00:00 and 24:60.
             */
-            $arc_magic = /\x1A[\x01-\x07][\S]{12}[\x00|\xf0-\xff][\x00-\xff]{4}[\x00-\x8d][\x00-\x8f][\x00-\xc7][\x00-\x9f]/
+
+            $arc_magic = { 1A (01 | 02 | 03 | 04 | 05 | 06 | 07) [12] (00 | F0 | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | FA | FB | FC | FD | FE | FF) }
 
         condition:
             $arc_magic
@@ -50,11 +45,10 @@ class ARCHandler(StructHandler):
 
     def valid_name(self, name: bytes) -> bool:
         try:
-            # we don't care about the terminating byte (null or unitialized)
-            snull(name[:-1]).decode("utf-8")
+            # we can still return False if the name is made out of an array of null bytes
+            return bool(name[:-1].strip(b"\x00").decode("utf-8"))
         except UnicodeDecodeError:
             return False
-        return True
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
