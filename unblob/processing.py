@@ -75,29 +75,28 @@ class Processor:
         self._verbose = verbose
 
     def process_task(self, task: Task) -> TaskResult:
-        try:
-            return self._process_task(task)
-        except Exception as exc:
-            return self._process_error(exc)
-
-    def _process_error(self, exc: Exception) -> TaskResult:
         result = TaskResult()
+        try:
+            self._process_task(result, task)
+        except Exception as exc:
+            self._process_error(result, exc)
+        return result
+
+    def _process_error(self, result: TaskResult, exc: Exception):
         error_report = UnknownError(exception=exc)
         result.add_report(error_report)
         logger.exception("Unknown error happened", exec_info=exc)
-        return result
 
-    def _process_task(self, task: Task) -> TaskResult:
+    def _process_task(self, result: TaskResult, task: Task):
         log = logger.bind(path=task.path)
-        result = TaskResult()
 
         if task.depth >= self._max_depth:
             log.info("Reached maximum depth, stop further processing")
-            return result
+            return
 
         if not valid_path(task.path):
             log.warn("Path contains invalid characters, it won't be processed")
-            return result
+            return
 
         log.info("Start processing file")
 
@@ -114,20 +113,18 @@ class Processor:
                         depth=task.depth + 1,
                     )
                 )
-            return result
+            return
 
         elif stat.S_ISLNK(mode):
             log.info("Ignoring symlink")
-            return result
+            return
 
         elif size == 0:
             log.info("Ignoring empty file")
-            return result
+            return
 
         log.info("Calculated file size", size=size)
-
         self._process_regular_file(task, size, result)
-        return result
 
     def _process_regular_file(self, task: Task, size: int, result: TaskResult):
         with task.path.open("rb") as file:
