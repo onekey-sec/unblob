@@ -88,6 +88,7 @@ class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
 
     handler: "Handler" = attr.ib(init=False, eq=False)
+    is_encrypted: bool = attr.ib(default=False)
 
 
 @attr.define(repr=False)

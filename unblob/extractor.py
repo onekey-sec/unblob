@@ -112,17 +112,11 @@ def carve_unknown_chunks(
     return carved_paths
 
 
-def extract_valid_chunk(
-    extract_dir: Path,
-    file: io.BufferedIOBase,
-    chunk: ValidChunk,
-    task_result: TaskResult,
+def carve_valid_chunk(
+    extract_dir: Path, file: io.BufferedIOBase, chunk: ValidChunk
 ) -> Path:
     filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
     carve_path = extract_dir / filename
     logger.info("Extracting valid chunk", path=carve_path, chunk=chunk)
     carve_chunk_to_file(carve_path, file, chunk)
-    extracted = extract_with_command(
-        extract_dir, carve_path, chunk.handler, task_result
-    )
-    return extracted
+    return carve_path

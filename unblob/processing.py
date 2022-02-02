@@ -8,7 +8,12 @@ from typing import List
 import plotext as plt
 from structlog import get_logger
 
-from .extractor import carve_unknown_chunks, extract_valid_chunk, make_extract_dir
+from .extractor import (
+    carve_unknown_chunks,
+    carve_valid_chunk,
+    extract_with_command,
+    make_extract_dir,
+)
 from .file_utils import iterate_file, valid_path
 from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
@@ -138,17 +143,31 @@ class Processor:
 
             extract_dir = make_extract_dir(task.root, task.path, self._extract_root)
 
-            carved_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
+            carved_unknown_paths = carve_unknown_chunks(
+                extract_dir, file, unknown_chunks
+            )
             if task.depth < self._entropy_depth:
-                for carved_path in carved_paths:
-                    calculate_entropy(carved_path, draw_plot=self._verbose)
+                for carved_unknown_path in carved_unknown_paths:
+                    calculate_entropy(carved_unknown_path, draw_plot=self._verbose)
 
             for chunk in outer_chunks:
-                new_path = extract_valid_chunk(extract_dir, file, chunk, result)
+                carved_valid_path = carve_valid_chunk(extract_dir, file, chunk)
+
+                if chunk.is_encrypted:
+                    logger.warning(
+                        "Do not attempt to extract encrypted file",
+                        path=carved_valid_path,
+                        chunk=chunk,
+                    )
+                    continue
+
+                new_dir = extract_with_command(
+                    extract_dir, carved_valid_path, chunk.handler, result
+                )
                 result.add_new_task(
                     Task(
                         root=self._extract_root,
-                        path=new_path,
+                        path=new_dir,
                         depth=task.depth + 1,
                     )
                 )

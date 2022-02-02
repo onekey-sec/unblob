@@ -41,10 +41,11 @@ class RarHandler(Handler):
         # RarFile have the side effect of moving the file pointer
         rar_end_offset = file.tell()
 
-        if rar_file.needs_password():
-            logger.warning("There are password protected files in the RAR file")
-
-        return ValidChunk(start_offset=start_offset, end_offset=rar_end_offset)
+        return ValidChunk(
+            start_offset=start_offset,
+            end_offset=rar_end_offset,
+            is_encrypted=rar_file.needs_password(),
+        )
 
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:

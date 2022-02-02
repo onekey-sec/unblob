@@ -1,6 +1,6 @@
 import io
 import zipfile
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from structlog import get_logger
 
@@ -80,18 +80,16 @@ class ZIPHandler(StructHandler):
         self.cparser_le.end_of_central_directory_t(file)
         return file.tell()
 
-    def is_valid(self, file: io.BufferedIOBase) -> bool:
+    def check_file(self, file: io.BufferedIOBase) -> Tuple[bool, bool]:
         has_encrypted_files = False
         try:
             with zipfile.ZipFile(file) as zip:  # type: ignore
                 for zipinfo in zip.infolist():
                     if zipinfo.flag_bits & ENCRYPTED_FLAG:
                         has_encrypted_files = True
-            if has_encrypted_files:
-                logger.warning("There are encrypted files in the ZIP")
-            return True
+            return True, has_encrypted_files
         except (zipfile.BadZipFile, UnicodeDecodeError, ValueError):
-            return False
+            return False, has_encrypted_files
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -104,10 +102,16 @@ class ZIPHandler(StructHandler):
         end_of_zip = self._calculate_zipfile_end(file, start_offset)
         file.seek(start_offset)
 
-        if not self.is_valid(file):
+        is_valid, has_encrypted_files = self.check_file(file)
+
+        if not is_valid:
             raise InvalidInputFormat("Invalid ZIP header.")
 
-        return ValidChunk(start_offset=start_offset, end_offset=end_of_zip)
+        return ValidChunk(
+            start_offset=start_offset,
+            end_offset=end_of_zip,
+            is_encrypted=has_encrypted_files,
+        )
 
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
