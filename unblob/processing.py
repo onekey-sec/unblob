@@ -33,7 +33,7 @@ def process_file(
     path: Path,
     extract_root: Path,
     entropy_depth: int,
-    verbose: bool = False,
+    entropy_plot: bool = False,
     max_depth: int = DEFAULT_DEPTH,
     process_num: int = DEFAULT_PROCESS_NUM,
 ) -> List[Report]:
@@ -45,7 +45,7 @@ def process_file(
         depth=0,
     )
 
-    processor = Processor(extract_root, max_depth, entropy_depth, verbose)
+    processor = Processor(extract_root, max_depth, entropy_depth, entropy_plot)
     all_reports = []
 
     def process_result(pool, result):
@@ -67,12 +67,12 @@ def process_file(
 
 class Processor:
     def __init__(
-        self, extract_root: Path, max_depth: int, entropy_depth: int, verbose: bool
+        self, extract_root: Path, max_depth: int, entropy_depth: int, entropy_plot: bool
     ):
         self._extract_root = extract_root
         self._max_depth = max_depth
         self._entropy_depth = entropy_depth
-        self._verbose = verbose
+        self._entropy_plot = entropy_plot
 
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult()
@@ -135,7 +135,7 @@ class Processor:
                 # we don't consider whole files as unknown chunks, but we still want to
                 # calculate entropy for whole files which produced no valid chunks
                 if task.depth < self._entropy_depth:
-                    calculate_entropy(task.path, draw_plot=self._verbose)
+                    calculate_entropy(task.path, draw_plot=self._entropy_plot)
                 return
 
             extract_dir = make_extract_dir(task.root, task.path, self._extract_root)
@@ -145,7 +145,7 @@ class Processor:
             )
             if task.depth < self._entropy_depth:
                 for carved_unknown_path in carved_unknown_paths:
-                    calculate_entropy(carved_unknown_path, draw_plot=self._verbose)
+                    calculate_entropy(carved_unknown_path, draw_plot=self._entropy_plot)
 
             for chunk in outer_chunks:
                 carved_valid_path = carve_valid_chunk(extract_dir, file, chunk)

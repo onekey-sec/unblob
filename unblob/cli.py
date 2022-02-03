@@ -113,7 +113,7 @@ def cli(
             extract_root,
             max_depth=depth,
             entropy_depth=entropy_depth,
-            verbose=verbose,
+            entropy_plot=verbose,
             process_num=process_num,
         )
         all_reports.extend(report)
