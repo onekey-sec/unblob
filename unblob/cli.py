@@ -102,7 +102,7 @@ def cli(
     depth: int,
     entropy_depth: int,
     process_num: int,
-    verbose: bool,
+    verbose: int,
 ) -> List[Report]:
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=noformat(len(files)))
@@ -113,7 +113,7 @@ def cli(
             extract_root,
             max_depth=depth,
             entropy_depth=entropy_depth,
-            entropy_plot=verbose,
+            entropy_plot=bool(verbose >= 3),
             process_num=process_num,
         )
         all_reports.extend(report)

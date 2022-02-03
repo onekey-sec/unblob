@@ -5,7 +5,10 @@ import click
 
 def verbosity_option(func):
     @click.option(
-        "-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs."
+        "-v",
+        "--verbose",
+        count=True,
+        help="Verbosity level, counting, maximum level: 3 (use: -v, -vv, -vvv)",
     )
     @functools.wraps(func)
     def decorator(*args, **kwargs):

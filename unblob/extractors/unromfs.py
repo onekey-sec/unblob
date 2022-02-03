@@ -357,7 +357,7 @@ class RomFSHeader(object):
 )
 @click.option("-f", "--force", is_flag=True, help="Force overwrite.")
 @verbosity_option
-def cli(romfs_file: Path, extract_root: Path, force: bool, verbose: bool):
+def cli(romfs_file: Path, extract_root: Path, force: bool, verbose: int):
     configure_logger(verbose, extract_root)
     if not romfs_file:
         logger.error("No file provided")
