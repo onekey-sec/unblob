@@ -8,6 +8,7 @@ from structlog import get_logger
 
 from unblob.report import Report
 
+from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
 from .handlers import ALL_HANDLERS
 from .logging import configure_logger, noformat
@@ -86,7 +87,7 @@ def get_help_text():
     help="Number of worker processes to process files parallelly.",
     show_default=True,
 )
-@click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
+@verbosity_option
 @click.option(
     "--show-external-dependencies",
     help="Shows commands needs to be available for unblob to work properly",

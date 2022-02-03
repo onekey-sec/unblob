@@ -10,6 +10,7 @@ from typing import Dict, Optional
 import click
 from structlog import get_logger
 
+from ..cli_options import verbosity_option
 from ..file_utils import round_up
 from ..logging import configure_logger
 
@@ -355,7 +356,7 @@ class RomFSHeader(object):
     help="Extract the files to this directory. Will be created if it doesn't exist.",
 )
 @click.option("-f", "--force", is_flag=True, help="Force overwrite.")
-@click.option("-v", "--verbose", is_flag=True, help="Verbose mode, enable debug logs.")
+@verbosity_option
 def cli(romfs_file: Path, extract_root: Path, force: bool, verbose: bool):
     configure_logger(verbose, extract_root)
     if not romfs_file:
