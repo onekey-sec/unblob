@@ -73,7 +73,6 @@ class MultiPool(PoolBase):
             p.start()
 
     def close(self):
-        self._input.join()
         for p in self._procs:
             p.terminate()
             p.join()
