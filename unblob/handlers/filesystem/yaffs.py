@@ -96,13 +96,9 @@ class _YAFFSBase(StructHandler):
     BIG_ENDIAN_MAGIC = 0x00_00_00_01
 
     def get_files(
-        self, file: io.BufferedIOBase, start_offset: int, config: YAFFSConfig
+        self, file: io.BufferedIOBase, start_offset: int, eof: int, config: YAFFSConfig
     ):
-
         files = 0
-        file.seek(0, io.SEEK_END)
-        eof = file.tell()
-
         current_offset = start_offset
         while current_offset < eof:
             file.seek(current_offset, io.SEEK_SET)
@@ -142,13 +138,16 @@ class _YAFFSBase(StructHandler):
 
         endian = get_endian(file, self.BIG_ENDIAN_MAGIC)
 
+        file.seek(0, io.SEEK_END)
+        eof = file.tell()
+
         for page_size in VALID_PAGE_SIZES:
             for spare_size in VALID_SPARE_SIZES:
                 if spare_size > page_size:
                     continue
                 config = YAFFSConfig(endian, page_size, spare_size)
-                files, offset = self.get_files(file, start_offset, config)
-                if files > total_files:
+                files, offset = self.get_files(file, start_offset, eof, config)
+                if files > total_files and offset <= eof:
                     end_offset = offset
                     total_files = files
 
