@@ -8,7 +8,7 @@ from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
-PAD_SIZE = 4_096
+PAD_SIZE = 1_024
 BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
 
