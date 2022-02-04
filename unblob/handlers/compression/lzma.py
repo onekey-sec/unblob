@@ -17,7 +17,15 @@ class LZMAHandler(Handler):
         strings:
             $lzma_magic = { 5d 00 00 ( 00 | 01 | 04 | 08 | 10 | 20 | 40 | 80) ( 00 | 01 | 02 | 04 | 08 ) }
         condition:
-            $lzma_magic
+            // LZMA file format: https://svn.python.org/projects/external/xz-5.0.3/doc/lzma-file-format.txt
+            $lzma_magic and
+            // dictionary size is non-zero (section 1.1.2 of format definition)
+            uint32(@lzma_magic + 1) > 0 and
+            // dictionary size is a power of two  (section 1.1.2 of format definition)
+            (uint32(@lzma_magic + 1) & (uint32(@lzma_magic + 1) - 1)) == 0 and
+            // uncompressed size is either unknown (0xFFFFFFFFFFFFFFFF) or smaller than 256GB  (section 1.1.3 of format definition)
+            // yara does not support uint64 so we check it using uint32
+            ((uint32(@lzma_magic + 5) == 0xFFFFFFFF and uint32(@lzma_magic + 9) == 0xFFFFFFFF) or uint32(@lzma_magic + 5) < 0x00000040)
     """
 
     def calculate_chunk(
