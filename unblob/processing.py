@@ -130,6 +130,7 @@ class Processor:
         with task.path.open("rb") as file:
             all_chunks = search_chunks_by_priority(task.path, file, size, result)
             outer_chunks = remove_inner_chunks(all_chunks)
+            outer_chunks = fix_chunk_overlaps(outer_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
             if not outer_chunks and not unknown_chunks:
                 # we don't consider whole files as unknown chunks, but we still want to
@@ -189,6 +190,22 @@ def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
         removed_inner_chunk_count=noformat(removed_count),
     )
     return outer_chunks
+
+
+def fix_chunk_overlaps(chunks: List[ValidChunk]) -> List[ValidChunk]:
+    """Fix potential overlaps between valid chunks. This can happen with
+    compression streams followed by a chunk starting with data that is
+    considered valid compressed data by the compression algorithm."""
+
+    if not chunks:
+        return []
+
+    sorted_by_offset = sorted(chunks, key=attrgetter("start_offset"))
+    for chunk, next_chunk in pairwise(sorted_by_offset):
+        if chunk.end_offset > next_chunk.start_offset:
+            chunk.end_offset = next_chunk.start_offset - 1
+
+    return chunks
 
 
 def calculate_unknown_chunks(
