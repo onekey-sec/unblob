@@ -10,7 +10,7 @@ from ...models import StructHandler, ValidChunk
 logger = get_logger()
 
 
-BLOCK_SIZE = HEADER_SIZE = 512
+BLOCK_SIZE = 512
 
 MAGIC_OFFSET = 257
 
@@ -40,7 +40,7 @@ def _get_end_of_last_tar_entry(file: io.BufferedIOBase) -> int:
         return -1
     last_member = members[-1]
     last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
-    return last_member.offset + HEADER_SIZE + last_file_size
+    return last_member.offset_data + last_file_size
 
 
 def _find_end_of_padding(file: io.BufferedIOBase, *, find_from: int) -> int:
@@ -65,10 +65,11 @@ class TarHandler(StructHandler):
 
     YARA_RULE = r"""
         strings:
-            $tar_magic = { 75 73 74 61 72 }
+            $gnu_tar_magic = {75 73 74 61 72 20 20 00}
+            $posix_tar_magic =  {75 73 74 61 72 00 30 30}
 
         condition:
-            $tar_magic
+            $gnu_tar_magic or $posix_tar_magic
     """
 
     # Since the magic is at 257, we have to subtract that from the match offset
