@@ -39,7 +39,7 @@ def search_chunks_by_priority(  # noqa: C901
     all_chunks = []
 
     for priority_level, handler_classes in enumerate(ALL_HANDLERS_BY_PRIORITY, start=1):
-        logger.info("Starting priority level", priority_level=noformat(priority_level))
+        logger.debug("Starting priority level", priority_level=noformat(priority_level))
         yara_rules = make_yara_rules(handler_classes)
         handler_map = make_handler_map(handler_classes)
         yara_results = search_yara_patterns(yara_rules, handler_map, path)
@@ -62,11 +62,12 @@ def search_chunks_by_priority(  # noqa: C901
                 if any(chunk.contains_offset(real_offset) for chunk in all_chunks):
                     continue
 
-                logger.info(
+                logger.debug(
                     "Calculating chunk for YARA match",
                     start_offset=offset,
                     real_offset=real_offset,
                     identifier=identifier,
+                    _verbosity=2,
                 )
 
                 limited_reader = LimitedStartReader(file, real_offset)
@@ -77,6 +78,7 @@ def search_chunks_by_priority(  # noqa: C901
                         "File format is invalid",
                         exc_info=exc,
                         handler=handler.NAME,
+                        _verbosity=2,
                     )
                     continue
                 except EOFError as exc:
@@ -84,6 +86,7 @@ def search_chunks_by_priority(  # noqa: C901
                         "File ends before header could be read",
                         exc_info=exc,
                         handler=handler.NAME,
+                        _verbosity=2,
                     )
                     continue
                 except Exception as exc:
@@ -104,14 +107,16 @@ def search_chunks_by_priority(  # noqa: C901
                     continue
 
                 if chunk.end_offset > file_size:
-                    logger.debug("Chunk overflows file", chunk=chunk)
+                    logger.debug("Chunk overflows file", chunk=chunk, _verbosity=2)
                     continue
 
                 chunk.handler = handler
-                logger.info("Found valid chunk", chunk=chunk, handler=handler.NAME)
+                logger.debug(
+                    "Found valid chunk", chunk=chunk, handler=handler.NAME, _verbosity=2
+                )
                 all_chunks.append(chunk)
 
-        logger.info("Ended priority level", priority_level=noformat(priority_level))
+        logger.debug("Ended priority level", priority_level=noformat(priority_level))
 
     return all_chunks
 
@@ -123,7 +128,7 @@ def make_yara_rules(handlers: Tuple[Type[Handler], ...]):
         _YARA_RULE_TEMPLATE.format(NAME=h.NAME, YARA_RULE=h.YARA_RULE.strip())
         for h in handlers
     )
-    logger.debug("Compiled YARA rules", rules=all_yara_rules)
+    logger.debug("Compiled YARA rules", rules=all_yara_rules, _verbosity=3)
     compiled_rules = yara.compile(source=all_yara_rules, includes=False)
     return compiled_rules
 
@@ -147,6 +152,6 @@ def search_yara_patterns(
         yara_results.append(yara_res)
 
     if yara_results:
-        logger.info("Found YARA results", count=noformat(len(yara_results)))
+        logger.debug("Found YARA results", count=noformat(len(yara_results)))
 
     return yara_results

@@ -91,20 +91,19 @@ class Processor:
         log = logger.bind(path=task.path)
 
         if task.depth >= self._max_depth:
-            log.info("Reached maximum depth, stop further processing")
+            # TODO: Use the reporting feature to warn the user (ONLY ONCE) at the end of execution, that this limit was reached.
+            log.debug("Reached maximum depth, stop further processing")
             return
 
         if not valid_path(task.path):
             log.warn("Path contains invalid characters, it won't be processed")
             return
 
-        log.info("Start processing file")
-
         statres = task.path.lstat()
         mode, size = statres.st_mode, statres.st_size
 
         if stat.S_ISDIR(mode):
-            log.info("Found directory")
+            log.debug("Found directory")
             for path in task.path.iterdir():
                 result.add_new_task(
                     Task(
@@ -116,17 +115,17 @@ class Processor:
             return
 
         elif stat.S_ISLNK(mode):
-            log.info("Ignoring symlink")
+            log.debug("Ignoring symlink")
             return
 
         elif size == 0:
-            log.info("Ignoring empty file")
+            log.debug("Ignoring empty file")
             return
 
-        log.info("Calculated file size", size=size)
         self._process_regular_file(task, size, result)
 
     def _process_regular_file(self, task: Task, size: int, result: TaskResult):
+        logger.debug("Processing file", path=task.path, size=size)
         with task.path.open("rb") as file:
             all_chunks = search_chunks_by_priority(task.path, file, size, result)
             outer_chunks = remove_inner_chunks(all_chunks)
@@ -183,10 +182,11 @@ def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
 
     outer_count = len(outer_chunks)
     removed_count = len(chunks) - outer_count
-    logger.info(
+    logger.debug(
         "Removed inner chunks",
         outer_chunk_count=noformat(outer_count),
         removed_inner_chunk_count=noformat(removed_count),
+        _verbosity=2,
     )
     return outer_chunks
 
@@ -240,7 +240,7 @@ def calculate_entropy(path: Path, *, draw_plot: bool):
     # We could use the chunk size instead of another syscall,
     # but we rely on the actual file size written to the disk
     file_size = path.stat().st_size
-    logger.info("Calculating entropy for file", path=path, size=file_size)
+    logger.debug("Calculating entropy for file", path=path, size=file_size)
 
     # Smaller chuk size would be very slow to calculate.
     # 1Mb chunk size takes ~ 3sec for a 4,5 GB file.
@@ -254,7 +254,7 @@ def calculate_entropy(path: Path, *, draw_plot: bool):
             entropy_percentage = round(entropy / 8 * 100, 2)
             percentages.append(entropy_percentage)
 
-    logger.info(
+    logger.debug(
         "Entropy calculated",
         mean=round(statistics.mean(percentages), 2),
         highest=max(percentages),
@@ -293,4 +293,4 @@ def draw_entropy_plot(percentages: List[float]):
     plt.yticks(range(0, 101, 10))
 
     # New line so that chart title will be aligned correctly in the next line
-    logger.debug("Entropy chart", chart="\n" + plt.build())
+    logger.debug("Entropy chart", chart="\n" + plt.build(), _verbosity=3)

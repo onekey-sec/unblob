@@ -147,7 +147,7 @@ class StructHandler(Handler):
 
     def parse_header(self, file: io.BufferedIOBase, endian=Endian.LITTLE):
         header = self._struct_parser.parse(self.HEADER_STRUCT, file, endian)
-        logger.debug("Header parsed", header=header)
+        logger.debug("Header parsed", header=header, _verbosity=3)
         return header
 
 

@@ -148,7 +148,7 @@ class FATHandler(StructHandler):
         if not self.valid_header(header):
             raise InvalidInputFormat("Invalid FAT header.")
 
-        logger.debug("FAT header parsed", header=header)
+        logger.debug("FAT header parsed", header=header, _verbosity=3)
 
         if sector_count == 0x0:
             sector_count = header.common.TotSectors
