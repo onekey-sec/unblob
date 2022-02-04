@@ -1,6 +1,7 @@
 import io
 from typing import List, Optional
 
+from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.file_utils import (
@@ -59,6 +60,24 @@ class _JFFS2Base(StructHandler):
         file.seek(-2, io.SEEK_CUR)
         return endian
 
+    def valid_header(self, header: Instance, node_start_offset: int, eof: int) -> bool:
+        if header.nodetype not in JFFS2_NODETYPES:
+            logger.debug("Invalid JFFS2 node type", node_type=header.nodetype)
+            return False
+
+        if node_start_offset + header.totlen > eof:
+            logger.debug(
+                "node length greater than total file size",
+                node_len=header.totlen,
+                file_size=eof,
+            )
+            return False
+
+        if header.totlen < len(header):
+            logger.debug("node length greater than header size", node_len=header.totlen)
+            return False
+        return True
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -73,7 +92,10 @@ class _JFFS2Base(StructHandler):
         while current_offset < eof:
             node_start_offset = current_offset
             file.seek(current_offset)
-            header = self.parse_header(file, endian=endian)
+            try:
+                header = self.parse_header(file, endian=endian)
+            except EOFError:
+                break
 
             if header.magic not in JFFS2_MAGICS:
                 # JFFS2 allows padding at the end with 0xFF or 0x00, usually
@@ -86,22 +108,7 @@ class _JFFS2Base(StructHandler):
                     logger.debug("unexpected header magic", header_magic=header.magic)
                     break
 
-            if header.nodetype not in JFFS2_NODETYPES:
-                logger.debug("Invalid JFFS2 node type", node_type=header.nodetype)
-                return
-
-            if node_start_offset + header.totlen > eof:
-                logger.debug(
-                    "node length greater than total file size",
-                    node_len=header.totlen,
-                    file_size=eof,
-                )
-                return
-
-            if header.totlen < len(header):
-                logger.debug(
-                    "node length greater than header size", node_len=header.totlen
-                )
+            if not self.valid_header(header, node_start_offset, eof):
                 return
 
             node_len = round_up(header.totlen, BLOCK_ALIGNMENT)
