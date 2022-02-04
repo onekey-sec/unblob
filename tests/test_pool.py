@@ -57,3 +57,23 @@ def test_multipool(process_num: int):
 
     assert list(handled) == [5, 4, 3, 2, 1, 0]
     assert list(results) == [5, 4, 3, 2, 1, 0]
+
+
+def test_input_cannot_be_submitted_from_worker():
+    pool: MultiPool
+
+    def submit_task(_):
+        nonlocal pool
+        try:
+            pool.submit("this should fail")
+        except Exception as exc:
+            return exc
+
+    def raise_result(_pool, result):
+        raise result
+
+    pool = MultiPool(process_num=1, handler=submit_task, result_callback=raise_result)
+
+    with pool, pytest.raises(RuntimeError, match="can only be called"):
+        pool.submit(1)
+        pool.process_until_done()

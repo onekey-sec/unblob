@@ -1,6 +1,8 @@
 import abc
 import multiprocessing as mp
+import queue
 import sys
+import threading
 from multiprocessing.queues import JoinableQueue
 from typing import Any, Callable, Union
 
@@ -38,10 +40,12 @@ class Queue(JoinableQueue):
             return self._unfinished_tasks._semlock._is_zero()  # type: ignore
 
 
+_SENTINEL = ...
+
+
 def _worker_process(handler, input, output):
     sys.breakpointhook = multiprocessing_breakpoint
-    while True:
-        args = input.get()
+    while (args := input.get()) is not _SENTINEL:
         result = handler(args)
         output.put(result)
 
@@ -67,17 +71,38 @@ class MultiPool(PoolBase):
             )
             for _ in range(process_num)
         ]
+        self._tid = threading.get_native_id()
 
     def start(self):
         for p in self._procs:
             p.start()
 
     def close(self):
+        self._clear_input_queue()
+        self._request_workers_to_quit()
+        self._wait_for_workers_to_quit()
+
+    def _clear_input_queue(self):
+        try:
+            while True:
+                self._input.get_nowait()
+        except queue.Empty:
+            pass
+
+    def _request_workers_to_quit(self):
+        for _ in self._procs:
+            self._input.put(_SENTINEL)
+
+    def _wait_for_workers_to_quit(self):
         for p in self._procs:
-            p.terminate()
             p.join()
 
     def submit(self, args):
+        if threading.get_native_id() != self._tid:
+            raise RuntimeError(
+                "Submit can only be called from the same "
+                "thread/process where the pool is created"
+            )
         self._input.put(args)
 
     def process_until_done(self):
