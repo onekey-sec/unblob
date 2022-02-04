@@ -8,7 +8,7 @@ from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
-PAD_SIZE = 4_096
+PAD_SIZES = [4_096, 1_024]
 BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
 
@@ -16,6 +16,31 @@ class _SquashFSBase(StructHandler):
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
         return ["unsquashfs", "-f", "-d", outdir, inpath]
+
+    def calculate_chunk(
+        self, file: io.BufferedIOBase, start_offset: int
+    ) -> Optional[ValidChunk]:
+        file.seek(start_offset)
+        endian = get_endian(file, BIG_ENDIAN_MAGIC)
+        header = self.parse_header(file, endian)
+
+        end_of_data_offset = start_offset + header.bytes_used
+        file.seek(end_of_data_offset)
+        padding = file.read(
+            round_up(header.bytes_used, max(PAD_SIZES)) - header.bytes_used
+        )
+
+        for pad_size in sorted(PAD_SIZES, reverse=True):
+            size = round_up(header.bytes_used, pad_size)
+            padding_length = size - header.bytes_used
+
+            if padding.startswith(b"\00" * padding_length):
+                end_offset = start_offset + size
+                return ValidChunk(start_offset=start_offset, end_offset=end_offset)
+
+        return ValidChunk(
+            start_offset=start_offset, end_offset=start_offset + header.bytes_used
+        )
 
 
 class SquashFSv3Handler(_SquashFSBase):
@@ -72,18 +97,6 @@ class SquashFSv3Handler(_SquashFSBase):
     """
     HEADER_STRUCT = "squashfs3_super_block_t"
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
-
-        endian = get_endian(file, BIG_ENDIAN_MAGIC)
-        header = self.parse_header(file, endian)
-
-        size = round_up(header.bytes_used, PAD_SIZE)
-        end_offset = start_offset + size
-
-        return ValidChunk(start_offset=start_offset, end_offset=end_offset)
-
 
 class SquashFSv4Handler(_SquashFSBase):
     NAME = "squashfs_v4"
@@ -125,11 +138,3 @@ class SquashFSv4Handler(_SquashFSBase):
         } squashfs4_super_block_t;
     """
     HEADER_STRUCT = "squashfs4_super_block_t"
-
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
-        header = self.parse_header(file)
-        size = round_up(header.bytes_used, PAD_SIZE)
-        end_offset = start_offset + size
-        return ValidChunk(start_offset=start_offset, end_offset=end_offset)
