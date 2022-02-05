@@ -1,0 +1,33 @@
+name: unblob
+summary: unblob summary
+description: |
+  Description
+version: git
+grade: stable
+confinement: devmode
+base: core20
+architectures:
+  - build-on: [all]
+
+apps:
+  unblob:
+    command: bin/unblob
+    plugs: [home]
+
+parts:
+  unblob:
+    plugin: dump
+    source: https://github.com/IoT-Inspector/unblob
+    source-type: git
+    stage-packages: [img2simg, lz4, lziprecover, lzop, squashfs-tools, unar, xz-utils]
+    override-build: |
+      apt-get install --no-install-recommends -y python3-pip liblzo2-dev curl xz-utils
+      python3 -m venv "${SNAPCRAFT_PART_INSTALL}"
+      export SNAPCRAFT_PYTHON_VENV_INTERP_PATH="${SNAPCRAFT_PART_INSTALL}/bin/python3"
+      ${SNAPCRAFT_PART_INSTALL}/bin/pip3 install poetry
+      ${SNAPCRAFT_PART_INSTALL}/bin/pip3 --disable-pip-version-check install --upgrade pip
+      ${SNAPCRAFT_PART_INSTALL}/bin/poetry build
+      ${SNAPCRAFT_PART_INSTALL}/bin/pip3 install dist/unblob*.whl
+      find "${SNAPCRAFT_PART_INSTALL}" -type f -executable -print0 | xargs -0 \
+         sed -i "1 s|^#\\!${SNAPCRAFT_PYTHON_VENV_INTERP_PATH}.*$|#\\!/usr/bin/env python3|"
+      curl -s https://www.7-zip.org/a/7z2107-linux-x64.tar.xz --output - | tar -C ${SNAPCRAFT_PART_INSTALL}/bin --transform 's/7zzs/7z/' -Jxvf - 7zzs
