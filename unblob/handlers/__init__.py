@@ -13,7 +13,7 @@ from .filesystem import (
     romfs,
     squashfs,
     ubi,
-    yaffs,
+    yaffs, netgear,
 )
 from .filesystem.android import sparse
 
@@ -33,6 +33,7 @@ ALL_HANDLERS_BY_PRIORITY: List[Tuple[Type[Handler], ...]] = [
         yaffs.YAFFSHandler,
         yaffs.YAFFS2Handler,
         sparse.SparseHandler,
+        netgear.ChkHandler, netgear.TRXHandler
     ),
     (
         ar.ARHandler,
