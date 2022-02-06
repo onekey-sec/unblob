@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 
 from structlog import get_logger
 
-from ...file_utils import InvalidInputFormat, find_first
+from ...file_utils import InvalidInputFormat, find_first, iterate_patterns
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -71,14 +71,32 @@ class ZIPHandler(StructHandler):
 
         file.seek(start_offset)
 
-        zip_end = find_first(file, EOCD_RECORD_HEADER)
+        for zip_end in iterate_patterns(file, EOCD_RECORD_HEADER):
+            if zip_end == -1:
+                break
 
-        if zip_end == -1:
-            raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
+            file.seek(zip_end)
+            eocd = self.cparser_le.end_of_central_directory_t(file)
 
-        file.seek(zip_end)
-        self.cparser_le.end_of_central_directory_t(file)
-        return file.tell()
+            # Check if the EOCD header is valid, we might be just picking up something that looks like an EOCD header
+            if zip_end == (eocd.offset_of_cd + eocd.central_directory_size):
+                return file.tell()
+
+        raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
+
+        # file.seek(start_offset)
+        #
+        # zip_end = find_first(file, EOCD_RECORD_HEADER)
+        # print('ZIP_END', zip_end)
+        #
+        # if zip_end == -1:
+        #     raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
+        #
+        # file.seek(zip_end)
+        # eocd = self.cparser_le.end_of_central_directory_t(file)
+        # print('EOCD', eocd)
+        # print(f"zip_end={zip_end} cd_size={eocd.central_directory_size} cd_offset={eocd.offset_of_cd} cd_end={eocd.offset_of_cd + eocd.central_directory_size}")
+        # return file.tell()
 
     def check_file(self, file: io.BufferedIOBase) -> Tuple[bool, bool]:
         has_encrypted_files = False
