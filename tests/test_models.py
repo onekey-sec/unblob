@@ -69,3 +69,6 @@ class TestHandler:
 
     def test_make_extract_command_default(self):
         assert self.HandlerWithoutExtraction.make_extract_command("aaaa", "bbbb") == []
+
+    def test_get_extract_command_default(self):
+        assert self.HandlerWithoutExtraction._get_extract_command() is None

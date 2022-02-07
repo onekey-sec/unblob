@@ -127,9 +127,13 @@ class Handler(abc.ABC):
         return []
 
     @classmethod
-    def _get_extract_command(cls) -> str:
+    def _get_extract_command(cls) -> Optional[str]:
         """Returns which (usually 3rd party CLI) command is used for extraction."""
-        return cls.make_extract_command.__code__.co_consts[1]
+        command = cls.make_extract_command("", "")
+        if not command:
+            return None
+
+        return command[0]
 
 
 class StructHandler(Handler):
