@@ -12,6 +12,7 @@ from .extractor import (
     carve_unknown_chunks,
     carve_valid_chunk,
     extract_with_command,
+    get_extract_paths,
     make_extract_dir,
 )
 from .file_utils import iterate_file, valid_path
@@ -157,13 +158,22 @@ class Processor:
                     )
                     continue
 
-                new_dir = extract_with_command(
-                    extract_dir, carved_valid_path, chunk.handler, result
-                )
+                inpath, outdir = get_extract_paths(extract_dir, carved_valid_path)
+                command = chunk.handler.make_extract_command(str(inpath), str(outdir))
+
+                if not command:
+                    logger.debug(
+                        "No need to extract, as this handler does not have extractor",
+                        handler=chunk.handler.NAME,
+                        _verbosity=2,
+                    )
+                    continue
+
+                extract_with_command(outdir, command, chunk.handler, result)
                 result.add_new_task(
                     Task(
                         root=self._extract_root,
-                        path=new_dir,
+                        path=outdir,
                         depth=task.depth + 1,
                     )
                 )

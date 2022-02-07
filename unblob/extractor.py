@@ -5,7 +5,7 @@ import io
 import shlex
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 from structlog import get_logger
 
@@ -46,16 +46,18 @@ def fix_permissions(outdir: Path):
             path.chmod(0o664)
 
 
-def extract_with_command(
-    extract_dir: Path, carved_path: Path, handler: Handler, task_result: TaskResult
-) -> Path:
+def get_extract_paths(extract_dir: Path, carved_path: Path) -> Tuple[Path, Path]:
     content_dir = extract_dir / (carved_path.name + APPEND_NAME)
-    # We only extract every blob once, it's a mistake to extract the same blog again
-    content_dir.mkdir(parents=True)
-
     inpath = carved_path.expanduser().resolve()
     outdir = content_dir.expanduser().resolve()
-    cmd = handler.make_extract_command(str(inpath), str(outdir))
+    return inpath, outdir
+
+
+def extract_with_command(
+    outdir: Path, cmd: List[str], handler: Handler, task_result: TaskResult
+):
+    # We only extract every blob once, it's a mistake to extract the same blog again
+    outdir.mkdir(parents=True)
 
     command = shlex.join(cmd)
     logger.debug("Running extract command", command=command)
@@ -89,8 +91,6 @@ def extract_with_command(
             command=handler._get_extract_command(),
         )
         raise
-
-    return content_dir
 
 
 def carve_unknown_chunks(

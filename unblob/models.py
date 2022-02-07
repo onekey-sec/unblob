@@ -119,9 +119,12 @@ class Handler(abc.ABC):
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 
     @staticmethod
-    @abc.abstractmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        """Make the extract command with the external tool, which can be passed for subprocess.run."""
+        """
+        Make the extract command with the external tool, which can be passed for subprocess.run.
+        Returns an empty list if the handler is not supposed to perform extractions.
+        """
+        return []
 
     @classmethod
     def _get_extract_command(cls) -> str:

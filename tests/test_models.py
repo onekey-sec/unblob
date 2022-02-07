@@ -61,5 +61,11 @@ class TestHandler:
         def make_extract_command(*args, **kwargs):
             return ["testcommand", "with", "some", "-test", "arguments"]
 
+    class HandlerWithoutExtraction(Handler):
+        pass
+
     def test_get_extract_command(self):
         assert self.DummyHandler._get_extract_command() == "testcommand"
+
+    def test_make_extract_command_default(self):
+        assert self.HandlerWithoutExtraction.make_extract_command("aaaa", "bbbb") == []
