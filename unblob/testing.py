@@ -1,13 +1,12 @@
 import shlex
 import subprocess
 from pathlib import Path
-from typing import List
 
 import pytest
 from pytest_cov.embed import cleanup_on_sigterm
 
 from unblob.logging import configure_logger
-from unblob.report import Report
+from unblob.report import Reports
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -62,7 +61,7 @@ def check_output_is_the_same(reference_dir: Path, extract_dir: Path):
         pytest.fail(f"\nDiff command: {runnable_diff_command}\n{exc.stdout}\n")
 
 
-def check_reports(reports: List[Report]):
+def check_reports(reports: Reports):
     __tracebackhide__ = True
 
-    assert reports == [], "Unexpected error reports"
+    assert reports.errors == [], "Unexpected error reports"

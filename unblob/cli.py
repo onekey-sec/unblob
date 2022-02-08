@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import click
 from structlog import get_logger
 
 from unblob.plugins import UnblobPluginManager
-from unblob.report import Report, Severity
+from unblob.profiling import to_speedscope
+from unblob.report import Reports, Severity
 
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
@@ -117,6 +118,12 @@ class UnblobContext(click.Context):
     show_default=True,
 )
 @click.option(
+    "--profile",
+    "profile_path",
+    type=click.Path(path_type=Path, dir_okay=False),
+    help="Write Speedscope profile files of extraction at this path.",
+)
+@click.option(
     "-p",
     "--process-num",
     "process_num",
@@ -150,9 +157,10 @@ def cli(
     keep_extracted_chunks: bool,
     verbose: int,
     plugins_path: Optional[Path],
+    profile_path: Optional[Path],
     handlers: Handlers,
     plugin_manager: UnblobPluginManager,
-) -> List[Report]:
+) -> Reports:
     configure_logger(verbose, extract_root)
 
     plugin_manager.import_plugins(plugins_path)
@@ -170,22 +178,27 @@ def cli(
     )
 
     logger.info("Start processing files", count=noformat(len(files)))
-    all_reports = []
+    all_reports = Reports()
     for path in files:
         report = process_file(config, path)
         all_reports.extend(report)
+
+    if profile_path:
+        with profile_path.open("w") as fd:
+            to_speedscope(all_reports, fd)
+
     return all_reports
 
 
 cli.context_class = UnblobContext
 
 
-def get_exit_code_from_reports(reports: List[Report]) -> int:
+def get_exit_code_from_reports(reports: Reports) -> int:
     severity_to_exit_code = [
         (Severity.ERROR, 1),
         (Severity.WARNING, 0),
     ]
-    severities = {report.severity for report in reports}
+    severities = {error.severity for error in reports.errors}
 
     for severity, exit_code in severity_to_exit_code:
         if severity in severities:

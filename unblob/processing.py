@@ -25,7 +25,8 @@ from .logging import noformat
 from .math import shannon_entropy
 from .models import ExtractError, Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
-from .report import Report, UnknownError
+from .profiling import PerfCounter
+from .report import Reports, UnknownError
 from .signals import terminate_gracefully
 
 logger = get_logger()
@@ -46,8 +47,7 @@ class ExtractionConfig:
 
 
 @terminate_gracefully
-def process_file(config: ExtractionConfig, path: Path) -> List[Report]:
-
+def process_file(config: ExtractionConfig, path: Path) -> Reports:
     root = path if path.is_dir() else path.parent
     root_task = Task(
         root=root,
@@ -56,7 +56,7 @@ def process_file(config: ExtractionConfig, path: Path) -> List[Report]:
     )
 
     processor = Processor(config)
-    all_reports = []
+    all_reports = Reports()
 
     def process_result(pool, result):
         for new_task in result.new_tasks:
@@ -80,9 +80,10 @@ class Processor:
         self._config = config
 
     def process_task(self, task: Task) -> TaskResult:
-        result = TaskResult()
+        result = TaskResult(task)
         try:
-            self._process_task(result, task)
+            with PerfCounter(result, "Process Task"):
+                self._process_task(result, task)
         except Exception as exc:
             self._process_error(result, exc)
         return result
@@ -127,7 +128,8 @@ class Processor:
             log.debug("Ignoring empty file")
             return
 
-        _FileTask(self._config, task, size, result).process()
+        with PerfCounter(result, "Process Regular File", name=Path(task.path).name):
+            _FileTask(self._config, task, size, result).process()
 
 
 class _FileTask:
@@ -147,9 +149,10 @@ class _FileTask:
         logger.debug("Processing file", path=self.task.path, size=self.size)
 
         with self.task.path.open("rb") as file:
-            all_chunks = search_chunks_by_priority(
-                self.task.path, file, self.size, self.config.handlers, self.result
-            )
+            with PerfCounter(self.result, "Search Chunks"):
+                all_chunks = search_chunks_by_priority(
+                    self.task.path, file, self.size, self.config.handlers, self.result
+                )
             outer_chunks = remove_inner_chunks(all_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, self.size)
 
@@ -158,7 +161,8 @@ class _FileTask:
             else:
                 # we don't consider whole files as unknown chunks, but we still want to
                 # calculate entropy for whole files which produced no valid chunks
-                self._calculate_entropies([self.task.path])
+                with PerfCounter(self.result, "Calculate Entropy", whole_file=True):
+                    self._calculate_entropies([self.task.path])
 
     def _process_chunks(
         self, file, outer_chunks: List[ValidChunk], unknown_chunks: List[UnknownChunk]
@@ -168,10 +172,12 @@ class _FileTask:
         )
 
         carved_unknown_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
-        self._calculate_entropies(carved_unknown_paths)
+        with PerfCounter(self.result, "Calculate Entropy", whole_file=False):
+            self._calculate_entropies(carved_unknown_paths)
 
         for chunk in outer_chunks:
-            self._extract_chunk(extract_dir, file, chunk)
+            with PerfCounter(self.result, "Carve Valid Chunks"):
+                self._extract_chunk(extract_dir, file, chunk)
 
     def _calculate_entropies(self, paths: List[Path]):
         if self.task.depth < self.config.entropy_depth:
