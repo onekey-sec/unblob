@@ -93,7 +93,34 @@ class BinaryHandler(_CPIOHandlerBase):
             $cpio_binary_magic= { c7 71 } // (default, bin, hpbin)
 
         condition:
-            $cpio_binary_magic
+            $cpio_binary_magic and
+            /**
+                check that c_mode file type is valid
+                C_ISBLK		060000
+                C_ISCHR		020000
+                C_ISDIR		040000
+                C_ISFIFO	010000
+                C_ISSOCK	0140000
+                C_ISLNK		0120000
+                C_ISCTG		0110000
+                C_ISREG		0100000
+            */
+            for any i in (0o1, 0o2, 0o4, 0o6, 0o10, 0o11, 0o12, 0o14) : (((uint16(@cpio_binary_magic + 6) & 0o770000) >> 0o14) == i) and
+
+            /**
+                check that c_mode sticky bits is valid
+                C_NONE      000000
+                C_ISUID		004000
+                C_ISGID		002000
+                C_ISVTX		001000
+            */
+            for any j in (0o0, 0o1, 0o2, 0o4): (((uint16(@cpio_binary_magic + 6) & 0o7000) >> 0o11) == j) and
+
+            /**
+                check that c_mode permissions are valid.
+                should be between 0o000 (0x0) (---------) and 0o777 (rwxrwxrwx)
+            */
+            ((uint16(@cpio_binary_magic + 6) & 0o777) <= 0o777)
     """
 
     C_DEFINITIONS = r"""

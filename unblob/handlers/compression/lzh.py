@@ -5,21 +5,6 @@ from ...file_utils import Endian
 from ...models import StructHandler, ValidChunk
 
 PADDING_LEN = 2
-LEVEL_IDENTIFIERS = [0, 1, 2]
-METHOD_IDS = [
-    b"-lh0-",
-    b"-lzs-",
-    b"-lz4-",
-    b"-lh1-",
-    b"-lh2-",
-    b"-lh3-",
-    b"-lh4-",
-    b"-lh5-",
-    b"-lh6-",
-    b"-lh7-",
-    b"-lh8-",
-    b"-lhd-",
-]
 
 
 class LZHHandler(StructHandler):
@@ -28,13 +13,40 @@ class LZHHandler(StructHandler):
 
     YARA_RULE = r"""
         strings:
-            // 2 header bytes followed by method ID
-            $lzh_magic = /[\x00-\xff][\x00-\xff]({magic_ids})/
+            $lzh_magic_lh0 = "-lh0-"
+            $lzh_magic_lzs = "-lzs-"
+            $lzh_magic_lz4 = "-lz4-"
+            $lzh_magic_lh1 = "-lh1-"
+            $lzh_magic_lh2 = "-lh2-"
+            $lzh_magic_lh3 = "-lh3-"
+            $lzh_magic_lh4 = "-lh4-"
+            $lzh_magic_lh5 = "-lh5-"
+            $lzh_magic_lh6 = "-lh6-"
+            $lzh_magic_lh7 = "-lh7-"
+            $lzh_magic_lh8 = "-lh8-"
+            $lzh_magic_lhd = "-lhd-"
         condition:
-            $lzh_magic
-    """.format(
-        magic_ids="|".join([char.decode() for char in METHOD_IDS])
-    )
+            any of them and
+            // validate that level identifier is either 0x0, 0x1 or 0x2
+            // the fact that we use 'or' is not problematic given that we check only one match at a time
+            // so only one of those condition will be true
+            (
+                uint8(@lzh_magic_lh0 + 18) <= 0x02 or
+                uint8(@lzh_magic_lzs + 18) <= 0x02 or
+                uint8(@lzh_magic_lz4 + 18) <= 0x02 or
+                uint8(@lzh_magic_lh1 + 18) <= 0x02 or
+                uint8(@lzh_magic_lh2 + 18) <= 0x02 or
+                uint8(@lzh_magic_lh3 + 18) <= 0x02 or
+                uint8(@lzh_magic_lh4 + 18) <= 0x02 or
+                uint8(@lzh_magic_lh5 + 18) <= 0x02 or
+                uint8(@lzh_magic_lh6 + 18) <= 0x02 or
+                uint8(@lzh_magic_lh7 + 18) <= 0x02 or
+                uint8(@lzh_magic_lh8 + 18) <= 0x02 or
+                uint8(@lzh_magic_lhd + 18) <= 0x02
+            )
+    """
+
+    YARA_MATCH_OFFSET = -2
 
     C_DEFINITIONS = r"""
         typedef struct lzh_default_header {
@@ -65,12 +77,6 @@ class LZHHandler(StructHandler):
     ) -> Optional[ValidChunk]:
 
         header = self.parse_header(file, Endian.LITTLE)
-
-        if (
-            header.method_id not in METHOD_IDS
-            or header.level_identifier not in LEVEL_IDENTIFIERS
-        ):
-            return
 
         if header.level_identifier == 0x2:
             # with level 2, the header size is a uint16 rather than uint8 and there

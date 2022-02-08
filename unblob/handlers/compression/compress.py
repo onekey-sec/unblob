@@ -44,11 +44,21 @@ class UnixCompressHandler(StructHandler):
     NAME = "compress"
 
     YARA_RULE = r"""
+        // reference: https://fuchsia.googlesource.com/third_party/wuffs/+/HEAD/std/lzw/README.md
         strings:
-            // magic followed by valid flags bytes (!(flag & 0x60) && (9 <= (flag & 0x1F) <= 16))
-            $compress_magic = { 1f 9d ( 09 | 0A | 0B | 0C | 0D | 0E | 0F | 10 | 89 | 8A | 8B | 8C | 8D | 8E | 8F | 90 ) }
+            $compress_magic = { 1f 9d }
         condition:
-            $compress_magic
+            $compress_magic and
+
+            // flags byte validation (!(flag & 0x60) && (9 <= (flag & 0x1F) <= 16))
+            not (uint8(@compress_magic + 2) & 0x60) and
+            (uint8(@compress_magic + 2) & 0x1F) <= 16 and
+            (uint8(@compress_magic + 2) & 0x1F) >= 9 and
+
+            // An LZW encoding is a stream of codes, each code emitting zero or more bytes.
+            // There are four types of codes: literals, copies, clear and end.
+            // The first code _must_ be a literal
+            (int16(@compress_magic + 3) & 0x1FF) <= 255
     """
 
     C_DEFINITIONS = r"""
