@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from structlog import get_logger
 
-from ...file_utils import DEFAULT_BUFSIZE, InvalidInputFormat
+from ...file_utils import DEFAULT_BUFSIZE, Endian, InvalidInputFormat, convert_int64
 from ...models import Handler, ValidChunk
 
 logger = get_logger()
@@ -25,20 +25,32 @@ class LZMAHandler(Handler):
             (uint32(@lzma_magic + 1) & (uint32(@lzma_magic + 1) - 1)) == 0 and
             // uncompressed size is either unknown (0xFFFFFFFFFFFFFFFF) or smaller than 256GB  (section 1.1.3 of format definition)
             // yara does not support uint64 so we check it using uint32
-            ((uint32(@lzma_magic + 5) == 0xFFFFFFFF and uint32(@lzma_magic + 9) == 0xFFFFFFFF) or uint32(@lzma_magic + 5) < 0x00000040)
+            ((uint32(@lzma_magic + 5) == 0xFFFFFFFF and uint32(@lzma_magic + 9) == 0xFFFFFFFF) or uint32(@lzma_magic + 9) < 0x00000040)
     """
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
 
+        read_size = 0
+        file.seek(start_offset + 5)
+        uncompressed_size = convert_int64(file.read(8), Endian.LITTLE)
+
+        file.seek(start_offset, io.SEEK_SET)
         decompressor = lzma.LZMADecompressor(format=lzma.FORMAT_ALONE)
 
         try:
-            data = file.read(DEFAULT_BUFSIZE)
-            while data and not decompressor.eof:
-                decompressor.decompress(data)
+            while read_size < uncompressed_size and not decompressor.eof:
                 data = file.read(DEFAULT_BUFSIZE)
+                if not data:
+                    logger.warn(
+                        "LZMA stream is truncated.",
+                        read_size=read_size,
+                        uncompressed_size=uncompressed_size,
+                    )
+                    break
+                read_size += len(decompressor.decompress(data))
+
         except lzma.LZMAError as exc:
             raise InvalidInputFormat from exc
 
