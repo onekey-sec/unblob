@@ -1,6 +1,7 @@
 import io
 from typing import List, Optional
 
+from dissect.cstruct import Instance
 from structlog import get_logger
 
 from ...models import StructHandler, ValidChunk
@@ -50,6 +51,15 @@ class ARCHandler(StructHandler):
         except UnicodeDecodeError:
             return False
 
+    def valid_header(self, header: Instance) -> bool:
+        if header.archive_marker != 0x1A:
+            return False
+        if header.header_type > 0x07:
+            return False
+        if not self.valid_name(header.name):
+            return False
+        return True
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -65,7 +75,7 @@ class ARCHandler(StructHandler):
                 break
             file.seek(offset)
             header = self.parse_header(file)
-            if not self.valid_name(header.name):
+            if not self.valid_header(header):
                 return
 
             offset += len(header) + header.size
