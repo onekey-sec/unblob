@@ -25,7 +25,7 @@ def make_extract_dir(root: Path, path: Path, extract_root: Path) -> Path:
     extract_name = relative_path.name + APPEND_NAME
     extract_dir = extract_root / relative_path.with_name(extract_name)
     extract_dir.mkdir(parents=True, exist_ok=True)
-    logger.info("Created extraction dir", path=extract_dir)
+    logger.debug("Created extraction dir", path=extract_dir)
     return extract_dir.expanduser().resolve()
 
 
@@ -58,7 +58,7 @@ def extract_with_command(
     cmd = handler.make_extract_command(str(inpath), str(outdir))
 
     command = shlex.join(cmd)
-    logger.info("Running extract command", command=command)
+    logger.debug("Running extract command", command=command)
     try:
         res = subprocess.run(
             cmd,

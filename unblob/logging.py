@@ -66,10 +66,25 @@ def add_pid_to_log_message(
     return event_dict
 
 
-def configure_logger(verbose: bool, extract_root: Path):
-    log_level = logging.DEBUG if verbose else logging.INFO
+def filter_debug_logs(verbosity_level: int):
+    def filter(_logger, _method_name: str, event_dict: structlog.types.EventDict):
+        if event_dict["level"] != "debug":
+            return event_dict
+
+        message_verbosity: int = event_dict.pop("_verbosity", 1)
+        if verbosity_level >= message_verbosity:
+            return event_dict
+
+        raise structlog.DropEvent
+
+    return filter
+
+
+def configure_logger(verbosity_level: int, extract_root: Path):
+    log_level = logging.DEBUG if verbosity_level > 0 else logging.INFO
     processors = [
         structlog.stdlib.add_log_level,
+        filter_debug_logs(verbosity_level),
         structlog.processors.TimeStamper(
             key="timestamp", fmt="%Y-%m-%d %H:%M.%S", utc=True
         ),
@@ -84,6 +99,12 @@ def configure_logger(verbose: bool, extract_root: Path):
     structlog.configure(
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         processors=processors,
+    )
+
+    structlog.get_logger().debug(
+        "Logging configured",
+        vebosity_level=noformat(verbosity_level),
+        extract_root=extract_root.expanduser().resolve(),
     )
 
 

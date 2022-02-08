@@ -9,7 +9,7 @@ from unblob.logging import configure_logger
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_logging():
-    configure_logger(verbose=True, extract_root=Path(""))
+    configure_logger(verbosity_level=3, extract_root=Path(""))
 
     # https://pytest-cov.readthedocs.io/en/latest/subprocess-support.html#if-you-use-multiprocessing-process
     cleanup_on_sigterm()

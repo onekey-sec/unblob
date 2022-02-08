@@ -94,7 +94,7 @@ class ARJHandler(StructHandler):
 
     def _read_arj_main_header(self, file: io.BufferedIOBase, start_offset: int) -> int:
         basic_header = self.cparser_le.basic_header(file)
-        logger.debug("Basic header parsed", header=basic_header)
+        logger.debug("Basic header parsed", header=basic_header, _verbosity=3)
 
         # It's unlikely and unhelpful if we find a completely zero-sized ARJ on it's own,
         # so we raise here.
@@ -103,7 +103,7 @@ class ARJHandler(StructHandler):
 
         file.seek(start_offset)
         main_header = self.cparser_le.arj_header(file)
-        logger.debug("Main header parsed", header=main_header)
+        logger.debug("Main header parsed", header=main_header, _verbosity=3)
 
         file.seek(start_offset + main_header.first_hdr_size + len(basic_header))
         self._read_headers(file)
@@ -113,7 +113,7 @@ class ARJHandler(StructHandler):
         while True:
             start = file.tell()
             basic_header = self.cparser_le.basic_header(file)
-            logger.debug("Basic header parsed", header=basic_header)
+            logger.debug("Basic header parsed", header=basic_header, _verbosity=3)
 
             if basic_header.size == 0:
                 # We've reached the final empty file header. This is where we want to be.
@@ -129,12 +129,12 @@ class ARJHandler(StructHandler):
 
     def _read_headers(self, file):
         metadata = self.cparser_le.metadata_t(file)
-        logger.debug("Metadata header parsed", header=metadata)
+        logger.debug("Metadata header parsed", header=metadata, _verbosity=3)
 
         # Lack of support for extended header is ok given that no versions of ARJ use the extended header.
         # Source: 'ARJ TECHNICAL INFORMATION', September 2001
         extended_header = self.cparser_le.extended_header_t(file)
-        logger.debug("Extended header parsed", header=extended_header)
+        logger.debug("Extended header parsed", header=extended_header, _verbosity=3)
         if extended_header.size != 0:
             raise ARJExtendedHeader
 

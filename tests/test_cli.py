@@ -145,14 +145,16 @@ def test_empty_dir_as_file(tmp_path: Path):
 @pytest.mark.parametrize(
     "params, expected_depth, expected_entropy_depth, expected_process_num, expected_verbosity",
     (
-        pytest.param([], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, False, id="empty"),
+        pytest.param([], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 0, id="empty"),
         pytest.param(
-            ["--verbose"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, True, id="verbose"
+            ["--verbose"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 1, id="verbose-1"
         ),
-        pytest.param(["--depth", "2"], 2, 1, DEFAULT_PROCESS_NUM, False, id="depth"),
+        pytest.param(["-vv"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 2, id="verbose-2"),
         pytest.param(
-            ["--process-num", "2"], DEFAULT_DEPTH, 1, 2, False, id="process-num"
+            ["-vvv"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 3, id="verbose-3"
         ),
+        pytest.param(["--depth", "2"], 2, 1, DEFAULT_PROCESS_NUM, 0, id="depth"),
+        pytest.param(["--process-num", "2"], DEFAULT_DEPTH, 1, 2, 0, id="process-num"),
     ),
 )
 def test_archive_success(
@@ -160,7 +162,7 @@ def test_archive_success(
     expected_depth: int,
     expected_entropy_depth: int,
     expected_process_num: int,
-    expected_verbosity: bool,
+    expected_verbosity: int,
     tmp_path: Path,
 ):
     runner = CliRunner()
@@ -187,7 +189,7 @@ def test_archive_success(
         tmp_path,
         max_depth=expected_depth,
         entropy_depth=expected_entropy_depth,
-        verbose=expected_verbosity,
+        entropy_plot=bool(expected_verbosity >= 3),
         process_num=expected_process_num,
     )
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
@@ -225,7 +227,7 @@ def test_archive_multiple_files(tmp_path: Path):
             tmp_path,
             max_depth=DEFAULT_DEPTH,
             entropy_depth=1,
-            verbose=False,
+            entropy_plot=False,
             process_num=DEFAULT_PROCESS_NUM,
         ),
         mock.call(
@@ -233,7 +235,7 @@ def test_archive_multiple_files(tmp_path: Path):
             tmp_path,
             max_depth=DEFAULT_DEPTH,
             entropy_depth=1,
-            verbose=False,
+            entropy_plot=False,
             process_num=DEFAULT_PROCESS_NUM,
         ),
     ]
