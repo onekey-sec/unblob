@@ -40,7 +40,11 @@ class Queue(JoinableQueue):
             return self._unfinished_tasks._semlock._is_zero()  # type: ignore
 
 
-_SENTINEL = ...
+class _Sentinel:
+    pass
+
+
+_SENTINEL = _Sentinel
 
 
 def _worker_process(handler, input, output):
