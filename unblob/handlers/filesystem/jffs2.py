@@ -62,7 +62,9 @@ class _JFFS2Base(StructHandler):
 
     def valid_header(self, header: Instance, node_start_offset: int, eof: int) -> bool:
         if header.nodetype not in JFFS2_NODETYPES:
-            logger.debug("Invalid JFFS2 node type", node_type=header.nodetype)
+            logger.debug(
+                "Invalid JFFS2 node type", node_type=header.nodetype, _verbosity=2
+            )
             return False
 
         if node_start_offset + header.totlen > eof:
@@ -70,11 +72,16 @@ class _JFFS2Base(StructHandler):
                 "node length greater than total file size",
                 node_len=header.totlen,
                 file_size=eof,
+                _verbosity=2,
             )
             return False
 
         if header.totlen < len(header):
-            logger.debug("node length greater than header size", node_len=header.totlen)
+            logger.debug(
+                "node length greater than header size",
+                node_len=header.totlen,
+                _verbosity=2,
+            )
             return False
         return True
 
@@ -105,7 +112,11 @@ class _JFFS2Base(StructHandler):
                     current_offset = read_until_past(file, b"\x00\xFF")
                     continue
                 else:
-                    logger.debug("unexpected header magic", header_magic=header.magic)
+                    logger.debug(
+                        "unexpected header magic",
+                        header_magic=header.magic,
+                        _verbosity=2,
+                    )
                     break
 
             if not self.valid_header(header, node_start_offset, eof):
