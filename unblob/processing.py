@@ -110,7 +110,7 @@ class Processor:
                     Task(
                         root=task.root,
                         path=path,
-                        depth=task.depth + 1,
+                        depth=task.depth,
                     )
                 )
             return
