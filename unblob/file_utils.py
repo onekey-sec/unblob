@@ -105,20 +105,6 @@ def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
     raise InvalidInputFormat("Multibyte integer decoding failed.")
 
 
-def find_first(
-    file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000
-) -> int:
-    """Search for the pattern and return the absolute position of the start of the pattern in the file.
-    Returns -1 if not found.
-    Seek the file pointer to the next byte of where we found the pattern or
-    seek back to the initial position when we did not find it.
-    """
-    try:
-        return next(iterate_patterns(file, pattern, chunk_size))
-    except StopIteration:
-        return -1
-
-
 def iterate_patterns(
     file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000
 ) -> Iterator[int]:

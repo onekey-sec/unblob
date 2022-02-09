@@ -16,7 +16,6 @@ from unblob.file_utils import (
     convert_int32,
     convert_int64,
     decode_multibyte_integer,
-    find_first,
     get_endian,
     iterate_file,
     iterate_patterns,
@@ -303,55 +302,6 @@ class TestMultibytesInteger:
     def test_decode_invalid_values(self, value: bytes):
         with pytest.raises(InvalidInputFormat):
             decode_multibyte_integer(value)
-
-
-class TestFindFirst:
-    @pytest.mark.parametrize(
-        "content, pattern, expected_position",
-        (
-            pytest.param(b"", b"not-found-pattern", -1, id="not_found"),
-            pytest.param(b"some", b"not-found", -1, id="smaller_data_than_pattern"),
-            pytest.param(b"pattern_12345", b"pattern", 0, id="pattern_at_beginning"),
-            pytest.param(b"01234_pattern", b"pattern", 6, id="pattern_at_the_end"),
-            pytest.param(b"01234_pattern5678", b"pattern", 6, id="pattern_in_middle"),
-        ),
-    )
-    def test_find_first(self, content: bytes, pattern: bytes, expected_position: int):
-        fake_file = io.BytesIO(content)
-        assert find_first(fake_file, pattern) == expected_position
-
-    def test_big_chunksize(self):
-        fake_file = io.BytesIO(b"0123456789_pattern")
-        pos = find_first(fake_file, b"pattern", chunk_size=0x10)
-        assert pos == 11
-
-    def test_smaller_chunksize_than_pattern_doesnt_hang(self):
-        fake_file = io.BytesIO(b"0123456789_pattern")
-        with pytest.raises(ValueError):
-            find_first(fake_file, b"pattern", chunk_size=0x5)
-
-    def test_equal_chunksize_read(self):
-        fake_file = io.BytesIO(b"0123456pattern")
-        pos = find_first(fake_file, b"pattern", chunk_size=0x7)
-        assert pos == 7
-
-    @pytest.mark.parametrize(
-        "content, pattern, initial_pointer_position",
-        (
-            pytest.param(b"", b"not-found-pattern", 0, id="not_found"),
-            pytest.param(b"some", b"not-found", 1, id="smaller_data_than_pattern"),
-            pytest.param(b"pattern_12345", b"pattern", 0, id="pattern_at_beginning"),
-            pytest.param(b"01234_pattern", b"pattern", 2, id="pattern_at_the_end"),
-            pytest.param(b"01234_pattern5678", b"pattern", 3, id="pattern_in_middle"),
-        ),
-    )
-    def test_find_first_keeps_file_pointer_intact(
-        self, content: bytes, pattern: bytes, initial_pointer_position: int
-    ):
-        fake_file = io.BytesIO(content)
-        fake_file.seek(initial_pointer_position)
-        find_first(fake_file, pattern)
-        assert fake_file.tell() == initial_pointer_position
 
 
 @pytest.mark.parametrize(
