@@ -5,3 +5,5 @@ build/
 /target/
 *.egg-info/
 *.so
+.idea
+.coverage
