@@ -23,6 +23,7 @@ from .math import shannon_entropy
 from .models import Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
 from .report import Report, UnknownError
+from .signals import terminate_gracefully
 
 logger = get_logger()
 
@@ -30,6 +31,7 @@ DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 
 
+@terminate_gracefully
 def process_file(
     path: Path,
     extract_root: Path,

@@ -1,5 +1,6 @@
 import abc
 import multiprocessing as mp
+import os
 import queue
 import sys
 import threading
@@ -40,14 +41,22 @@ class Queue(JoinableQueue):
             return self._unfinished_tasks._semlock._is_zero()  # type: ignore
 
 
-_SENTINEL = ...
+class _Sentinel:
+    pass
+
+
+_SENTINEL = _Sentinel
 
 
 def _worker_process(handler, input, output):
+    # Creates a new process group, making sure no signals are propagated from the main process to the worker processes.
+    os.setpgrp()
+
     sys.breakpointhook = multiprocessing_breakpoint
     while (args := input.get()) is not _SENTINEL:
         result = handler(args)
         output.put(result)
+    output.put(_SENTINEL)
 
 
 class MultiPool(PoolBase):
@@ -63,7 +72,7 @@ class MultiPool(PoolBase):
 
         self._result_callback = result_callback
         self._input = Queue(ctx=mp.get_context())
-        self._output = mp.Queue()
+        self._output = mp.SimpleQueue()
         self._procs = [
             mp.Process(
                 target=_worker_process,
@@ -80,6 +89,7 @@ class MultiPool(PoolBase):
     def close(self):
         self._clear_input_queue()
         self._request_workers_to_quit()
+        self._clear_output_queue()
         self._wait_for_workers_to_quit()
 
     def _clear_input_queue(self):
@@ -92,6 +102,15 @@ class MultiPool(PoolBase):
     def _request_workers_to_quit(self):
         for _ in self._procs:
             self._input.put(_SENTINEL)
+        self._input.close()
+
+    def _clear_output_queue(self):
+        process_quit_count = 0
+        process_num = len(self._procs)
+        while process_quit_count < process_num:
+            result = self._output.get()
+            if result is _SENTINEL:
+                process_quit_count += 1
 
     def _wait_for_workers_to_quit(self):
         for p in self._procs:
