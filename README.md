@@ -24,6 +24,46 @@ Help on usage:
 docker run --rm --pull always ghcr.io/iot-inspector/unblob:latest --help
 ```
 
+## Extractors
+
+Unblob relies on various tools for extracting the contents of a blob. These extractors are either third party tools (e.g. 7z), or internally developed extractors (available in [unblob/extractors](https://github.com/IoT-Inspector/unblob/tree/main/unblob/extractors) directory). \
+To be able to use unblob properly, all extractors needs to be installed.
+
+Hints for extractor installation:
+* If you are using unblob from the official docker container, nothing to be done.
+* Internally developed extractors are always installed with unblob installation.
+* There is a `--show-external-dependencies` CLI option, which displays the name of the extractors used by unblob and shows if they are available for unblob to use or not. \
+**NOTE**: This option does NOT check the version of the extractors.
+
+### External extractors
+
+These are the **external** extractor version recommendations. These are used in the official Docker container:
+
+| Extractor                                 |   Version   |
+|-------------------------------------------| ----------- |
+| 7z                                        | 21.07       |
+| lz4                                       | 1.9.3       |
+| lziprecover                               | 1.22        |
+| lzop                                      | 1.04        |
+| simg2img                                  | 8.1.0       |
+| tar                                       | 1.34        |
+| unar                                      | 1.10.1      |
+| unsquashfs                                | 4.4         |
+
+### Internal extractors
+
+These are the **internal** extractors which are automatically installed by unblob. \
+For more info on these extractors, check the [pyproject.toml](https://github.com/IoT-Inspector/unblob/blob/main/pyproject.toml).
+
+
+| Extractor                |
+|--------------------------|
+| jefferson                |
+| ubireader_extract_files  |
+| ubireader_extract_images |
+| unromfs                  |
+| yaffshiv                 |
+
 
 ## Development
 
