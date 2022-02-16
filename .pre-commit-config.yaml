@@ -41,3 +41,8 @@ repos:
     hooks:
       - id: fmt
       - id: clippy
+
+  - repo: https://github.com/nix-community/nixpkgs-fmt
+    rev: master
+    hooks:
+    -   id: nixpkgs-fmt
