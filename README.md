@@ -24,6 +24,51 @@ Help on usage:
 docker run --rm --pull always ghcr.io/iot-inspector/unblob:latest --help
 ```
 
+### Using Nix
+
+Unblob can be built and run using [Nix](https://nixos.org). The Nix
+derivation installs all 3rd party dependencies:
+
+1. [Install and configure Nix](https://nixos.org/download.html)
+
+    a. Optional: enable the experimental features so that you don't
+       need to pass `--extra-experimental-features "nix-command
+       flakes"` to `nix` command invocations:
+
+        ```console
+        $ cat > ~/.config/nix/nix.conf <<EOF
+        experimental-features = nix-command flakes
+        EOF
+        ```
+
+    b. Optional: use pre-built binaries from GitHub using [cachix](https://app.cachix.org/cache/unblob):
+
+        ```console
+        nix-env -iA cachix -f https://cachix.org/api/v1/install
+        cachix use unblob
+        ```
+
+2. Install unblob
+
+    ```console
+    $ nix profile install github:IoT-Inspector/unblob
+    $ unblob --show-external-dependencies
+    The following executables found installed, which are needed by unblob:
+        7z                          ✓
+        jefferson                   ✓
+        lz4                         ✓
+        lziprecover                 ✓
+        lzop                        ✓
+        simg2img                    ✓
+        tar                         ✓
+        ubireader_extract_files     ✓
+        ubireader_extract_images    ✓
+        unar                        ✓
+        unromfs                     ✓
+        unsquashfs                  ✓
+        yaffshiv                    ✓
+    ```
+
 ## Extractors
 
 Unblob relies on various tools for extracting the contents of a blob. These extractors are either third party tools (e.g. 7z), or internally developed extractors (available in [unblob/extractors](https://github.com/IoT-Inspector/unblob/tree/main/unblob/extractors) directory). \
