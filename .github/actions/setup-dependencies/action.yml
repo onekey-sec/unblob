@@ -1,3 +1,8 @@
+inputs:
+  python-version:
+    description: 'Python version to setup'
+    required: false
+    default: 3.8
 runs:
   using: "composite"
   steps:
@@ -13,11 +18,16 @@ runs:
         sudo chmod +x /usr/local/bin/7z
       shell: bash
 
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ inputs.python-version }}
+
     - name: Restore pip cache
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: pip
+        key: pip-${{ inputs.python-version }}
 
     - name: Pip install
       run: python -m pip install --upgrade pip poetry
@@ -29,13 +39,13 @@ runs:
         path: |
           ~/.cache/pypoetry/cache
           ~/.cache/pypoetry/artifacts
-        key: poetry-cache-and-artifacts
+        key: poetry-cache-and-artifacts-${{ inputs.python-version }}
 
     - name: Restore virtualenvs
       uses: actions/cache@v2
       with:
         path: ~/.cache/pypoetry/virtualenvs
-        key: venv-${{ hashFiles('poetry.lock') }}
+        key: venv-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}
 
     - name: Poetry install
       run: UNBLOB_BUILD_RUST_EXTENSION=1 poetry install
