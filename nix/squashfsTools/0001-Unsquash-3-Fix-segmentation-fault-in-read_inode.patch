@@ -1,0 +1,39 @@
+From e011d1b574db60d91d83be9a2c1eb49fb94d861c Mon Sep 17 00:00:00 2001
+From: Phillip Lougher <phillip@squashfs.org.uk>
+Date: Thu, 9 Dec 2021 18:04:03 +0000
+Subject: [PATCH] Unsquash-3: Fix segmentation fault in read_inode()
+
+Fix issue https://github.com/plougher/squashfs-tools/issues/138
+which is caused by some typos when updating read_inode()
+to use read_inode_data().
+
+Signed-off-by: Phillip Lougher <phillip@squashfs.org.uk>
+---
+ squashfs-tools/unsquash-3.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/squashfs-tools/unsquash-3.c b/squashfs-tools/unsquash-3.c
+index 0123562..2774436 100644
+--- a/squashfs-tools/unsquash-3.c
++++ b/squashfs-tools/unsquash-3.c
+@@ -236,7 +236,7 @@ static struct inode *read_inode(unsigned int start_block, unsigned int offset)
+ 					SQUASHFS_SWAP_LDIR_INODE_HEADER_3(&header.ldir,
+ 						&sinode);
+ 			} else
+-				res = read_inode_data(&inode, &start, &offset, sizeof(*inode));
++				res = read_inode_data(inode, &start, &offset, sizeof(*inode));
+ 
+ 			if(res == FALSE)
+ 				EXIT_UNSQUASH("read_inode: failed to read "
+@@ -257,7 +257,7 @@ static struct inode *read_inode(unsigned int start_block, unsigned int offset)
+ 					SQUASHFS_SWAP_REG_INODE_HEADER_3(inode,
+ 						&sinode);
+ 			} else
+-				res = read_inode_data(&inode, &start, &offset, sizeof(*inode));
++				res = read_inode_data(inode, &start, &offset, sizeof(*inode));
+ 
+ 			if(res == FALSE)
+ 				EXIT_UNSQUASH("read_inode: failed to read "
+-- 
+2.34.0
+
