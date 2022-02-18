@@ -3,6 +3,7 @@
 , poetry2nix
 , python3
 , rustPlatform
+, yara
 , _7zz
 , lz4
 , lziprecover
@@ -48,6 +49,12 @@ poetry2nix.mkPoetryApplication {
         # Use the _same_ version as unblob
         self.cstruct
       ];
+    });
+
+    yara-python = super.yara-python.overridePythonAttrs (_: {
+      # Use _our_ patched version of yara
+      buildInputs = [ yara ];
+      setupPyBuildFlags = [ "--dynamic-linking" ];
     });
   });
 
