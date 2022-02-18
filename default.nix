@@ -58,6 +58,20 @@ poetry2nix.mkPoetryApplication {
     });
   });
 
+  checkPhase = ''
+    (
+      deps_PATH=${lib.makeBinPath runtimeDeps}
+
+      # $program_PATH is set to contain all the script-paths of all
+      # Python dependencies
+      export PATH=$deps_PATH:$program_PATH:$PATH
+
+      # romfs sample file contains some funky symlinks which get
+      # removed when source is copyed to the nix store.
+      pytest -k "not test_all_handlers[filesystem.romfs]" --no-cov
+    )
+  '';
+
   python = python3;
 
   postFixup = ''
