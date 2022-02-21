@@ -23,4 +23,4 @@ jobs:
     - run: |
         nix flake check -L
     - run: |
-        nix build -L
+        nix build -L ".#unblob.withTests"

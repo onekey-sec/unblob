@@ -30,63 +30,66 @@ let
     mkdir -p $out/bin
     ln -snf ${_7zz}/bin/7zz $out/bin/7z
   '';
-in
 
-poetry2nix.mkPoetryApplication {
-  projectDir = ./.;
+  self = poetry2nix.mkPoetryApplication {
+    projectDir = ./.;
 
-  # Python dependencies that need special care, like non-python
-  # build dependencies
-  overrides = poetry2nix.overrides.withDefaults (self: super: {
-    python-lzo = super.python-lzo.overridePythonAttrs (_: {
-      buildInputs = [
-        lzo
-      ];
+    # Python dependencies that need special care, like non-python
+    # build dependencies
+    overrides = poetry2nix.overrides.withDefaults (self: super: {
+      python-lzo = super.python-lzo.overridePythonAttrs (_: {
+        buildInputs = [
+          lzo
+        ];
+      });
+
+      jefferson = super.jefferson.overridePythonAttrs (_: {
+        propagatedBuildInputs = [
+          # Use the _same_ version as unblob
+          self.cstruct
+        ];
+      });
+
+      yara-python = super.yara-python.overridePythonAttrs (_: {
+        # Use _our_ patched version of yara
+        buildInputs = [ yara ];
+        setupPyBuildFlags = [ "--dynamic-linking" ];
+      });
     });
 
-    jefferson = super.jefferson.overridePythonAttrs (_: {
-      propagatedBuildInputs = [
-        # Use the _same_ version as unblob
-        self.cstruct
-      ];
-    });
+    python = python3;
 
-    yara-python = super.yara-python.overridePythonAttrs (_: {
-      # Use _our_ patched version of yara
-      buildInputs = [ yara ];
-      setupPyBuildFlags = [ "--dynamic-linking" ];
-    });
-  });
+    postFixup = ''
+      wrapProgram $out/bin/unblob --prefix PATH : ${lib.makeBinPath runtimeDeps}
+    '';
 
-  checkPhase = ''
-    (
-      deps_PATH=${lib.makeBinPath runtimeDeps}
+    UNBLOB_BUILD_RUST_EXTENSION = "1";
 
-      # $program_PATH is set to contain all the script-paths of all
-      # Python dependencies
-      export PATH=$deps_PATH:$program_PATH:$PATH
+    cargoDeps = rustPlatform.importCargoLock {
+      lockFile = ./Cargo.lock;
+    };
 
-      # romfs sample file contains some funky symlinks which get
-      # removed when source is copyed to the nix store.
-      pytest -k "not test_all_handlers[filesystem.romfs]" --no-cov
-    )
-  '';
-
-  python = python3;
-
-  postFixup = ''
-    wrapProgram $out/bin/unblob --prefix PATH : ${lib.makeBinPath runtimeDeps}
-  '';
-
-  UNBLOB_BUILD_RUST_EXTENSION = "1";
-
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
+    nativeBuildInputs = with rustPlatform; [
+      cargoSetupHook
+      rust.cargo
+      rust.rustc
+    ];
   };
+in
+self // {
+  withTests = self.overridePythonAttrs (_: {
+    checkPhase = ''
+      (
+        deps_PATH=${lib.makeBinPath runtimeDeps}
 
-  nativeBuildInputs = with rustPlatform; [
-    cargoSetupHook
-    rust.cargo
-    rust.rustc
-  ];
+        # $program_PATH is set to contain all the script-paths of all
+        # Python dependencies
+        export PATH=$deps_PATH:$program_PATH:$PATH
+
+        # romfs sample file contains some funky symlinks which get
+        # removed when source is copyed to the nix store.
+        pytest -k "not test_all_handlers[filesystem.romfs]" --no-cov
+      )
+    '';
+  });
 }
