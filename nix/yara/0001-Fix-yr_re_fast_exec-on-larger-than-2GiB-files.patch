@@ -1,0 +1,47 @@
+From bd49335d34ec39ac4398126758a80265ec38e299 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?L=C3=A1szl=C3=B3=20Vask=C3=B3?= <vlaci.4fdro@aleeas.com>
+Date: Tue, 14 Dec 2021 18:45:06 +0100
+Subject: [PATCH 1/2] Fix yr_re_fast_exec on larger than 2GiB files
+
+There was a silent integer overflow on the `max_bytes_matched`
+calculation as `input_forwards_size` can be way more than what can fit
+in a signed int. `yr_re_exec` doesn't suffer from the same issue as
+a match there is bounded to `YR_RE_SCAN_LIMIT` which already fits into
+an int just fine.
+---
+ libyara/re.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/libyara/re.c b/libyara/re.c
+index 1df0373a..6ddd1910 100644
+--- a/libyara/re.c
++++ b/libyara/re.c
+@@ -1699,12 +1699,14 @@ int yr_re_exec(
+ 
+   if (flags & RE_FLAGS_BACKWARDS)
+   {
++    // Signedness conversion is sound as long as YR_RE_SCAN_LIMIT <= INT_MAX
+     max_bytes_matched = (int) yr_min(input_backwards_size, YR_RE_SCAN_LIMIT);
+     input -= character_size;
+     input_incr = -input_incr;
+   }
+   else
+   {
++    // Signedness conversion is sound as long as YR_RE_SCAN_LIMIT <= INT_MAX
+     max_bytes_matched = (int) yr_min(input_forwards_size, YR_RE_SCAN_LIMIT);
+   }
+ 
+@@ -2084,8 +2086,8 @@ int yr_re_fast_exec(
+ 
+   int input_incr = flags & RE_FLAGS_BACKWARDS ? -1 : 1;
+   int max_bytes_matched = flags & RE_FLAGS_BACKWARDS
+-                              ? (int) input_backwards_size
+-                              : (int) input_forwards_size;
++                              ? (int) yr_min(input_backwards_size, INT_MAX)
++                              : (int) yr_min(input_forwards_size, INT_MAX);
+   int bytes_matched;
+ 
+   const uint8_t* ip = code;
+-- 
+2.34.0
+
