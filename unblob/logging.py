@@ -93,7 +93,7 @@ def configure_logger(verbosity_level: int, extract_root: Path):
         structlog.processors.UnicodeDecoder(),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
-        structlog.dev.ConsoleRenderer(),
+        structlog.dev.ConsoleRenderer(colors=sys.stdout.isatty()),
     ]
 
     structlog.configure(
