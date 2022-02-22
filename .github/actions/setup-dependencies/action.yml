@@ -18,6 +18,14 @@ runs:
         sudo chmod +x /usr/local/bin/7z
       shell: bash
 
+    - name: Install unsquashfs
+      run: |
+        git clone https://github.com/IoT-Inspector/sasquatch.git /tmp/sasquatch
+        cd /tmp/sasquatch/squashfs-tools
+        make
+        sudo make install
+      shell: bash
+
     - name: Setup Python
       uses: actions/setup-python@v2
       with:

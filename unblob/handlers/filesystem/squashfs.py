@@ -15,7 +15,8 @@ BIG_ENDIAN_MAGIC = 0x73_71_73_68
 class _SquashFSBase(StructHandler):
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["unsquashfs", "-f", "-d", outdir, inpath]
+        # -no-exit-code: don't set exit code (to nonzero) on non-fatal errors
+        return ["sasquatch", "-no-exit-code", "-f", "-d", outdir, inpath]
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
