@@ -7,7 +7,7 @@ runs:
   using: "composite"
   steps:
     - name: Install 3rd party from apt
-      run: sudo apt install unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg
+      run: sudo apt install gcc g++ unar zlib1g-dev liblzo2-dev liblz4-dev liblzma-dev libzstd-dev lzop lziprecover img2simg
       shell: bash
 
     - name: Install 7zip
@@ -16,6 +16,14 @@ runs:
         curl -s https://www.7-zip.org/a/7z2107-linux-x64.tar.xz --output - | tar Jxvf - 7zzs
         sudo mv 7zzs /usr/local/bin/7z
         sudo chmod +x /usr/local/bin/7z
+      shell: bash
+
+    - name: Install unsquashfs
+      run: |
+        git clone https://github.com/IoT-Inspector/sasquatch.git /tmp/sasquatch
+        cd /tmp/sasquatch/squashfs-tools
+        make
+        sudo make install
       shell: bash
 
     - name: Setup Python
