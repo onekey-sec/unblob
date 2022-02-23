@@ -34,13 +34,27 @@ class GZIPHandler(Handler):
 
     YARA_RULE = r"""
     strings:
-        // id1 & id2
-        // compression method (0x8 = DEFLATE)
-        // flags, 00011111 (0x1f) is the highest since the first 3 bits are reserved
-        // unix time
-        // eXtra FLags (2 or 4 per RFC1952 2.3.1)
-        // Operating System (0-13, or 255 per RFC1952 2.3.1)
-        $gzip_magic = { 1F 8B 08 (00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 0A | 0B | 0C | 0D | 0E | 0F | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 1A | 1B | 1C | 1D | 1E) [4] (02 | 04) (00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 0A | 0B | 0C | 0D | FF) }
+        $gzip_magic = {
+            // ID1
+            1F
+            // ID2
+            8B
+            // compression method (0x8 = DEFLATE)
+            08
+            // flags, 00011111 (0x1f) is the highest since the first 3 bits are reserved
+            (
+                00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 |
+                0A | 0B | 0C | 0D | 0E | 0F | 10 | 11 | 12 | 13 |
+                14 | 15 | 16 | 17 | 18 | 19 | 1A | 1B | 1C | 1D | 1E
+            )
+            // unix time (uint32) + eXtra FLags (2 or 4 per RFC1952 2.3.1)
+            // we accept any value because the RFC is not followed by some samples
+            [5]
+            // Operating System (0-13, or 255 per RFC1952 2.3.1)
+            (
+                00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 0A | 0B | 0C | 0D | FF
+            )
+        }
     condition:
         $gzip_magic
     """
