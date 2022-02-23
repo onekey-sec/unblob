@@ -1,7 +1,9 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...models import StructHandler, ValidChunk
 
@@ -66,6 +68,8 @@ class LZOHandler(StructHandler):
     """
     HEADER_STRUCT = "lzo_header"
 
+    EXTRACTOR = Command("lzop", "-d", "-f", "-N", "-p{outdir}", "{inpath}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -92,7 +96,3 @@ class LZOHandler(StructHandler):
         return ValidChunk(
             start_offset=start_offset, end_offset=start_offset + end_offset
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["lzop", "-d", "-f", "-N", f"-p{outdir}", inpath]

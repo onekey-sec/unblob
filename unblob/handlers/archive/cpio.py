@@ -1,8 +1,9 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
+from ...extractors import Command
 from ...file_utils import decode_int, round_up, snull
 from ...models import StructHandler, ValidChunk
 
@@ -17,6 +18,8 @@ class _CPIOHandlerBase(StructHandler):
     The format should be parsed the same, there are small differences how to calculate
     file and filename sizes padding and conversion from octal / hex.
     """
+
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     _PAD_ALIGN: int
     _FILE_PAD_ALIGN: int = 512
@@ -85,10 +88,6 @@ class _CPIOHandlerBase(StructHandler):
     @staticmethod
     def _calculate_name_size(header) -> int:
         raise NotImplementedError
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]
 
 
 class BinaryHandler(_CPIOHandlerBase):

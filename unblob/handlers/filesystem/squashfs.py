@@ -1,7 +1,9 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import get_endian, round_up
 from ...models import StructHandler, ValidChunk
@@ -12,12 +14,11 @@ PAD_SIZES = [4_096, 1_024]
 
 
 class _SquashFSBase(StructHandler):
-
     BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["sasquatch", "-no-exit-code", "-f", "-d", outdir, inpath]
+    EXTRACTOR = Command(
+        "sasquatch", "-no-exit-code", "-f", "-d", "{outdir}", "{inpath}"
+    )
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -233,6 +234,6 @@ class SquashFSv4BEHandler(SquashFSv4LEHandler):
             $squashfs_v4_magic_be
     """
 
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["sasquatch-v4be", "-be", "-no-exit-code", "-f", "-d", outdir, inpath]
+    EXTRACTOR = Command(
+        "sasquatch-v4be", "-be", "-no-exit-code", "-f", "-d", "{outdir}", "{inpath}"
+    )

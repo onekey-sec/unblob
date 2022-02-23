@@ -1,8 +1,10 @@
 import io
 import struct
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import Endian, InvalidInputFormat, read_until_past
 from ...models import StructHandler, ValidChunk
@@ -53,6 +55,7 @@ class RomFSFSHandler(StructHandler):
         }
     """
     HEADER_STRUCT = "romfs_header"
+    EXTRACTOR = Command("unromfs", "-f", "-e", "{outdir}", "{inpath}")
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -84,7 +87,3 @@ class RomFSFSHandler(StructHandler):
             start_offset=start_offset,
             end_offset=file.tell(),
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["unromfs", "-f", "-e", outdir, inpath]

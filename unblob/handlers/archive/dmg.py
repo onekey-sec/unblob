@@ -1,7 +1,9 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors.command import Command
 
 from ...file_utils import Endian
 from ...models import StructHandler, ValidChunk
@@ -59,6 +61,13 @@ class DMGHandler(StructHandler):
     """
     HEADER_STRUCT = "dmg_header_t"
 
+    # This directory is here for simulating hardlinks and other metadata
+    # but the files will be extracted anyway, and we only care about the content
+    # See more about this problem: https://newbedev.com/hfs-private-directory-data
+    EXTRACTOR = Command(
+        "7z", "x", "-xr!*HFS+ Private Data*", "-y", "{inpath}", "-o{outdir}"
+    )
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -82,10 +91,3 @@ class DMGHandler(StructHandler):
             start_offset=start_offset - header.XMLLength - header.DataForkLength,
             end_offset=start_offset + len(header),
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        # This directory is here for simulating hardlinks and other metadata
-        # but the files will be extracted anyway, and we only care about the content
-        # See more about this problem: https://newbedev.com/hfs-private-directory-data
-        return ["7z", "x", "-xr!*HFS+ Private Data*", "-y", inpath, f"-o{outdir}"]

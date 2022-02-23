@@ -3,16 +3,14 @@ File extraction related functions.
 """
 import io
 import os
-import shlex
-import subprocess
 from pathlib import Path
 from typing import List, Tuple
 
 from structlog import get_logger
 
 from .file_utils import iterate_file
-from .models import Chunk, Handler, TaskResult, UnknownChunk, ValidChunk
-from .report import ExtractCommandFailedReport, MaliciousSymlinkRemoved
+from .models import Chunk, TaskResult, UnknownChunk, ValidChunk
+from .report import MaliciousSymlinkRemoved
 
 logger = get_logger()
 
@@ -113,46 +111,6 @@ def get_extract_paths(extract_dir: Path, carved_path: Path) -> Tuple[Path, Path]
     inpath = carved_path.expanduser().resolve()
     outdir = content_dir.expanduser().resolve()
     return inpath, outdir
-
-
-def extract_with_command(
-    outdir: Path, cmd: List[str], handler: Handler, task_result: TaskResult
-):
-    # We only extract every blob once, it's a mistake to extract the same blog again
-    outdir.mkdir(parents=True)
-
-    command = shlex.join(cmd)
-    logger.debug("Running extract command", command=command)
-    try:
-        res = subprocess.run(
-            cmd,
-            encoding="utf-8",
-            errors="surrogateescape",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        if res.returncode != 0:
-            stdout = res.stdout.encode("utf-8", errors="surrogateescape")
-            stderr = res.stderr.encode("utf-8", errors="surrogateescape")
-
-            error_report = ExtractCommandFailedReport(
-                handler=handler.NAME,
-                command=command,
-                stdout=stdout,
-                stderr=stderr,
-                exit_code=res.returncode,
-            )
-
-            task_result.add_report(error_report)
-            logger.error("Extract command failed", **error_report.asdict())
-
-        fix_extracted_directory(outdir, task_result)
-    except FileNotFoundError:
-        logger.error(
-            "Can't run extract command. Is the extractor installed?",
-            command=handler._get_extract_command(),
-        )
-        raise
 
 
 def carve_unknown_chunks(

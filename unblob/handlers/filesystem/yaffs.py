@@ -1,13 +1,14 @@
 import io
 import math
 from enum import IntEnum
-from typing import List, Optional
+from typing import Optional
 
 import attr
 from structlog import get_logger
 
 from unblob.file_utils import Endian, InvalidInputFormat, get_endian, read_until_past
 
+from ...extractors import Command
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -93,6 +94,8 @@ class _YAFFSBase(StructHandler):
 
     HEADER_STRUCT = "yaffs_obj_hdr_t"
 
+    EXTRACTOR = Command("yaffshiv", "-b", "-d", "{outdir}", "-f", "{inpath}")
+
     BIG_ENDIAN_MAGIC = 0x00_00_00_01
 
     def get_files(
@@ -159,10 +162,6 @@ class _YAFFSBase(StructHandler):
         file.seek(end_offset, io.SEEK_SET)
         read_until_past(file, b"\xff")
         return ValidChunk(start_offset=start_offset, end_offset=file.tell())
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["yaffshiv", "-b", "-d", outdir, "-f", inpath]
 
 
 class YAFFS2Handler(_YAFFSBase):

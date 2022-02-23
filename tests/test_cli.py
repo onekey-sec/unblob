@@ -7,13 +7,12 @@ from click.testing import CliRunner
 from conftest import TestHandler
 
 import unblob.cli
+from unblob.extractors import Command
 from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM
 
 
 class ExistingCommandHandler(TestHandler):
-    @staticmethod
-    def make_extract_command(*args, **kwargs):
-        return ["sh", "something"]
+    EXTRACTOR = Command("sh", "something")
 
 
 def test_show_external_dependencies_exists(monkeypatch):

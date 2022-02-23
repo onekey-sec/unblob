@@ -103,6 +103,37 @@ class UnknownChunk(Chunk):
     """
 
 
+class TaskResult:
+    def __init__(self):
+        self._reports = []
+        self._new_tasks = []
+
+    def add_report(self, report: Report):
+        self._reports.append(report)
+
+    def add_new_task(self, task: Task):
+        self._new_tasks.append(task)
+
+    @property
+    def new_tasks(self):
+        return self._new_tasks
+
+    @property
+    def reports(self):
+        return self._reports
+
+
+class Extractor(abc.ABC):
+    @abc.abstractclassmethod
+    def get_dependencies(cls) -> List[str]:
+        """Returns the external command dependencies."""
+        return []
+
+    @abc.abstractmethod
+    def extract(self, inpath: Path, outdir: Path, task_result: TaskResult):
+        """Extract the carved out chunk"""
+
+
 class Handler(abc.ABC):
     """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
 
@@ -112,28 +143,20 @@ class Handler(abc.ABC):
     # (e.g. tar magic is in the middle of the header)
     YARA_MATCH_OFFSET: int = 0
 
+    EXTRACTOR: Optional[Extractor]
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns external command dependencies needed for this handler to work."""
+        if cls.EXTRACTOR:
+            return cls.EXTRACTOR.get_dependencies()
+        return []
+
     @abc.abstractmethod
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        """
-        Make the extract command with the external tool, which can be passed for subprocess.run.
-        Returns an empty list if the handler is not supposed to perform extractions.
-        """
-        return []
-
-    @classmethod
-    def _get_extract_command(cls) -> Optional[str]:
-        """Returns which (usually 3rd party CLI) command is used for extraction."""
-        command = cls.make_extract_command("", "")
-        if not command:
-            return None
-
-        return command[0]
 
 
 class StructHandler(Handler):
@@ -156,23 +179,3 @@ class StructHandler(Handler):
         header = self._struct_parser.parse(self.HEADER_STRUCT, file, endian)
         logger.debug("Header parsed", header=header, _verbosity=3)
         return header
-
-
-class TaskResult:
-    def __init__(self):
-        self._reports = []
-        self._new_tasks = []
-
-    def add_report(self, report: Report):
-        self._reports.append(report)
-
-    def add_new_task(self, task: Task):
-        self._new_tasks.append(task)
-
-    @property
-    def new_tasks(self):
-        return self._new_tasks
-
-    @property
-    def reports(self):
-        return self._reports

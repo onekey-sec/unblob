@@ -1,8 +1,10 @@
 import io
 import lzma
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import DEFAULT_BUFSIZE, Endian, InvalidInputFormat, convert_int64
 from ...models import Handler, ValidChunk
@@ -37,6 +39,8 @@ class LZMAHandler(Handler):
             ((uint32(@lzma_magic + 5) == 0xFFFFFFFF and uint32(@lzma_magic + 9) == 0xFFFFFFFF) or uint32(@lzma_magic + 9) < 0x00000040)
     """
 
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -67,7 +71,3 @@ class LZMAHandler(Handler):
             start_offset=start_offset,
             end_offset=file.tell() - len(decompressor.unused_data),
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

@@ -11,7 +11,7 @@ from structlog import get_logger
 from .extractor import (
     carve_unknown_chunks,
     carve_valid_chunk,
-    extract_with_command,
+    fix_extracted_directory,
     get_extract_paths,
     make_extract_dir,
 )
@@ -20,7 +20,7 @@ from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
-from .models import Task, TaskResult, UnknownChunk, ValidChunk
+from .models import Extractor, Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
 from .report import Report, UnknownError
 from .signals import terminate_gracefully
@@ -161,24 +161,38 @@ class Processor:
                     continue
 
                 inpath, outdir = get_extract_paths(extract_dir, carved_valid_path)
-                command = chunk.handler.make_extract_command(str(inpath), str(outdir))
 
-                if not command:
-                    logger.debug(
-                        "No need to extract, as this handler does not have extractor",
-                        handler=chunk.handler.NAME,
-                        _verbosity=2,
-                    )
-                    continue
+                extractor = chunk.handler.EXTRACTOR
+                if extractor is not None:
+                    self._extract_chunk(task, inpath, outdir, extractor, result)
 
-                extract_with_command(outdir, command, chunk.handler, result)
-                result.add_new_task(
-                    Task(
-                        root=self._extract_root,
-                        path=outdir,
-                        depth=task.depth + 1,
-                    )
-                )
+    def _extract_chunk(
+        self,
+        task: Task,
+        inpath: Path,
+        outdir: Path,
+        extractor: Extractor,
+        result: TaskResult,
+    ):
+        # We only extract every blob once, it's a mistake to extract the same blog again
+        outdir.mkdir(parents=True, exist_ok=False)
+        try:
+            extractor.extract(inpath, outdir, result)
+        except Exception as exc:
+            logger.exception("Unknown error happened while extracting chunk")
+            result.add_report(UnknownError(exception=exc))
+
+            return
+
+        fix_extracted_directory(outdir, result)
+
+        result.add_new_task(
+            Task(
+                root=self._extract_root,
+                path=outdir,
+                depth=task.depth + 1,
+            )
+        )
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:

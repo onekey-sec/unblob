@@ -14,9 +14,11 @@ library tries to read the next stream header.
 import gzip
 import io
 import zlib
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import InvalidInputFormat, read_until_past
 from ...models import Handler, ValidChunk
@@ -59,6 +61,8 @@ class GZIPHandler(Handler):
         $gzip_magic
     """
 
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -81,7 +85,3 @@ class GZIPHandler(Handler):
             start_offset=start_offset,
             end_offset=end_offset,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

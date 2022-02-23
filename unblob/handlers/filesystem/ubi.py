@@ -1,8 +1,10 @@
 import io
 import statistics
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import InvalidInputFormat, get_endian, iterate_patterns
 from ...iter_utils import get_intervals
@@ -81,6 +83,8 @@ class UBIFSHandler(StructHandler):
     """
     HEADER_STRUCT = "ubifs_sb_node_t"
 
+    EXTRACTOR = Command("ubireader_extract_files", "{inpath}", "-o", "{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -96,10 +100,6 @@ class UBIFSHandler(StructHandler):
             end_offset=start_offset + ubifs_length,
         )
 
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["ubireader_extract_files", inpath, "-o", outdir]
-
 
 class UBIHandler(Handler):
     NAME = "ubi"
@@ -112,6 +112,8 @@ class UBIHandler(Handler):
         condition:
             $ubi_magic
     """
+
+    EXTRACTOR = Command("ubireader_extract_images", "{inpath}", "-o", "{outdir}")
 
     def _guess_peb_size(self, file: io.BufferedIOBase) -> int:
         # Since we don't know the PEB size, we need to guess it. At the moment we just find the
@@ -151,7 +153,3 @@ class UBIHandler(Handler):
         end_offset = self._walk_ubi(file, peb_size)
 
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["ubireader_extract_images", inpath, "-o", outdir]

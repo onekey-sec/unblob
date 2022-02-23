@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import attr
 
@@ -36,6 +36,13 @@ class ExtractCommandFailedReport(Report):
     stdout: bytes
     stderr: bytes
     exit_code: int
+
+
+@attr.define(kw_only=True)
+class ExtractorDependencyNotFoundReport(Report):
+    """Describes an error when the dependency of an extractor doesn't exist"""
+
+    dependencies: List[str]
 
 
 @attr.define(kw_only=True)

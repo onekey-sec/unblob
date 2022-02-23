@@ -14,10 +14,11 @@ If you have the resources to add support for these archive formats,
 feel free to do so !
 """
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
+from ...extractors import Command
 from ...file_utils import Endian
 from ...models import StructHandler, ValidChunk
 
@@ -38,9 +39,7 @@ class _StuffItHandlerBase(StructHandler):
             end_offset=start_offset + header.archive_length,
         )
 
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["unar", inpath, "-o", outdir]
+    EXTRACTOR = Command("unar", "-o", "{outdir}", "{inpath}")
 
 
 class StuffItSITHandler(_StuffItHandlerBase):

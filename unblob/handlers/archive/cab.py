@@ -1,8 +1,9 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
+from ...extractors import Command
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -46,6 +47,8 @@ class CABHandler(StructHandler):
     """
     HEADER_STRUCT = "cab_header_t"
 
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -58,7 +61,3 @@ class CABHandler(StructHandler):
             start_offset=start_offset,
             end_offset=start_offset + header.cbCabinet,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

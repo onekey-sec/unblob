@@ -18,9 +18,11 @@ https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zForm
 https://py7zr.readthedocs.io/en/latest/archive_format.html
 """
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...models import StructHandler, ValidChunk
 
@@ -51,6 +53,7 @@ class SevenZipHandler(StructHandler):
         } sevenzip_header_t;
     """
     HEADER_STRUCT = "sevenzip_header_t"
+    EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -60,8 +63,3 @@ class SevenZipHandler(StructHandler):
         first_db_header = start_offset + len(header) + header.next_header_offset
         end_offset = first_db_header + header.next_header_size
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        # 7z needs the outdir to be directly after the -o, without any space.
-        return ["7z", "x", "-p", "-y", inpath, f"-o{outdir}"]

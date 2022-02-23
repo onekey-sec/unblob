@@ -1,7 +1,7 @@
 import pytest
 
 from unblob.file_utils import InvalidInputFormat
-from unblob.models import Chunk, Handler, UnknownChunk
+from unblob.models import Chunk, UnknownChunk
 
 
 class TestChunk:
@@ -47,28 +47,3 @@ class TestChunk:
     def test_validation(self, start_offset, end_offset):
         with pytest.raises(InvalidInputFormat):
             Chunk(start_offset, end_offset)
-
-
-class TestHandler:
-    class DummyHandler(Handler):
-        NAME = "name"
-        YARA_RULE = "yara_rule"
-
-        def calculate_chunk(self, *args, **kwargs):
-            pass
-
-        @staticmethod
-        def make_extract_command(*args, **kwargs):
-            return ["testcommand", "with", "some", "-test", "arguments"]
-
-    class HandlerWithoutExtraction(Handler):
-        pass
-
-    def test_get_extract_command(self):
-        assert self.DummyHandler._get_extract_command() == "testcommand"
-
-    def test_make_extract_command_default(self):
-        assert self.HandlerWithoutExtraction.make_extract_command("aaaa", "bbbb") == []
-
-    def test_get_extract_command_default(self):
-        assert self.HandlerWithoutExtraction._get_extract_command() is None

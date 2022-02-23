@@ -7,10 +7,12 @@ https://www.rarlab.com/technote.htm#rarsign
 """
 
 import io
-from typing import List, Optional
+from typing import Optional
 
 import rarfile
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...models import Handler, ValidChunk
 
@@ -28,6 +30,7 @@ class RarHandler(Handler):
         condition:
             $rar_magic
     """
+    EXTRACTOR = Command("unar", "-p", "", "{inpath}", "-o", "{outdir}")
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -46,7 +49,3 @@ class RarHandler(Handler):
             end_offset=rar_end_offset,
             is_encrypted=rar_file.needs_password(),
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["unar", "-p", "", inpath, "-o", outdir]

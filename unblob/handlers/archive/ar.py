@@ -1,10 +1,11 @@
 import io
 import os
-from typing import List, Optional
+from typing import Optional
 
 import arpy
 from structlog import get_logger
 
+from ...extractors import Command
 from ...models import Handler, ValidChunk
 
 logger = get_logger()
@@ -24,6 +25,8 @@ class ARHandler(Handler):
         condition:
             $ar_magic
     """
+
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -53,7 +56,3 @@ class ARHandler(Handler):
             start_offset=start_offset,
             end_offset=ar.file.tell(),
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

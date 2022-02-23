@@ -19,9 +19,8 @@ NOT_INSTALLED = "✗"
 def get_dependencies(handlers: List[Type[Handler]]) -> List[Dependency]:
     all_commands = set()
     for handler in handlers:
-        command = handler._get_extract_command()
-        if command is not None:
-            all_commands.add(command)
+        commands = handler.EXTRACTOR.get_dependencies()
+        all_commands.update(commands)
     rv = []
     for command in sorted(all_commands):
         is_installed = shutil.which(command) is not None

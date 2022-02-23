@@ -1,9 +1,10 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from dissect.cstruct import Instance
 from structlog import get_logger
 
+from unblob.extractors.command import Command
 from unblob.file_utils import InvalidInputFormat
 
 from ...models import StructHandler, ValidChunk
@@ -99,6 +100,8 @@ class FATHandler(StructHandler):
         } fat_unknown_t;
     """
 
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
     def valid_name(self, name: bytes) -> bool:
         try:
             name.decode("utf-8")
@@ -159,7 +162,3 @@ class FATHandler(StructHandler):
             start_offset=start_offset,
             end_offset=start_offset + size,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

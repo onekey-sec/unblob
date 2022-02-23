@@ -1,8 +1,9 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
+from unblob.extractors import Command
 from unblob.file_utils import Endian
 
 from ...models import StructHandler, ValidChunk
@@ -110,6 +111,8 @@ class ISO9660FSHandler(StructHandler):
 
     HEADER_STRUCT = "iso9660_pvd_t"
 
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -127,7 +130,3 @@ class ISO9660FSHandler(StructHandler):
             start_offset=real_start_offset,
             end_offset=real_start_offset + size,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", inpath, f"-o{outdir}"]
