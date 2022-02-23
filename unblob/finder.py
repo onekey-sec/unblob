@@ -60,6 +60,12 @@ def search_chunks_by_priority(  # noqa: C901
                 # Skip chunk calculation if this would start inside another one,
                 # similar to remove_inner_chunks, but before we even begin calculating.
                 if any(chunk.contains_offset(real_offset) for chunk in all_chunks):
+                    logger.debug(
+                        "Skip chunk calculation as pattern is inside an other chunk",
+                        handler=handler.NAME,
+                        offset=real_offset,
+                        _verbosity=2,
+                    )
                     continue
 
                 logger.debug(
