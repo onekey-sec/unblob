@@ -36,10 +36,7 @@ class LZOHandler(StructHandler):
             uint32 mtime;
             uint32 gmtdiff;
             uint8 filename_len;
-            /** The filename length is variable and set by filename_len,
-            so we don't know what's the exact filename char array length
-            at parsing time. Filename parsing is handled in calculate_chunk */
-            //char filename[];
+            char filename[filename_len];
         } lzo_header_no_filter_t;
 
         typedef struct lzo_header_filter
@@ -56,10 +53,7 @@ class LZOHandler(StructHandler):
             uint32 mtime;
             uint32 gmtdiff;
             uint8 filename_len;
-            /** The filename length is variable and set by filename_len,
-            so we don't know what's the exact filename char array length
-            at parsing time. Filename parsing is handled in calculate_chunk */
-            //char filename[];
+            char filename[filename_len];
         } lzo_header_filter_t;
 
         typedef struct lzo_size_crc {
@@ -77,22 +71,22 @@ class LZOHandler(StructHandler):
     ) -> Optional[ValidChunk]:
 
         header = self.cparser_be.lzo_header_no_filter_t(file)
+        # maxmimum compression level is 9
+        if header.level > 9:
+            logger.debug("Invalid LZO header level", header=header, _verbosity=3)
+            return
 
         if header.flags & F_H_FILTER:
             file.seek(start_offset)
             header = self.cparser_be.lzo_header_filter_t(file)
 
-        file.seek(header.filename_len, io.SEEK_CUR)
         logger.debug("LZO header parsed", header=header, _verbosity=3)
 
         size_crc_header = self.cparser_be.lzo_size_crc_t(file)
         logger.debug("CRC header parsed", header=size_crc_header, _verbosity=3)
 
         end_offset = (
-            len(header)
-            + header.filename_len
-            + len(size_crc_header)
-            + size_crc_header.compressed_size
+            len(header) + len(size_crc_header) + size_crc_header.compressed_size
         )
 
         return ValidChunk(
