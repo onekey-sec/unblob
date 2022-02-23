@@ -50,12 +50,17 @@ class _CPIOHandlerBase(StructHandler):
                     offset += self._pad_content(header, c_filesize, c_namesize)
                     break
 
+            file.seek(c_filesize, io.SEEK_CUR)
             # Rounding up the total of the header size, and the c_filesize, again. Because
             # some CPIO implementations don't align the first chunk, but do align the 2nd.
             # In theory, with a "normal" CPIO file, we should just be aligned on the
             # 4-byte boundary already, but if we are not for some reason, then we just
             # need to round up again.
-            offset += self._pad_content(header, c_filesize, c_namesize)
+
+            if c_filesize > 0:
+                offset += self._pad_content(header, c_filesize, c_namesize)
+            else:
+                offset = round_up(file.tell(), self._PAD_ALIGN)
 
         # Add padding that could exists between the cpio trailer and the end-of-file.
         # cpio aligns the file to 512 bytes
@@ -68,7 +73,7 @@ class _CPIOHandlerBase(StructHandler):
 
     @classmethod
     def _pad_content(cls, header, c_filesize: int, c_namesize: int) -> int:
-        """Pad header and content with 4 bytes."""
+        """Pad header and content with _PAD_ALIGN bytes."""
         padded_header = round_up(len(header), cls._PAD_ALIGN)
         padded_content = round_up(c_filesize + c_namesize, cls._PAD_ALIGN)
         return padded_header + padded_content
