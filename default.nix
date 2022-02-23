@@ -10,7 +10,7 @@
 , lzo
 , lzop
 , simg2img
-, squashfsTools
+, sasquatch
 , unar
 }:
 
@@ -22,7 +22,7 @@ let
     lziprecover
     lzop
     simg2img
-    squashfsTools
+    sasquatch
     unar
   ];
 
