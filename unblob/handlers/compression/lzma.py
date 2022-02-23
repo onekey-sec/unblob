@@ -15,7 +15,16 @@ class LZMAHandler(Handler):
 
     YARA_RULE = r"""
         strings:
-            $lzma_magic = { 5d 00 00 ( 00 | 01 | 04 | 08 | 10 | 20 | 40 | 80) ( 00 | 01 | 02 | 04 | 08 ) }
+            $lzma_magic = {
+                // pre-computed valid properties bytes
+                (
+                    51 | 5A | 5B | 5C | 5D | 5E | 63 | 64 | 65 | 66 | 6C | 6D | 6E | 75 | 76 | 7E |
+                    87 | 88 | 89 | 8A | 8B | 90 | 91 | 92 | 93 | 99 | 9A | 9B | A2 | A3 | AB | B4 |
+                    B5 | B6 | B7 | B8 | BD | BE | BF | C0 | C6 | C7 | C8 | CF | D0 | D8
+                )
+                // dictionary size
+                00 00 ( 00 | 01 | 04 | 08 | 10 | 20 | 40 | 80) ( 00 | 01 | 02 | 04 | 08 )
+            }
         condition:
             // LZMA file format: https://svn.python.org/projects/external/xz-5.0.3/doc/lzma-file-format.txt
             $lzma_magic and
