@@ -35,18 +35,18 @@ derivation installs all 3rd party dependencies:
        need to pass `--extra-experimental-features "nix-command
        flakes"` to `nix` command invocations:
 
-        ```console
-        $ cat > ~/.config/nix/nix.conf <<EOF
-        experimental-features = nix-command flakes
-        EOF
-        ```
+     ```console
+     $ cat > ~/.config/nix/nix.conf <<EOF
+     experimental-features = nix-command flakes
+     EOF
+     ```
 
     b. Optional: use pre-built binaries from GitHub using [cachix](https://app.cachix.org/cache/unblob):
 
-        ```console
-        nix-env -iA cachix -f https://cachix.org/api/v1/install
-        cachix use unblob
-        ```
+     ```console
+     nix-env -iA cachix -f https://cachix.org/api/v1/install
+     cachix use unblob
+     ```
 
 2. Install unblob
 
