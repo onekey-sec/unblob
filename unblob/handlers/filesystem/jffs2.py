@@ -62,10 +62,14 @@ class _JFFS2Base(StructHandler):
 
     def valid_header(self, header: Instance, node_start_offset: int, eof: int) -> bool:
         if header.nodetype not in JFFS2_NODETYPES:
+            if header.nodetype | JFFS2_NODE_ACCURATE not in JFFS2_NODETYPES:
+                logger.debug(
+                    "Invalid JFFS2 node type", node_type=header.nodetype, _verbosity=2
+                )
+                return False
             logger.debug(
-                "Invalid JFFS2 node type", node_type=header.nodetype, _verbosity=2
+                "Not accurate JFFS2 node type", node_type=header.nodetype, _verbosity=2
             )
-            return False
 
         if node_start_offset + header.totlen > eof:
             logger.debug(
