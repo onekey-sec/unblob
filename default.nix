@@ -5,6 +5,7 @@
 , rustPlatform
 , yara
 , _7zz
+, e2fsprogs
 , lz4
 , lziprecover
 , lzo
@@ -18,6 +19,7 @@ let
   # These dependencies are only added to PATH
   runtimeDeps = [
     _7z
+    e2fsprogs
     lz4
     lziprecover
     lzop

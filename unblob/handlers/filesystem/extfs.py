@@ -110,4 +110,4 @@ class EXTHandler(StructHandler):
 
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]
+        return ["debugfs", inpath, "-R", f"rdump / {outdir}"]
