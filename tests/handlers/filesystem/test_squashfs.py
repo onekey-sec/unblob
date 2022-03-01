@@ -5,9 +5,13 @@ import pytest
 from helpers import unhex
 
 from unblob.file_utils import round_up
-from unblob.handlers.filesystem.squashfs import SquashFSv3Handler, SquashFSv4Handler
+from unblob.handlers.filesystem.squashfs import (
+    SquashFSv3Handler,
+    SquashFSv4BEHandler,
+    SquashFSv4LEHandler,
+)
 
-SQUASHFS_V4_NO_PAD_CONTENTS = unhex(
+SQUASHFS_V4_LE_NO_PAD_CONTENTS = unhex(
     """\
 00000000  68 73 71 73 05 00 00 00  06 b6 03 62 00 00 02 00  |hsqs.......b....|
 00000010  01 00 00 00 01 00 11 00  c0 00 01 00 04 00 00 00  |................|
@@ -30,6 +34,32 @@ SQUASHFS_V4_NO_PAD_CONTENTS = unhex(
 00000120  00 00 00 00 00 00 04 80  00 00 00 00 26 01 00 00  |............&...|
 00000130  00 00 00 00                                       |....|
 00000134
+"""
+)
+
+SQUASHFS_V4_BE_NO_PAD_CONTENTS = unhex(
+    """\
+00000000  73 71 73 68 00 00 00 05  62 1f 9f 26 00 02 00 00  |................|
+00000010  00 00 00 01 00 01 00 11  00 c0 00 01 00 04 00 00  |................|
+00000020  00 00 00 00 00 00 00 80  00 00 00 00 00 00 01 33  |................|
+00000030  00 00 00 00 00 00 01 2b  ff ff ff ff ff ff ff ff  |................|
+00000040  00 00 00 00 00 00 00 79  00 00 00 00 00 00 00 b5  |................|
+00000050  00 00 00 00 00 00 00 ff  00 00 00 00 00 00 01 1d  |................|
+00000060  78 da 4b 2c 28 c8 49 35  e4 4a 04 51 46 10 ca 18  |................|
+00000070  42 99 70 01 00 8b ee 09  3b 00 3a 78 da 63 60 62  |................|
+00000080  5c c2 00 04 49 f2 b1 c1  40 8a 91 01 15 b0 33 a0  |................|
+00000090  ca 33 a1 c8 61 ca 33 23  c9 f3 61 91 67 41 92 17  |................|
+000000a0  05 cb 33 32 fe 45 92 67  85 ca 31 31 84 83 69 36  |................|
+000000b0  00 55 b7 0a 45 00 36 78  da 63 60 60 60 66 80 00  |................|
+000000c0  46 30 c9 c4 c0 99 58 50  90 93 6a a8 57 52 51 c2  |................|
+000000d0  a0 00 14 85 89 18 81 45  1c 80 7c 98 88 31 58 24  |................|
+000000e0  01 68 02 4c c4 04 24 02  00 0f 1e 10 41 80 10 00  |................|
+000000f0  00 00 00 00 00 00 60 00  00 00 19 00 00 00 00 00  |................|
+00000100  00 00 00 00 00 00 ed 00  14 78 da 63 60 40 01 0a  |................|
+00000110  50 da 01 4a 27 40 e9 06  00 0b 68 01 41 00 00 00  |................|
+00000120  00 00 00 01 07 80 04 00  00 03 e8 00 00 00 00 00  |................|
+00000130  00 01 25                                          |...|
+00000133
 """
 )
 
@@ -95,7 +125,8 @@ def pad_contents(contents: bytes, alignment: int):
 @pytest.mark.parametrize(
     "contents, handler_class",
     (
-        pytest.param(SQUASHFS_V4_NO_PAD_CONTENTS, SquashFSv4Handler, id="v4"),
+        pytest.param(SQUASHFS_V4_LE_NO_PAD_CONTENTS, SquashFSv4LEHandler, id="v4_le"),
+        pytest.param(SQUASHFS_V4_BE_NO_PAD_CONTENTS, SquashFSv4BEHandler, id="v4_be"),
         pytest.param(SQUASHFS_V3_LE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_le"),
         pytest.param(SQUASHFS_V3_BE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_be"),
     ),
@@ -159,7 +190,8 @@ def test_squashfs_chunk_is_detected(
 @pytest.mark.parametrize(
     "contents, handler_class",
     (
-        pytest.param(SQUASHFS_V4_NO_PAD_CONTENTS, SquashFSv4Handler, id="v4"),
+        pytest.param(SQUASHFS_V4_LE_NO_PAD_CONTENTS, SquashFSv4LEHandler, id="v4_le"),
+        pytest.param(SQUASHFS_V4_BE_NO_PAD_CONTENTS, SquashFSv4BEHandler, id="v4_be"),
         pytest.param(SQUASHFS_V3_LE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_le"),
         pytest.param(SQUASHFS_V3_BE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_be"),
     ),
@@ -172,7 +204,8 @@ def test_squashfs_incomplete_header(contents: bytes, handler_class):
 @pytest.mark.parametrize(
     "contents, handler_class",
     (
-        pytest.param(SQUASHFS_V4_NO_PAD_CONTENTS, SquashFSv4Handler, id="v4"),
+        pytest.param(SQUASHFS_V4_LE_NO_PAD_CONTENTS, SquashFSv4LEHandler, id="v4_le"),
+        pytest.param(SQUASHFS_V4_BE_NO_PAD_CONTENTS, SquashFSv4BEHandler, id="v4_be"),
         pytest.param(SQUASHFS_V3_LE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_le"),
         pytest.param(SQUASHFS_V3_BE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_be"),
     ),

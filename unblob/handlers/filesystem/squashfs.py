@@ -9,20 +9,21 @@ from ...models import StructHandler, ValidChunk
 logger = get_logger()
 
 PAD_SIZES = [4_096, 1_024]
-BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
 
 class _SquashFSBase(StructHandler):
+
+    BIG_ENDIAN_MAGIC = 0x73_71_73_68
+
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        # -no-exit-code: don't set exit code (to nonzero) on non-fatal errors
         return ["sasquatch", "-no-exit-code", "-f", "-d", outdir, inpath]
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
         file.seek(start_offset)
-        endian = get_endian(file, BIG_ENDIAN_MAGIC)
+        endian = get_endian(file, self.BIG_ENDIAN_MAGIC)
         header = self.parse_header(file, endian)
 
         end_of_data_offset = start_offset + header.bytes_used
@@ -53,16 +54,17 @@ class SquashFSv3Handler(_SquashFSBase):
             00000000  73 71 73 68 00 00 00 03  00 00 00 00 00 00 00 00  |sqsh............|
             00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 03 00 00  |................|
             */
-            $squashfs_v3_magic_be = { 73 71 73 68 [24] 00 03}
+            $squashfs_v3_magic_be = { 73 71 73 68 [24] 00 03 }
 
             /**
             00000000  68 73 71 73 03 00 00 00  00 00 00 00 00 00 00 00  |hsqs............|
             00000010  00 00 00 00 00 00 00 00  00 00 00 00 03 00 00 00  |................|
             */
-            $squashfs_v3_magic_le = { 68 73 71 73 [24] 03 00}
+            $squashfs_v3_magic_le = { 68 73 71 73 [24] 03 00 }
 
         condition:
-            $squashfs_v3_magic_le or $squashfs_v3_magic_be
+            $squashfs_v3_magic_le or
+            $squashfs_v3_magic_be
     """
 
     C_DEFINITIONS = r"""
@@ -99,8 +101,83 @@ class SquashFSv3Handler(_SquashFSBase):
     HEADER_STRUCT = "squashfs3_super_block_t"
 
 
-class SquashFSv4Handler(_SquashFSBase):
-    NAME = "squashfs_v4"
+class SquashFSv3DDWRTHandler(SquashFSv3Handler):
+    NAME = "squashfs_v3_ddwrt"
+
+    BIG_ENDIAN_MAGIC = 0x74_71_73_68
+
+    YARA_RULE = r"""
+        strings:
+            /**
+            00000000  68 73 71 74 21 02 00 00  00 00 00 00 00 00 00 00  |hsqt!...........|
+            00000010  00 00 00 00 00 00 00 00  50 02 00 00 03 00 00 00  |........P.......|
+            */
+            $squashfs_v3_magic_ddwrt_le = { 68 73 71 74 [24] 03 00 }
+
+            /**
+            00000000  74 71 73 68 21 02 00 00  00 00 00 00 00 00 00 00  |tqsh!...........|
+            00000010  00 00 00 00 00 00 00 00  50 02 00 03 00 00 00 00  |........P.......|
+            */
+            $squashfs_v3_magic_ddwrt_be = { 68 73 71 74 [24] 00 03 }
+
+        condition:
+            $squashfs_v3_magic_ddwrt_le or
+            $squashfs_v3_magic_ddwrt_be
+    """
+
+
+class SquashFSv3BroadcomHandler(SquashFSv3Handler):
+    NAME = "squashfs_v3_broadcom"
+
+    BIG_ENDIAN_MAGIC = 0x71_73_68_73
+
+    YARA_RULE = r"""
+        strings:
+            /**
+            00000000  73 68 73 71 0f 05 00 00  c8 a9 00 01 00 00 00 bc  |shsq............|
+            00000010  1f 2d 00 a2 d0 2b 00 bf  79 2e 00 65 03 00 00 00  |.-...+..y..e....|
+            */
+            $squashfs_v3_magic_broadcom_le = { 73 68 73 71 [24] 03 00}
+
+            /**
+            00000000  71 73 68 73 0f 05 00 00  c8 a9 00 01 00 00 00 bc  |qshs............|
+            00000010  1f 2d 00 a2 d0 2b 00 bf  79 2e 00 65 00 03 00 00  |.-...+..y..e....|
+            */
+            $squashfs_v3_magic_broadcom_be = { 71 73 68 73 [24] 00 03 }
+
+        condition:
+            $squashfs_v3_magic_broadcom_le or
+            $squashfs_v3_magic_broadcom_be
+    """
+
+
+class SquashFSv3NSHandler(SquashFSv3Handler):
+    NAME = "squashfs_v3_nonstandard"
+
+    BIG_ENDIAN_MAGIC = 0x73_71_6C_7A
+
+    YARA_RULE = r"""
+        strings:
+            /**
+            00000000  7a 6c 71 73 00 00 04 df  57 00 17 95 46 00 19 ed  |zlqs....W...F...|
+            00000010  20 08 04 8e 02 40 01 06  c9 02 16 00 00 03 00 01  | ....@..........|
+            */
+            $squashfs_v3_magic_nonstandard_le = { 7A 6c 71 73 [24] 03 00 }
+
+            /**
+            00000000  73 71 6c 7a 00 00 04 df  57 00 17 95 46 00 19 ed  |sqlz....W...F...|
+            00000010  20 08 04 8e 02 40 01 06  c9 02 16 00 00 03 00 01  | ....@..........|
+            */
+            $squashfs_v3_magic_nonstandard_be = { 73 71 6c 7A [24] 00 03 }
+
+        condition:
+            $squashfs_v3_magic_nonstandard_le or
+            $squashfs_v3_magic_nonstandard_be
+    """
+
+
+class SquashFSv4LEHandler(_SquashFSBase):
+    NAME = "squashfs_v4_le"
 
     YARA_RULE = r"""
         strings:
@@ -139,3 +216,23 @@ class SquashFSv4Handler(_SquashFSBase):
         } squashfs4_super_block_t;
     """
     HEADER_STRUCT = "squashfs4_super_block_t"
+
+
+class SquashFSv4BEHandler(SquashFSv4LEHandler):
+    NAME = "squashfs_v4_be"
+
+    YARA_RULE = r"""
+        strings:
+            /**
+            00000000  73 71 73 68 03 00 00 00  00 c1 9c 61 00 00 02 00  |sqsh.......a....|
+            00000010  01 00 00 00 01 00 11 00  c0 00 01 00 04 00 00 00  |................|
+            */
+            $squashfs_v4_magic_be = { 73 71 73 68 [24] 00 04 }
+
+        condition:
+            $squashfs_v4_magic_be
+    """
+
+    @staticmethod
+    def make_extract_command(inpath: str, outdir: str) -> List[str]:
+        return ["sasquatch-v4be", "-be", "-no-exit-code", "-f", "-d", outdir, inpath]
