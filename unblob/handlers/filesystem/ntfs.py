@@ -78,4 +78,4 @@ class NTFSHandler(StructHandler):
 
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]
+        return ["7z", "x", "-x![SYSTEM]", "-y", inpath, f"-o{outdir}"]
