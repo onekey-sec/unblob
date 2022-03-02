@@ -115,4 +115,4 @@ class TarHandler(StructHandler):
 
     @staticmethod
     def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", inpath, f"-o{outdir}"]
+        return ["7z", "x", "-xr!PaxHeaders", inpath, f"-o{outdir}"]
