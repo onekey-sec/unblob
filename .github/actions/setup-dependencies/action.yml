@@ -7,15 +7,7 @@ runs:
   using: "composite"
   steps:
     - name: Install 3rd party from apt
-      run: sudo apt install e2fsprogs unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg
-      shell: bash
-
-    - name: Install 7zip
-      run: |
-        sudo apt remove -y p7zip
-        curl -s https://www.7-zip.org/a/7z2107-linux-x64.tar.xz --output - | tar Jxvf - 7zzs
-        sudo mv 7zzs /usr/local/bin/7z
-        sudo chmod +x /usr/local/bin/7z
+      run: sudo apt install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg
       shell: bash
 
     - name: Install sasquatch

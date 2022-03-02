@@ -1,37 +1,31 @@
 { lib
-, runCommand
 , poetry2nix
 , python3
 , rustPlatform
 , yara
-, _7zz
 , e2fsprogs
 , lz4
 , lziprecover
 , lzo
 , lzop
-, simg2img
+, p7zip
 , sasquatch
+, simg2img
 , unar
 }:
 
 let
   # These dependencies are only added to PATH
   runtimeDeps = [
-    _7z
     e2fsprogs
     lz4
     lziprecover
     lzop
-    simg2img
+    p7zip
     sasquatch
+    simg2img
     unar
   ];
-
-  _7z = runCommand "7z" { } ''
-    mkdir -p $out/bin
-    ln -snf ${_7zz}/bin/7zz $out/bin/7z
-  '';
 
   self = poetry2nix.mkPoetryApplication {
     projectDir = ./.;
