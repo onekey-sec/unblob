@@ -18,6 +18,13 @@ runs:
         sudo chmod +x /usr/local/bin/7z
       shell: bash
 
+    - name: Install sasquatch
+      run: |
+        curl -L -o sasquatch_1.0_amd64.deb https://github.com/IoT-Inspector/sasquatch/releases/download/sasquatch-v1.0/sasquatch_1.0_amd64.deb
+        sudo dpkg -i sasquatch_1.0_amd64.deb
+        rm -f sasquatch_1.0_amd64.deb
+      shell: bash
+
     - name: Setup Python
       uses: actions/setup-python@v2
       with:

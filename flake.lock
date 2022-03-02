@@ -68,7 +68,24 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "poetry2nix": "poetry2nix"
+        "poetry2nix": "poetry2nix",
+        "sasquatch": "sasquatch"
+      }
+    },
+    "sasquatch": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1645627565,
+        "narHash": "sha256-yXB6ST3x2DXZ+kMl/tU5rGZpASzuv0iKUJEqY3c2x78=",
+        "owner": "IoT-Inspector",
+        "repo": "sasquatch",
+        "rev": "b5939b3ef0db8dbd9e4203ff9112baf77cdd0449",
+        "type": "github"
+      },
+      "original": {
+        "owner": "IoT-Inspector",
+        "repo": "sasquatch",
+        "type": "github"
       }
     }
   },

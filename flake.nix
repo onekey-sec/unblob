@@ -4,7 +4,10 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.poetry2nix.url = "github:nix-community/poetry2nix";
 
-  outputs = { self, nixpkgs, poetry2nix }:
+  inputs.sasquatch.url = "github:IoT-Inspector/sasquatch";
+  inputs.sasquatch.flake = false;
+
+  outputs = { self, nixpkgs, poetry2nix, sasquatch }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -16,7 +19,7 @@
     {
       overlay = nixpkgs.lib.composeManyExtensions [
         poetry2nix.overlay
-        (import ./overlay.nix)
+        (import ./overlay.nix { inherit sasquatch; })
       ];
 
       packages.${system} = {
