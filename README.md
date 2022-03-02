@@ -86,7 +86,7 @@ These are the **external** extractor version recommendations. These are used in 
 
 | Extractor                                 |   Version   |
 |-------------------------------------------| ----------- |
-| 7z                                        | 21.07       |
+| 7z (p7zip-full)                           | 16.02       |
 | lz4                                       | 1.9.3       |
 | lziprecover                               | 1.22        |
 | lzop                                      | 1.04        |
