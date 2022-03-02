@@ -69,6 +69,9 @@ class XZHandler(Handler):
             stored_backward_size = convert_int32(backward_bytes, Endian.LITTLE)
             real_backward_size = (stored_backward_size + 1) * 4
 
+            if real_backward_size > file.tell():
+                continue
+
             file.seek(-CRC32_LEN - BACKWARD_SIZE_LEN, io.SEEK_CUR)
             # skip backwards of backward size to the start of index
             file.seek(-real_backward_size, io.SEEK_CUR)
