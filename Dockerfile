@@ -8,6 +8,7 @@ WORKDIR /data/output
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     curl \
+    e2fsprogs \
     gcc \
     git \
     img2simg \
