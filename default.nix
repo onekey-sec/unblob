@@ -23,6 +23,7 @@ let
     lzop
     p7zip
     sasquatch
+    sasquatch.bigEndian
     simg2img
     unar
   ];

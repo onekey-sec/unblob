@@ -24,6 +24,7 @@
 
       packages.${system} = {
         inherit unblob;
+        inherit (pkgs) sasquatch;
       };
 
       defaultPackage.${system} = unblob;

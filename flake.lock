@@ -75,11 +75,11 @@
     "sasquatch": {
       "flake": false,
       "locked": {
-        "lastModified": 1645627565,
-        "narHash": "sha256-yXB6ST3x2DXZ+kMl/tU5rGZpASzuv0iKUJEqY3c2x78=",
+        "lastModified": 1645916782,
+        "narHash": "sha256-yt0Rrw0WMfwsIjnnIEbo7+BlH/4qVpTo3TcENIjE2bk=",
         "owner": "IoT-Inspector",
         "repo": "sasquatch",
-        "rev": "b5939b3ef0db8dbd9e4203ff9112baf77cdd0449",
+        "rev": "5806c80793c045eb1de06f26896071bac20be5b9",
         "type": "github"
       },
       "original": {
