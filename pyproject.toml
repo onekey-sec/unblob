@@ -22,7 +22,7 @@ rarfile = "^4.0"
 ubi-reader = { git = "https://github.com/IoT-Inspector/ubi_reader.git", rev = "3b30234ffe117eb3d4f2a7a4e455c3fb4bca3668" }
 python-lzo = "^1.12"
 cstruct = "2.1"
-jefferson = { git = "https://github.com/IoT-Inspector/jefferson.git", rev = "41f654eac078cfec240428be457c054613a80851" }
+jefferson = { git = "https://github.com/IoT-Inspector/jefferson.git", rev = "729d0b691abf9bc2bd9ad13830d941ec33a6ed44" }
 yaffshiv = { git = "https://github.com/IoT-Inspector/yaffshiv.git", rev = "24e6e453a36a02144ae2d159eb3229f9c6312828" }
 plotext = "^4.1.5"
 
