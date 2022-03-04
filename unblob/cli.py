@@ -45,12 +45,19 @@ def add_handlers_from_plugins(
     handlers: Handlers,
     plugin_path: Optional[Path],
 ):
-    if not plugin_path:
+    if plugin_path:
+        plugin_manager.import_path(plugin_path)
+
+    plugin_manager.load_setuptools_entrypoints()
+
+    plugins = [name for name, _plugin in plugin_manager.list_name_plugin()]
+    if not plugins:
         return handlers
 
-    plugin_manager.import_path(plugin_path)
+    logger.info("Loaded plugins", plugins=plugins)
 
     extra_handlers = list(itertools.chain(*plugin_manager.hook.unblob_register_handlers()))  # type: ignore
+
     logger.debug("Loaded handlers from plugins", handlers=extra_handlers)
 
     return handlers.with_prepended(extra_handlers)
