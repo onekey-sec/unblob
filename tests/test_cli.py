@@ -8,6 +8,7 @@ from conftest import TestHandler
 
 import unblob.cli
 from unblob.extractors import Command
+from unblob.handlers import BUILTIN_HANDLERS, Handlers
 from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM
 
 
@@ -15,12 +16,12 @@ class ExistingCommandHandler(TestHandler):
     EXTRACTOR = Command("sh", "something")
 
 
-def test_show_external_dependencies_exists(monkeypatch):
-    monkeypatch.setattr(
-        unblob.cli, "ALL_HANDLERS", [ExistingCommandHandler(), TestHandler()]
-    )
+def test_show_external_dependencies_exists():
+    handlers = Handlers([(ExistingCommandHandler, TestHandler)])
     runner = CliRunner()
-    result = runner.invoke(unblob.cli.cli, ["--show-external-dependencies"])
+    result = runner.invoke(
+        unblob.cli.cli, ["--show-external-dependencies"], handlers=handlers
+    )
     assert result.exit_code == 1
     assert (
         result.output
@@ -31,12 +32,12 @@ def test_show_external_dependencies_exists(monkeypatch):
     )
 
 
-def test_show_external_dependencies_not_exists(monkeypatch):
-    monkeypatch.setattr(
-        unblob.cli, "ALL_HANDLERS", [ExistingCommandHandler(), ExistingCommandHandler()]
-    )
+def test_show_external_dependencies_not_exists():
+    handlers = Handlers([(ExistingCommandHandler, ExistingCommandHandler)])
     runner = CliRunner()
-    result = runner.invoke(unblob.cli.cli, ["--show-external-dependencies"])
+    result = runner.invoke(
+        unblob.cli.cli, ["--show-external-dependencies"], handlers=handlers
+    )
     assert result.exit_code == 0
     assert (
         result.output
@@ -190,6 +191,7 @@ def test_archive_success(
         entropy_depth=expected_entropy_depth,
         entropy_plot=bool(expected_verbosity >= 3),
         process_num=expected_process_num,
+        handlers=BUILTIN_HANDLERS,
     )
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
 
@@ -228,6 +230,7 @@ def test_archive_multiple_files(tmp_path: Path):
             entropy_depth=1,
             entropy_plot=False,
             process_num=DEFAULT_PROCESS_NUM,
+            handlers=mock.ANY,
         ),
         mock.call(
             in_path_2,
@@ -236,5 +239,6 @@ def test_archive_multiple_files(tmp_path: Path):
             entropy_depth=1,
             entropy_plot=False,
             process_num=DEFAULT_PROCESS_NUM,
+            handlers=mock.ANY,
         ),
     ]

@@ -10,7 +10,7 @@ from unblob.report import Report
 
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
-from .handlers import ALL_HANDLERS
+from .handlers import BUILTIN_HANDLERS, Handlers
 from .logging import configure_logger, noformat
 from .processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, process_file
 
@@ -23,7 +23,8 @@ def show_external_dependencies(
     if not value or ctx.resilient_parsing:
         return
 
-    dependencies = get_dependencies(ALL_HANDLERS)
+    handlers = ctx.params["handlers"]
+    dependencies = get_dependencies(handlers)
     text = pretty_format_dependencies(dependencies)
     exit_code = 0 if all(dep.is_installed for dep in dependencies) else 1
 
@@ -32,7 +33,7 @@ def show_external_dependencies(
 
 
 def get_help_text():
-    dependencies = get_dependencies(ALL_HANDLERS)
+    dependencies = get_dependencies(BUILTIN_HANDLERS)
     lines = [
         "A tool for getting information out of any kind of binary blob.",
         "",
@@ -42,6 +43,18 @@ def get_help_text():
         "NOTE: Some older extractors might not be compatible.",
     ]
     return "\n".join(lines)
+
+
+class UnblobContext(click.Context):
+    def __init__(
+        self,
+        *args,
+        handlers: Handlers = None,
+        **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        handlers = handlers or BUILTIN_HANDLERS
+        self.params["handlers"] = handlers
 
 
 @click.command(help=get_help_text())
@@ -103,6 +116,7 @@ def cli(
     entropy_depth: int,
     process_num: int,
     verbose: int,
+    handlers: Handlers,
 ) -> List[Report]:
     configure_logger(verbose, extract_root)
     logger.info("Start processing files", count=noformat(len(files)))
@@ -115,9 +129,13 @@ def cli(
             entropy_depth=entropy_depth,
             entropy_plot=bool(verbose >= 3),
             process_num=process_num,
+            handlers=handlers,
         )
         all_reports.extend(report)
     return all_reports
+
+
+cli.context_class = UnblobContext
 
 
 def main():

@@ -8,6 +8,8 @@ from typing import List
 import plotext as plt
 from structlog import get_logger
 
+from unblob.handlers import BUILTIN_HANDLERS, Handlers
+
 from .extractor import (
     carve_unknown_chunks,
     carve_valid_chunk,
@@ -39,6 +41,7 @@ def process_file(
     entropy_plot: bool = False,
     max_depth: int = DEFAULT_DEPTH,
     process_num: int = DEFAULT_PROCESS_NUM,
+    handlers: Handlers = BUILTIN_HANDLERS,
 ) -> List[Report]:
 
     root = path if path.is_dir() else path.parent
@@ -48,7 +51,9 @@ def process_file(
         depth=0,
     )
 
-    processor = Processor(extract_root, max_depth, entropy_depth, entropy_plot)
+    processor = Processor(
+        extract_root, max_depth, entropy_depth, entropy_plot, handlers
+    )
     all_reports = []
 
     def process_result(pool, result):
@@ -70,12 +75,18 @@ def process_file(
 
 class Processor:
     def __init__(
-        self, extract_root: Path, max_depth: int, entropy_depth: int, entropy_plot: bool
+        self,
+        extract_root: Path,
+        max_depth: int,
+        entropy_depth: int,
+        entropy_plot: bool,
+        handlers: Handlers,
     ):
         self._extract_root = extract_root
         self._max_depth = max_depth
         self._entropy_depth = entropy_depth
         self._entropy_plot = entropy_plot
+        self._handlers = handlers
 
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult()
@@ -130,7 +141,9 @@ class Processor:
     def _process_regular_file(self, task: Task, size: int, result: TaskResult):
         logger.debug("Processing file", path=task.path, size=size)
         with task.path.open("rb") as file:
-            all_chunks = search_chunks_by_priority(task.path, file, size, result)
+            all_chunks = search_chunks_by_priority(
+                task.path, file, size, self._handlers, result
+            )
             outer_chunks = remove_inner_chunks(all_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
             if not outer_chunks and not unknown_chunks:

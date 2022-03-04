@@ -1,9 +1,9 @@
 import shutil
-from typing import List, Type
+from typing import List
 
 import attr
 
-from .models import Handler
+from .models import Handlers
 
 
 @attr.define
@@ -16,10 +16,10 @@ INSTALLED = "✓"
 NOT_INSTALLED = "✗"
 
 
-def get_dependencies(handlers: List[Type[Handler]]) -> List[Dependency]:
+def get_dependencies(handlers: Handlers) -> List[Dependency]:
     all_commands = set()
-    for handler in handlers:
-        commands = handler.EXTRACTOR.get_dependencies()
+    for handler in handlers.flat:
+        commands = handler.get_dependencies()
         all_commands.update(commands)
     rv = []
     for command in sorted(all_commands):

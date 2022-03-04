@@ -1,7 +1,7 @@
 import abc
 import io
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple, Type
 
 import attr
 import yara
@@ -179,3 +179,20 @@ class StructHandler(Handler):
         header = self._struct_parser.parse(self.HEADER_STRUCT, file, endian)
         logger.debug("Header parsed", header=header, _verbosity=3)
         return header
+
+
+class Handlers:
+    def __init__(self, by_priority: List[Tuple[Type[Handler], ...]]):
+        self._by_priority = by_priority
+        self._flat = [h for handlers in by_priority for h in handlers]
+
+    def with_prepended(self, by_priority):
+        return Handlers([tuple(by_priority)] + self._by_priority)
+
+    @property
+    def by_priority(self):
+        return self._by_priority
+
+    @property
+    def flat(self):
+        return self._flat
