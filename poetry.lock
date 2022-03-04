@@ -303,7 +303,7 @@ testing = ["fields", "hunter", "process-tests", "six", "pytest-xdist", "virtuale
 
 [[package]]
 name = "python-lzo"
-version = "1.12"
+version = "1.14"
 description = "Python bindings for the LZO data compression library"
 category = "main"
 optional = false
@@ -450,7 +450,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "0320d59eb17ebd19b9a07c1bbd2b3f49aac7d2648f9735613c61fa2baf6f0390"
+content-hash = "b07c9c54e01473ea5745f78395bea7280fe60572a9ceb41d010bafc8c09c829c"
 
 [metadata.files]
 arpy = [
@@ -597,7 +597,7 @@ pytest-cov = [
     {file = "pytest_cov-3.0.0-py3-none-any.whl", hash = "sha256:578d5d15ac4a25e5f961c938b85a05b09fdaae9deef3bb6de9a6e766622ca7a6"},
 ]
 python-lzo = [
-    {file = "python-lzo-1.12.tar.gz", hash = "sha256:97a8e46825e8f1abd84c2a3372bc09adae9745a5be5d3af2692cd850dac35345"},
+    {file = "python-lzo-1.14.tar.gz", hash = "sha256:83cbd8ecaae284735250e31d6c0ecc18ac08763fab2a8c910dc5a6910db6250c"},
 ]
 pyyaml = [
     {file = "PyYAML-6.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d4db7c7aef085872ef65a8fd7d6d09a14ae91f691dec3e87ee5ee0539d516f53"},
