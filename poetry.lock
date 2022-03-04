@@ -210,7 +210,7 @@ image = ["pillow (>=8.4)"]
 name = "pluggy"
 version = "1.0.0"
 description = "plugin and hook calling mechanisms for python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -450,7 +450,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b07c9c54e01473ea5745f78395bea7280fe60572a9ceb41d010bafc8c09c829c"
+content-hash = "8763d863000d95ebd019c62f002ed8f787c6c1f6a8e5f51f574ac82bd858b5c5"
 
 [metadata.files]
 arpy = [
