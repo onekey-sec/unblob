@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 from pytest_cov.embed import cleanup_on_sigterm
 
-from unblob.handlers import Handler
 from unblob.logging import configure_logger
+from unblob.models import Handler
 
 
 @pytest.fixture(scope="session", autouse=True)
