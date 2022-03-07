@@ -1,10 +1,11 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
 from unblob.file_utils import InvalidInputFormat
 
+from ...extractors import Command
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -70,6 +71,8 @@ class EXTHandler(StructHandler):
 
     YARA_MATCH_OFFSET = -MAGIC_OFFSET
 
+    EXTRACTOR = Command("debugfs", "{inpath}", "-R", "rdump / {outdir}")
+
     def valid_header(self, header) -> bool:
 
         if header.s_state not in [0x1, 0x2]:
@@ -107,7 +110,3 @@ class EXTHandler(StructHandler):
             start_offset=start_offset,
             end_offset=end_offset,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["debugfs", inpath, "-R", f"rdump / {outdir}"]

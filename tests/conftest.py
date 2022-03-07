@@ -3,8 +3,9 @@ from pathlib import Path
 import pytest
 from pytest_cov.embed import cleanup_on_sigterm
 
-from unblob.handlers import Handler
+from unblob.extractors import Command
 from unblob.logging import configure_logger
+from unblob.models import Handler
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -23,10 +24,7 @@ class TestHandler(Handler):
         condition:
             $handler1_magic
     """
+    EXTRACTOR = Command("testcommand", "for", "test", "handler")
 
     def calculate_chunk(self, *args, **kwargs):
         pass
-
-    @staticmethod
-    def make_extract_command(*args, **kwargs):
-        return ["testcommand", "for", "test", "handler"]

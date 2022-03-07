@@ -1,8 +1,9 @@
 import io
-from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int64
 from ...models import Handler, ValidChunk
@@ -46,7 +47,6 @@ class LZipHandler(Handler):
 
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
 
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        outfile = Path(inpath).stem
-        return ["lziprecover", "-k", "-D0", "-i", inpath, "-o", f"{outdir}/{outfile}"]
+    EXTRACTOR = Command(
+        "lziprecover", "-k", "-D0", "-i", "{inpath}", "-o", "{outdir}/{infile}"
+    )

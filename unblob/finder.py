@@ -12,7 +12,7 @@ import yara
 from structlog import get_logger
 
 from .file_utils import InvalidInputFormat, LimitedStartReader
-from .handlers import ALL_HANDLERS_BY_PRIORITY
+from .handlers import Handlers
 from .logging import noformat
 from .models import Handler, TaskResult, ValidChunk, YaraMatchResult
 from .report import CalculateChunkExceptionReport
@@ -29,7 +29,11 @@ rule {NAME}
 
 
 def search_chunks_by_priority(  # noqa: C901
-    path: Path, file: io.BufferedReader, file_size: int, task_result: TaskResult
+    path: Path,
+    file: io.BufferedReader,
+    file_size: int,
+    handlers: Handlers,
+    task_result: TaskResult,
 ) -> List[ValidChunk]:
     """Search all ValidChunks within the file.
     Collect all the registered handlers by priority, search for YARA patterns and run
@@ -38,7 +42,7 @@ def search_chunks_by_priority(  # noqa: C901
     """
     all_chunks = []
 
-    for priority_level, handler_classes in enumerate(ALL_HANDLERS_BY_PRIORITY, start=1):
+    for priority_level, handler_classes in enumerate(handlers.by_priority, start=1):
         logger.debug("Starting priority level", priority_level=noformat(priority_level))
         yara_rules = make_yara_rules(handler_classes)
         handler_map = make_handler_map(handler_classes)
@@ -60,6 +64,12 @@ def search_chunks_by_priority(  # noqa: C901
                 # Skip chunk calculation if this would start inside another one,
                 # similar to remove_inner_chunks, but before we even begin calculating.
                 if any(chunk.contains_offset(real_offset) for chunk in all_chunks):
+                    logger.debug(
+                        "Skip chunk calculation as pattern is inside an other chunk",
+                        handler=handler.NAME,
+                        offset=real_offset,
+                        _verbosity=2,
+                    )
                     continue
 
                 logger.debug(

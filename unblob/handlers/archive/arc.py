@@ -1,8 +1,10 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from dissect.cstruct import Instance
 from structlog import get_logger
+
+from unblob.extractors.command import Command
 
 from ...models import StructHandler, ValidChunk
 
@@ -43,6 +45,7 @@ class ARCHandler(StructHandler):
     """
 
     HEADER_STRUCT = "arc_head_t"
+    EXTRACTOR = Command("unar", "-o", "{outdir}", "{inpath}")
 
     def valid_name(self, name: bytes) -> bool:
         try:
@@ -84,7 +87,3 @@ class ARCHandler(StructHandler):
             start_offset=start_offset,
             end_offset=offset,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["unar", "-o", outdir, inpath]

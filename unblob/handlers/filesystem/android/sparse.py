@@ -1,8 +1,9 @@
 import io
-from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors.command import Command
 
 from ....file_utils import Endian
 from ....models import StructHandler, ValidChunk
@@ -64,6 +65,8 @@ class SparseHandler(StructHandler):
     """
     HEADER_STRUCT = "sparse_header_t"
 
+    EXTRACTOR = Command("simg2img", "{inpath}", "{outdir}/{infile}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -83,8 +86,3 @@ class SparseHandler(StructHandler):
             start_offset=start_offset,
             end_offset=file.tell(),
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        s = Path(inpath).stem
-        return ["simg2img", inpath, f"{outdir}/{s}"]

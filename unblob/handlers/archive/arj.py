@@ -1,8 +1,9 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
+from ...extractors import Command
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -92,6 +93,8 @@ class ARJHandler(StructHandler):
 
     HEADER_STRUCT = "arj_header_t"
 
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
     def _read_arj_main_header(self, file: io.BufferedIOBase, start_offset: int) -> int:
         basic_header = self.cparser_le.basic_header(file)
         logger.debug("Basic header parsed", header=basic_header, _verbosity=3)
@@ -153,7 +156,3 @@ class ARJHandler(StructHandler):
             start_offset=start_offset,
             end_offset=end_of_arj,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

@@ -1,6 +1,7 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
+from ...extractors import Command
 from ...file_utils import Endian
 from ...models import StructHandler, ValidChunk
 
@@ -72,6 +73,8 @@ class LZHHandler(StructHandler):
     """
     HEADER_STRUCT = "lzh_default_header_t"
 
+    EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -102,7 +105,3 @@ class LZHHandler(StructHandler):
             start_offset=start_offset,
             end_offset=end_offset,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

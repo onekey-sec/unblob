@@ -1,7 +1,9 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import Endian, InvalidInputFormat, iterbits, round_up
 from ...models import StructHandler, ValidChunk
@@ -43,6 +45,8 @@ class BZip2Handler(StructHandler):
         } bzip2_header_t;
     """
     HEADER_STRUCT = "bzip2_header_t"
+
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -92,7 +96,3 @@ class BZip2Handler(StructHandler):
         # blocks are counted in bits but we need an offset in bytes
         end_block_offset = round_up(current_block_end, 8) // 8
         return start_offset + end_block_offset
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

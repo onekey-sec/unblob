@@ -1,10 +1,11 @@
 import io
 import struct
-from typing import List, Optional
+from typing import Optional
 
 from dissect.cstruct import Instance
 from structlog import get_logger
 
+from ...extractors import Command
 from ...file_utils import InvalidInputFormat, iterate_patterns
 from ...models import StructHandler, ValidChunk
 
@@ -63,6 +64,9 @@ class ZIPHandler(StructHandler):
     """
     HEADER_STRUCT = "end_of_central_directory_t"
 
+    # empty password with -p will make sure the command will not hang
+    EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
+
     def has_encrypted_files(
         self,
         file: io.BufferedIOBase,
@@ -111,8 +115,3 @@ class ZIPHandler(StructHandler):
             end_offset=file.tell(),
             is_encrypted=has_encrypted_files,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        # empty password with -p will make sure the command will not hang
-        return ["7z", "x", "-p", "-y", inpath, f"-o{outdir}"]

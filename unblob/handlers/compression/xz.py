@@ -1,7 +1,9 @@
 import io
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import (
     Endian,
@@ -47,6 +49,8 @@ class XZHandler(Handler):
         condition:
             $xz_stream_header_magic
     """
+
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
@@ -111,7 +115,3 @@ class XZHandler(Handler):
             # we can return
             if (end_offset - start_offset) == overall_size:
                 return ValidChunk(start_offset=start_offset, end_offset=end_offset)
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

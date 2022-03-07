@@ -2,10 +2,11 @@
 LZ4 frame format definition: https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md
 """
 import io
-from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int8, convert_int32
 from ...models import Handler, ValidChunk
@@ -61,13 +62,10 @@ class FLG:
 class _LZ4HandlerBase(Handler):
     """A common base for all LZ4 formats."""
 
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        outfile = Path(inpath).stem
-        return ["lz4", "--decompress", inpath, f"{outdir}/{outfile}"]
-
     def _skip_magic_bytes(self, file: io.BufferedIOBase):
         file.seek(MAGIC_LEN, io.SEEK_CUR)
+
+    EXTRACTOR = Command("lz4", "--decompress", "{inpath}", "{outdir}/{infile}")
 
 
 class LegacyFrameHandler(_LZ4HandlerBase):

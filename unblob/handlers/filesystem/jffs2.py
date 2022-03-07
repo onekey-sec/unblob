@@ -1,5 +1,5 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from dissect.cstruct import Instance
 from structlog import get_logger
@@ -12,6 +12,7 @@ from unblob.file_utils import (
     round_up,
 )
 
+from ...extractors import Command
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -50,6 +51,8 @@ class _JFFS2Base(StructHandler):
     HEADER_STRUCT = "jffs2_unknown_node_t"
 
     BIG_ENDIAN_MAGIC = 0x19_85
+
+    EXTRACTOR = Command("jefferson", "-v", "-f", "-d", "{outdir}", "{inpath}")
 
     def guess_endian(self, file: io.BufferedIOBase) -> Endian:
         magic = convert_int16(file.read(2), Endian.BIG)
@@ -137,10 +140,6 @@ class _JFFS2Base(StructHandler):
             start_offset=start_offset,
             end_offset=current_offset,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["jefferson", "-v", "-f", "-d", outdir, inpath]
 
 
 class JFFS2OldHandler(_JFFS2Base):

@@ -1,8 +1,10 @@
 import binascii
 import io
-from typing import List, Optional
+from typing import Optional
 
 from dissect.cstruct import Instance
+
+from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int32, get_endian
 from ...models import StructHandler, ValidChunk
@@ -38,6 +40,8 @@ class CramFSHandler(StructHandler):
     """
     HEADER_STRUCT = "cramfs_header_t"
 
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -66,7 +70,3 @@ class CramFSHandler(StructHandler):
         content[32:36] = b"\x00\x00\x00\x00"
         computed_crc = binascii.crc32(content)
         return header_crc == computed_crc
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-y", inpath, f"-o{outdir}"]

@@ -28,10 +28,11 @@ I observed were followed by null bytes sentinels, which helps identifying the
 exact end offset.
 """
 import io
-from pathlib import Path
 from typing import List, Optional
 
 from structlog import get_logger
+
+from unblob.extractors import Command
 
 from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int16
 from ...models import StructHandler, ValidChunk
@@ -68,6 +69,8 @@ class UnixCompressHandler(StructHandler):
         };
     """
     HEADER_STRUCT = "compress_header"
+
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}/{infile}")
 
     def unlzw(  # noqa: C901
         self, file: io.BufferedIOBase, start_offset: int, max_len: int
@@ -245,8 +248,3 @@ class UnixCompressHandler(StructHandler):
             start_offset=start_offset,
             end_offset=end_offset,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        p = Path(inpath).stem
-        return ["7z", "x", "-y", inpath, f"-o{outdir}/{p}"]

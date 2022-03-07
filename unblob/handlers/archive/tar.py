@@ -1,8 +1,10 @@
 import io
 import tarfile
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
+
+from unblob.extractors.command import Command
 
 from ...file_utils import decode_int, round_down, round_up, snull
 from ...models import StructHandler, ValidChunk
@@ -100,6 +102,8 @@ class TarHandler(StructHandler):
     """
     HEADER_STRUCT = "posix_header_t"
 
+    EXTRACTOR = Command("7z", "x", "-xr!PaxHeaders", "-y", "{inpath}", "-o{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -112,7 +116,3 @@ class TarHandler(StructHandler):
         if end_offset == -1:
             return
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-xr!PaxHeaders", inpath, f"-o{outdir}"]

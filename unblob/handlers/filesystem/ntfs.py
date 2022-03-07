@@ -1,10 +1,11 @@
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
 from unblob.file_utils import InvalidInputFormat
 
+from ...extractors import Command
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
@@ -61,6 +62,8 @@ class NTFSHandler(StructHandler):
 
     HEADER_STRUCT = "ntfs_boot_t"
 
+    EXTRACTOR = Command("7z", "x", "-x![SYSTEM]", "-y", "{inpath}", "-o{outdir}")
+
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
@@ -75,7 +78,3 @@ class NTFSHandler(StructHandler):
             start_offset=start_offset,
             end_offset=end_offset,
         )
-
-    @staticmethod
-    def make_extract_command(inpath: str, outdir: str) -> List[str]:
-        return ["7z", "x", "-x![SYSTEM]", "-y", inpath, f"-o{outdir}"]
