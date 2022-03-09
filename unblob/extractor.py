@@ -8,7 +8,6 @@ from typing import List, Tuple
 
 from structlog import get_logger
 
-from .file_utils import iterate_file
 from .models import Chunk, TaskResult, UnknownChunk, ValidChunk
 from .report import MaliciousSymlinkRemoved
 
@@ -31,8 +30,7 @@ def make_extract_dir(root: Path, path: Path, extract_root: Path) -> Path:
 def carve_chunk_to_file(carve_path: Path, file: io.BufferedIOBase, chunk: Chunk):
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
     with carve_path.open("wb") as f:
-        for data in iterate_file(file, chunk.start_offset, chunk.size):
-            f.write(data)
+        os.sendfile(f.fileno(), file.fileno(), chunk.start_offset, chunk.size)
 
 
 def fix_permission(path: Path):
