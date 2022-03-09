@@ -2,6 +2,7 @@
 , makeWrapper
 , mkPoetryApp
 , poetry2nix
+, glibc
 , python3
 , rustPlatform
 , e2fsprogs
@@ -67,7 +68,9 @@ let
     python = python3;
 
     postFixup = ''
-      wrapProgram $out/bin/unblob --prefix PATH : ${lib.makeBinPath runtimeDeps}
+      wrapProgram $out/bin/unblob --prefix PATH : ${lib.makeBinPath runtimeDeps} \
+                                  --set LOCALE_ARCHIVE_2_27 ${glibc}/lib/locale/locale-archive \
+                                  --set LC_ALL C.UTF-8
     '';
 
     UNBLOB_BUILD_RUST_EXTENSION = "1";
