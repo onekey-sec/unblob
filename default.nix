@@ -1,4 +1,5 @@
 { lib
+, makeWrapper
 , poetry2nix
 , python3
 , rustPlatform
@@ -69,6 +70,7 @@ let
 
     nativeBuildInputs = with rustPlatform; [
       cargoSetupHook
+      makeWrapper
       rust.cargo
       rust.rustc
     ];
