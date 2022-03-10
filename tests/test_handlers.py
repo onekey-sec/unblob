@@ -8,8 +8,6 @@ Each of the test folders should contain 2 things:
 """
 
 import inspect
-import shlex
-import subprocess
 from pathlib import Path
 from typing import Type
 
@@ -18,55 +16,26 @@ import pytest
 from unblob import handlers
 from unblob.models import Handler
 from unblob.processing import process_file
+from unblob.testing import (
+    check_output_is_the_same,
+    check_reports,
+    gather_integration_tests,
+)
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
-TEST_INPUT_DIRS = list(TEST_DATA_PATH.glob("**/__input__"))
-TEST_CASE_DIRS = [p.parent for p in TEST_INPUT_DIRS]
-TEST_OUTPUT_DIRS = [p / "__output__" for p in TEST_CASE_DIRS]
-TEST_IDS = [
-    f"{str(p.relative_to(TEST_DATA_PATH)).replace('/', '.')}" for p in TEST_CASE_DIRS
-]
 HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
 
 
-@pytest.mark.parametrize(
-    ("input_dir, output_dir"),
-    zip(TEST_INPUT_DIRS, TEST_OUTPUT_DIRS),
-    ids=TEST_IDS,
-)
+@gather_integration_tests(TEST_DATA_PATH)
 def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
-    assert (
-        list(input_dir.iterdir()) != []
-    ), f"Integration test input dir should contain at least 1 file: {input_dir}"
-
     all_reports = process_file(
         path=input_dir,
         extract_root=tmp_path,
         entropy_depth=0,
     )
 
-    diff_command = [
-        "diff",
-        "--recursive",
-        "--unified",
-        # fix for potential symlinks
-        "--no-dereference",
-        # Non-unicode files would produce garbage output
-        # showing file names which are different should be helpful
-        "--brief",
-        "--exclude",
-        ".gitkeep",
-        str(output_dir),
-        str(tmp_path),
-    ]
-
-    try:
-        subprocess.run(diff_command, capture_output=True, check=True, text=True)
-    except subprocess.CalledProcessError as exc:
-        runnable_diff_command = shlex.join(diff_command)
-        pytest.fail(f"\nDiff command: {runnable_diff_command}\n{exc.stdout}\n")
-
-    assert all_reports == [], f"Unexpected error reports: {all_reports}"
+    check_output_is_the_same(output_dir, tmp_path)
+    check_reports(all_reports)
 
 
 @pytest.mark.parametrize(
