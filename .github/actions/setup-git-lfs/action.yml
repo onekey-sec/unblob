@@ -2,14 +2,14 @@ runs:
   using: "composite"
   steps:
     - name: Create LFS file hash list
-      run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+      run: git lfs ls-files -l | cut -d' ' -f1 | sort > .git/lfs-assets-id
       shell: bash
 
     - name: Restore LFS cache
       uses: actions/cache@v2
       with:
           path: .git/lfs
-          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+          key: lfs-${{ hashFiles('.git/lfs-assets-id') }}
 
     - name: Git LFS Pull
       run: git lfs pull
