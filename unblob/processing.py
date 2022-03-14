@@ -41,6 +41,7 @@ def process_file(
     entropy_plot: bool = False,
     max_depth: int = DEFAULT_DEPTH,
     process_num: int = DEFAULT_PROCESS_NUM,
+    keep_extracted_chunks: bool = False,
     handlers: Handlers = BUILTIN_HANDLERS,
 ) -> List[Report]:
 

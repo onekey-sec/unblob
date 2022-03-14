@@ -120,6 +120,14 @@ class UnblobContext(click.Context):
     help="Number of worker processes to process files parallelly.",
     show_default=True,
 )
+@click.option(
+    "-k",
+    "--keep-extracted-chunks",
+    "keep_extracted_chunks",
+    is_flag=True,
+    show_default=True,
+    help="Keep extracted chunks",
+)
 @verbosity_option
 @click.option(
     "--show-external-dependencies",
@@ -134,6 +142,7 @@ def cli(
     depth: int,
     entropy_depth: int,
     process_num: int,
+    keep_extracted_chunks: bool,
     verbose: int,
     plugins_path: Optional[Path],
     handlers: Handlers,
@@ -156,6 +165,7 @@ def cli(
             entropy_plot=bool(verbose >= 3),
             process_num=process_num,
             handlers=handlers,
+            keep_extracted_chunks=keep_extracted_chunks,
         )
         all_reports.extend(report)
     return all_reports
