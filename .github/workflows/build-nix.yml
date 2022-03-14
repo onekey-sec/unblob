@@ -23,4 +23,4 @@ jobs:
     - run: |
         nix flake check -L
     - run: |
-        nix build -L ".#unblob" ".#unblob.withTests"
+        nix build -L ".#unblob.withTests" "github:IoT-Inspector/unblob/$GITHUB_SHA"
