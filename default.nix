@@ -44,6 +44,7 @@ let
         propagatedBuildInputs = [
           # Use the _same_ version as unblob
           self.cstruct
+          self.python-lzo
         ];
       });
 
