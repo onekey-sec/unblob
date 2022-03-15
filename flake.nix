@@ -28,5 +28,9 @@
       };
 
       defaultPackage.${system} = unblob;
+
+      devShell.${system} = pkgs.mkShell {
+        packages = [ unblob.editableEnv unblob.runtimeDeps ];
+      };
     };
 }

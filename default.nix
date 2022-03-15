@@ -1,4 +1,6 @@
 { lib
+, makeWrapper
+, mkPoetryApp
 , poetry2nix
 , python3
 , rustPlatform
@@ -28,7 +30,7 @@ let
     unar
   ];
 
-  self = poetry2nix.mkPoetryApplication {
+  self = mkPoetryApp {
     projectDir = ./.;
 
     # Python dependencies that need special care, like non-python
@@ -69,13 +71,17 @@ let
 
     nativeBuildInputs = with rustPlatform; [
       cargoSetupHook
+      makeWrapper
       rust.cargo
       rust.rustc
     ];
+
+    editablePackageSources = { "unblob" = ./unblob; };
   };
 in
 self // {
-  withTests = self.overridePythonAttrs (_: {
+  inherit runtimeDeps;
+  withTests = self.app.overridePythonAttrs (_: {
     checkPhase = ''
       (
         deps_PATH=${lib.makeBinPath runtimeDeps}
