@@ -5,7 +5,7 @@ import pytest
 
 from unblob.extractors import Command
 from unblob.extractors.command import InvalidCommandTemplate
-from unblob.models import TaskResult
+from unblob.models import ExtractError, TaskResult
 from unblob.report import ExtractCommandFailedReport, ExtractorDependencyNotFoundReport
 
 
@@ -47,7 +47,8 @@ def test_command_execution_failure(tmpdir: Path):
     command = Command("sh", "-c", ">&1 echo -n stdout; >&2 echo -n stderr; false")
 
     res = TaskResult()
-    command.extract(Path("input"), outdir, res)
+    with pytest.raises(ExtractError):
+        command.extract(Path("input"), outdir, res)
     assert res.reports == [
         ExtractCommandFailedReport(
             handler=None,
@@ -64,7 +65,8 @@ def test_command_not_found(tmpdir: Path):
     command = Command("this-command-should-not-exist-in-any-system")
 
     res = TaskResult()
-    command.extract(Path("input"), outdir, res)
+    with pytest.raises(ExtractError):
+        command.extract(Path("input"), outdir, res)
     assert res.reports == [
         ExtractorDependencyNotFoundReport(
             handler=None, dependencies=["this-command-should-not-exist-in-any-system"]

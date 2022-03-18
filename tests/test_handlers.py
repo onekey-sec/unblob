@@ -34,6 +34,7 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         path=input_dir,
         extract_root=tmp_path,
         entropy_depth=0,
+        keep_extracted_chunks=True,
     )
 
     check_output_is_the_same(output_dir, tmp_path)

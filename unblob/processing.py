@@ -59,6 +59,7 @@ def process_file(
         entropy_depth=entropy_depth,
         entropy_plot=entropy_plot,
         handlers=handlers,
+        keep_extracted_chunks=keep_extracted_chunks,
     )
     processor = Processor(parameters)
     all_reports = []
@@ -87,6 +88,7 @@ class Parameters:
     entropy_depth: int
     entropy_plot: bool
     handlers: Handlers
+    keep_extracted_chunks: bool
 
 
 class Processor:
@@ -203,6 +205,10 @@ class _FileTask:
 
         try:
             chunk.extract(inpath, outdir, self.result)
+            if not self.parameters.keep_extracted_chunks:
+                logger.debug("Removing extracted chunk", path=inpath)
+                inpath.unlink()
+
         except ExtractError:
             # already reported & logged by extractor
             pass
