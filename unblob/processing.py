@@ -204,14 +204,14 @@ class _FileTask:
         inpath, outdir = get_extract_paths(extract_dir, carved_path)
 
         try:
-            chunk.extract(inpath, outdir, self.result)
+            chunk.extract(inpath, outdir)
             if not self.parameters.keep_extracted_chunks:
                 logger.debug("Removing extracted chunk", path=inpath)
                 inpath.unlink()
 
-        except ExtractError:
-            # already reported & logged by extractor
-            pass
+        except ExtractError as e:
+            for report in e.reports:
+                self.result.add_report(report)
 
         except Exception as exc:
             logger.exception("Unknown error happened while extracting chunk")

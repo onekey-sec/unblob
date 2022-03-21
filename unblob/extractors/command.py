@@ -5,7 +5,7 @@ from typing import List
 
 from structlog import get_logger
 
-from unblob.models import ExtractError, Extractor, TaskResult
+from unblob.models import ExtractError, Extractor
 from unblob.report import ExtractCommandFailedReport, ExtractorDependencyNotFoundReport
 
 logger = get_logger()
@@ -16,7 +16,7 @@ class Command(Extractor):
         self._executable = executable
         self._command_template = [executable, *args]
 
-    def extract(self, inpath: Path, outdir: Path, task_result: TaskResult):
+    def extract(self, inpath: Path, outdir: Path):
         cmd = self._make_extract_command(inpath, outdir)
         command = shlex.join(cmd)
         logger.debug("Running extract command", command=command)
@@ -39,19 +39,17 @@ class Command(Extractor):
                     exit_code=res.returncode,
                 )
 
-                task_result.add_report(error_report)
                 logger.error("Extract command failed", **error_report.asdict())
-                raise ExtractError
+                raise ExtractError(error_report)
         except FileNotFoundError:
             error_report = ExtractorDependencyNotFoundReport(
                 dependencies=self.get_dependencies()
             )
-            task_result.add_report(error_report)
             logger.error(
                 "Can't run extract command. Is the extractor installed?",
                 **error_report.asdict(),
             )
-            raise ExtractError
+            raise ExtractError(error_report)
 
     def _make_extract_command(self, inpath: Path, outdir: Path):
         replacements = dict(inpath=inpath, outdir=outdir, infile=inpath.stem)

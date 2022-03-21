@@ -90,16 +90,16 @@ class ValidChunk(Chunk):
     handler: "Handler" = attr.ib(init=False, eq=False)
     is_encrypted: bool = attr.ib(default=False)
 
-    def extract(self, inpath: Path, outdir: Path, result: "TaskResult"):
+    def extract(self, inpath: Path, outdir: Path):
         if self.is_encrypted:
             logger.warning(
                 "Encrypted file is not extracted",
                 path=inpath,
                 chunk=self,
             )
-            raise ExtractError("Encrypted file")
+            raise ExtractError()
 
-        self.handler.extract(inpath, outdir, result)
+        self.handler.extract(inpath, outdir)
 
 
 @attr.define(repr=False)
@@ -137,6 +137,10 @@ class TaskResult:
 class ExtractError(Exception):
     """There was an error during extraction"""
 
+    def __init__(self, *reports: Report):
+        super().__init__()
+        self.reports: Tuple[Report, ...] = reports
+
 
 class Extractor(abc.ABC):
     @abc.abstractclassmethod
@@ -145,15 +149,11 @@ class Extractor(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def extract(self, inpath: Path, outdir: Path, task_result: TaskResult):
+    def extract(self, inpath: Path, outdir: Path):
         """Extract the carved out chunk.
 
         Raises ExtractError on failure.
         """
-
-
-class CanNotExtractWithoutExtractor(ExtractError):
-    """There is no EXTRACTOR defined"""
 
 
 class Handler(abc.ABC):
@@ -180,14 +180,15 @@ class Handler(abc.ABC):
     ) -> Optional[ValidChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 
-    def extract(self, inpath: Path, outdir: Path, task_result: TaskResult):
+    def extract(self, inpath: Path, outdir: Path):
         if self.EXTRACTOR is None:
-            raise CanNotExtractWithoutExtractor
+            logger.debug("Skipping file: no extractor.", path=inpath)
+            raise ExtractError()
 
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
 
-        self.EXTRACTOR.extract(inpath, outdir, task_result)
+        self.EXTRACTOR.extract(inpath, outdir)
 
 
 class StructHandler(Handler):
