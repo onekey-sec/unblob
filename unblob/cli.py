@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import itertools
 import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -27,10 +26,11 @@ def show_external_dependencies(
 
     plugin_manager = ctx.params["plugin_manager"]
     handlers = ctx.params["handlers"]
-    plugins = ctx.params.get(
+    plugins_path = ctx.params.get(
         "plugins_path"
     )  # may not exist, depends on parameter order...
-    handlers = add_handlers_from_plugins(plugin_manager, handlers, plugins)
+    plugin_manager.import_plugins(plugins_path)
+    handlers = plugin_manager.extend_handlers_from_plugins(handlers)
 
     dependencies = get_dependencies(handlers)
     text = pretty_format_dependencies(dependencies)
@@ -38,29 +38,6 @@ def show_external_dependencies(
 
     click.echo(text)
     ctx.exit(code=exit_code)
-
-
-def add_handlers_from_plugins(
-    plugin_manager: UnblobPluginManager,
-    handlers: Handlers,
-    plugin_path: Optional[Path],
-):
-    if plugin_path:
-        plugin_manager.import_path(plugin_path)
-
-    plugin_manager.load_setuptools_entrypoints()
-
-    plugins = [name for name, _plugin in plugin_manager.list_name_plugin()]
-    if not plugins:
-        return handlers
-
-    logger.info("Loaded plugins", plugins=plugins)
-
-    extra_handlers = list(itertools.chain(*plugin_manager.hook.unblob_register_handlers()))  # type: ignore
-
-    logger.debug("Loaded handlers from plugins", handlers=extra_handlers)
-
-    return handlers.with_prepended(extra_handlers)
 
 
 def get_help_text():
@@ -160,11 +137,12 @@ def cli(
     verbose: int,
     plugins_path: Optional[Path],
     handlers: Handlers,
-    plugin_manager,
+    plugin_manager: UnblobPluginManager,
 ) -> List[Report]:
     configure_logger(verbose, extract_root)
 
-    handlers = add_handlers_from_plugins(plugin_manager, handlers, plugins_path)
+    plugin_manager.import_plugins(plugins_path)
+    handlers = plugin_manager.extend_handlers_from_plugins(handlers)
 
     logger.info("Start processing files", count=noformat(len(files)))
     all_reports = []

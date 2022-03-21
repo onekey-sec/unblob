@@ -1,4 +1,5 @@
 import importlib.util
+import itertools
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -8,6 +9,7 @@ import pluggy
 from structlog import get_logger
 
 from unblob import hookspecs
+from unblob.models import Handlers
 
 # The entrypoints are defined by the to-be-loaded plugins. The version
 # should be incremented whenever a backward-incompatible change is
@@ -79,3 +81,26 @@ class UnblobPluginManager(pluggy.PluginManager):
             modules.append(mod)
 
         return modules
+
+    def import_plugins(self, path: Optional[Path] = None):
+        if path:
+            self.import_path(path)
+
+        self.load_setuptools_entrypoints()
+        plugins = [name for name, _plugin in self.list_name_plugin()]
+        if not plugins:
+            return
+
+        logger.info("Loaded plugins", plugins=plugins)
+
+    def extend_handlers_from_plugins(
+        self,
+        handlers: Handlers,
+    ) -> Handlers:
+        extra_handlers = list(itertools.chain(*self.hook.unblob_register_handlers()))  # type: ignore
+        if not extra_handlers:
+            return handlers
+
+        logger.debug("Loaded handlers from plugins", handlers=extra_handlers)
+
+        return handlers.with_prepended(extra_handlers)
