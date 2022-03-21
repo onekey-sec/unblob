@@ -160,7 +160,7 @@ def cli(
     verbose: int,
     plugins_path: Optional[Path],
     handlers: Handlers,
-    plugin_manager,
+    plugin_manager: UnblobPluginManager,
 ) -> List[Report]:
     configure_logger(verbose, extract_root)
 
