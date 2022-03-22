@@ -34,27 +34,19 @@ DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 
 
-@attr.define
+@attr.define(kw_only=True)
 class ExtractionConfig:
     extract_root: Path
-    max_depth: int
     entropy_depth: int
-    entropy_plot: bool
-    handlers: Handlers
-    keep_extracted_chunks: bool
+    entropy_plot: bool = False
+    max_depth: int = DEFAULT_DEPTH
+    process_num: int = DEFAULT_PROCESS_NUM
+    keep_extracted_chunks: bool = False
+    handlers: Handlers = BUILTIN_HANDLERS
 
 
 @terminate_gracefully
-def process_file(
-    path: Path,
-    extract_root: Path,
-    entropy_depth: int,
-    entropy_plot: bool = False,
-    max_depth: int = DEFAULT_DEPTH,
-    process_num: int = DEFAULT_PROCESS_NUM,
-    keep_extracted_chunks: bool = False,
-    handlers: Handlers = BUILTIN_HANDLERS,
-) -> List[Report]:
+def process_file(config: ExtractionConfig, path: Path) -> List[Report]:
 
     root = path if path.is_dir() else path.parent
     root_task = Task(
@@ -63,14 +55,6 @@ def process_file(
         depth=0,
     )
 
-    config = ExtractionConfig(
-        extract_root=extract_root,
-        max_depth=max_depth,
-        entropy_depth=entropy_depth,
-        entropy_plot=entropy_plot,
-        handlers=handlers,
-        keep_extracted_chunks=keep_extracted_chunks,
-    )
     processor = Processor(config)
     all_reports = []
 
@@ -80,7 +64,7 @@ def process_file(
         all_reports.extend(result.reports)
 
     pool = make_pool(
-        process_num=process_num,
+        process_num=config.process_num,
         handler=processor.process_task,
         result_callback=process_result,
     )
