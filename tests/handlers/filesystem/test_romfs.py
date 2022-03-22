@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from unblob.extractors.unromfs import get_string, is_safe_path, romfs_checksum
+from unblob.handlers.filesystem.romfs import get_string, is_safe_path, romfs_checksum
 
 
 @pytest.mark.parametrize(
