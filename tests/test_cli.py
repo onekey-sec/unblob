@@ -191,6 +191,7 @@ def test_archive_success(
         entropy_depth=expected_entropy_depth,
         entropy_plot=bool(expected_verbosity >= 3),
         process_num=expected_process_num,
+        keep_extracted_chunks=False,
         handlers=BUILTIN_HANDLERS,
     )
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
@@ -230,6 +231,7 @@ def test_archive_multiple_files(tmp_path: Path):
             entropy_depth=1,
             entropy_plot=False,
             process_num=DEFAULT_PROCESS_NUM,
+            keep_extracted_chunks=False,
             handlers=mock.ANY,
         ),
         mock.call(
@@ -239,6 +241,41 @@ def test_archive_multiple_files(tmp_path: Path):
             entropy_depth=1,
             entropy_plot=False,
             process_num=DEFAULT_PROCESS_NUM,
+            keep_extracted_chunks=False,
             handlers=mock.ANY,
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    "args, keep_extracted_chunks, fail_message",
+    [
+        ([], False, "Should *NOT* have kept extracted chunks"),
+        (["-k"], True, "Should have kept extracted chunks"),
+        (["--keep-extracted-chunks"], True, "Should have kept extracted chunks"),
+    ],
+)
+def test_keep_extracted_chunks(
+    args: List[str], keep_extracted_chunks: bool, fail_message: str, tmp_path: Path
+):
+    runner = CliRunner()
+    in_path = (
+        Path(__file__).parent
+        / "integration"
+        / "archive"
+        / "zip"
+        / "regular"
+        / "__input__/"
+    )
+    params = args + ["--extract-dir", str(tmp_path), str(in_path)]
+
+    process_file_mock = mock.MagicMock()
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
+        result = runner.invoke(unblob.cli.cli, params)
+
+    assert result.exit_code == 0
+    process_file_mock.assert_called_once()
+    assert (
+        process_file_mock.call_args.kwargs["keep_extracted_chunks"]
+        == keep_extracted_chunks
+    ), fail_message

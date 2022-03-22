@@ -90,6 +90,17 @@ class ValidChunk(Chunk):
     handler: "Handler" = attr.ib(init=False, eq=False)
     is_encrypted: bool = attr.ib(default=False)
 
+    def extract(self, inpath: Path, outdir: Path):
+        if self.is_encrypted:
+            logger.warning(
+                "Encrypted file is not extracted",
+                path=inpath,
+                chunk=self,
+            )
+            raise ExtractError()
+
+        self.handler.extract(inpath, outdir)
+
 
 @attr.define(repr=False)
 class UnknownChunk(Chunk):
@@ -123,6 +134,14 @@ class TaskResult:
         return self._reports
 
 
+class ExtractError(Exception):
+    """There was an error during extraction"""
+
+    def __init__(self, *reports: Report):
+        super().__init__()
+        self.reports: Tuple[Report, ...] = reports
+
+
 class Extractor(abc.ABC):
     @abc.abstractclassmethod
     def get_dependencies(cls) -> List[str]:
@@ -130,8 +149,11 @@ class Extractor(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def extract(self, inpath: Path, outdir: Path, task_result: TaskResult):
-        """Extract the carved out chunk"""
+    def extract(self, inpath: Path, outdir: Path):
+        """Extract the carved out chunk.
+
+        Raises ExtractError on failure.
+        """
 
 
 class Handler(abc.ABC):
@@ -157,6 +179,16 @@ class Handler(abc.ABC):
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
+
+    def extract(self, inpath: Path, outdir: Path):
+        if self.EXTRACTOR is None:
+            logger.debug("Skipping file: no extractor.", path=inpath)
+            raise ExtractError()
+
+        # We only extract every blob once, it's a mistake to extract the same blob again
+        outdir.mkdir(parents=True, exist_ok=False)
+
+        self.EXTRACTOR.extract(inpath, outdir)
 
 
 class StructHandler(Handler):

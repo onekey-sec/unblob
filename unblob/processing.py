@@ -5,6 +5,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import List
 
+import attr
 import plotext as plt
 from structlog import get_logger
 
@@ -22,7 +23,7 @@ from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
-from .models import Extractor, Task, TaskResult, UnknownChunk, ValidChunk
+from .models import ExtractError, Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
 from .report import Report, UnknownError
 from .signals import terminate_gracefully
@@ -41,6 +42,7 @@ def process_file(
     entropy_plot: bool = False,
     max_depth: int = DEFAULT_DEPTH,
     process_num: int = DEFAULT_PROCESS_NUM,
+    keep_extracted_chunks: bool = False,
     handlers: Handlers = BUILTIN_HANDLERS,
 ) -> List[Report]:
 
@@ -51,9 +53,15 @@ def process_file(
         depth=0,
     )
 
-    processor = Processor(
-        extract_root, max_depth, entropy_depth, entropy_plot, handlers
+    parameters = Parameters(
+        extract_root=extract_root,
+        max_depth=max_depth,
+        entropy_depth=entropy_depth,
+        entropy_plot=entropy_plot,
+        handlers=handlers,
+        keep_extracted_chunks=keep_extracted_chunks,
     )
+    processor = Processor(parameters)
     all_reports = []
 
     def process_result(pool, result):
@@ -73,20 +81,19 @@ def process_file(
     return all_reports
 
 
+@attr.define
+class Parameters:
+    extract_root: Path
+    max_depth: int
+    entropy_depth: int
+    entropy_plot: bool
+    handlers: Handlers
+    keep_extracted_chunks: bool
+
+
 class Processor:
-    def __init__(
-        self,
-        extract_root: Path,
-        max_depth: int,
-        entropy_depth: int,
-        entropy_plot: bool,
-        handlers: Handlers,
-    ):
-        self._extract_root = extract_root
-        self._max_depth = max_depth
-        self._entropy_depth = entropy_depth
-        self._entropy_plot = entropy_plot
-        self._handlers = handlers
+    def __init__(self, parameters: Parameters):
+        self._parameters = parameters
 
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult()
@@ -104,7 +111,7 @@ class Processor:
     def _process_task(self, result: TaskResult, task: Task):
         log = logger.bind(path=task.path)
 
-        if task.depth >= self._max_depth:
+        if task.depth >= self._parameters.max_depth:
             # TODO: Use the reporting feature to warn the user (ONLY ONCE) at the end of execution, that this limit was reached.
             log.debug("Reached maximum depth, stop further processing")
             return
@@ -136,76 +143,91 @@ class Processor:
             log.debug("Ignoring empty file")
             return
 
-        self._process_regular_file(task, size, result)
+        _FileTask(self._parameters, task, size, result).process()
 
-    def _process_regular_file(self, task: Task, size: int, result: TaskResult):
-        logger.debug("Processing file", path=task.path, size=size)
-        with task.path.open("rb") as file:
+
+class _FileTask:
+    def __init__(
+        self,
+        parameters: Parameters,
+        task: Task,
+        size: int,
+        result: TaskResult,
+    ):
+        self.parameters = parameters
+        self.task = task
+        self.size = size
+        self.result = result
+
+    def process(self):
+        logger.debug("Processing file", path=self.task.path, size=self.size)
+
+        with self.task.path.open("rb") as file:
             all_chunks = search_chunks_by_priority(
-                task.path, file, size, self._handlers, result
+                self.task.path, file, self.size, self.parameters.handlers, self.result
             )
             outer_chunks = remove_inner_chunks(all_chunks)
-            unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
-            if not outer_chunks and not unknown_chunks:
+            unknown_chunks = calculate_unknown_chunks(outer_chunks, self.size)
+
+            if outer_chunks or unknown_chunks:
+                self._process_chunks(file, outer_chunks, unknown_chunks)
+            else:
                 # we don't consider whole files as unknown chunks, but we still want to
                 # calculate entropy for whole files which produced no valid chunks
-                if task.depth < self._entropy_depth:
-                    calculate_entropy(task.path, draw_plot=self._entropy_plot)
-                return
+                self._calculate_entropies([self.task.path])
 
-            extract_dir = make_extract_dir(task.root, task.path, self._extract_root)
+    def _process_chunks(
+        self, file, outer_chunks: List[ValidChunk], unknown_chunks: List[UnknownChunk]
+    ):
+        extract_dir = make_extract_dir(
+            self.task.root, self.task.path, self.parameters.extract_root
+        )
 
-            carved_unknown_paths = carve_unknown_chunks(
-                extract_dir, file, unknown_chunks
-            )
-            if task.depth < self._entropy_depth:
-                for carved_unknown_path in carved_unknown_paths:
-                    calculate_entropy(carved_unknown_path, draw_plot=self._entropy_plot)
+        carved_unknown_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
+        self._calculate_entropies(carved_unknown_paths)
 
-            for chunk in outer_chunks:
-                carved_valid_path = carve_valid_chunk(extract_dir, file, chunk)
+        for chunk in outer_chunks:
+            self._extract_chunk(extract_dir, file, chunk)
 
-                if chunk.is_encrypted:
-                    logger.warning(
-                        "Do not attempt to extract encrypted file",
-                        path=carved_valid_path,
-                        chunk=chunk,
-                    )
-                    continue
-
-                inpath, outdir = get_extract_paths(extract_dir, carved_valid_path)
-
-                extractor = chunk.handler.EXTRACTOR
-                if extractor is not None:
-                    self._extract_chunk(task, inpath, outdir, extractor, result)
+    def _calculate_entropies(self, paths: List[Path]):
+        if self.task.depth < self.parameters.entropy_depth:
+            for path in paths:
+                calculate_entropy(path, draw_plot=self.parameters.entropy_plot)
 
     def _extract_chunk(
         self,
-        task: Task,
-        inpath: Path,
-        outdir: Path,
-        extractor: Extractor,
-        result: TaskResult,
+        extract_dir: Path,
+        file,
+        chunk: ValidChunk,
     ):
-        # We only extract every blob once, it's a mistake to extract the same blog again
-        outdir.mkdir(parents=True, exist_ok=False)
+        carved_path = carve_valid_chunk(extract_dir, file, chunk)
+        inpath, outdir = get_extract_paths(extract_dir, carved_path)
+
         try:
-            extractor.extract(inpath, outdir, result)
+            chunk.extract(inpath, outdir)
+            if not self.parameters.keep_extracted_chunks:
+                logger.debug("Removing extracted chunk", path=inpath)
+                inpath.unlink()
+
+        except ExtractError as e:
+            for report in e.reports:
+                self.result.add_report(report)
+
         except Exception as exc:
             logger.exception("Unknown error happened while extracting chunk")
-            result.add_report(UnknownError(exception=exc))
+            self.result.add_report(UnknownError(exception=exc))
 
-            return
+        # we want to get consistent partial output even in case of unforeseen problems
+        fix_extracted_directory(outdir, self.result)
 
-        fix_extracted_directory(outdir, result)
-
-        result.add_new_task(
-            Task(
-                root=self._extract_root,
-                path=outdir,
-                depth=task.depth + 1,
+        if outdir.exists():
+            self.result.add_new_task(
+                Task(
+                    root=self.parameters.extract_root,
+                    path=outdir,
+                    depth=self.task.depth + 1,
+                )
             )
-        )
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
