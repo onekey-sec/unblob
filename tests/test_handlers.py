@@ -26,7 +26,9 @@ TEST_DATA_PATH = Path(__file__).parent / "integration"
 HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
 
 
-@gather_integration_tests(TEST_DATA_PATH)
+@pytest.mark.parametrize(
+    "input_dir, output_dir", gather_integration_tests(TEST_DATA_PATH)
+)
 def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
     all_reports = process_file(
         path=input_dir,
