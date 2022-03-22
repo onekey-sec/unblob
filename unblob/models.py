@@ -187,6 +187,9 @@ class Handlers:
         self._flat = [h for handlers in by_priority for h in handlers]
 
     def with_prepended(self, by_priority):
+        if not by_priority:
+            # No additions
+            return self
         return Handlers([tuple(by_priority)] + self._by_priority)
 
     @property
