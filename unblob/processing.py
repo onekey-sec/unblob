@@ -34,6 +34,16 @@ DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 
 
+@attr.define
+class ExtractionConfig:
+    extract_root: Path
+    max_depth: int
+    entropy_depth: int
+    entropy_plot: bool
+    handlers: Handlers
+    keep_extracted_chunks: bool
+
+
 @terminate_gracefully
 def process_file(
     path: Path,
@@ -53,7 +63,7 @@ def process_file(
         depth=0,
     )
 
-    parameters = Parameters(
+    config = ExtractionConfig(
         extract_root=extract_root,
         max_depth=max_depth,
         entropy_depth=entropy_depth,
@@ -61,7 +71,7 @@ def process_file(
         handlers=handlers,
         keep_extracted_chunks=keep_extracted_chunks,
     )
-    processor = Processor(parameters)
+    processor = Processor(config)
     all_reports = []
 
     def process_result(pool, result):
@@ -81,19 +91,9 @@ def process_file(
     return all_reports
 
 
-@attr.define
-class Parameters:
-    extract_root: Path
-    max_depth: int
-    entropy_depth: int
-    entropy_plot: bool
-    handlers: Handlers
-    keep_extracted_chunks: bool
-
-
 class Processor:
-    def __init__(self, parameters: Parameters):
-        self._parameters = parameters
+    def __init__(self, config: ExtractionConfig):
+        self._config = config
 
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult()
@@ -111,7 +111,7 @@ class Processor:
     def _process_task(self, result: TaskResult, task: Task):
         log = logger.bind(path=task.path)
 
-        if task.depth >= self._parameters.max_depth:
+        if task.depth >= self._config.max_depth:
             # TODO: Use the reporting feature to warn the user (ONLY ONCE) at the end of execution, that this limit was reached.
             log.debug("Reached maximum depth, stop further processing")
             return
@@ -143,18 +143,18 @@ class Processor:
             log.debug("Ignoring empty file")
             return
 
-        _FileTask(self._parameters, task, size, result).process()
+        _FileTask(self._config, task, size, result).process()
 
 
 class _FileTask:
     def __init__(
         self,
-        parameters: Parameters,
+        config: ExtractionConfig,
         task: Task,
         size: int,
         result: TaskResult,
     ):
-        self.parameters = parameters
+        self.config = config
         self.task = task
         self.size = size
         self.result = result
@@ -164,7 +164,7 @@ class _FileTask:
 
         with self.task.path.open("rb") as file:
             all_chunks = search_chunks_by_priority(
-                self.task.path, file, self.size, self.parameters.handlers, self.result
+                self.task.path, file, self.size, self.config.handlers, self.result
             )
             outer_chunks = remove_inner_chunks(all_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, self.size)
@@ -180,7 +180,7 @@ class _FileTask:
         self, file, outer_chunks: List[ValidChunk], unknown_chunks: List[UnknownChunk]
     ):
         extract_dir = make_extract_dir(
-            self.task.root, self.task.path, self.parameters.extract_root
+            self.task.root, self.task.path, self.config.extract_root
         )
 
         carved_unknown_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
@@ -190,9 +190,9 @@ class _FileTask:
             self._extract_chunk(extract_dir, file, chunk)
 
     def _calculate_entropies(self, paths: List[Path]):
-        if self.task.depth < self.parameters.entropy_depth:
+        if self.task.depth < self.config.entropy_depth:
             for path in paths:
-                calculate_entropy(path, draw_plot=self.parameters.entropy_plot)
+                calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
     def _extract_chunk(
         self,
@@ -205,7 +205,7 @@ class _FileTask:
 
         try:
             chunk.extract(inpath, outdir)
-            if not self.parameters.keep_extracted_chunks:
+            if not self.config.keep_extracted_chunks:
                 logger.debug("Removing extracted chunk", path=inpath)
                 inpath.unlink()
 
@@ -223,7 +223,7 @@ class _FileTask:
         if outdir.exists():
             self.result.add_new_task(
                 Task(
-                    root=self.parameters.extract_root,
+                    root=self.config.extract_root,
                     path=outdir,
                     depth=self.task.depth + 1,
                 )
