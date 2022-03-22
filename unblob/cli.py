@@ -25,12 +25,12 @@ def show_external_dependencies(
         return
 
     plugin_manager = ctx.params["plugin_manager"]
-    handlers = ctx.params["handlers"]
     plugins_path = ctx.params.get(
         "plugins_path"
     )  # may not exist, depends on parameter order...
     plugin_manager.import_plugins(plugins_path)
-    handlers = plugin_manager.extend_handlers_from_plugins(handlers)
+    extra_handlers = plugin_manager.load_handlers_from_plugins()
+    handlers = ctx.params["handlers"].with_prepended(extra_handlers)
 
     dependencies = get_dependencies(handlers)
     text = pretty_format_dependencies(dependencies)
@@ -142,7 +142,8 @@ def cli(
     configure_logger(verbose, extract_root)
 
     plugin_manager.import_plugins(plugins_path)
-    handlers = plugin_manager.extend_handlers_from_plugins(handlers)
+    extra_handlers = plugin_manager.load_handlers_from_plugins()
+    handlers = handlers.with_prepended(extra_handlers)
 
     logger.info("Start processing files", count=noformat(len(files)))
     all_reports = []

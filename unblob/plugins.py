@@ -93,14 +93,11 @@ class UnblobPluginManager(pluggy.PluginManager):
 
         logger.info("Loaded plugins", plugins=plugins)
 
-    def extend_handlers_from_plugins(
+    def load_handlers_from_plugins(
         self,
-        handlers: Handlers,
-    ) -> Handlers:
+    ) -> List[Handlers]:
         extra_handlers = list(itertools.chain(*self.hook.unblob_register_handlers()))  # type: ignore
-        if not extra_handlers:
-            return handlers
+        if extra_handlers:
+            logger.debug("Loaded handlers from plugins", handlers=extra_handlers)
 
-        logger.debug("Loaded handlers from plugins", handlers=extra_handlers)
-
-        return handlers.with_prepended(extra_handlers)
+        return extra_handlers
