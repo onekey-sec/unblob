@@ -7,7 +7,7 @@ import click
 from structlog import get_logger
 
 from unblob.plugins import UnblobPluginManager
-from unblob.report import Report
+from unblob.report import Report, Severity
 
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
@@ -180,6 +180,20 @@ def cli(
 cli.context_class = UnblobContext
 
 
+def get_exit_code_from_reports(reports: List[Report]) -> int:
+    severity_to_exit_code = [
+        (Severity.ERROR, 1),
+        (Severity.WARNING, 0),
+    ]
+    severities = {report.severity for report in reports}
+
+    for severity, exit_code in severity_to_exit_code:
+        if severity in severities:
+            return exit_code
+
+    return 0
+
+
 def main():
     try:
         # Click argument parsing
@@ -200,8 +214,7 @@ def main():
         logger.exception("Unhandled exception during unblob")
         sys.exit(1)
 
-    exit_code = 0 if not reports else 1
-    sys.exit(exit_code)
+    sys.exit(get_exit_code_from_reports(reports))
 
 
 if __name__ == "__main__":
