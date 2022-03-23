@@ -41,7 +41,6 @@ profile = "black"
 
 [tool.poetry.scripts]
 unblob = "unblob.cli:main"
-unromfs = "unblob.extractors.unromfs:cli"
 
 [tool.pytest.ini_options]
 addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
