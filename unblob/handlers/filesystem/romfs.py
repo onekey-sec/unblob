@@ -42,19 +42,19 @@ class FS_TYPE(IntEnum):
     FIFO = 7
 
 
-def romfs_checksum(content: bytes) -> int:
+def valid_checksum(content: bytes) -> bool:
     """Apply a RomFS checksum and returns whether it's valid or not."""
     total = 0
 
     # unalign content will lead to unpacking errors down the line
     if len(content) % 4 != 0:
-        return -1
+        return False
 
     for i in range(0, len(content), 4):
         total = (
             total + struct.unpack(">L", content[i : i + 4])[0]  # noqa: E203
         ) % MAX_UINT32
-    return total
+    return total == 0
 
 
 def get_string(file: io.BufferedIOBase) -> bytes:
@@ -101,7 +101,7 @@ class FileHeader(object):
             self.file.seek(self.addr, io.SEEK_SET)
             filename_len = len(self.filename)
             header_size = 16 + round_up(filename_len, 16)
-            return romfs_checksum(self.file.read(header_size)) == 0
+            return valid_checksum(self.file.read(header_size))
         finally:
             self.file.seek(current_position, io.SEEK_SET)
 
@@ -191,7 +191,7 @@ class RomFSHeader(object):
         current_position = self.file.tell()
         try:
             self.file.seek(0, io.SEEK_SET)
-            return romfs_checksum(self.file.read(ROMFS_HEADER_SIZE)) == 0
+            return valid_checksum(self.file.read(ROMFS_HEADER_SIZE))
         finally:
             self.file.seek(current_position, io.SEEK_SET)
 
@@ -341,11 +341,6 @@ class RomfsExtractor(Extractor):
             header.validate()
             header.recursive_walk(header.header_end_offset, None)
             header.dump_fs()
-
-
-def valid_checksum(content: bytes) -> int:
-    """Compute the RomFS checksum of content."""
-    return romfs_checksum(content) == 0
 
 
 class RomFSFSHandler(StructHandler):
