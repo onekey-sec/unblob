@@ -1,20 +1,31 @@
+import binascii
 import io
 from typing import Optional
 
 from structlog import get_logger
 
 from ...extractors import Command
+from ...file_utils import Endian, convert_int32
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
+
+# CPP/7zip/Archive/ArjHandler.cpp IsArc_Arj()
+MIN_BLOCK_SIZE = 30
+MAX_BLOCK_SIZE = 2600
+BASIC_HEADER_SIZE = 4
 
 
 class ARJError(Exception):
     pass
 
 
-class ARJNullFile(ARJError):
-    """Zero-sized ARJ."""
+class InvalidARJSize(ARJError):
+    """Invalid size fields in ARJ header"""
+
+
+class ARJChecksumError(ARJError):
+    """Main ARJ header checksum missmatch"""
 
 
 class ARJExtendedHeader(ARJError):
@@ -96,19 +107,26 @@ class ARJHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def _read_arj_main_header(self, file: io.BufferedIOBase, start_offset: int) -> int:
-        basic_header = self.cparser_le.basic_header(file)
-        logger.debug("Basic header parsed", header=basic_header, _verbosity=3)
-
-        # It's unlikely and unhelpful if we find a completely zero-sized ARJ on it's own,
-        # so we raise here.
-        if basic_header.size == 0:
-            raise ARJNullFile
-
         file.seek(start_offset)
         main_header = self.cparser_le.arj_header(file)
         logger.debug("Main header parsed", header=main_header, _verbosity=3)
 
-        file.seek(start_offset + main_header.first_hdr_size + len(basic_header))
+        if (
+            main_header.header.size < MIN_BLOCK_SIZE
+            or main_header.header.size > MAX_BLOCK_SIZE
+            or main_header.header.size < main_header.first_hdr_size
+        ):
+            raise InvalidARJSize
+
+        file.seek(start_offset + BASIC_HEADER_SIZE)
+        content = file.read(main_header.header.size)
+        calculated_crc = binascii.crc32(content)
+        crc = convert_int32(file.read(4), endian=Endian.LITTLE)
+
+        if crc != calculated_crc:
+            raise ARJChecksumError
+
+        file.seek(start_offset + main_header.first_hdr_size + BASIC_HEADER_SIZE)
         self._read_headers(file)
         return file.tell()
 
@@ -149,7 +167,12 @@ class ARJHandler(StructHandler):
             self._read_arj_main_header(file, start_offset)
             end_of_arj = self._read_arj_files(file)
         except ARJError as exc:
-            logger.warning("Invalid ARJ file", reason=exc.__doc__)
+            logger.debug(
+                "Invalid ARJ file",
+                start_offset=start_offset,
+                reason=exc.__doc__,
+                _verbosity=2,
+            )
             return
 
         return ValidChunk(
