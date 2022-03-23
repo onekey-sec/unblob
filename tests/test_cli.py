@@ -9,7 +9,7 @@ from conftest import TestHandler
 import unblob.cli
 from unblob.extractors import Command
 from unblob.handlers import BUILTIN_HANDLERS, Handlers
-from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM
+from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
 
 
 class ExistingCommandHandler(TestHandler):
@@ -184,16 +184,15 @@ def test_archive_success(
     assert result.exit_code == 0
     assert "error" not in result.output
     assert "warning" not in result.output
-    process_file_mock.assert_called_once_with(
-        in_path,
-        tmp_path,
+    config = ExtractionConfig(
+        extract_root=tmp_path,
         max_depth=expected_depth,
         entropy_depth=expected_entropy_depth,
         entropy_plot=bool(expected_verbosity >= 3),
         process_num=expected_process_num,
-        keep_extracted_chunks=False,
         handlers=BUILTIN_HANDLERS,
     )
+    process_file_mock.assert_called_once_with(config, in_path)
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
 
 
@@ -223,27 +222,18 @@ def test_archive_multiple_files(tmp_path: Path):
         )
     assert result.exit_code == 0
     assert process_file_mock.call_count == 2
+    config = ExtractionConfig(
+        extract_root=tmp_path,
+        max_depth=DEFAULT_DEPTH,
+        entropy_depth=1,
+        entropy_plot=False,
+        process_num=DEFAULT_PROCESS_NUM,
+        keep_extracted_chunks=False,
+        handlers=mock.ANY,
+    )
     assert process_file_mock.call_args_list == [
-        mock.call(
-            in_path_1,
-            tmp_path,
-            max_depth=DEFAULT_DEPTH,
-            entropy_depth=1,
-            entropy_plot=False,
-            process_num=DEFAULT_PROCESS_NUM,
-            keep_extracted_chunks=False,
-            handlers=mock.ANY,
-        ),
-        mock.call(
-            in_path_2,
-            tmp_path,
-            max_depth=DEFAULT_DEPTH,
-            entropy_depth=1,
-            entropy_plot=False,
-            process_num=DEFAULT_PROCESS_NUM,
-            keep_extracted_chunks=False,
-            handlers=mock.ANY,
-        ),
+        mock.call(config, in_path_1),
+        mock.call(config, in_path_2),
     ]
 
 
@@ -276,6 +266,6 @@ def test_keep_extracted_chunks(
     assert result.exit_code == 0
     process_file_mock.assert_called_once()
     assert (
-        process_file_mock.call_args.kwargs["keep_extracted_chunks"]
+        process_file_mock.call_args.args[0].keep_extracted_chunks
         == keep_extracted_chunks
     ), fail_message

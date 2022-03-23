@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from unblob.models import Handler, Handlers, ValidChunk
-from unblob.processing import process_file
+from unblob.processing import ExtractionConfig, process_file
 
 _ZIP_CONTENT = b"good file"
 # replacing _ZIP_CONTENT with _DAMAGED_ZIP_CONTENT will result in CRC error at unpacking time
@@ -45,26 +45,24 @@ def output_dir(tmp_path):
 
 def test_remove_extracted_chunks(input_dir: Path, output_dir: Path):
     (input_dir / "blob").write_bytes(ZIP_BYTES)
-    all_reports = process_file(
-        path=input_dir,
+    config = ExtractionConfig(
         extract_root=output_dir,
         entropy_depth=0,
-        keep_extracted_chunks=False,
     )
 
+    all_reports = process_file(config, path=input_dir)
     assert list(output_dir.glob("**/*.zip")) == []
     assert all_reports == [], f"Unexpected error reports: {all_reports}"
 
 
 def test_keep_all_problematic_chunks(input_dir: Path, output_dir: Path):
     (input_dir / "blob").write_bytes(DAMAGED_ZIP_BYTES)
-    all_reports = process_file(
-        path=input_dir,
+    config = ExtractionConfig(
         extract_root=output_dir,
         entropy_depth=0,
-        keep_extracted_chunks=False,
     )
 
+    all_reports = process_file(config, path=input_dir)
     # damaged zip file should not be removed
     assert all_reports != [], "Unexpectedly no errors found!"
     assert list(output_dir.glob("**/*.zip"))
@@ -72,13 +70,12 @@ def test_keep_all_problematic_chunks(input_dir: Path, output_dir: Path):
 
 def test_keep_all_unknown_chunks(input_dir: Path, output_dir: Path):
     (input_dir / "blob").write_bytes(b"unknown1" + ZIP_BYTES + b"unknown2")
-    all_reports = process_file(
-        path=input_dir,
+    config = ExtractionConfig(
         extract_root=output_dir,
         entropy_depth=0,
-        keep_extracted_chunks=False,
     )
 
+    all_reports = process_file(config, path=input_dir)
     assert list(output_dir.glob("**/*.unknown"))
     assert all_reports == [], f"Unexpected error reports: {all_reports}"
 
@@ -103,13 +100,11 @@ class _HandlerWithNullExtractor(Handler):
 
 def test_keep_chunks_with_null_extractor(input_dir: Path, output_dir: Path):
     (input_dir / "blob").write_text("some text")
-    all_reports = process_file(
-        path=input_dir,
+    config = ExtractionConfig(
         extract_root=output_dir,
         entropy_depth=0,
-        keep_extracted_chunks=False,
         handlers=Handlers([tuple([_HandlerWithNullExtractor])]),
     )
-
+    all_reports = process_file(config, path=input_dir)
     assert list(output_dir.glob("**/*.null"))
     assert all_reports == [], f"Unexpected error reports: {all_reports}"

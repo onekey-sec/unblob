@@ -13,7 +13,12 @@ from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
 from .handlers import BUILTIN_HANDLERS, Handlers
 from .logging import configure_logger, noformat
-from .processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, process_file
+from .processing import (
+    DEFAULT_DEPTH,
+    DEFAULT_PROCESS_NUM,
+    ExtractionConfig,
+    process_file,
+)
 
 logger = get_logger()
 
@@ -154,19 +159,20 @@ def cli(
     extra_handlers = plugin_manager.load_handlers_from_plugins()
     handlers = handlers.with_prepended(extra_handlers)
 
+    config = ExtractionConfig(
+        extract_root=extract_root,
+        max_depth=depth,
+        entropy_depth=entropy_depth,
+        entropy_plot=bool(verbose >= 3),
+        process_num=process_num,
+        handlers=handlers,
+        keep_extracted_chunks=keep_extracted_chunks,
+    )
+
     logger.info("Start processing files", count=noformat(len(files)))
     all_reports = []
     for path in files:
-        report = process_file(
-            path,
-            extract_root,
-            max_depth=depth,
-            entropy_depth=entropy_depth,
-            entropy_plot=bool(verbose >= 3),
-            process_num=process_num,
-            handlers=handlers,
-            keep_extracted_chunks=keep_extracted_chunks,
-        )
+        report = process_file(config, path)
         all_reports.extend(report)
     return all_reports
 
