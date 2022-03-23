@@ -1,10 +1,16 @@
 import io
+import os
+import stat
 import struct
-from typing import Optional
+from enum import IntEnum, unique
+from pathlib import Path
+from typing import Dict, Optional
 
 from structlog import get_logger
 
-from ...file_utils import Endian, InvalidInputFormat, read_until_past
+from unblob.extractor import is_safe_path
+
+from ...file_utils import Endian, InvalidInputFormat, read_until_past, round_up
 from ...models import Extractor, StructHandler, ValidChunk
 
 logger = get_logger()
@@ -14,16 +20,6 @@ STRING_ALIGNMENT = 16
 MAX_LINUX_PATH_LENGTH = 0xFF
 MAX_UINT32 = 0x100000000
 
-
-import os
-import stat
-import struct
-from enum import IntEnum, unique
-from pathlib import Path
-from typing import Dict, Optional
-
-
-from ...file_utils import round_up
 
 WORLD_RW = 0o666
 WORLD_RWX = 0o777
@@ -44,14 +40,6 @@ class FS_TYPE(IntEnum):
     CHAR_DEV = 5
     SOCKET = 6
     FIFO = 7
-
-
-def is_safe_path(basedir: Path, path: Path) -> bool:
-    try:
-        basedir.joinpath(path).resolve().relative_to(basedir.resolve())
-    except ValueError:
-        return False
-    return True
 
 
 def romfs_checksum(content: bytes) -> int:
@@ -175,13 +163,11 @@ class RomFSHeader(object):
     end_offset: int
     inodes: Dict[int, "FileHeader"]
     extract_root: Path
-    force_overwrite: bool = False
 
     def __init__(
         self,
         file: io.BufferedReader,
         extract_root: Path,
-        force_overwrite: bool = False,
     ):
 
         self.file = file
@@ -200,7 +186,6 @@ class RomFSHeader(object):
         self.inodes = {}
 
         self.extract_root = extract_root
-        self.force_overwrite = force_overwrite
 
     def valid_checksum(self) -> bool:
         current_position = self.file.tell()
@@ -227,11 +212,11 @@ class RomFSHeader(object):
     def is_recursive(self, addr) -> bool:
         return True if addr in self.inodes else False
 
-    def recursive_walk(self, addr: int, parent: FileHeader = None):
+    def recursive_walk(self, addr: int, parent: Optional[FileHeader] = None):
         while self.is_valid_addr(addr) is True:
             addr = self.walk_dir(addr, parent)
 
-    def walk_dir(self, addr: int, parent: FileHeader = None):
+    def walk_dir(self, addr: int, parent: Optional[FileHeader] = None):
         self.file.seek(addr, io.SEEK_SET)
         file_header = FileHeader(addr, self.file)
         file_header.parent = parent
@@ -352,7 +337,7 @@ class RomFSHeader(object):
 class RomfsExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
         with inpath.open("rb") as f:
-            header = RomFSHeader(f, outdir, True)
+            header = RomFSHeader(f, outdir)
             header.validate()
             header.recursive_walk(header.header_end_offset, None)
             header.dump_fs()
@@ -365,15 +350,6 @@ def valid_checksum(content: bytes) -> int:
         total += struct.unpack(">L", content[i : (i + 4)])[0]  # noqa: E203
         total %= MAX_UINT32
     return total == 0
-
-
-def get_string(file: io.BufferedIOBase) -> bytes:
-    filename = b""
-    counter = 0
-    while b"\x00" not in filename and counter < MAX_LINUX_PATH_LENGTH:
-        filename += file.read(STRING_ALIGNMENT)
-        counter += STRING_ALIGNMENT
-    return filename.rstrip(b"\x00")
 
 
 class RomFSFSHandler(StructHandler):
