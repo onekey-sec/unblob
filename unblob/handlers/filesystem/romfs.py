@@ -345,11 +345,7 @@ class RomfsExtractor(Extractor):
 
 def valid_checksum(content: bytes) -> int:
     """Compute the RomFS checksum of content."""
-    total = 0
-    for i in range(0, len(content), 4):
-        total += struct.unpack(">L", content[i : (i + 4)])[0]  # noqa: E203
-        total %= MAX_UINT32
-    return total == 0
+    return romfs_checksum(content) == 0
 
 
 class RomFSFSHandler(StructHandler):
