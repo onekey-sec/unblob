@@ -4,7 +4,6 @@
 , poetry2nix
 , python3
 , rustPlatform
-, yara
 , e2fsprogs
 , lz4
 , lziprecover
@@ -48,12 +47,6 @@ let
           self.cstruct
           self.python-lzo
         ];
-      });
-
-      yara-python = super.yara-python.overridePythonAttrs (_: {
-        # Use _our_ patched version of yara
-        buildInputs = [ yara ];
-        setupPyBuildFlags = [ "--dynamic-linking" ];
       });
     });
 

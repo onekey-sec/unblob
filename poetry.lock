@@ -441,7 +441,7 @@ resolved_reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
 
 [[package]]
 name = "yara-python"
-version = "4.1.3"
+version = "4.2.0"
 description = "Python interface for YARA"
 category = "main"
 optional = false
@@ -673,15 +673,17 @@ virtualenv = [
 ]
 yaffshiv = []
 yara-python = [
-    {file = "yara-python-4.1.3.tar.gz", hash = "sha256:348d80039c3b499ad8ec9ce02ceaef0c1d5b7282b84e3b6fe6adb6a158c8e0cf"},
-    {file = "yara_python-4.1.3-cp35-cp35m-win32.whl", hash = "sha256:ecfa95fa1e2cc4114e6043ee7760590eaf094bd83e0784bb0fd5d438899934c7"},
-    {file = "yara_python-4.1.3-cp35-cp35m-win_amd64.whl", hash = "sha256:9ae9a523006fe32f46ad2144d0391fdcba1d4fb6de77437898816546e9290dd0"},
-    {file = "yara_python-4.1.3-cp36-cp36m-win32.whl", hash = "sha256:79964f785ce567fe51a7f76874a8d737b8e64e414a43437289b39a17bf087165"},
-    {file = "yara_python-4.1.3-cp36-cp36m-win_amd64.whl", hash = "sha256:b0d2ad9f7dba273b96214edc99b24cf622babe1d74af9205f82221a3a6dfdfa7"},
-    {file = "yara_python-4.1.3-cp37-cp37m-win32.whl", hash = "sha256:f89e514615b49998c27a92876a37cc57dc3c7fa9f163d5c2ea50176d7f9596b1"},
-    {file = "yara_python-4.1.3-cp37-cp37m-win_amd64.whl", hash = "sha256:da1423fa7d52498e8cb4d3c9bd1ad3237281c2aede82adbdcc8ce5a9b7fcfb7c"},
-    {file = "yara_python-4.1.3-cp38-cp38-win32.whl", hash = "sha256:0dde7a7458dd519e49c3c64a46dc3d1b4f614d27455f2669d4e113ff02ba6c66"},
-    {file = "yara_python-4.1.3-cp38-cp38-win_amd64.whl", hash = "sha256:352536454b1d415a132298d6cf8acbafa94d3f55576962a5b688dd41d0fb03e6"},
-    {file = "yara_python-4.1.3-cp39-cp39-win32.whl", hash = "sha256:6bec7be7fdd1d91f89113cb244c2d890431b51e8411480a649d754188e4bbabc"},
-    {file = "yara_python-4.1.3-cp39-cp39-win_amd64.whl", hash = "sha256:4159c2ffe6855b8e608e1b6728a80088e2edef31f23d7c8204ce43948ba2ea9b"},
+    {file = "yara-python-4.2.0.tar.gz", hash = "sha256:d02f239f429c6c94e60b500246d376595fbed8d9124209d332b6f8e7cfb5ec6e"},
+    {file = "yara_python-4.2.0-cp310-cp310-win32.whl", hash = "sha256:1faec6480be87964056ac19cddae052da4c88755426c81c83bce53ed7d57ebfe"},
+    {file = "yara_python-4.2.0-cp310-cp310-win_amd64.whl", hash = "sha256:76f711603de6a66a42be4501219288353397b032d6239b01a34e2bbcce4a2e50"},
+    {file = "yara_python-4.2.0-cp35-cp35m-win32.whl", hash = "sha256:cabef9144d35357ba9815f6ecacfaeed05fa2cc2a2ae0a0c37766839500555d9"},
+    {file = "yara_python-4.2.0-cp35-cp35m-win_amd64.whl", hash = "sha256:300581837e17114432d52599075bb8348dc2ce3e9ec8d3c325f5a797424791a4"},
+    {file = "yara_python-4.2.0-cp36-cp36m-win32.whl", hash = "sha256:c4c147495267a26b2d5fc39a486e1561bc501b170f973ab1ab0f39f2c00791da"},
+    {file = "yara_python-4.2.0-cp36-cp36m-win_amd64.whl", hash = "sha256:9d43bb5a5148f1c50e972e8fc4653620d63bb0d1cb02701d41fa580eb44a1bcf"},
+    {file = "yara_python-4.2.0-cp37-cp37m-win32.whl", hash = "sha256:0de9d9482a6def6ef719ac9024dceae89809fa05d02656518a146374df93eb94"},
+    {file = "yara_python-4.2.0-cp37-cp37m-win_amd64.whl", hash = "sha256:963e089f5d70d614408d08830a9244f3146a63c87a2daedc130af72f6569d2af"},
+    {file = "yara_python-4.2.0-cp38-cp38-win32.whl", hash = "sha256:5da322141985e95f5018856603761ad908c3eb6dd8add566066c082fca8b4541"},
+    {file = "yara_python-4.2.0-cp38-cp38-win_amd64.whl", hash = "sha256:4853d0bf9a320fd98f5a0beb94eb651639073f8ccc2e2f40c132c66f3ed64d74"},
+    {file = "yara_python-4.2.0-cp39-cp39-win32.whl", hash = "sha256:e5adfdcf01e2cc6bc07603eaadb314cf3515cab577e529db86c4de7bf9b327dd"},
+    {file = "yara_python-4.2.0-cp39-cp39-win_amd64.whl", hash = "sha256:a92dc977e5e6add276ebdf5c8e0ddae7a79a85993c407a9c1d198dab518116e6"},
 ]
