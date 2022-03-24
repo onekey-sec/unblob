@@ -148,8 +148,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/IoT-Inspector/jefferson.git"
-reference = "729d0b691abf9bc2bd9ad13830d941ec33a6ed44"
-resolved_reference = "729d0b691abf9bc2bd9ad13830d941ec33a6ed44"
+reference = "1a0ee577d7c7238303b8d76abb9a44422ac062f5"
+resolved_reference = "1a0ee577d7c7238303b8d76abb9a44422ac062f5"
 
 [[package]]
 name = "lark"
@@ -450,7 +450,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "8763d863000d95ebd019c62f002ed8f787c6c1f6a8e5f51f574ac82bd858b5c5"
+content-hash = "e756d4a70250f5795cb0c5918dfcbec81c57125d0a87cddc2b72323351db67f3"
 
 [metadata.files]
 arpy = [
