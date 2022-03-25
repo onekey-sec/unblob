@@ -5,12 +5,28 @@ from structlog import get_logger
 
 from unblob.extractors import Command
 
+from ...file_utils import Endian, convert_int32
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
+CHECKSUM_LENGTH = 4
 
-F_H_FILTER = 0x00000800
+# Header flags defined in lzop (http://www.lzop.org/) source in src/conf.h
+F_ADLER32_D = 0x00000001  # noqa
+F_ADLER32_C = 0x00000002  # noqa
+F_STDIN = 0x00000004  # noqa
+F_STDOUT = 0x00000008  # noqa
+F_NAME_DEFAULT = 0x00000010  # noqa
+F_DOSISH = 0x00000020  # noqa
+F_H_EXTRA_FIELD = 0x00000040  # noqa
+F_H_GMTDIFF = 0x00000080  # noqa
+F_CRC32_D = 0x00000100  # noqa
+F_CRC32_C = 0x00000200  # noqa
+F_MULTIPART = 0x00000400  # noqa
+F_H_FILTER = 0x00000800  # noqa
+F_H_CRC32 = 0x00001000  # noqa
+F_H_PATH = 0x00002000  # noqa
 
 
 class LZOHandler(StructHandler):
@@ -39,6 +55,7 @@ class LZOHandler(StructHandler):
             uint32 gmtdiff;
             uint8 filename_len;
             char filename[filename_len];
+            uint32 header_checksum;        // (CRC32 if flags & F_H_CRC32 else Adler32)
         } lzo_header_no_filter_t;
 
         typedef struct lzo_header_filter
@@ -56,15 +73,8 @@ class LZOHandler(StructHandler):
             uint32 gmtdiff;
             uint8 filename_len;
             char filename[filename_len];
+            uint32 header_checksum;        // (CRC32 if flags & F_H_CRC32 else Adler32)
         } lzo_header_filter_t;
-
-        typedef struct lzo_size_crc {
-            uint32 original_crc;        // (CRC32 if flags & F_H_CRC32 else Adler32)
-            uint32 uncompressed_size;
-            uint32 compressed_size;
-            uint32 uncompressed_crc;
-            uint32 compressed_crc;      // (only if flags & F_ADLER32_C or flags & F_CRC32_C)
-        } lzo_size_crc_t;
     """
     HEADER_STRUCT = "lzo_header"
 
@@ -86,13 +96,20 @@ class LZOHandler(StructHandler):
 
         logger.debug("LZO header parsed", header=header, _verbosity=3)
 
-        size_crc_header = self.cparser_be.lzo_size_crc_t(file)
-        logger.debug("CRC header parsed", header=size_crc_header, _verbosity=3)
+        uncompressed_size = convert_int32(file.read(4), endian=Endian.BIG)
+        while uncompressed_size:
+            compressed_size = convert_int32(file.read(4), endian=Endian.BIG)
 
-        end_offset = (
-            len(header) + len(size_crc_header) + size_crc_header.compressed_size
-        )
+            checksum_size = 0
+            if header.flags & F_ADLER32_D or header.flags & F_CRC32_D:
+                checksum_size += CHECKSUM_LENGTH
 
-        return ValidChunk(
-            start_offset=start_offset, end_offset=start_offset + end_offset
-        )
+            if header.flags & F_ADLER32_C or header.flags & F_CRC32_C:
+                checksum_size += CHECKSUM_LENGTH
+
+            file.seek(checksum_size + compressed_size, io.SEEK_CUR)
+            uncompressed_size = convert_int32(file.read(4), endian=Endian.BIG)
+
+        end_offset = file.tell()
+
+        return ValidChunk(start_offset=start_offset, end_offset=end_offset)
