@@ -42,8 +42,18 @@ def test_unlzw(content: bytes, start_offset: int, expected_end_offset: int):
 @pytest.mark.parametrize(
     "content, start_offset",
     (
+        pytest.param(
+            b"\x1f\x9d\x08\x61\xe0\xc0\x61\x53\x26\x86\x02", 0, id="header_too_low_max"
+        ),
+        pytest.param(
+            b"\x1f\x9d\x11\x61\xe0\xc0\x61\x53\x26\x86\x02", 0, id="header_too_high_max"
+        ),
         pytest.param(b"\x1f\x9d\x90", 0, id="header_no_content"),
-        pytest.param(b"\x1f\x9d\x60", 0, id="header_invalid_flag_bytes"),
+        pytest.param(
+            b"\x1f\x9d\x60\x61\xe0\xc0\x61\x53\x26\x86\x02",
+            0,
+            id="header_invalid_flag_bytes",
+        ),
         pytest.param(b"\x1f\x9d\xff", 0, id="header_invalid_flag_code"),
         pytest.param(b"\x1f\x9d\x90\xff\xff", 0, id="code_not_literal"),
         pytest.param(b"\x1f\x9d\x90\x61", 0, id="file_ends_before_stream"),
