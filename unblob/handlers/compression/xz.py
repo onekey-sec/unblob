@@ -101,7 +101,7 @@ class XZHandler(Handler):
                 size, _ = read_multibyte_int(file)
                 index_size += size
 
-                blocks_size += unpadded_size
+                blocks_size += round_up(unpadded_size, XZ_PADDING)
 
             index_size += CRC32_LEN
 
