@@ -20,7 +20,7 @@ from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...file_utils import InvalidInputFormat, read_until_past
+from ...file_utils import InvalidInputFormat
 from ...models import Handler, ValidChunk
 from ._gzip_reader import SingleMemberGzipReader
 
@@ -78,10 +78,7 @@ class GZIPHandler(Handler):
 
         file.seek(GZIP2_FOOTER_LEN - len(fp.unused_data), io.SEEK_CUR)
 
-        # Gzip files can be padded with zeroes
-        end_offset = read_until_past(file, b"\x00")
-
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=end_offset,
+            end_offset=file.tell(),
         )
