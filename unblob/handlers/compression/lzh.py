@@ -27,24 +27,7 @@ class LZHHandler(StructHandler):
             $lzh_magic_lh8 = "-lh8-"
             $lzh_magic_lhd = "-lhd-"
         condition:
-            any of them and
-            // validate that level identifier is either 0x0, 0x1 or 0x2
-            // the fact that we use 'or' is not problematic given that we check only one match at a time
-            // so only one of those condition will be true
-            (
-                uint8(@lzh_magic_lh0 + 18) <= 0x02 or
-                uint8(@lzh_magic_lzs + 18) <= 0x02 or
-                uint8(@lzh_magic_lz4 + 18) <= 0x02 or
-                uint8(@lzh_magic_lh1 + 18) <= 0x02 or
-                uint8(@lzh_magic_lh2 + 18) <= 0x02 or
-                uint8(@lzh_magic_lh3 + 18) <= 0x02 or
-                uint8(@lzh_magic_lh4 + 18) <= 0x02 or
-                uint8(@lzh_magic_lh5 + 18) <= 0x02 or
-                uint8(@lzh_magic_lh6 + 18) <= 0x02 or
-                uint8(@lzh_magic_lh7 + 18) <= 0x02 or
-                uint8(@lzh_magic_lh8 + 18) <= 0x02 or
-                uint8(@lzh_magic_lhd + 18) <= 0x02
-            )
+            any of them
     """
 
     YARA_MATCH_OFFSET = -2
@@ -80,6 +63,9 @@ class LZHHandler(StructHandler):
     ) -> Optional[ValidChunk]:
 
         header = self.parse_header(file, Endian.LITTLE)
+
+        if header.level_identifier > 0x2:
+            return
 
         if header.level_identifier == 0x2:
             # with level 2, the header size is a uint16 rather than uint8 and there
