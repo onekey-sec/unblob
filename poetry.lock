@@ -106,6 +106,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "file-magic"
+version = "0.4.0"
+description = "(official) libmagic Python bindings"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "filelock"
 version = "3.4.0"
 description = "A platform independent file lock."
@@ -453,7 +461,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "a8d0a07026437f12dd7f41d479a481c2558262b90bfd146dcdcf65f6e5d0f3d3"
+content-hash = "f7a7c444f691d8d2a6a2f1be7aee04f5e045f70d7a058c7d9057e45c515fded5"
 
 [metadata.files]
 arpy = [
@@ -537,6 +545,10 @@ cstruct = [
 distlib = [
     {file = "distlib-0.3.3-py2.py3-none-any.whl", hash = "sha256:c8b54e8454e5bf6237cc84c20e8264c3e991e824ef27e8f1e81049867d861e31"},
     {file = "distlib-0.3.3.zip", hash = "sha256:d982d0751ff6eaaab5e2ec8e691d949ee80eddf01a62eaa96ddb11531fe16b05"},
+]
+file-magic = [
+    {file = "file-magic-0.4.0.tar.gz", hash = "sha256:4dd1492b9a9ca57c272aaa9cc495cd65310115b2aec5503c7d047ad9bfae1035"},
+    {file = "file_magic-0.4.0-py3-none-any.whl", hash = "sha256:8ea03da58cf4de5a69909c0e27746cf17fc903356a601967ab01577916a73aed"},
 ]
 filelock = [
     {file = "filelock-3.4.0-py3-none-any.whl", hash = "sha256:2e139a228bcf56dd8b2274a65174d005c4a6b68540ee0bdbb92c76f43f29f7e8"},

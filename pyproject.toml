@@ -26,6 +26,7 @@ jefferson = { git = "https://github.com/IoT-Inspector/jefferson.git", rev = "1a0
 yaffshiv = { git = "https://github.com/IoT-Inspector/yaffshiv.git", rev = "24e6e453a36a02144ae2d159eb3229f9c6312828" }
 plotext = "^4.1.5"
 pluggy = "^1.0.0"
+file-magic = "^0.4.0"
 
 
 [tool.poetry.dev-dependencies]
