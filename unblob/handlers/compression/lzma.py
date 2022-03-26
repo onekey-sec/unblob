@@ -6,10 +6,19 @@ from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...file_utils import DEFAULT_BUFSIZE, Endian, InvalidInputFormat, convert_int64
+from ...file_utils import (
+    DEFAULT_BUFSIZE,
+    Endian,
+    InvalidInputFormat,
+    convert_int32,
+    convert_int64,
+)
 from ...models import Handler, ValidChunk
 
 logger = get_logger()
+
+# 256GB
+MAX_UNCOMPRESSED_SIZE = 256 * 1024 * 1024 * 1024
 
 
 class LZMAHandler(Handler):
@@ -29,14 +38,7 @@ class LZMAHandler(Handler):
             }
         condition:
             // LZMA file format: https://svn.python.org/projects/external/xz-5.0.3/doc/lzma-file-format.txt
-            $lzma_magic and
-            // dictionary size is non-zero (section 1.1.2 of format definition)
-            uint32(@lzma_magic + 1) > 0 and
-            // dictionary size is a power of two  (section 1.1.2 of format definition)
-            (uint32(@lzma_magic + 1) & (uint32(@lzma_magic + 1) - 1)) == 0 and
-            // uncompressed size is either unknown (0xFFFFFFFFFFFFFFFF) or smaller than 256GB  (section 1.1.3 of format definition)
-            // yara does not support uint64 so we check it using uint32
-            ((uint32(@lzma_magic + 5) == 0xFFFFFFFF and uint32(@lzma_magic + 9) == 0xFFFFFFFF) or uint32(@lzma_magic + 9) < 0x00000040)
+            $lzma_magic
     """
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
@@ -46,8 +48,23 @@ class LZMAHandler(Handler):
     ) -> Optional[ValidChunk]:
 
         read_size = 0
-        file.seek(start_offset + 5)
+        file.seek(start_offset + 1)
+        dictionary_size = convert_int32(file.read(4), Endian.LITTLE)
+
+        # dictionary size is non-zero (section 1.1.2 of format definition)
+        # dictionary size is a power of two  (section 1.1.2 of format definition)
+        if dictionary_size == 0 or (dictionary_size & (dictionary_size - 1)) != 0:
+            raise InvalidInputFormat
+
         uncompressed_size = convert_int64(file.read(8), Endian.LITTLE)
+
+        # uncompressed size is either unknown (0xFFFFFFFFFFFFFFFF) or
+        # smaller than 256GB  (section 1.1.3 of format definition)
+        if not (
+            uncompressed_size == 0xFFFFFFFFFFFFFFFF
+            or uncompressed_size < MAX_UNCOMPRESSED_SIZE
+        ):
+            raise InvalidInputFormat
 
         file.seek(start_offset, io.SEEK_SET)
         decompressor = lzma.LZMADecompressor(format=lzma.FORMAT_ALONE)
