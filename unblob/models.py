@@ -143,7 +143,7 @@ class ExtractError(Exception):
 
 
 class Extractor(abc.ABC):
-    def get_dependencies(cls) -> List[str]:
+    def get_dependencies(self) -> List[str]:
         """Returns the external command dependencies."""
         return []
 
