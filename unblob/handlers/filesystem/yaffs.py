@@ -4,9 +4,16 @@ from enum import IntEnum
 from typing import Optional
 
 import attr
+from dissect.cstruct import Instance
 from structlog import get_logger
 
-from unblob.file_utils import Endian, InvalidInputFormat, get_endian, read_until_past
+from unblob.file_utils import (
+    Endian,
+    InvalidInputFormat,
+    get_endian,
+    read_until_past,
+    snull,
+)
 
 from ...extractors import Command
 from ...models import StructHandler, ValidChunk
@@ -44,6 +51,15 @@ def decode_file_size(high: int, low: int) -> int:
         return low
     else:
         return 0
+
+
+def valid_name(name: bytes) -> bool:
+    # a valid name is either full of null bytes, or unicode decodable
+    try:
+        snull(name[:-1]).decode("utf-8")
+        return True
+    except UnicodeDecodeError:
+        return False
 
 
 class _YAFFSBase(StructHandler):
@@ -98,6 +114,15 @@ class _YAFFSBase(StructHandler):
 
     BIG_ENDIAN_MAGIC = 0x00_00_00_01
 
+    def is_valid_header(self, header: Instance) -> bool:
+        if not valid_name(header.name):
+            return False
+        if header.sum_no_longer_used != 0xFFFF:
+            return False
+        if header.chksum != 0xFFFF:
+            return False
+        return True
+
     def get_files(
         self, file: io.BufferedIOBase, start_offset: int, eof: int, config: YAFFSConfig
     ):
@@ -107,6 +132,8 @@ class _YAFFSBase(StructHandler):
             file.seek(current_offset, io.SEEK_SET)
             try:
                 header = self.parse_header(file, config.endian)
+                if not self.is_valid_header(header):
+                    break
             except EOFError:
                 break
 
@@ -127,7 +154,6 @@ class _YAFFSBase(StructHandler):
                 # more pages we need to skip
                 blocks += math.ceil(filesize / config.page_size)
             else:
-                logger.debug("End of YAFFS section ?")
                 break
             current_offset += blocks * (config.page_size + config.spare_size)
         return files, current_offset
