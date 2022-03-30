@@ -44,6 +44,15 @@ unblob = "unblob.cli:main"
 
 [tool.pytest.ini_options]
 addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
+norecursedirs = """
+  *.egg
+  *_extract
+  .*
+  dist
+  build
+  target
+  tests/integration
+"""
 
 [tool.vulture]
 paths = ["unblob/" ]
