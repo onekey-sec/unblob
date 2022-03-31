@@ -13,6 +13,7 @@
 , sasquatch
 , simg2img
 , unar
+, file
 }:
 
 let
@@ -54,6 +55,12 @@ let
           # Use the _same_ version as unblob
           self.python-lzo
         ];
+      });
+
+      file-magic = super.file-magic.overridePythonAttrs (_: {
+        patchPhase = ''
+          substituteInPlace magic.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
+        '';
       });
     });
 
