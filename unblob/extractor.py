@@ -4,7 +4,7 @@ File extraction related functions.
 import io
 import os
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 from structlog import get_logger
 
@@ -15,21 +15,11 @@ from .report import MaliciousSymlinkRemoved
 logger = get_logger()
 
 
-APPEND_NAME = "_extract"
-
-
-def make_extract_dir(root: Path, path: Path, extract_root: Path) -> Path:
-    """Create extraction dir under root with the name of path."""
-    relative_path = path.relative_to(root)
-    extract_name = relative_path.name + APPEND_NAME
-    extract_dir = extract_root / relative_path.with_name(extract_name)
-    extract_dir.mkdir(parents=True, exist_ok=True)
-    logger.debug("Created extraction dir", path=extract_dir)
-    return extract_dir.expanduser().resolve()
-
-
 def carve_chunk_to_file(carve_path: Path, file: io.BufferedIOBase, chunk: Chunk):
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
+    carve_path.parent.mkdir(parents=True, exist_ok=True)
+    logger.debug("Carving chunk", path=carve_path)
+
     with carve_path.open("wb") as f:
         for data in iterate_file(file, chunk.start_offset, chunk.size):
             f.write(data)
@@ -104,13 +94,6 @@ def fix_extracted_directory(outdir: Path, task_result: TaskResult):
             fix_symlink(path, outdir, task_result)
         else:
             fix_permission(path)
-
-
-def get_extract_paths(extract_dir: Path, carved_path: Path) -> Tuple[Path, Path]:
-    content_dir = extract_dir / (carved_path.name + APPEND_NAME)
-    inpath = carved_path.expanduser().resolve()
-    outdir = content_dir.expanduser().resolve()
-    return inpath, outdir
 
 
 def carve_unknown_chunks(
