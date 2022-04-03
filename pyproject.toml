@@ -27,6 +27,7 @@ yaffshiv = { git = "https://github.com/IoT-Inspector/yaffshiv.git", rev = "24e6e
 plotext = "^4.1.5"
 pluggy = "^1.0.0"
 file-magic = "^0.4.0"
+hyperscan = "^0.2.0"
 
 
 [tool.poetry.dev-dependencies]
