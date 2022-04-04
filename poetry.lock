@@ -391,19 +391,22 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
-name = "ubi-reader"
+name = "ubi_reader"
 version = "0.7.2"
-description = "Extract files from UBI and UBIFS images."
+description = ""
 category = "main"
 optional = false
 python-versions = "*"
 develop = false
 
+[package.dependencies]
+python-lzo = "*"
+
 [package.source]
 type = "git"
 url = "https://github.com/IoT-Inspector/ubi_reader.git"
-reference = "3b30234ffe117eb3d4f2a7a4e455c3fb4bca3668"
-resolved_reference = "3b30234ffe117eb3d4f2a7a4e455c3fb4bca3668"
+reference = "1b7f0d0d3b9ad936bc127601ebe9144c1a115215"
+resolved_reference = "1b7f0d0d3b9ad936bc127601ebe9144c1a115215"
 
 [[package]]
 name = "virtualenv"
@@ -450,7 +453,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "e756d4a70250f5795cb0c5918dfcbec81c57125d0a87cddc2b72323351db67f3"
+content-hash = "a8d0a07026437f12dd7f41d479a481c2558262b90bfd146dcdcf65f6e5d0f3d3"
 
 [metadata.files]
 arpy = [
@@ -666,7 +669,7 @@ typing-extensions = [
     {file = "typing_extensions-4.0.1-py3-none-any.whl", hash = "sha256:7f001e5ac290a0c0401508864c7ec868be4e701886d5b573a9528ed3973d9d3b"},
     {file = "typing_extensions-4.0.1.tar.gz", hash = "sha256:4ca091dea149f945ec56afb48dae714f21e8692ef22a395223bcd328961b6a0e"},
 ]
-ubi-reader = []
+ubi_reader = []
 virtualenv = [
     {file = "virtualenv-20.10.0-py2.py3-none-any.whl", hash = "sha256:4b02e52a624336eece99c96e3ab7111f469c24ba226a53ec474e8e787b365814"},
     {file = "virtualenv-20.10.0.tar.gz", hash = "sha256:576d05b46eace16a9c348085f7d0dc8ef28713a2cabaa1cf0aea41e8f12c9218"},
