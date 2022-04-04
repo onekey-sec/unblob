@@ -8,7 +8,7 @@ import yara
 from structlog import get_logger
 
 from .file_utils import Endian, InvalidInputFormat, StructParser
-from .report import Report
+from .report import Report, Reports
 
 logger = get_logger()
 
@@ -115,8 +115,9 @@ class UnknownChunk(Chunk):
 
 
 class TaskResult:
-    def __init__(self):
-        self._reports = []
+    def __init__(self, task=None):
+        self._task = task
+        self._reports = Reports()
         self._new_tasks = []
 
     def add_report(self, report: Report):
@@ -126,11 +127,15 @@ class TaskResult:
         self._new_tasks.append(task)
 
     @property
+    def task(self):
+        return self._task
+
+    @property
     def new_tasks(self):
         return self._new_tasks
 
     @property
-    def reports(self):
+    def reports(self) -> Reports:
         return self._reports
 
 

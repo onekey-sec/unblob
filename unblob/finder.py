@@ -11,6 +11,8 @@ from typing import Dict, List, Tuple, Type
 import yara
 from structlog import get_logger
 
+from unblob.profiling import PerfCounter
+
 from .file_utils import InvalidInputFormat, LimitedStartReader
 from .handlers import Handlers
 from .logging import noformat
@@ -46,7 +48,8 @@ def search_chunks_by_priority(  # noqa: C901
         logger.debug("Starting priority level", priority_level=noformat(priority_level))
         yara_rules = make_yara_rules(handler_classes)
         handler_map = make_handler_map(handler_classes)
-        yara_results = search_yara_patterns(yara_rules, handler_map, path)
+        with PerfCounter(task_result, "Search Yara Patterns"):
+            yara_results = search_yara_patterns(yara_rules, handler_map, path)
 
         for result in yara_results:
             handler, match = result.handler, result.match
@@ -82,7 +85,10 @@ def search_chunks_by_priority(  # noqa: C901
 
                 limited_reader = LimitedStartReader(file, real_offset)
                 try:
-                    chunk = handler.calculate_chunk(limited_reader, real_offset)
+                    with PerfCounter(
+                        task_result, "Calculate Chunk", handler=handler.NAME
+                    ):
+                        chunk = handler.calculate_chunk(limited_reader, real_offset)
                 except InvalidInputFormat as exc:
                     logger.debug(
                         "File format is invalid",

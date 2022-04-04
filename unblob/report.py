@@ -11,11 +11,9 @@ class Severity(Enum):
     WARNING = "WARNING"
 
 
-@attr.define(kw_only=True)
+@attr.define(frozen=True, kw_only=True)
 class Report:
     """A common base class for different reports"""
-
-    severity: Severity
 
     # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
     handler: Optional[str] = None
@@ -24,8 +22,18 @@ class Report:
         return attr.asdict(self)
 
 
+class Error(Report):
+    severity: Severity
+
+
+class Reports(List[Report]):
+    @property
+    def errors(self) -> List[Error]:
+        return [r for r in self if isinstance(r, Error)]
+
+
 @attr.define(kw_only=True)
-class UnknownError(Report):
+class UnknownError(Error):
     """Describes an exception raised during file processing"""
 
     severity: Severity = Severity.ERROR
@@ -40,7 +48,7 @@ class CalculateChunkExceptionReport(UnknownError):
 
 
 @attr.define(kw_only=True)
-class ExtractCommandFailedReport(Report):
+class ExtractCommandFailedReport(Error):
     """Describes an error when failed to run the extraction command"""
 
     severity: Severity = Severity.WARNING
@@ -51,7 +59,7 @@ class ExtractCommandFailedReport(Report):
 
 
 @attr.define(kw_only=True)
-class ExtractorDependencyNotFoundReport(Report):
+class ExtractorDependencyNotFoundReport(Error):
     """Describes an error when the dependency of an extractor doesn't exist"""
 
     severity: Severity = Severity.ERROR
@@ -59,7 +67,7 @@ class ExtractorDependencyNotFoundReport(Report):
 
 
 @attr.define(kw_only=True)
-class MaliciousSymlinkRemoved(Report):
+class MaliciousSymlinkRemoved(Error):
     """Describes an error when malicious symlinks have been removed from disk."""
 
     severity: Severity = Severity.WARNING
