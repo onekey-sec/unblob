@@ -44,8 +44,20 @@ class ExtractionConfig:
 
 
 @terminate_gracefully
-def process_file(config: ExtractionConfig, path: Path) -> List[Report]:
+def process_files(config: ExtractionConfig, *paths: Path) -> List[Report]:
+    all_reports = []
+    for path in paths:
+        report = _process_one_file(config, path)
+        all_reports.extend(report)
 
+    return all_reports
+
+
+def process_file(config: ExtractionConfig, path: Path) -> List[Report]:
+    return process_files(config, path)
+
+
+def _process_one_file(config: ExtractionConfig, path: Path) -> List[Report]:
     root = path if path.is_dir() else path.parent
     root_task = Task(
         root=root,

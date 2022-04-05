@@ -18,7 +18,7 @@ from .processing import (
     DEFAULT_PROCESS_NUM,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
-    process_file,
+    process_files,
 )
 
 logger = get_logger()
@@ -183,10 +183,7 @@ def cli(
     )
 
     logger.info("Start processing files", count=noformat(len(files)))
-    all_reports = []
-    for path in files:
-        report = process_file(config, path)
-        all_reports.extend(report)
+    all_reports = process_files(config, *files)
     return all_reports
 
 
