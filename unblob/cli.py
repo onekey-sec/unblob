@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional
 
 import click
 from structlog import get_logger
@@ -153,7 +153,7 @@ class UnblobContext(click.Context):
     expose_value=False,
 )
 def cli(
-    files: Tuple[Path],
+    files: List[Path],
     extract_root: Path,
     depth: int,
     entropy_depth: int,
