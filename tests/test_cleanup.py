@@ -3,7 +3,6 @@
 The tests use zip files as inputs - for simplicity
 """
 import io
-import os
 import zipfile
 from pathlib import Path
 
@@ -17,16 +16,20 @@ _ZIP_CONTENT = b"good file"
 _DAMAGED_ZIP_CONTENT = b"*BAD*file"
 
 
-def _zip_bytes() -> bytes:
+def wrapzip(filename: str, content: bytes) -> bytes:
+    """Create an in-memory zip archive with a single file"""
     bio = io.BytesIO()
     z = zipfile.ZipFile(bio, mode="w", compression=zipfile.ZIP_STORED)
-    z.writestr("content.txt", _ZIP_CONTENT)
+    z.writestr(filename, content)
     z.close()
     return bio.getvalue()
 
 
-ZIP_BYTES = _zip_bytes()
+ZIP_BYTES = b"prefix to force carving the zip archive " + wrapzip(
+    "content.txt", _ZIP_CONTENT
+)
 DAMAGED_ZIP_BYTES = ZIP_BYTES.replace(_ZIP_CONTENT, _DAMAGED_ZIP_CONTENT)
+assert ZIP_BYTES != DAMAGED_ZIP_BYTES
 
 
 @pytest.fixture()
@@ -92,10 +95,7 @@ class _HandlerWithNullExtractor(Handler):
     """
 
     def calculate_chunk(self, file: io.BufferedIOBase, start_offset: int) -> ValidChunk:
-        pos = file.tell()
-        length = file.seek(0, os.SEEK_END)
-        file.seek(pos, os.SEEK_SET)
-        return ValidChunk(start_offset=0, end_offset=length)
+        return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
 
 
 def test_keep_chunks_with_null_extractor(input_dir: Path, output_dir: Path):

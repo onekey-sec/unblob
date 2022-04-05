@@ -11,13 +11,7 @@ from structlog import get_logger
 
 from unblob.handlers import BUILTIN_HANDLERS, Handlers
 
-from .extractor import (
-    carve_unknown_chunks,
-    carve_valid_chunk,
-    fix_extracted_directory,
-    get_extract_paths,
-    make_extract_dir,
-)
+from .extractor import carve_unknown_chunks, carve_valid_chunk, fix_extracted_directory
 from .file_utils import iterate_file, valid_path
 from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
@@ -42,6 +36,7 @@ class ExtractionConfig:
     max_depth: int = DEFAULT_DEPTH
     process_num: int = DEFAULT_PROCESS_NUM
     keep_extracted_chunks: bool = False
+    extract_suffix: str = "_extract"
     handlers: Handlers = BUILTIN_HANDLERS
 
 
@@ -127,7 +122,11 @@ class Processor:
             log.debug("Ignoring empty file")
             return
 
-        _FileTask(self._config, task, size, result).process()
+        filetask = _FileTask(self._config, task, size, result)
+        filetask.process()
+        # ensure that the root extraction directory is created even for empty extractions
+        if task.depth == 0:
+            filetask.extract_dir.mkdir(parents=True, exist_ok=True)
 
 
 class _FileTask:
@@ -142,6 +141,15 @@ class _FileTask:
         self.task = task
         self.size = size
         self.result = result
+
+        self.extract_dir = self._get_extract_dir()
+
+    def _get_extract_dir(self) -> Path:
+        """Extraction dir under root with the name of path."""
+        relative_path = self.task.path.relative_to(self.task.root)
+        extract_name = relative_path.name + self.config.extract_suffix
+        extract_dir = self.config.extract_root / relative_path.with_name(extract_name)
+        return extract_dir.expanduser().resolve()
 
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
@@ -163,35 +171,38 @@ class _FileTask:
     def _process_chunks(
         self, file, outer_chunks: List[ValidChunk], unknown_chunks: List[UnknownChunk]
     ):
-        extract_dir = make_extract_dir(
-            self.task.root, self.task.path, self.config.extract_root
+        carved_unknown_paths = carve_unknown_chunks(
+            self.extract_dir, file, unknown_chunks
         )
-
-        carved_unknown_paths = carve_unknown_chunks(extract_dir, file, unknown_chunks)
         self._calculate_entropies(carved_unknown_paths)
 
         for chunk in outer_chunks:
-            self._extract_chunk(extract_dir, file, chunk)
+            self._extract_chunk(file, chunk)
 
     def _calculate_entropies(self, paths: List[Path]):
         if self.task.depth < self.config.entropy_depth:
             for path in paths:
                 calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
-    def _extract_chunk(
-        self,
-        extract_dir: Path,
-        file,
-        chunk: ValidChunk,
-    ):
-        carved_path = carve_valid_chunk(extract_dir, file, chunk)
-        inpath, outdir = get_extract_paths(extract_dir, carved_path)
+    def _extract_chunk(self, file, chunk: ValidChunk):
+        # Skip carving whole file and thus duplicating the file and creating more directories
+        is_whole_file_chunk = chunk.start_offset == 0 and chunk.end_offset == self.size
+        skip_carving = is_whole_file_chunk
+        if skip_carving:
+            inpath = self.task.path
+            outdir = self.extract_dir
+            carved_path = None
+        else:
+            inpath = carve_valid_chunk(self.extract_dir, file, chunk)
+            outdir = self.extract_dir / (inpath.name + self.config.extract_suffix)
+            carved_path = inpath
 
         try:
             chunk.extract(inpath, outdir)
-            if not self.config.keep_extracted_chunks:
-                logger.debug("Removing extracted chunk", path=inpath)
-                inpath.unlink()
+
+            if carved_path and not self.config.keep_extracted_chunks:
+                logger.debug("Removing extracted chunk", path=carved_path)
+                carved_path.unlink()
 
         except ExtractError as e:
             for report in e.reports:
