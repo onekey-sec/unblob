@@ -49,17 +49,7 @@ class UnixCompressHandler(StructHandler):
         strings:
             $compress_magic = { 1f 9d }
         condition:
-            $compress_magic and
-
-            // flags byte validation (!(flag & 0x60) && (9 <= (flag & 0x1F) <= 16))
-            not (uint8(@compress_magic + 2) & 0x60) and
-            (uint8(@compress_magic + 2) & 0x1F) <= 16 and
-            (uint8(@compress_magic + 2) & 0x1F) >= 9 and
-
-            // An LZW encoding is a stream of codes, each code emitting zero or more bytes.
-            // There are four types of codes: literals, copies, clear and end.
-            // The first code _must_ be a literal
-            (int16(@compress_magic + 3) & 0x1FF) <= 255
+            $compress_magic
     """
 
     C_DEFINITIONS = r"""
@@ -107,7 +97,13 @@ class UnixCompressHandler(StructHandler):
 
         header = self.parse_header(file, Endian.LITTLE)
 
+        if header.flags & 0x60:
+            raise InvalidInputFormat("Flag & 0x60")
+
         max_ = header.flags & 0x1F
+        if not (9 <= max_ <= 16):
+            raise InvalidInputFormat("Invalid max")
+
         if max_ == 9:
             max_ = 10  # 9 doesn't really mean 9
 

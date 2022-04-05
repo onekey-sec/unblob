@@ -12,6 +12,33 @@ logger = get_logger()
 CPIO_TRAILER_NAME = b"TRAILER!!!"
 MAX_LINUX_PATH_LENGTH = 0x1000
 
+C_ISBLK = 0o60000
+C_ISCHR = 0o20000
+C_ISDIR = 0o40000
+C_ISFIFO = 0o10000
+C_ISSOCK = 0o140000
+C_ISLNK = 0o120000
+C_ISCTG = 0o110000
+C_ISREG = 0o100000
+
+C_FILE_TYPES = (
+    C_ISBLK,
+    C_ISCHR,
+    C_ISDIR,
+    C_ISFIFO,
+    C_ISSOCK,
+    C_ISLNK,
+    C_ISCTG,
+    C_ISREG,
+)
+
+C_NONE = 0o00000
+C_ISUID = 0o04000
+C_ISGID = 0o02000
+C_ISVTX = 0o01000
+
+C_STICKY_BITS = (C_NONE, C_ISUID, C_ISGID, C_ISVTX)
+
 
 class _CPIOHandlerBase(StructHandler):
     """A common base for all CPIO formats
@@ -53,6 +80,16 @@ class _CPIOHandlerBase(StructHandler):
                     offset += self._pad_content(header, c_filesize, c_namesize)
                     break
 
+            c_mode = self._calculate_mode(header)
+
+            file_type = c_mode & 0o770000
+            sticky_bit = c_mode & 0o7000
+
+            # heuristics 3: check mode field
+            is_valid = file_type in C_FILE_TYPES and sticky_bit in C_STICKY_BITS
+            if not is_valid:
+                return
+
             file.seek(c_filesize, io.SEEK_CUR)
             # Rounding up the total of the header size, and the c_filesize, again. Because
             # some CPIO implementations don't align the first chunk, but do align the 2nd.
@@ -89,6 +126,10 @@ class _CPIOHandlerBase(StructHandler):
     def _calculate_name_size(header) -> int:
         raise NotImplementedError
 
+    @staticmethod
+    def _calculate_mode(header) -> int:
+        raise NotImplementedError
+
 
 class BinaryHandler(_CPIOHandlerBase):
     NAME = "cpio_binary"
@@ -97,34 +138,7 @@ class BinaryHandler(_CPIOHandlerBase):
             $cpio_binary_magic= { c7 71 } // (default, bin, hpbin)
 
         condition:
-            $cpio_binary_magic and
-            /**
-                check that c_mode file type is valid
-                C_ISBLK		060000
-                C_ISCHR		020000
-                C_ISDIR		040000
-                C_ISFIFO	010000
-                C_ISSOCK	0140000
-                C_ISLNK		0120000
-                C_ISCTG		0110000
-                C_ISREG		0100000
-            */
-            for any i in (0o1, 0o2, 0o4, 0o6, 0o10, 0o11, 0o12, 0o14) : (((uint16(@cpio_binary_magic + 6) & 0o770000) >> 0o14) == i) and
-
-            /**
-                check that c_mode sticky bits is valid
-                C_NONE      000000
-                C_ISUID		004000
-                C_ISGID		002000
-                C_ISVTX		001000
-            */
-            for any j in (0o0, 0o1, 0o2, 0o4): (((uint16(@cpio_binary_magic + 6) & 0o7000) >> 0o11) == j) and
-
-            /**
-                check that c_mode permissions are valid.
-                should be between 0o000 (0x0) (---------) and 0o777 (rwxrwxrwx)
-            */
-            ((uint16(@cpio_binary_magic + 6) & 0o777) <= 0o777)
+            $cpio_binary_magic
     """
 
     C_DEFINITIONS = r"""
@@ -154,6 +168,10 @@ class BinaryHandler(_CPIOHandlerBase):
     @staticmethod
     def _calculate_name_size(header) -> int:
         return header.c_namesize + 1 if header.c_namesize % 2 else header.c_namesize
+
+    @staticmethod
+    def _calculate_mode(header) -> int:
+        return header.c_mode
 
 
 class PortableOldASCIIHandler(_CPIOHandlerBase):
@@ -193,6 +211,10 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
     @staticmethod
     def _calculate_name_size(header) -> int:
         return decode_int(header.c_namesize, 8)
+
+    @staticmethod
+    def _calculate_mode(header) -> int:
+        return decode_int(header.c_mode, 8)
 
 
 class _NewASCIICommon(StructHandler):
@@ -238,6 +260,10 @@ class PortableASCIIHandler(_NewASCIICommon, _CPIOHandlerBase):
     def _calculate_name_size(header) -> int:
         return decode_int(header.c_namesize, 16)
 
+    @staticmethod
+    def _calculate_mode(header) -> int:
+        return decode_int(header.c_mode, 16)
+
 
 class PortableASCIIWithCRCHandler(_NewASCIICommon, _CPIOHandlerBase):
     NAME = "cpio_portable_ascii_crc"
@@ -256,3 +282,7 @@ class PortableASCIIWithCRCHandler(_NewASCIICommon, _CPIOHandlerBase):
     @staticmethod
     def _calculate_name_size(header):
         return decode_int(header.c_namesize, 16)
+
+    @staticmethod
+    def _calculate_mode(header) -> int:
+        return decode_int(header.c_mode, 16)
