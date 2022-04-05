@@ -129,11 +129,7 @@ class Processor:
             log.debug("Ignoring file based on magic")
             return
 
-        filetask = _FileTask(self._config, task, size, result)
-        filetask.process()
-        # ensure that the root extraction directory is created even for empty extractions
-        if task.depth == 0:
-            filetask.extract_dir.mkdir(parents=True, exist_ok=True)
+        _FileTask(self._config, task, size, result).process()
 
     def _should_skip_magic(self, task: Task):
         detect = magic.detect_from_filename(task.path)
@@ -184,6 +180,8 @@ class _FileTask:
                 # calculate entropy for whole files which produced no valid chunks
                 self._calculate_entropies([self.task.path])
 
+        self._ensure_root_extract_dir()
+
     def _process_chunks(
         self, file, outer_chunks: List[ValidChunk], unknown_chunks: List[UnknownChunk]
     ):
@@ -194,6 +192,11 @@ class _FileTask:
 
         for chunk in outer_chunks:
             self._extract_chunk(file, chunk)
+
+    def _ensure_root_extract_dir(self):
+        # ensure that the root extraction directory is created even for empty extractions
+        if self.task.depth == 0:
+            self.extract_dir.mkdir(parents=True, exist_ok=True)
 
     def _calculate_entropies(self, paths: List[Path]):
         if self.task.depth < self.config.entropy_depth:
