@@ -48,6 +48,13 @@ let
           self.python-lzo
         ];
       });
+
+      ubi_reader = super.ubi_reader.ovveridePythonAttrs (_: {
+        propagatedBuildInputs = [
+          # Use the _same_ version as unblob
+          self.python-lzo
+        ];
+      });
     });
 
     python = python3;
