@@ -3,9 +3,10 @@ import stat
 import statistics
 from operator import attrgetter
 from pathlib import Path
-from typing import List
+from typing import Iterable, List
 
 import attr
+import magic
 import plotext as plt
 from structlog import get_logger
 
@@ -26,6 +27,7 @@ logger = get_logger()
 
 DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
+DEFAULT_SKIP_MAGIC = ("ELF", "JPEG", "GIF", "PNG")
 
 
 @attr.define(kw_only=True)
@@ -34,6 +36,7 @@ class ExtractionConfig:
     entropy_depth: int
     entropy_plot: bool = False
     max_depth: int = DEFAULT_DEPTH
+    skip_magic: Iterable[str] = DEFAULT_SKIP_MAGIC
     process_num: int = DEFAULT_PROCESS_NUM
     keep_extracted_chunks: bool = False
     extract_suffix: str = "_extract"
@@ -122,11 +125,20 @@ class Processor:
             log.debug("Ignoring empty file")
             return
 
-        filetask = _FileTask(self._config, task, size, result)
-        filetask.process()
-        # ensure that the root extraction directory is created even for empty extractions
-        if task.depth == 0:
-            filetask.extract_dir.mkdir(parents=True, exist_ok=True)
+        elif self._should_skip_magic(task):
+            log.debug("Ignoring file based on magic")
+            return
+
+        _FileTask(self._config, task, size, result).process()
+
+    def _should_skip_magic(self, task: Task):
+        detect = magic.detect_from_filename(task.path)
+        logger.debug(
+            "Detected file-magic", magic=detect.name, path=task.path, _verbosity=2
+        )
+        return any(
+            detect.name.startswith(pattern) for pattern in self._config.skip_magic
+        )
 
 
 class _FileTask:
@@ -168,6 +180,8 @@ class _FileTask:
                 # calculate entropy for whole files which produced no valid chunks
                 self._calculate_entropies([self.task.path])
 
+        self._ensure_root_extract_dir()
+
     def _process_chunks(
         self, file, outer_chunks: List[ValidChunk], unknown_chunks: List[UnknownChunk]
     ):
@@ -178,6 +192,11 @@ class _FileTask:
 
         for chunk in outer_chunks:
             self._extract_chunk(file, chunk)
+
+    def _ensure_root_extract_dir(self):
+        # ensure that the root extraction directory is created even for empty extractions
+        if self.task.depth == 0:
+            self.extract_dir.mkdir(parents=True, exist_ok=True)
 
     def _calculate_entropies(self, paths: List[Path]):
         if self.task.depth < self.config.entropy_depth:

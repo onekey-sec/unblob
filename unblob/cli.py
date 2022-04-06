@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import click
 from structlog import get_logger
@@ -16,6 +16,7 @@ from .logging import configure_logger, noformat
 from .processing import (
     DEFAULT_DEPTH,
     DEFAULT_PROCESS_NUM,
+    DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
     process_file,
 )
@@ -117,6 +118,16 @@ class UnblobContext(click.Context):
     show_default=True,
 )
 @click.option(
+    "-S",
+    "--skip-magic",
+    "skip_magic",
+    type=click.STRING,
+    default=DEFAULT_SKIP_MAGIC,
+    help="Skip processing files with given magic prefix",
+    show_default=True,
+    multiple=True,
+)
+@click.option(
     "-p",
     "--process-num",
     "process_num",
@@ -146,6 +157,7 @@ def cli(
     extract_root: Path,
     depth: int,
     entropy_depth: int,
+    skip_magic: Iterable[str],
     process_num: int,
     keep_extracted_chunks: bool,
     verbose: int,
@@ -164,6 +176,7 @@ def cli(
         max_depth=depth,
         entropy_depth=entropy_depth,
         entropy_plot=bool(verbose >= 3),
+        skip_magic=skip_magic,
         process_num=process_num,
         handlers=handlers,
         keep_extracted_chunks=keep_extracted_chunks,

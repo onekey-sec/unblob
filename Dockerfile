@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     p7zip-full \
     unar \
     xz-utils \
-    zlib1g-dev
+    zlib1g-dev \
+    libmagic1
 RUN curl -L -o sasquatch_1.0_amd64.deb https://github.com/IoT-Inspector/sasquatch/releases/download/sasquatch-v1.0/sasquatch_1.0_amd64.deb \
     && dpkg -i sasquatch_1.0_amd64.deb \
     && rm -f sasquatch_1.0_amd64.deb
