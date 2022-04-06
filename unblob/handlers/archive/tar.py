@@ -102,7 +102,9 @@ class TarHandler(StructHandler):
     """
     HEADER_STRUCT = "posix_header_t"
 
-    EXTRACTOR = Command("7z", "x", "-xr!PaxHeaders", "-y", "{inpath}", "-o{outdir}")
+    EXTRACTOR = Command(
+        "7z", "x", "-xr!PaxHeaders*", "-xr!GlobalHead*", "-y", "{inpath}", "-o{outdir}"
+    )
 
     def calculate_chunk(
         self, file: io.BufferedIOBase, start_offset: int
