@@ -60,6 +60,9 @@ norecursedirs = """
 paths = ["unblob/", "vulture_whitelist.py" ]
 exclude = ["unblob/_py/", "unblob/testing.py"]
 
+[tool.pyright]
+exclude = ["build"]
+
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools>=60.9.3"]
 build-backend = "poetry.core.masonry.api"
