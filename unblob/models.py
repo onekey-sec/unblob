@@ -101,15 +101,20 @@ class UnknownChunk(Chunk):
 
 
 class TaskResult:
-    def __init__(self):
+    def __init__(self, task):
         self._reports = []
         self._new_tasks = []
+        self._task = task
 
     def add_report(self, report: Report):
         self._reports.append(report)
 
     def add_new_task(self, task: Task):
         self._new_tasks.append(task)
+
+    @property
+    def task(self):
+        return self._task
 
     @property
     def new_tasks(self):

@@ -123,7 +123,7 @@ class Processor:
         self._config = config
 
     def process_task(self, task: Task) -> TaskResult:
-        result = TaskResult()
+        result = TaskResult(task)
         try:
             self._process_task(result, task)
         except Exception as exc:
