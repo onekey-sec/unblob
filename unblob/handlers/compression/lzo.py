@@ -1,6 +1,7 @@
 import io
 from typing import Optional
 
+import lzo
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -10,6 +11,7 @@ from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
 
+MAGIC_LENGTH = 9
 CHECKSUM_LENGTH = 4
 
 # Header flags defined in lzop (http://www.lzop.org/) source in src/conf.h
@@ -95,6 +97,20 @@ class LZOHandler(StructHandler):
             header = self.cparser_be.lzo_header_filter_t(file)
 
         logger.debug("LZO header parsed", header=header, _verbosity=3)
+
+        # Checksum excludes the magic and the checksum itself
+        if header.flags & F_H_CRC32:
+            calculated_checksum = lzo.crc32(
+                header.dumps()[MAGIC_LENGTH:-CHECKSUM_LENGTH]
+            )
+        else:
+            calculated_checksum = lzo.adler32(
+                header.dumps()[MAGIC_LENGTH:-CHECKSUM_LENGTH]
+            )
+
+        if header.header_checksum != calculated_checksum:
+            logger.debug("Header checksum verification failed")
+            return
 
         uncompressed_size = convert_int32(file.read(4), endian=Endian.BIG)
         while uncompressed_size:
