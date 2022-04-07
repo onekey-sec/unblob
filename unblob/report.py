@@ -5,6 +5,14 @@ from typing import List, Union
 import attr
 
 
+@attr.define(kw_only=True, frozen=True)
+class Report:
+    """A common base class for different reports"""
+
+    def asdict(self) -> dict:
+        return attr.asdict(self)
+
+
 class Severity(Enum):
     """Represents possible problems encountered during execution"""
 
@@ -12,14 +20,9 @@ class Severity(Enum):
     WARNING = "WARNING"
 
 
-@attr.define(kw_only=True, frozen=True)
-class Report:
-    """A common base class for different reports"""
-
+@attr.define(kw_only=True)
+class ErrorReport(Report):
     severity: Severity
-
-    def asdict(self) -> dict:
-        return attr.asdict(self)
 
 
 STR = Union[str, Exception]
@@ -47,7 +50,7 @@ def _convert_exception_to_str(obj: Union[str, Exception]) -> str:
 
 
 @attr.define(kw_only=True)
-class UnknownError(Report):
+class UnknownError(ErrorReport):
     """Describes an exception raised during file processing"""
 
     severity: Severity = attr.field(default=Severity.ERROR)
@@ -72,7 +75,7 @@ class CalculateChunkExceptionReport(UnknownError):
 
 
 @attr.define(kw_only=True)
-class ExtractCommandFailedReport(Report):
+class ExtractCommandFailedReport(ErrorReport):
     """Describes an error when failed to run the extraction command"""
 
     severity: Severity = Severity.WARNING
@@ -83,13 +86,13 @@ class ExtractCommandFailedReport(Report):
 
 
 @attr.define(kw_only=True)
-class ExtractDirectoriesExistReport(Report):
+class ExtractDirectoriesExistReport(ErrorReport):
     severity: Severity = Severity.ERROR
     paths: List[Path]
 
 
 @attr.define(kw_only=True)
-class ExtractorDependencyNotFoundReport(Report):
+class ExtractorDependencyNotFoundReport(ErrorReport):
     """Describes an error when the dependency of an extractor doesn't exist"""
 
     severity: Severity = Severity.ERROR
@@ -97,7 +100,7 @@ class ExtractorDependencyNotFoundReport(Report):
 
 
 @attr.define(kw_only=True)
-class MaliciousSymlinkRemoved(Report):
+class MaliciousSymlinkRemoved(ErrorReport):
     """Describes an error when malicious symlinks have been removed from disk."""
 
     severity: Severity = Severity.WARNING

@@ -204,7 +204,9 @@ def get_exit_code_from_reports(reports: List[Report]) -> int:
         (Severity.ERROR, 1),
         (Severity.WARNING, 0),
     ]
-    severities = {report.severity for report in reports}
+    severities = {
+        report.severity for report in reports if isinstance(report, ErrorReport)
+    }
 
     for severity, exit_code in severity_to_exit_code:
         if severity in severities:

@@ -10,6 +10,8 @@ import pytest
 
 from unblob.models import File, Handler, Regex, ValidChunk
 from unblob.processing import ExtractionConfig, process_files
+from unblob.report import ErrorReport
+from unblob.testing import check_reports
 
 _ZIP_CONTENT = b"good file"
 # replacing _ZIP_CONTENT with _DAMAGED_ZIP_CONTENT will result in CRC error at unpacking time
@@ -55,7 +57,7 @@ def test_remove_extracted_chunks(input_dir: Path, output_dir: Path):
 
     all_reports = process_files(config, input_dir)
     assert list(output_dir.glob("**/*.zip")) == []
-    assert all_reports == [], f"Unexpected error reports: {all_reports}"
+    check_reports(all_reports)
 
 
 def test_keep_all_problematic_chunks(input_dir: Path, output_dir: Path):
@@ -67,7 +69,9 @@ def test_keep_all_problematic_chunks(input_dir: Path, output_dir: Path):
 
     all_reports = process_files(config, input_dir)
     # damaged zip file should not be removed
-    assert all_reports != [], "Unexpectedly no errors found!"
+    assert [
+        r for r in all_reports if isinstance(r, ErrorReport)
+    ] != [], "Unexpectedly no errors found!"
     assert list(output_dir.glob("**/*.zip"))
 
 
@@ -80,7 +84,7 @@ def test_keep_all_unknown_chunks(input_dir: Path, output_dir: Path):
 
     all_reports = process_files(config, input_dir)
     assert list(output_dir.glob("**/*.unknown"))
-    assert all_reports == [], f"Unexpected error reports: {all_reports}"
+    check_reports(all_reports)
 
 
 class _HandlerWithNullExtractor(Handler):
@@ -101,4 +105,4 @@ def test_keep_chunks_with_null_extractor(input_dir: Path, output_dir: Path):
     )
     all_reports = process_files(config, input_dir)
     assert list(output_dir.glob("**/*.null"))
-    assert all_reports == [], f"Unexpected error reports: {all_reports}"
+    check_reports(all_reports)
