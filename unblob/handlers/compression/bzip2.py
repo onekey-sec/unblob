@@ -13,7 +13,8 @@ logger = get_logger()
 
 BLOCK_HEADER = 0x0000_3141_5926_5359
 BLOCK_ENDMARK = 0x0000_1772_4538_5090
-
+# BCD-encoded digits of BLOCK_HEADER
+COMPRESSED_MAGIC = b"1AY&SY\x86\xc6"
 COMPRESSED_MAGIC_LENGTH = 6 * 8
 
 BLOCK_ENDMARK_SHIFTED = BLOCK_ENDMARK << COMPRESSED_MAGIC_LENGTH
@@ -52,8 +53,16 @@ class BZip2Handler(StructHandler):
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
 
-        self.parse_header(file, Endian.BIG)
-        end_block_offset = self.bzip2_recover(file, start_offset)
+        header = self.parse_header(file, Endian.BIG)
+        end_block_offset = -1
+        while header.compressed_magic == COMPRESSED_MAGIC:
+            current_offset = file.tell() - len(header)
+            end_block_offset = self.bzip2_recover(file, current_offset)
+            try:
+                file.seek(end_block_offset + FOOTER_SIZE, io.SEEK_SET)
+                header = self.parse_header(file, Endian.BIG)
+            except EOFError:
+                break
 
         return ValidChunk(
             start_offset=start_offset,
