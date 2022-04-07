@@ -1,7 +1,6 @@
 import traceback
 from enum import Enum
-from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Union
 
 import attr
 
@@ -18,9 +17,6 @@ class Report:
     """A common base class for different reports"""
 
     severity: Severity
-
-    # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
-    handler: Optional[str] = None
 
     def asdict(self) -> dict:
         return attr.asdict(self)
@@ -71,6 +67,8 @@ class CalculateChunkExceptionReport(UnknownError):
     """Describes an exception raised during calculate_chunk execution"""
 
     start_offset: int
+    # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
+    handler: str
 
 
 @attr.define(kw_only=True)
