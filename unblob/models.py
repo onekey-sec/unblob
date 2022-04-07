@@ -100,29 +100,17 @@ class UnknownChunk(Chunk):
     """
 
 
+@attr.define
 class TaskResult:
-    def __init__(self, task):
-        self._reports = []
-        self._new_tasks = []
-        self._task = task
+    task: Task
+    reports : List[Report] = attr.field(factory=list)
+    new_tasks : List[Task] = attr.field(factory=list)
 
     def add_report(self, report: Report):
-        self._reports.append(report)
+        self.reports.append(report)
 
     def add_new_task(self, task: Task):
-        self._new_tasks.append(task)
-
-    @property
-    def task(self):
-        return self._task
-
-    @property
-    def new_tasks(self):
-        return self._new_tasks
-
-    @property
-    def reports(self):
-        return self._reports
+        self.new_tasks.append(task)
 
 
 class ExtractError(Exception):
