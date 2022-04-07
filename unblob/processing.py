@@ -102,7 +102,7 @@ def _process_one_file(config: ExtractionConfig, path: Path) -> List[Report]:
     all_reports = []
 
     def process_result(pool, result):
-        for new_task in result.new_tasks:
+        for new_task in result.subtasks:
             pool.submit(new_task)
         all_reports.extend(result.reports)
 
@@ -153,7 +153,7 @@ class Processor:
         if stat.S_ISDIR(mode):
             log.debug("Found directory")
             for path in task.path.iterdir():
-                result.add_new_task(
+                result.add_subtask(
                     Task(
                         path=path,
                         depth=task.depth,
@@ -275,7 +275,7 @@ class _FileTask:
         fix_extracted_directory(outdir, self.result)
 
         if outdir.exists():
-            self.result.add_new_task(
+            self.result.add_subtask(
                 Task(
                     path=outdir,
                     depth=self.task.depth + 1,

@@ -103,14 +103,14 @@ class UnknownChunk(Chunk):
 @attr.define
 class TaskResult:
     task: Task
-    reports : List[Report] = attr.field(factory=list)
-    new_tasks : List[Task] = attr.field(factory=list)
+    reports: List[Report] = attr.field(factory=list)
+    subtasks: List[Task] = attr.field(factory=list)
 
     def add_report(self, report: Report):
         self.reports.append(report)
 
-    def add_new_task(self, task: Task):
-        self.new_tasks.append(task)
+    def add_subtask(self, task: Task):
+        self.subtasks.append(task)
 
 
 class ExtractError(Exception):
