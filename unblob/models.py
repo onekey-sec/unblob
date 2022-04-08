@@ -20,7 +20,6 @@ logger = get_logger()
 
 @attr.define
 class Task:
-    root: Path
     path: Path
     depth: int
 

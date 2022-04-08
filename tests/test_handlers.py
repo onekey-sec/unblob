@@ -15,7 +15,7 @@ import pytest
 
 from unblob import handlers
 from unblob.models import Handler
-from unblob.processing import ExtractionConfig, process_file
+from unblob.processing import ExtractionConfig, process_files
 from unblob.testing import (
     check_output_is_the_same,
     check_reports,
@@ -35,7 +35,7 @@ def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
         entropy_depth=0,
         keep_extracted_chunks=True,
     )
-    all_reports = process_file(config, path=input_dir)
+    all_reports = process_files(config, input_dir)
 
     check_output_is_the_same(output_dir, tmp_path)
     check_reports(all_reports)

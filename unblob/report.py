@@ -1,4 +1,5 @@
 from enum import Enum
+from pathlib import Path
 from typing import List, Optional
 
 import attr
@@ -48,6 +49,12 @@ class ExtractCommandFailedReport(Report):
     stdout: bytes
     stderr: bytes
     exit_code: int
+
+
+@attr.define(kw_only=True)
+class ExtractDirectoriesExistReport(Report):
+    severity: Severity = Severity.ERROR
+    paths: List[Path]
 
 
 @attr.define(kw_only=True)

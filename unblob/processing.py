@@ -1,4 +1,5 @@
 import multiprocessing
+import shutil
 import stat
 import statistics
 from operator import attrgetter
@@ -20,7 +21,7 @@ from .logging import noformat
 from .math import shannon_entropy
 from .models import ExtractError, Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
-from .report import Report, UnknownError
+from .report import ExtractDirectoriesExistReport, Report, UnknownError
 from .signals import terminate_gracefully
 
 logger = get_logger()
@@ -33,6 +34,7 @@ DEFAULT_SKIP_MAGIC = ("ELF", "JPEG", "GIF", "PNG")
 @attr.define(kw_only=True)
 class ExtractionConfig:
     extract_root: Path
+    force_extract: bool = False
     entropy_depth: int
     entropy_plot: bool = False
     max_depth: int = DEFAULT_DEPTH
@@ -44,11 +46,44 @@ class ExtractionConfig:
 
 
 @terminate_gracefully
-def process_file(config: ExtractionConfig, path: Path) -> List[Report]:
+def process_files(config: ExtractionConfig, *paths: Path) -> List[Report]:
+    existing_extract_dirs = get_existing_extract_dirs(config, paths)
 
-    root = path if path.is_dir() else path.parent
+    if config.force_extract:
+        for d in existing_extract_dirs:
+            shutil.rmtree(d)
+    elif existing_extract_dirs:
+        report = ExtractDirectoriesExistReport(paths=existing_extract_dirs)
+        logger.error("Extraction directories already exist", **report.asdict())
+        return [report]
+
+    all_reports = []
+    for path in paths:
+        report = _process_one_file(config, path)
+        all_reports.extend(report)
+
+    return all_reports
+
+
+def get_existing_extract_dirs(
+    config: ExtractionConfig, paths: Iterable[Path]
+) -> List[Path]:
+    extract_dirs = []
+    for path in paths:
+        if path.is_dir():
+            subpaths = path.iterdir()
+        else:
+            subpaths = [path]
+        for path in subpaths:
+            d = get_extract_dir_for_input(config, path)
+            if d.exists():
+                extract_dirs.append(d)
+
+    return extract_dirs
+
+
+def _process_one_file(config: ExtractionConfig, path: Path) -> List[Report]:
     root_task = Task(
-        root=root,
         path=path,
         depth=0,
     )
@@ -110,7 +145,6 @@ class Processor:
             for path in task.path.iterdir():
                 result.add_new_task(
                     Task(
-                        root=task.root,
                         path=path,
                         depth=task.depth,
                     )
@@ -154,14 +188,7 @@ class _FileTask:
         self.size = size
         self.result = result
 
-        self.extract_dir = self._get_extract_dir()
-
-    def _get_extract_dir(self) -> Path:
-        """Extraction dir under root with the name of path."""
-        relative_path = self.task.path.relative_to(self.task.root)
-        extract_name = relative_path.name + self.config.extract_suffix
-        extract_dir = self.config.extract_root / relative_path.with_name(extract_name)
-        return extract_dir.expanduser().resolve()
+        self.extract_dir = get_extract_dir_for_input(config, self.task.path)
 
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
@@ -237,11 +264,22 @@ class _FileTask:
         if outdir.exists():
             self.result.add_new_task(
                 Task(
-                    root=self.config.extract_root,
                     path=outdir,
                     depth=self.task.depth + 1,
                 )
             )
+
+
+def get_extract_dir_for_input(config: ExtractionConfig, path: Path) -> Path:
+    """Extraction dir under root with the name of path."""
+    try:
+        relative_path = path.relative_to(config.extract_root)
+    except ValueError:
+        # path is not inside root, i.e. it is an input file
+        relative_path = Path(path.name)
+    extract_name = path.name + config.extract_suffix
+    extract_dir = config.extract_root / relative_path.with_name(extract_name)
+    return extract_dir.expanduser().resolve()
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:

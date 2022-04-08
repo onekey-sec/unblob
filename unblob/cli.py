@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional
 
 import click
 from structlog import get_logger
@@ -18,7 +18,7 @@ from .processing import (
     DEFAULT_PROCESS_NUM,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
-    process_file,
+    process_files,
 )
 
 logger = get_logger()
@@ -91,6 +91,13 @@ class UnblobContext(click.Context):
     help="Extract the files to this directory. Will be created if doesn't exist.",
 )
 @click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    show_default=True,
+    help="Force extraction removing previously extracted files.",
+)
+@click.option(
     "-d",
     "--depth",
     default=DEFAULT_DEPTH,
@@ -153,8 +160,9 @@ class UnblobContext(click.Context):
     expose_value=False,
 )
 def cli(
-    files: Tuple[Path],
+    files: List[Path],
     extract_root: Path,
+    force: bool,
     depth: int,
     entropy_depth: int,
     skip_magic: Iterable[str],
@@ -173,6 +181,7 @@ def cli(
 
     config = ExtractionConfig(
         extract_root=extract_root,
+        force_extract=force,
         max_depth=depth,
         entropy_depth=entropy_depth,
         entropy_plot=bool(verbose >= 3),
@@ -183,10 +192,7 @@ def cli(
     )
 
     logger.info("Start processing files", count=noformat(len(files)))
-    all_reports = []
-    for path in files:
-        report = process_file(config, path)
-        all_reports.extend(report)
+    all_reports = process_files(config, *files)
     return all_reports
 
 

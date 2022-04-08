@@ -174,11 +174,11 @@ def test_archive_success(
         / "regular"
         / "__input__/"
     )
-    process_file_mock = mock.MagicMock()
+    process_files_mock = mock.MagicMock()
     logger_config_mock = mock.MagicMock()
     new_params = params + ["--extract-dir", str(tmp_path), str(in_path)]
     with mock.patch.object(
-        unblob.cli, "process_file", process_file_mock
+        unblob.cli, "process_files", process_files_mock
     ), mock.patch.object(unblob.cli, "configure_logger", logger_config_mock):
         result = runner.invoke(unblob.cli.cli, new_params)
     assert result.exit_code == 0
@@ -192,49 +192,8 @@ def test_archive_success(
         process_num=expected_process_num,
         handlers=BUILTIN_HANDLERS,
     )
-    process_file_mock.assert_called_once_with(config, in_path)
+    process_files_mock.assert_called_once_with(config, in_path)
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
-
-
-def test_archive_multiple_files(tmp_path: Path):
-    runner = CliRunner()
-    in_path_1 = (
-        Path(__file__).parent
-        / "integration"
-        / "archive"
-        / "zip"
-        / "regular"
-        / "__input__/"
-    )
-    in_path_2 = (
-        Path(__file__).parent
-        / "integration"
-        / "archive"
-        / "rar"
-        / "default"
-        / "__input__/"
-    )
-    process_file_mock = mock.MagicMock()
-    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
-        result = runner.invoke(
-            unblob.cli.cli,
-            ["--extract-dir", str(tmp_path), str(in_path_1), str(in_path_2)],
-        )
-    assert result.exit_code == 0
-    assert process_file_mock.call_count == 2
-    config = ExtractionConfig(
-        extract_root=tmp_path,
-        max_depth=DEFAULT_DEPTH,
-        entropy_depth=1,
-        entropy_plot=False,
-        process_num=DEFAULT_PROCESS_NUM,
-        keep_extracted_chunks=False,
-        handlers=mock.ANY,
-    )
-    assert process_file_mock.call_args_list == [
-        mock.call(config, in_path_1),
-        mock.call(config, in_path_2),
-    ]
 
 
 @pytest.mark.parametrize(
@@ -259,13 +218,13 @@ def test_keep_extracted_chunks(
     )
     params = args + ["--extract-dir", str(tmp_path), str(in_path)]
 
-    process_file_mock = mock.MagicMock()
-    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
+    process_files_mock = mock.MagicMock()
+    with mock.patch.object(unblob.cli, "process_files", process_files_mock):
         result = runner.invoke(unblob.cli.cli, params)
 
     assert result.exit_code == 0
-    process_file_mock.assert_called_once()
+    process_files_mock.assert_called_once()
     assert (
-        process_file_mock.call_args.args[0].keep_extracted_chunks
+        process_files_mock.call_args.args[0].keep_extracted_chunks
         == keep_extracted_chunks
     ), fail_message
