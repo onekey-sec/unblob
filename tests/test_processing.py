@@ -147,20 +147,21 @@ def test_calculate_entropy_no_exception(path: Path, draw_plot: bool):
 
 
 @pytest.mark.parametrize(
-    "root, path, extract_dir_prefix",
+    "extract_root, path, extract_dir_prefix",
     [
-        (".", "firmware", "firmware"),
-        ("root", "root/firmware", "firmware"),
-        ("root/dir", "root/dir/firmware", "firmware"),
-        ("root", "/some/place/else/firmware", "firmware"),
+        ("/extract", "firmware", "firmware"),
+        ("/extract", "relative/firmware", "firmware"),
+        ("/extract", "/extract/dir/firmware", "dir/firmware"),
+        ("/extract/dir", "/extract/dir/firmware", "firmware"),
+        ("/extract", "/some/place/else/firmware", "firmware"),
     ],
 )
 def test_get_extract_dir_for_input(
-    root: str, path: str, extract_dir_prefix: str, tmp_path: Path
+    extract_root: str, path: str, extract_dir_prefix: str
 ):
-    cfg = ExtractionConfig(extract_root=tmp_path, entropy_depth=0)
-    assert get_extract_dir_for_input(cfg, Path(root), Path(path)) == (
-        tmp_path / Path(extract_dir_prefix + cfg.extract_suffix)
+    cfg = ExtractionConfig(extract_root=Path(extract_root), entropy_depth=0)
+    assert get_extract_dir_for_input(cfg, Path(path)) == (
+        cfg.extract_root / Path(extract_dir_prefix + cfg.extract_suffix)
     )
 
 

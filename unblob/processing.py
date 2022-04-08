@@ -75,7 +75,7 @@ def get_existing_extract_dirs(
         else:
             subpaths = [path]
         for path in subpaths:
-            d = get_extract_dir_for_input(config, root, path)
+            d = get_extract_dir_for_input(config, path)
             if d.exists():
                 extract_dirs.append(d)
 
@@ -83,9 +83,7 @@ def get_existing_extract_dirs(
 
 
 def _process_one_file(config: ExtractionConfig, path: Path) -> List[Report]:
-    root = path if path.is_dir() else path.parent
     root_task = Task(
-        root=root,
         path=path,
         depth=0,
     )
@@ -147,7 +145,6 @@ class Processor:
             for path in task.path.iterdir():
                 result.add_new_task(
                     Task(
-                        root=task.root,
                         path=path,
                         depth=task.depth,
                     )
@@ -191,9 +188,7 @@ class _FileTask:
         self.size = size
         self.result = result
 
-        self.extract_dir = get_extract_dir_for_input(
-            config, self.task.root, self.task.path
-        )
+        self.extract_dir = get_extract_dir_for_input(config, self.task.path)
 
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
@@ -269,14 +264,13 @@ class _FileTask:
         if outdir.exists():
             self.result.add_new_task(
                 Task(
-                    root=self.config.extract_root,
                     path=outdir,
                     depth=self.task.depth + 1,
                 )
             )
 
 
-def get_extract_dir_for_input(config: ExtractionConfig, root: Path, path: Path) -> Path:
+def get_extract_dir_for_input(config: ExtractionConfig, path: Path) -> Path:
     """Extraction dir under root with the name of path."""
     try:
         relative_path = path.relative_to(config.extract_root)
