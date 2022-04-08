@@ -1,13 +1,11 @@
 import multiprocessing
 import shutil
-import stat
 import statistics
 from operator import attrgetter
 from pathlib import Path
 from typing import Iterable, List
 
 import attr
-import magic
 import plotext as plt
 from structlog import get_logger
 
@@ -21,7 +19,12 @@ from .logging import noformat
 from .math import shannon_entropy
 from .models import ExtractError, File, Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
-from .report import ExtractDirectoriesExistReport, Report, UnknownError
+from .report import (
+    ExtractDirectoriesExistReport,
+    FileMagicReport,
+    StatReport,
+    UnknownError,
+)
 from .signals import terminate_gracefully
 
 logger = get_logger()
@@ -147,10 +150,10 @@ class Processor:
             log.warn("Path contains invalid characters, it won't be processed")
             return
 
-        statres = task.path.lstat()
-        mode, size = statres.st_mode, statres.st_size
+        stat_report = StatReport.from_path(task.path)
+        result.add_report(stat_report)
 
-        if stat.S_ISDIR(mode):
+        if stat_report.is_dir:
             log.debug("Found directory")
             for path in task.path.iterdir():
                 result.add_subtask(
@@ -161,28 +164,30 @@ class Processor:
                 )
             return
 
-        elif stat.S_ISLNK(mode):
+        if stat_report.is_link:
             log.debug("Ignoring symlink")
             return
 
-        elif size == 0:
+        if stat_report.size == 0:
             log.debug("Ignoring empty file")
             return
 
-        elif self._should_skip_magic(task):
-            log.debug("Ignoring file based on magic")
+        magic_report = FileMagicReport.from_path(task.path)
+        result.add_report(magic_report)
+
+        magic = magic_report.magic
+
+        logger.debug("Detected file-magic", magic=magic, path=task.path, _verbosity=2)
+
+        should_skip_file = any(
+            magic.startswith(pattern) for pattern in self._config.skip_magic
+        )
+
+        if should_skip_file:
+            log.debug("Ignoring file based on magic", magic=magic)
             return
 
-        _FileTask(self._config, task, size, result).process()
-
-    def _should_skip_magic(self, task: Task):
-        detect = magic.detect_from_filename(task.path)
-        logger.debug(
-            "Detected file-magic", magic=detect.name, path=task.path, _verbosity=2
-        )
-        return any(
-            detect.name.startswith(pattern) for pattern in self._config.skip_magic
-        )
+        _FileTask(self._config, task, stat_report.size, result).process()
 
 
 class _FileTask:

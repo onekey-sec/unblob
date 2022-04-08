@@ -1,8 +1,12 @@
+import os
+import stat
 import traceback
 from enum import Enum
-from typing import List, Union
+from pathlib import Path
+from typing import List, Optional, Union
 
 import attr
+import magic
 
 
 @attr.define(kw_only=True, frozen=True)
@@ -106,3 +110,41 @@ class MaliciousSymlinkRemoved(ErrorReport):
     severity: Severity = Severity.WARNING
     link: str
     target: str
+
+
+@attr.define(kw_only=True)
+class StatReport(Report):
+    path: Path
+    size: int
+    is_dir: bool
+    is_file: bool
+    is_link: bool
+    link_target: Optional[Path]
+
+    @classmethod
+    def from_path(cls, path: Path):
+        st = path.lstat()
+        mode = st.st_mode
+        try:
+            link_target = Path(os.readlink(path))
+        except OSError:
+            link_target = None
+
+        return cls(
+            path=path,
+            size=st.st_size,
+            is_dir=stat.S_ISDIR(mode),
+            is_file=stat.S_ISREG(mode),
+            is_link=stat.S_ISLNK(mode),
+            link_target=link_target,
+        )
+
+
+@attr.define(kw_only=True)
+class FileMagicReport(Report):
+    magic: str
+
+    @classmethod
+    def from_path(cls, path: Path):
+        detected = magic.detect_from_filename(path)
+        return cls(magic=detected.name)
