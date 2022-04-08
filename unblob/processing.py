@@ -278,8 +278,12 @@ class _FileTask:
 
 def get_extract_dir_for_input(config: ExtractionConfig, root: Path, path: Path) -> Path:
     """Extraction dir under root with the name of path."""
-    relative_path = path.relative_to(root)
-    extract_name = relative_path.name + config.extract_suffix
+    try:
+        relative_path = path.relative_to(config.extract_root)
+    except ValueError:
+        # path is not inside root, i.e. it is an input file
+        relative_path = Path(path.name)
+    extract_name = path.name + config.extract_suffix
     extract_dir = config.extract_root / relative_path.with_name(extract_name)
     return extract_dir.expanduser().resolve()
 
