@@ -123,7 +123,7 @@ class Processor:
     def _process_error(self, result: TaskResult, exc: Exception):
         error_report = UnknownError(exception=exc)
         result.add_report(error_report)
-        logger.exception("Unknown error happened", exec_info=exc)
+        logger.exception("Unknown error happened", exc_info=exc)
 
     def _process_task(self, result: TaskResult, task: Task):
         log = logger.bind(path=task.path)

@@ -2,8 +2,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import structlog
 
 from unblob.logging import _format_message, noformat
+from unblob.report import UnknownError
 
 
 @pytest.mark.parametrize(
@@ -35,3 +37,10 @@ def test_format_message_dont_care_root_path(value: Any, expected: str):
 )
 def test_format_message_root_path(value: Path, extract_root: Path, expected: str):
     assert expected == _format_message(value, extract_root)
+
+
+def test_UnknownError_can_be_logged():
+    logger = structlog.get_logger()
+
+    # this line used to trigger an exception:
+    logger.error("unknown", **UnknownError(exception=Exception("whatever")).asdict())
