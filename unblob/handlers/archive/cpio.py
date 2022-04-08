@@ -114,8 +114,8 @@ class _CPIOHandlerBase(StructHandler):
     @classmethod
     def _pad_content(cls, header, c_filesize: int, c_namesize: int) -> int:
         """Pad header and content with _PAD_ALIGN bytes."""
-        padded_header = round_up(len(header), cls._PAD_ALIGN)
-        padded_content = round_up(c_filesize + c_namesize, cls._PAD_ALIGN)
+        padded_header = round_up(len(header) + c_namesize, cls._PAD_ALIGN)
+        padded_content = round_up(c_filesize, cls._PAD_ALIGN)
         return padded_header + padded_content
 
     @staticmethod
@@ -202,7 +202,7 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
     """
     HEADER_STRUCT = "old_ascii_header_t"
 
-    _PAD_ALIGN = 2
+    _PAD_ALIGN = 1
 
     @staticmethod
     def _calculate_file_size(header) -> int:
