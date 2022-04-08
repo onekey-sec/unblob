@@ -77,8 +77,7 @@ class UnblobContext(click.Context):
 
 @click.command(help=get_help_text())
 @click.argument(
-    "files",
-    nargs=-1,
+    "file",
     type=click.Path(path_type=Path, exists=True, resolve_path=True),
     required=True,
 )
@@ -160,7 +159,7 @@ class UnblobContext(click.Context):
     expose_value=False,
 )
 def cli(
-    files: List[Path],
+    file: Path,
     extract_root: Path,
     force: bool,
     depth: int,
@@ -191,8 +190,8 @@ def cli(
         keep_extracted_chunks=keep_extracted_chunks,
     )
 
-    logger.info("Start processing files", count=noformat(len(files)))
-    all_reports = process_files(config, *files)
+    logger.info("Start processing file", file=file)
+    all_reports = process_files(config, file)
     return all_reports
 
 

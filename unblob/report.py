@@ -90,9 +90,9 @@ class ExtractCommandFailedReport(ErrorReport):
 
 
 @attr.define(kw_only=True)
-class ExtractDirectoriesExistReport(ErrorReport):
+class ExtractDirectoryExistsReport(ErrorReport):
     severity: Severity = Severity.ERROR
-    paths: List[Path]
+    path: Path
 
 
 @attr.define(kw_only=True)

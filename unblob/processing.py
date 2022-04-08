@@ -20,8 +20,9 @@ from .math import shannon_entropy
 from .models import ExtractError, File, Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
 from .report import (
-    ExtractDirectoriesExistReport,
+    ExtractDirectoryExistsReport,
     FileMagicReport,
+    Report,
     StatReport,
     UnknownError,
 )
@@ -59,24 +60,34 @@ class ExtractionConfig:
 
 
 @terminate_gracefully
-def process_files(config: ExtractionConfig, *paths: Path) -> List[Report]:
-    existing_extract_dirs = get_existing_extract_dirs(config, paths)
+def process_files(config: ExtractionConfig, path: Path) -> List[Report]:
+    task = Task(
+        path=path,
+        depth=0,
+    )
 
-    if config.force_extract:
-        for d in existing_extract_dirs:
-            shutil.rmtree(d)
-    elif existing_extract_dirs:
-        report = ExtractDirectoriesExistReport(paths=existing_extract_dirs)
-        logger.error("Extraction directories already exist", **report.asdict())
-        return [report]
+    errors = check_extract_directory(task, config)
+    if errors:
+        return errors
 
-    all_reports = []
-    for path in paths:
-        report = _process_one_file(config, path)
-        all_reports.extend(report)
+    result = _process_one_file(config, task)
 
-    return all_reports
+    return result
 
+
+def check_extract_directory(task: Task, config: ExtractionConfig):
+    errors = []
+
+    extract_dir = get_extract_dir_for_input(config, task.path)
+    if extract_dir.exists():
+        if config.force_extract:
+            shutil.rmtree(extract_dir)
+        else:
+            report = ExtractDirectoryExistsReport(path=extract_dir)
+            logger.error("Extraction directory already exist", **report.asdict())
+            errors.append(report)
+
+    return errors
 
 def get_existing_extract_dirs(
     config: ExtractionConfig, paths: Iterable[Path]
@@ -95,12 +106,7 @@ def get_existing_extract_dirs(
     return extract_dirs
 
 
-def _process_one_file(config: ExtractionConfig, path: Path) -> List[Report]:
-    root_task = Task(
-        path=path,
-        depth=0,
-    )
-
+def _process_one_file(config: ExtractionConfig, root_task: Task) -> List[Report]:
     processor = Processor(config)
     all_reports = []
 

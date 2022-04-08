@@ -86,7 +86,7 @@ def test_help(params):
     result = runner.invoke(unblob.cli.cli, params)
     assert result.exit_code == 0
     # NOTE: In practice, it writes "Usage: unblob ...", this is done in the `cli.main` with `click.make_context`
-    assert result.output.startswith("Usage: cli [OPTIONS] FILES...")
+    assert result.output.startswith("Usage: cli [OPTIONS] FILE")
 
 
 @pytest.mark.parametrize(
@@ -118,7 +118,7 @@ def test_without_file(params: List[str]):
     runner = CliRunner()
     result = runner.invoke(unblob.cli.cli, params)
     assert result.exit_code == 2
-    assert "Missing argument 'FILES...'" in result.output
+    assert "Missing argument 'FILE'" in result.output
 
 
 def test_non_existing_file(tmp_path: Path):
@@ -126,7 +126,7 @@ def test_non_existing_file(tmp_path: Path):
     path = Path("non/existing/path/54")
     result = runner.invoke(unblob.cli.cli, ["--extract-dir", str(tmp_path), str(path)])
     assert result.exit_code == 2
-    assert "Invalid value for 'FILES...'" in result.output
+    assert "Invalid value for 'FILE'" in result.output
     assert f"Path '{str(path)}' does not exist" in result.output
 
 
