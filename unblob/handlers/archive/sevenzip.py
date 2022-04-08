@@ -17,6 +17,7 @@ https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zForm
 
 https://py7zr.readthedocs.io/en/latest/archive_format.html
 """
+import binascii
 import io
 from typing import Optional
 
@@ -27,6 +28,9 @@ from unblob.extractors import Command
 from ...models import StructHandler, ValidChunk
 
 logger = get_logger()
+
+# StartHeader (next_header_offset, next_header_size, next_header_crc)
+START_HEADER_SIZE = 8 + 8 + 4
 
 
 class SevenZipHandler(StructHandler):
@@ -59,6 +63,14 @@ class SevenZipHandler(StructHandler):
         self, file: io.BufferedIOBase, start_offset: int
     ) -> Optional[ValidChunk]:
         header = self.parse_header(file)
+
+        # CRC includes the StartHeader (next_header_offset, next_header_size, next_header_crc)
+        # CPP/7zip/Archive/7z/7zOut.cpp COutArchive::WriteStartHeader
+        calculated_crc = binascii.crc32(header.dumps()[-START_HEADER_SIZE:])
+        if header.crc != calculated_crc:
+            logger.debug("Invalid header CRC", _verbosity=2)
+            return
+
         # We read the signature header here to get the offset to the header database
         first_db_header = start_offset + len(header) + header.next_header_offset
         end_offset = first_db_header + header.next_header_size
