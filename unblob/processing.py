@@ -70,14 +70,9 @@ def get_existing_extract_dirs(
 ) -> List[Path]:
     extract_dirs = []
     for path in paths:
-        if path.is_dir():
-            subpaths = path.iterdir()
-        else:
-            subpaths = [path]
-        for path in subpaths:
-            d = get_extract_dir_for_input(config, path)
-            if d.exists():
-                extract_dirs.append(d)
+        d = get_extract_dir_for_input(config, path)
+        if d.exists():
+            extract_dirs.append(d)
 
     return extract_dirs
 
