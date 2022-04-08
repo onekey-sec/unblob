@@ -6,6 +6,8 @@ from ...file_utils import Endian
 from ...models import StructHandler, ValidChunk
 
 PADDING_LEN = 2
+# CPP/7zip/Archive/LzhHandler.cpp
+HEADER_MIN_SIZE = 2 + 22
 
 
 class LZHHandler(StructHandler):
@@ -74,6 +76,9 @@ class LZHHandler(StructHandler):
             header_size = header.header_size + (header.header_checksum << 8)
         else:
             header_size = header.header_size + PADDING_LEN
+
+        if header_size < HEADER_MIN_SIZE:
+            return
 
         file.seek(-len(header), io.SEEK_CUR)
         file.seek(header_size + header.compressed_size, io.SEEK_CUR)
