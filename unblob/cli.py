@@ -91,6 +91,13 @@ class UnblobContext(click.Context):
     help="Extract the files to this directory. Will be created if doesn't exist.",
 )
 @click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    show_default=True,
+    help="Force extraction removing previously extracted files.",
+)
+@click.option(
     "-d",
     "--depth",
     default=DEFAULT_DEPTH,
@@ -155,6 +162,7 @@ class UnblobContext(click.Context):
 def cli(
     files: List[Path],
     extract_root: Path,
+    force: bool,
     depth: int,
     entropy_depth: int,
     skip_magic: Iterable[str],
@@ -173,6 +181,7 @@ def cli(
 
     config = ExtractionConfig(
         extract_root=extract_root,
+        force_extract=force,
         max_depth=depth,
         entropy_depth=entropy_depth,
         entropy_plot=bool(verbose >= 3),
