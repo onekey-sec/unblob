@@ -29,7 +29,9 @@ class FATHandler(StructHandler):
             // 495 (0x1EF) bytes of whatever
             // 55 AA is the "signature". "This will be the end of the sector only in case the
             // sector size is 512."
-            ( EB | E9 ) [13] ( 01 | 02 | 04 | 08 | 10 | 20 | 40 | 80 ) [495] 55 AA
+            // Hyperscan fails to match with any jump larger then 142 bytes, no idea why so
+            // signature will be checked in calculate_chunk
+            ( EB | E9 ) [13] ( 01 | 02 | 04 | 08 | 10 | 20 | 40 | 80 )
         """
         )
     ]
@@ -134,6 +136,11 @@ class FATHandler(StructHandler):
         return True
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+        signature_start = start_offset + 510
+        signature_end = start_offset + 512
+        if file[signature_start:signature_end] != b"\x55\xaa":
+            raise InvalidInputFormat("Signature mismatch")
+
         header = self.cparser_le.fat12_16_bootsec_t(file)
 
         if header.FileSysType in (b"FAT12   ", b"FAT16   "):
