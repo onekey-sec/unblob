@@ -1,6 +1,8 @@
 import itertools
 
-from lark import Lark, Transformer, UnexpectedCharacters
+from lark.exceptions import UnexpectedCharacters
+from lark.lark import Lark
+from lark.visitors import Transformer
 
 _hex_string_parser = Lark(
     """

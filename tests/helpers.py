@@ -2,8 +2,8 @@ import binascii
 import io
 
 from attr import dataclass
-from lark import Lark, Transformer
-from lark.visitors import Discard
+from lark.lark import Lark
+from lark.visitors import Discard, Transformer
 
 
 def unhex(hexdump: str) -> bytes:
