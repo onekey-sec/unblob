@@ -169,9 +169,9 @@ resolved_reference = "1a0ee577d7c7238303b8d76abb9a44422ac062f5"
 
 [[package]]
 name = "lark"
-version = "1.0.0"
+version = "1.1.2"
 description = "a modern parsing library"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -461,7 +461,7 @@ resolved_reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "65294b3988b5ced884a2843b7e57306760609566dee290273ad164405659c952"
+content-hash = "ec7ee558504e35666bde1d992a30fbe4965e5c6322c37f072420255be2cac626"
 
 [metadata.files]
 arpy = [
@@ -571,8 +571,8 @@ iniconfig = [
 ]
 jefferson = []
 lark = [
-    {file = "lark-1.0.0-py2.py3-none-any.whl", hash = "sha256:10818563b44e18ea264b5013a80fe04406999ad51bacc74214f69f13d95af6e1"},
-    {file = "lark-1.0.0.tar.gz", hash = "sha256:2269dee215e6c689d5ce9d34fdc6e749d0c1c763add3fc7935938ebd7da159cb"},
+    {file = "lark-1.1.2-py2.py3-none-any.whl", hash = "sha256:c1ab213fc5e2d273fe2d91da218ccc8b5b92d065b17faa5e743499cb16594b7d"},
+    {file = "lark-1.1.2.tar.gz", hash = "sha256:7a8d0c07d663da9391d7faee1bf1d7df4998c47ca43a593cbef5c7566acd057a"},
 ]
 nodeenv = [
     {file = "nodeenv-1.6.0-py2.py3-none-any.whl", hash = "sha256:621e6b7076565ddcacd2db0294c0381e01fd28945ab36bcf00f41c5daf63bef7"},
