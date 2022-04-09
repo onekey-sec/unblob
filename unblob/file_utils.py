@@ -35,6 +35,12 @@ class File(mmap.mmap):
             raise EOFError
         return self.tell()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
+        self.close()
+
 
 class OffsetFile:
     def __init__(self, file: File, offset: int):
