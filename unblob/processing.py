@@ -19,7 +19,7 @@ from .finder import search_chunks_by_priority
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
-from .models import ExtractError, Task, TaskResult, UnknownChunk, ValidChunk
+from .models import ExtractError, File, Task, TaskResult, UnknownChunk, ValidChunk
 from .pool import make_pool
 from .report import ExtractDirectoriesExistReport, Report, UnknownError
 from .signals import terminate_gracefully
@@ -193,9 +193,9 @@ class _FileTask:
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
 
-        with self.task.path.open("rb") as file:
+        with File.from_path(self.task.path) as file:
             all_chunks = search_chunks_by_priority(
-                self.task.path, file, self.size, self.config.handlers, self.result
+                file, self.size, self.config.handlers, self.result
             )
             outer_chunks = remove_inner_chunks(all_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, self.size)
@@ -210,7 +210,10 @@ class _FileTask:
         self._ensure_root_extract_dir()
 
     def _process_chunks(
-        self, file, outer_chunks: List[ValidChunk], unknown_chunks: List[UnknownChunk]
+        self,
+        file: File,
+        outer_chunks: List[ValidChunk],
+        unknown_chunks: List[UnknownChunk],
     ):
         carved_unknown_paths = carve_unknown_chunks(
             self.extract_dir, file, unknown_chunks
@@ -361,7 +364,7 @@ def calculate_entropy(path: Path, *, draw_plot: bool):
         file_size, chunk_count=80, min_limit=1024, max_limit=1024 * 1024
     )
 
-    with path.open("rb") as file:
+    with File.from_path(path) as file:
         for chunk in iterate_file(file, 0, file_size, buffer_size=buffer_size):
             entropy = shannon_entropy(chunk)
             entropy_percentage = round(entropy / 8 * 100, 2)
