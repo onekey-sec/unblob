@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from unblob.models import File, Handler, Handlers, Regex, ValidChunk
+from unblob.models import File, Handler, Regex, ValidChunk
 from unblob.processing import ExtractionConfig, process_files
 
 _ZIP_CONTENT = b"good file"
@@ -97,7 +97,7 @@ def test_keep_chunks_with_null_extractor(input_dir: Path, output_dir: Path):
     config = ExtractionConfig(
         extract_root=output_dir,
         entropy_depth=0,
-        handlers=Handlers([tuple([_HandlerWithNullExtractor])]),
+        handlers=(_HandlerWithNullExtractor,),
     )
     all_reports = process_files(config, input_dir)
     assert list(output_dir.glob("**/*.null"))

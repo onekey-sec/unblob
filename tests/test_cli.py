@@ -8,7 +8,7 @@ from conftest import TestHandler
 
 import unblob.cli
 from unblob.extractors import Command
-from unblob.handlers import BUILTIN_HANDLERS, Handlers
+from unblob.handlers import BUILTIN_HANDLERS
 from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
 
 
@@ -17,7 +17,7 @@ class ExistingCommandHandler(TestHandler):
 
 
 def test_show_external_dependencies_exists():
-    handlers = Handlers([(ExistingCommandHandler, TestHandler)])
+    handlers = (ExistingCommandHandler, TestHandler)
     runner = CliRunner()
     result = runner.invoke(
         unblob.cli.cli, ["--show-external-dependencies"], handlers=handlers
@@ -33,7 +33,7 @@ def test_show_external_dependencies_exists():
 
 
 def test_show_external_dependencies_not_exists():
-    handlers = Handlers([(ExistingCommandHandler, ExistingCommandHandler)])
+    handlers = (ExistingCommandHandler, ExistingCommandHandler)
     runner = CliRunner()
     result = runner.invoke(
         unblob.cli.cli, ["--show-external-dependencies"], handlers=handlers

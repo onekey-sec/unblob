@@ -36,7 +36,7 @@ def show_external_dependencies(
     )  # may not exist, depends on parameter order...
     plugin_manager.import_plugins(plugins_path)
     extra_handlers = plugin_manager.load_handlers_from_plugins()
-    handlers = ctx.params["handlers"].with_prepended(extra_handlers)
+    handlers = ctx.params["handlers"] + tuple(extra_handlers)
 
     dependencies = get_dependencies(handlers)
     text = pretty_format_dependencies(dependencies)
@@ -177,7 +177,7 @@ def cli(
 
     plugin_manager.import_plugins(plugins_path)
     extra_handlers = plugin_manager.load_handlers_from_plugins()
-    handlers = handlers.with_prepended(extra_handlers)
+    handlers += tuple(extra_handlers)
 
     config = ExtractionConfig(
         extract_root=extract_root,

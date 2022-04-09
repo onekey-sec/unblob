@@ -40,10 +40,7 @@ def test_all_handlers(
 
 @pytest.mark.parametrize(
     "handler",
-    (
-        pytest.param(handler, id=handler.NAME)
-        for handler in handlers.BUILTIN_HANDLERS.flat
-    ),
+    (pytest.param(handler, id=handler.NAME) for handler in handlers.BUILTIN_HANDLERS),
 )
 def test_missing_handlers_integrations_tests(handler: Type[Handler]):
     handler_module_path = Path(inspect.getfile(handler))
