@@ -458,18 +458,10 @@ url = "https://github.com/IoT-Inspector/yaffshiv.git"
 reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
 resolved_reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
 
-[[package]]
-name = "yara-python"
-version = "4.2.0"
-description = "Python interface for YARA"
-category = "main"
-optional = false
-python-versions = "*"
-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "44ea67dc4b5e48ef54499d5649caea31fbe29aaa3f09c6c8b7a2cbb8c8699d31"
+content-hash = "65294b3988b5ced884a2843b7e57306760609566dee290273ad164405659c952"
 
 [metadata.files]
 arpy = [
@@ -702,18 +694,3 @@ virtualenv = [
     {file = "virtualenv-20.10.0.tar.gz", hash = "sha256:576d05b46eace16a9c348085f7d0dc8ef28713a2cabaa1cf0aea41e8f12c9218"},
 ]
 yaffshiv = []
-yara-python = [
-    {file = "yara-python-4.2.0.tar.gz", hash = "sha256:d02f239f429c6c94e60b500246d376595fbed8d9124209d332b6f8e7cfb5ec6e"},
-    {file = "yara_python-4.2.0-cp310-cp310-win32.whl", hash = "sha256:1faec6480be87964056ac19cddae052da4c88755426c81c83bce53ed7d57ebfe"},
-    {file = "yara_python-4.2.0-cp310-cp310-win_amd64.whl", hash = "sha256:76f711603de6a66a42be4501219288353397b032d6239b01a34e2bbcce4a2e50"},
-    {file = "yara_python-4.2.0-cp35-cp35m-win32.whl", hash = "sha256:cabef9144d35357ba9815f6ecacfaeed05fa2cc2a2ae0a0c37766839500555d9"},
-    {file = "yara_python-4.2.0-cp35-cp35m-win_amd64.whl", hash = "sha256:300581837e17114432d52599075bb8348dc2ce3e9ec8d3c325f5a797424791a4"},
-    {file = "yara_python-4.2.0-cp36-cp36m-win32.whl", hash = "sha256:c4c147495267a26b2d5fc39a486e1561bc501b170f973ab1ab0f39f2c00791da"},
-    {file = "yara_python-4.2.0-cp36-cp36m-win_amd64.whl", hash = "sha256:9d43bb5a5148f1c50e972e8fc4653620d63bb0d1cb02701d41fa580eb44a1bcf"},
-    {file = "yara_python-4.2.0-cp37-cp37m-win32.whl", hash = "sha256:0de9d9482a6def6ef719ac9024dceae89809fa05d02656518a146374df93eb94"},
-    {file = "yara_python-4.2.0-cp37-cp37m-win_amd64.whl", hash = "sha256:963e089f5d70d614408d08830a9244f3146a63c87a2daedc130af72f6569d2af"},
-    {file = "yara_python-4.2.0-cp38-cp38-win32.whl", hash = "sha256:5da322141985e95f5018856603761ad908c3eb6dd8add566066c082fca8b4541"},
-    {file = "yara_python-4.2.0-cp38-cp38-win_amd64.whl", hash = "sha256:4853d0bf9a320fd98f5a0beb94eb651639073f8ccc2e2f40c132c66f3ed64d74"},
-    {file = "yara_python-4.2.0-cp39-cp39-win32.whl", hash = "sha256:e5adfdcf01e2cc6bc07603eaadb314cf3515cab577e529db86c4de7bf9b327dd"},
-    {file = "yara_python-4.2.0-cp39-cp39-win_amd64.whl", hash = "sha256:a92dc977e5e6add276ebdf5c8e0ddae7a79a85993c407a9c1d198dab518116e6"},
-]
