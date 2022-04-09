@@ -2,166 +2,202 @@
 Searching Chunk related functions.
 The main "entry point" is search_chunks_by_priority.
 """
-import io
+from enum import Flag
 from functools import lru_cache
-from operator import itemgetter
-from pathlib import Path
-from typing import Dict, List, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type
 
-import yara
+import attr
+import hyperscan
 from structlog import get_logger
 
-from .file_utils import InvalidInputFormat, LimitedStartReader
+from .file_utils import InvalidInputFormat
 from .handlers import Handlers
 from .logging import noformat
-from .models import Handler, TaskResult, ValidChunk, YaraMatchResult
+from .models import File, Handler, TaskResult, ValidChunk
 from .report import CalculateChunkExceptionReport
 
 logger = get_logger()
 
 
-_YARA_RULE_TEMPLATE = """
-rule {NAME}
-{{
-    {YARA_RULE}
-}}
-"""
+@attr.define
+class HyperscanMatchContext:
+    handler_map: Dict[int, Handler]
+    file: File
+    file_size: int
+    all_chunks: List
+    task_result: TaskResult
+
+
+class _HyperscanScan(Flag):
+    Continue = False
+    Terminate = True
+
+
+def _calculate_chunk(
+    handler: Handler, file: File, real_offset, task_result: TaskResult
+) -> Optional[ValidChunk]:
+
+    file.seek(real_offset)
+    try:
+        return handler.calculate_chunk(file, real_offset)
+    except InvalidInputFormat as exc:
+        logger.debug(
+            "File format is invalid",
+            exc_info=exc,
+            handler=handler.NAME,
+            _verbosity=2,
+        )
+    except EOFError as exc:
+        logger.debug(
+            "File ends before header could be read",
+            exc_info=exc,
+            handler=handler.NAME,
+            _verbosity=2,
+        )
+    except Exception as exc:
+        error_report = CalculateChunkExceptionReport(
+            handler=handler.NAME,
+            start_offset=real_offset,
+            exception=exc,
+        )
+        task_result.add_report(error_report)
+        logger.error(
+            "Unhandled Exception during chunk calculation", **error_report.asdict()
+        )
+
+
+def _hyperscan_match(
+    pattern_id: int, offset: int, end: int, flags: int, context: HyperscanMatchContext
+) -> _HyperscanScan:
+    handler = context.handler_map[pattern_id]
+    real_offset = offset + handler.PATTERN_MATCH_OFFSET
+
+    if real_offset < 0:
+        return _HyperscanScan.Continue
+
+    # Skip chunk calculation if this would start inside another one,
+    # similar to remove_inner_chunks, but before we even begin calculating.
+    if any(chunk.contains_offset(real_offset) for chunk in context.all_chunks):
+        logger.debug(
+            "Skip chunk calculation as pattern is inside an other chunk",
+            handler=handler.NAME,
+            offset=real_offset,
+            _verbosity=2,
+        )
+        return _HyperscanScan.Continue
+
+    logger.debug(
+        "Calculating chunk for pattern match",
+        start_offset=offset,
+        real_offset=real_offset,
+        _verbosity=2,
+    )
+
+    chunk = _calculate_chunk(handler, context.file, real_offset, context.task_result)
+
+    # We found some random bytes this handler couldn't parse
+    if chunk is None:
+        return _HyperscanScan.Continue
+
+    if chunk.end_offset > context.file_size:
+        logger.debug("Chunk overflows file", chunk=chunk, _verbosity=2)
+        return _HyperscanScan.Continue
+
+    chunk.handler = handler
+    logger.debug("Found valid chunk", chunk=chunk, handler=handler.NAME, _verbosity=2)
+    context.all_chunks.append(chunk)
+
+    # Terminate scan  if we have a full file match
+    if chunk.start_offset == 0 and chunk.end_offset == context.file_size:
+        logger.debug("Chunk covers the whole file", chunk=chunk)
+        return _HyperscanScan.Terminate
+
+    return _HyperscanScan.Continue
 
 
 def search_chunks_by_priority(  # noqa: C901
-    path: Path,
-    file: io.BufferedReader,
+    file: File,
     file_size: int,
     handlers: Handlers,
     task_result: TaskResult,
 ) -> List[ValidChunk]:
     """Search all ValidChunks within the file.
-    Collect all the registered handlers by priority, search for YARA patterns and run
+    Collect all the registered handlers by priority, search for patterns and run
     Handler.calculate_chunk() on the found matches.
     We don't deal with offset within already found ValidChunks and invalid chunks are thrown away.
+    If chunk covers the whole file we stop any further search and processing.
     """
     all_chunks = []
 
     for priority_level, handler_classes in enumerate(handlers.by_priority, start=1):
         logger.debug("Starting priority level", priority_level=noformat(priority_level))
-        yara_rules = make_yara_rules(handler_classes)
-        handler_map = make_handler_map(handler_classes)
-        yara_results = search_yara_patterns(yara_rules, handler_map, path)
+        hyperscan_db, handler_map = build_hyperscan_database(handler_classes)
 
-        for result in yara_results:
-            handler, match = result.handler, result.match
+        hyperscan_context = HyperscanMatchContext(
+            handler_map=handler_map,
+            file=file,
+            file_size=file_size,
+            all_chunks=all_chunks,
+            task_result=task_result,
+        )
 
-            by_offset = itemgetter(0)
-            sorted_match_strings = sorted(match.strings, key=by_offset)
-            for offset, identifier, _string_data in sorted_match_strings:
-                real_offset = offset + handler.YARA_MATCH_OFFSET
-
-                # Skip chunk calculation if the match is found too early in the file,
-                # leading to a negative real offset once YARA_MATCH_OFFSET is applied.
-                if real_offset < 0:
-                    continue
-
-                # Skip chunk calculation if this would start inside another one,
-                # similar to remove_inner_chunks, but before we even begin calculating.
-                if any(chunk.contains_offset(real_offset) for chunk in all_chunks):
-                    logger.debug(
-                        "Skip chunk calculation as pattern is inside an other chunk",
-                        handler=handler.NAME,
-                        offset=real_offset,
-                        _verbosity=2,
-                    )
-                    continue
-
+        try:
+            hyperscan_db.scan(
+                [file],
+                match_event_handler=_hyperscan_match,
+                context=hyperscan_context,
+            )
+        except hyperscan.error as e:
+            if e.args and e.args[0] == f"error code {hyperscan.HS_SCAN_TERMINATED}":
                 logger.debug(
-                    "Calculating chunk for YARA match",
-                    start_offset=offset,
-                    real_offset=real_offset,
-                    identifier=identifier,
-                    _verbosity=2,
+                    "Scanning terminated as whole file chunk is found",
+                    priority_level=noformat(priority_level),
+                )
+                return all_chunks
+            else:
+                logger.error(
+                    "Error scanning for patterns",
+                    priority_level=noformat(priority_level),
+                    error=e,
                 )
 
-                limited_reader = LimitedStartReader(file, real_offset)
-                try:
-                    chunk = handler.calculate_chunk(limited_reader, real_offset)
-                except InvalidInputFormat as exc:
-                    logger.debug(
-                        "File format is invalid",
-                        exc_info=exc,
-                        handler=handler.NAME,
-                        _verbosity=2,
-                    )
-                    continue
-                except EOFError as exc:
-                    logger.debug(
-                        "File ends before header could be read",
-                        exc_info=exc,
-                        handler=handler.NAME,
-                        _verbosity=2,
-                    )
-                    continue
-                except Exception as exc:
-                    error_report = CalculateChunkExceptionReport(
-                        handler=handler.NAME,
-                        start_offset=real_offset,
-                        exception=exc,
-                    )
-                    task_result.add_report(error_report)
-                    logger.error(
-                        "Unhandled Exception during chunk calculation",
-                        **error_report.asdict()
-                    )
-                    continue
-
-                # We found some random bytes this handler couldn't parse
-                if chunk is None:
-                    continue
-
-                if chunk.end_offset > file_size:
-                    logger.debug("Chunk overflows file", chunk=chunk, _verbosity=2)
-                    continue
-
-                chunk.handler = handler
-                logger.debug(
-                    "Found valid chunk", chunk=chunk, handler=handler.NAME, _verbosity=2
-                )
-                all_chunks.append(chunk)
-
-        logger.debug("Ended priority level", priority_level=noformat(priority_level))
+        logger.debug(
+            "Ended priority level",
+            priority_level=noformat(priority_level),
+            all_chunks=all_chunks,
+        )
 
     return all_chunks
 
 
 @lru_cache
-def make_yara_rules(handlers: Tuple[Type[Handler], ...]):
-    """Make yara.Rule by concatenating all handlers yara rules and compiling them."""
-    all_yara_rules = "\n".join(
-        _YARA_RULE_TEMPLATE.format(NAME=h.NAME, YARA_RULE=h.YARA_RULE.strip())
-        for h in handlers
-    )
-    logger.debug("Compiled YARA rules", rules=all_yara_rules, _verbosity=3)
-    compiled_rules = yara.compile(source=all_yara_rules, includes=False)
-    return compiled_rules
+def build_hyperscan_database(
+    handlers: Tuple[Type[Handler], ...]
+) -> Tuple[hyperscan.Database, Dict]:
+    db = hyperscan.Database(mode=hyperscan.HS_MODE_VECTORED)
+    handler_map = dict()
 
+    pattern_id = 0
+    patterns = []
+    for handler_class in handlers:
+        handler = handler_class()
+        for pattern in handler.PATTERNS:
+            try:
+                patterns.append(
+                    (pattern.as_regex(), pattern_id, hyperscan.HS_FLAG_SOM_LEFTMOST)
+                )
+            except ValueError as e:
+                logger.error(
+                    "Invalid pattern",
+                    handler=handler.NAME,
+                    pattern=pattern,
+                    error=str(e),
+                )
+                raise
+            handler_map[pattern_id] = handler
+            pattern_id += 1
 
-@lru_cache
-def make_handler_map(handler_classes: Tuple[Type[Handler], ...]) -> Dict[str, Handler]:
-    return {h.NAME: h() for h in handler_classes}
+    expressions, ids, flags = zip(*patterns)
+    db.compile(expressions=expressions, ids=ids, elements=len(patterns), flags=flags)
 
-
-def search_yara_patterns(
-    yara_rules: yara.Rule, handler_map: Dict[str, Handler], full_path: Path
-) -> List[YaraMatchResult]:
-    """Search with the compiled YARA rules and identify the handler which defined the rule."""
-    # YARA uses a memory mapped file internally when given a path
-    yara_matches: List[yara.Match] = yara_rules.match(full_path.as_posix())
-
-    yara_results = []
-    for match in yara_matches:
-        handler = handler_map[match.rule]
-        yara_res = YaraMatchResult(handler=handler, match=match)
-        yara_results.append(yara_res)
-
-    if yara_results:
-        logger.debug("Found YARA results", count=noformat(len(yara_results)))
-
-    return yara_results
+    return db, handler_map

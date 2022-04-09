@@ -1,20 +1,19 @@
 import abc
-import io
 from pathlib import Path
 from typing import List, Optional, Tuple, Type
 
 import attr
-import yara
 from structlog import get_logger
 
-from .file_utils import Endian, InvalidInputFormat, StructParser
+from .file_utils import Endian, File, InvalidInputFormat, StructParser
+from .parser import hexstring2regex
 from .report import Report
 
 logger = get_logger()
 
 # The state transitions are:
 #
-# file ──► YaraMatchResult ──► ValidChunk
+# file ──► pattern match ──► ValidChunk
 #
 
 
@@ -22,18 +21,6 @@ logger = get_logger()
 class Task:
     path: Path
     depth: int
-
-
-@attr.define
-class YaraMatchResult:
-    """Results of a YARA match grouped by file types (handlers).
-
-    When running a YARA search for specific bytes, we get a list of Blobs
-    and the Handler to the corresponding YARA rule.
-    """
-
-    handler: "Handler"
-    match: yara.Match
 
 
 @attr.define
@@ -154,14 +141,60 @@ class Extractor(abc.ABC):
         """
 
 
+class Pattern(str):
+    def as_regex(self) -> bytes:
+        raise NotImplementedError
+
+
+class HexString(Pattern):
+    """
+    Hex string can be a YARA rule like hexadecimal strings to simplify defining
+    binary strings using hex encoding, wild-cards, jumps and alternatives.
+    Hexstrings are convereted to hyperscan compatible PCRE regex.
+
+    See YARA & Hyperscan documentation for more details:
+    - https://yara.readthedocs.io/en/stable/writingrules.html#hexadecimal-strings
+    - https://intel.github.io/hyperscan/dev-reference/compilation.html#pattern-support
+
+    You can specify the following:
+    - normal bytes using hexadecimals: 01 de ad co de ff
+    - wild-cards can match single bytes and can be mixed with normal hex: 01 ?? 02
+    - wild-cards can also match first and second nibles: 0? ?0
+    - jumps can be specified for multiple wildcard bytes: [3] [2-5]
+    - alternatives can be specified as well: ( 01 02 | 03 04 )
+    The above can be combined and alternatives nested:
+     01 02 ( 03 04 | (0? | 03 | ?0) | 05 ?? ) 06
+
+    Single line comments can be specified using //
+
+    We do NOT support the following YARA syntax:
+    - comments using /* */ notation
+    - infinite jumps: [-]
+    - unbounded jumps: [3-] or [-4] (use [0-4] instead)
+    """
+
+    def as_regex(self) -> bytes:
+        return hexstring2regex(self)
+
+
+class Regex(Pattern):
+    """
+    Byte PCRE regex, see hyperscan documentation for more details:
+    https://intel.github.io/hyperscan/dev-reference/compilation.html#pattern-support
+    """
+
+    def as_regex(self) -> bytes:
+        return self.encode()
+
+
 class Handler(abc.ABC):
     """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
 
     NAME: str
-    YARA_RULE: str
+    PATTERNS: List[Pattern]
     # We need this, because not every match reflects the actual start
     # (e.g. tar magic is in the middle of the header)
-    YARA_MATCH_OFFSET: int = 0
+    PATTERN_MATCH_OFFSET: int = 0
 
     EXTRACTOR: Optional[Extractor]
 
@@ -173,9 +206,7 @@ class Handler(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 
     def extract(self, inpath: Path, outdir: Path):

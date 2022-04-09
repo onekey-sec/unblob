@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from unblob.models import Handler, Handlers, ValidChunk
+from unblob.models import File, Handler, Handlers, Regex, ValidChunk
 from unblob.processing import ExtractionConfig, process_files
 
 _ZIP_CONTENT = b"good file"
@@ -86,15 +86,9 @@ def test_keep_all_unknown_chunks(input_dir: Path, output_dir: Path):
 class _HandlerWithNullExtractor(Handler):
     NAME = "null"
     EXTRACTOR = None
-    YARA_RULE = r"""
-        strings:
-            $anychar = /./
+    PATTERNS = [Regex(".")]
 
-        condition:
-            $anychar
-    """
-
-    def calculate_chunk(self, file: io.BufferedIOBase, start_offset: int) -> ValidChunk:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk:
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
 
 
