@@ -128,7 +128,6 @@ class _JFFS2Base(StructHandler):
                 return
 
             node_len = round_up(header.totlen, BLOCK_ALIGNMENT)
-            file.seek(node_len, io.SEEK_CUR)
             current_offset += node_len
 
         if current_offset > eof:
