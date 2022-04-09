@@ -1,4 +1,3 @@
-import io
 from typing import Optional
 
 from dissect.cstruct import Instance
@@ -6,7 +5,7 @@ from structlog import get_logger
 
 from unblob.extractors.command import Command
 
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -16,20 +15,17 @@ END_HEADER = b"\x1a\x00"
 class ARCHandler(StructHandler):
     NAME = "arc"
 
-    YARA_RULE = r"""
-        strings:
-            /**
-            Each entry in an archive begins with a one byte archive marker set to 0x1A.
-            The marker is followed by a one byte header type code, from 0x0 to 0x7.
-            Then a null-byte or unitialized-byte terminated filename string of 13 bytes, the
-            uninitialized byte is always set between 0xf0 and 0xff.
-            */
-
-            $arc_magic = { 1A (01 | 02 | 03 | 04 | 05 | 06 | 07) [12] (00 | F0 | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | FA | FB | FC | FD | FE | FF) }
-
-        condition:
-            $arc_magic
-    """
+    PATTERNS = [
+        HexString(
+            """
+            // Each entry in an archive begins with a one byte archive marker set to 0x1A.
+            // The marker is followed by a one byte header type code, from 0x0 to 0x7.
+            // Then a null-byte or unitialized-byte terminated filename string of 13 bytes, the
+            // uninitialized byte is always set between 0xf0 and 0xff.
+            1A (01 | 02 | 03 | 04 | 05 | 06 | 07) [12] (00 | F0 | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | FA | FB | FC | FD | FE | FF)
+            """
+        )
+    ]
 
     C_DEFINITIONS = r"""
     typedef struct arc_head {			/* archive entry header format */
@@ -63,9 +59,7 @@ class ARCHandler(StructHandler):
             return False
         return True
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         # we loop from header to header until we reach the end header
         offset = start_offset

@@ -1,8 +1,7 @@
-import io
-
 import pytest
 from helpers import unhex
 
+from unblob.file_utils import File
 from unblob.handlers.archive.tar import _get_tar_end_offset
 
 GNU_TAR_CONTENTS = unhex(
@@ -177,7 +176,7 @@ PADDING_AFTER_END_OF_ARCHIVE = unhex(
     ),
 )
 def test_offset(contents: bytes, expected_length: int, message: str):
-    f = io.BytesIO(contents)
+    f = File.from_bytes(contents)
 
     offset = _get_tar_end_offset(f)
     assert offset == expected_length, message
@@ -215,9 +214,9 @@ def test_truncated_files(contents: bytes, start_complete: bool, message: str):
     truncated = contents[:0x180]
 
     if start_complete:
-        f = io.BytesIO(contents + truncated)
+        f = File.from_bytes(contents + truncated)
     else:
-        f = io.BytesIO(truncated)
+        f = File.from_bytes(truncated)
 
     offset = _get_tar_end_offset(f)
     if start_complete:

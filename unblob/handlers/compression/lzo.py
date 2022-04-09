@@ -7,7 +7,7 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int32
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -34,12 +34,7 @@ F_H_PATH = 0x00002000  # noqa
 class LZOHandler(StructHandler):
     NAME = "lzo"
 
-    YARA_RULE = r"""
-        strings:
-            $lzo_magic = { 89 4C 5A 4F 00 0D 0A 1A 0A }
-        condition:
-            $lzo_magic
-    """
+    PATTERNS = [HexString("89 4C 5A 4F 00 0D 0A 1A 0A")]
 
     C_DEFINITIONS = r"""
         typedef struct lzo_header_no_filter
@@ -82,9 +77,7 @@ class LZOHandler(StructHandler):
 
     EXTRACTOR = Command("lzop", "-d", "-f", "-N", "-p{outdir}", "{inpath}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         header = self.cparser_be.lzo_header_no_filter_t(file)
         # maxmimum compression level is 9

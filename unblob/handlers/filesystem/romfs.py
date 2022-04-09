@@ -11,7 +11,7 @@ from structlog import get_logger
 from unblob.extractor import is_safe_path
 
 from ...file_utils import Endian, InvalidInputFormat, read_until_past, round_up
-from ...models import Extractor, StructHandler, ValidChunk
+from ...models import Extractor, File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -57,7 +57,7 @@ def valid_checksum(content: bytes) -> bool:
     return total == 0
 
 
-def get_string(file: io.BufferedIOBase) -> bytes:
+def get_string(file: File) -> bytes:
     """Read a 16 bytes aligned, null terminated string."""
     filename = b""
     counter = 0
@@ -80,9 +80,9 @@ class FileHeader(object):
     parent: Optional["FileHeader"] = None
     start_offset: int
     end_offset: int
-    file: io.BufferedReader
+    file: File
 
-    def __init__(self, addr: int, file: io.BufferedReader):
+    def __init__(self, addr: int, file: File):
         self.addr = addr
         type_exec_next = struct.unpack(">L", file.read(4))[0]
         self.next_filehdr = type_exec_next & ~0b1111
@@ -159,14 +159,14 @@ class RomFSHeader(object):
     checksum: int
     volume_name: bytes
     eof: int
-    file: io.BufferedReader
+    file: File
     end_offset: int
     inodes: Dict[int, "FileHeader"]
     extract_root: Path
 
     def __init__(
         self,
-        file: io.BufferedReader,
+        file: File,
         extract_root: Path,
     ):
 
@@ -336,7 +336,7 @@ class RomFSHeader(object):
 
 class RomfsExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
-        with inpath.open("rb") as f:
+        with File.from_path(inpath) as f:
             header = RomFSHeader(f, outdir)
             header.validate()
             header.recursive_walk(header.header_end_offset, None)
@@ -347,13 +347,10 @@ class RomFSFSHandler(StructHandler):
 
     NAME = "romfs"
 
-    YARA_RULE = r"""
-        strings:
-            // '-rom1fs-'
-            $romfs_magic = { 2D 72 6F 6D 31 66 73 2d }
-        condition:
-            $romfs_magic
-    """
+    PATTERNS = [
+        # '-rom1fs-'
+        HexString("2D 72 6F 6D 31 66 73 2d")
+    ]
 
     C_DEFINITIONS = r"""
         struct romfs_header {
@@ -365,9 +362,7 @@ class RomFSFSHandler(StructHandler):
     HEADER_STRUCT = "romfs_header"
     EXTRACTOR = RomfsExtractor()
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         if not valid_checksum(file.read(512)):
             raise InvalidInputFormat("Invalid RomFS checksum.")

@@ -21,7 +21,7 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import InvalidInputFormat
-from ...models import Handler, ValidChunk
+from ...models import File, Handler, HexString, ValidChunk
 from ._gzip_reader import SingleMemberGzipReader
 
 logger = get_logger()
@@ -34,9 +34,9 @@ GZIP2_FOOTER_LEN = GZIP2_CRC_LEN + GZIP2_SIZE_LEN
 class GZIPHandler(Handler):
     NAME = "gzip"
 
-    YARA_RULE = r"""
-    strings:
-        $gzip_magic = {
+    PATTERNS = [
+        HexString(
+            """
             // ID1
             1F
             // ID2
@@ -56,16 +56,13 @@ class GZIPHandler(Handler):
             (
                 00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 0A | 0B | 0C | 0D | FF
             )
-        }
-    condition:
-        $gzip_magic
-    """
+        """
+        )
+    ]
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         fp = SingleMemberGzipReader(file)
         if not fp.read_header():

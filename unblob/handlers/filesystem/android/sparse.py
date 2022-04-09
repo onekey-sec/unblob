@@ -6,7 +6,7 @@ from structlog import get_logger
 from unblob.extractors.command import Command
 
 from ....file_utils import Endian
-from ....models import StructHandler, ValidChunk
+from ....models import File, Regex, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -27,19 +27,12 @@ class SparseHandler(StructHandler):
 
     NAME = "sparse"
 
-    YARA_RULE = r"""
-        strings:
-            /**
-                magic (0xed26ff3a)
-                major version (0x1)
-                minor version (any)
-                file header size (0x1C in v1.0)
-                chunk header size (0XC in v1.0)
-            */
-            $android_sparse = /\x3A\xFF\x26\xED\x01\x00[\x00-\xFF]{2}\x1C\x00\x0C\x00/
-        condition:
-            $android_sparse
-    """
+    # magic (0xed26ff3a)
+    # major version (0x1)
+    # minor version (any)
+    # file header size (0x1C in v1.0)
+    # chunk header size (0XC in v1.0)
+    PATTERNS = [Regex(r"\x3A\xFF\x26\xED\x01\x00[\x00-\xFF]{2}\x1C\x00\x0C\x00")]
 
     C_DEFINITIONS = r"""
         typedef struct sparse_header {
@@ -67,9 +60,7 @@ class SparseHandler(StructHandler):
 
     EXTRACTOR = Command("simg2img", "{inpath}", "{outdir}/{infile}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         header = self.parse_header(file, Endian.LITTLE)
 

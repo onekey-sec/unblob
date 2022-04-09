@@ -1,9 +1,9 @@
 import copy
-import io
 
 import pytest
 from helpers import unhex
 
+from unblob.file_utils import File
 from unblob.handlers.archive.arj import ARJChecksumError, ARJHandler, InvalidARJSize
 
 ARJ_CONTENTS = unhex(
@@ -38,8 +38,7 @@ ARJ_CONTENTS = unhex(
 
 def test_valid_calculation():
     contents_len = len(ARJ_CONTENTS)
-    f = io.BytesIO(ARJ_CONTENTS)
-    f.seek(0)
+    f = File.from_bytes(ARJ_CONTENTS)
 
     handler = ARJHandler()
     chunk = handler.calculate_chunk(f, 0)
@@ -61,7 +60,7 @@ def test_invalid_block_size(header_size):
     contents = bytearray(copy.copy(ARJ_CONTENTS))
     contents[2] = header_size & 0xFF
     contents[3] = (header_size & 0xFF00) >> 8
-    f = io.BytesIO(contents)
+    f = File.from_bytes(contents)
     f.seek(0)
 
     handler = ARJHandler()
@@ -72,7 +71,7 @@ def test_invalid_block_size(header_size):
 def test_invalid_checksum():
     contents = bytearray(copy.copy(ARJ_CONTENTS))
     contents[4] = 0
-    f = io.BytesIO(contents)
+    f = File.from_bytes(contents)
     f.seek(0)
 
     handler = ARJHandler()

@@ -35,7 +35,7 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int16
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -44,13 +44,10 @@ class UnixCompressHandler(StructHandler):
 
     NAME = "compress"
 
-    YARA_RULE = r"""
-        // reference: https://fuchsia.googlesource.com/third_party/wuffs/+/HEAD/std/lzw/README.md
-        strings:
-            $compress_magic = { 1f 9d }
-        condition:
-            $compress_magic
-    """
+    PATTERNS = [
+        # reference: https://fuchsia.googlesource.com/third_party/wuffs/+/HEAD/std/lzw/README.md
+        HexString("1f 9d")
+    ]
 
     C_DEFINITIONS = r"""
         struct compress_header {
@@ -62,9 +59,7 @@ class UnixCompressHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}/{infile}")
 
-    def unlzw(  # noqa: C901
-        self, file: io.BufferedIOBase, start_offset: int, max_len: int
-    ) -> int:
+    def unlzw(self, file: File, start_offset: int, max_len: int) -> int:  # noqa: C901
         """
         Calculate the end of a unix compress stream by performing decompression on
         a stream read from <file> from <start_offset> up until <max_len>.
@@ -231,9 +226,7 @@ class UnixCompressHandler(StructHandler):
         else:
             return file.tell() - 1
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         file.seek(0, io.SEEK_END)
         max_len = file.tell()

@@ -13,14 +13,13 @@ we don't support the following Stuffit file formats at the moment:
 If you have the resources to add support for these archive formats,
 feel free to do so !
 """
-import io
 from typing import Optional
 
 from structlog import get_logger
 
 from ...extractors import Command
 from ...file_utils import Endian
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -28,9 +27,7 @@ logger = get_logger()
 class _StuffItHandlerBase(StructHandler):
     """A common base for all StuffIt formats."""
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         header = self.parse_header(file, endian=Endian.BIG)
 
@@ -45,13 +42,14 @@ class _StuffItHandlerBase(StructHandler):
 class StuffItSITHandler(_StuffItHandlerBase):
     NAME = "stuffit"
 
-    YARA_RULE = r"""
-        strings:
+    PATTERNS = [
+        HexString(
+            """
             // "SIT!\\x00", then 6 bytes (uint16 number of files and uint32 size), then "rLau".
-            $sit_magic = { 53 49 54 21 [6] 72 4C 61 75 }
-        condition:
-            $sit_magic
-    """
+            53 49 54 21 [6] 72 4C 61 75
+        """
+        )
+    ]
 
     C_DEFINITIONS = r"""
         typedef struct sit_header
@@ -68,13 +66,14 @@ class StuffItSITHandler(_StuffItHandlerBase):
 class StuffIt5Handler(_StuffItHandlerBase):
     NAME = "stuffit5"
 
-    YARA_RULE = r"""
-        strings:
+    PATTERNS = [
+        HexString(
+            """
             // "StuffIt (c)1997-"
-            $stuffit5_magic = { 53 74 75 66 66 49 74 20 28 63 29 31 39 39 37 2D }
-        condition:
-            $stuffit5_magic
+            53 74 75 66 66 49 74 20 28 63 29 31 39 39 37 2D
     """
+        )
+    ]
 
     C_DEFINITIONS = r"""
         typedef struct stuffit5_header

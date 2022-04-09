@@ -1,10 +1,8 @@
-import io
-
 import pytest
 from dissect.cstruct import Instance
 from helpers import unhex
 
-from unblob.file_utils import Endian
+from unblob.file_utils import Endian, File
 from unblob.handlers.filesystem.jffs2 import JFFS2NewHandler, JFFS2OldHandler
 
 VALID_JFFS2_NEW_LE_HEADER_CONTENT = unhex(
@@ -37,25 +35,25 @@ old_handler = JFFS2OldHandler()
 
 def get_valid_jffs2_new_le_header():
     return new_handler.parse_header(
-        io.BytesIO(VALID_JFFS2_NEW_LE_HEADER_CONTENT), Endian.LITTLE
+        File.from_bytes(VALID_JFFS2_NEW_LE_HEADER_CONTENT), Endian.LITTLE
     )
 
 
 def get_valid_jffs2_new_be_header():
     return new_handler.parse_header(
-        io.BytesIO(VALID_JFFS2_NEW_BE_HEADER_CONTENT), Endian.BIG
+        File.from_bytes(VALID_JFFS2_NEW_BE_HEADER_CONTENT), Endian.BIG
     )
 
 
 def get_valid_jffs2_old_le_header():
     return old_handler.parse_header(
-        io.BytesIO(VALID_JFFS2_OLD_LE_HEADER_CONTENT), Endian.LITTLE
+        File.from_bytes(VALID_JFFS2_OLD_LE_HEADER_CONTENT), Endian.LITTLE
     )
 
 
 def get_valid_jffs2_old_be_header():
     return old_handler.parse_header(
-        io.BytesIO(VALID_JFFS2_OLD_BE_HEADER_CONTENT), Endian.BIG
+        File.from_bytes(VALID_JFFS2_OLD_BE_HEADER_CONTENT), Endian.BIG
     )
 
 

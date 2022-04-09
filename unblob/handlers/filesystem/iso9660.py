@@ -1,4 +1,3 @@
-import io
 from typing import Optional
 
 from structlog import get_logger
@@ -6,7 +5,7 @@ from structlog import get_logger
 from unblob.extractors import Command
 from unblob.file_utils import Endian
 
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -34,23 +33,21 @@ class ISO9660FSHandler(StructHandler):
 
     NAME = "iso9660"
 
-    YARA_RULE = r"""
-        strings:
-            /**
-            Match on volume descriptor type, followed by ISO_STANDARD_ID, which corresponds to the beginning of a volume descriptor.
+    #
+    # Match on volume descriptor type, followed by ISO_STANDARD_ID, which corresponds to the beginning of a volume descriptor.
+    #
+    # Volume descriptor types can be:
+    #     - 0x00	Boot record volume descriptor
+    #     - 0x01	Primary volume descriptor
+    #     - 0x02	Supplementary volume descriptor, or enhanced volume descriptor
+    #     - 0x03	Volume partition descriptor
+    #     - 0xFF Volume descriptor terminator
 
-            Volume descriptor types can be:
-                - 0x00	Boot record volume descriptor
-                - 0x01	Primary volume descriptor
-                - 0x02	Supplementary volume descriptor, or enhanced volume descriptor
-                - 0x03	Volume partition descriptor
-                - 0xFF Volume descriptor terminator
-            */
-            $iso9660_header = { ( 00 | 01 | 02 | 03 ) 43 44 30 30 31 } // vd_type + "CD001" (ISO_STANDARD_ID within primary volume descriptor)
-
-        condition:
-            $iso9660_header
-    """
+    PATTERNS = [
+        HexString(
+            "( 00 | 01 | 02 | 03 ) 43 44 30 30 31 // vd_type + 'CD001' (ISO_STANDARD_ID within primary volume descriptor)"
+        )
+    ]
 
     C_DEFINITIONS = r"""
         typedef struct iso9660_dtime_s {
@@ -113,9 +110,7 @@ class ISO9660FSHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, Endian.LITTLE)
         size = from_733(header.volume_space_size) * from_723(header.logical_block_size)
 

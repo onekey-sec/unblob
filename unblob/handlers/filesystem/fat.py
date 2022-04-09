@@ -1,4 +1,3 @@
-import io
 from typing import Optional
 
 from dissect.cstruct import Instance
@@ -7,7 +6,7 @@ from structlog import get_logger
 from unblob.extractors.command import Command
 from unblob.file_utils import InvalidInputFormat
 
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -20,8 +19,9 @@ class FATHandler(StructHandler):
 
     NAME = "fat"
 
-    YARA_RULE = r"""
-        strings:
+    PATTERNS = [
+        HexString(
+            """
             // An initial x86 short jump instruction
             // OEMName (8 bytes)
             // BytesPerSec (2 bytes)
@@ -29,10 +29,10 @@ class FATHandler(StructHandler):
             // 495 (0x1EF) bytes of whatever
             // 55 AA is the "signature". "This will be the end of the sector only in case the
             // sector size is 512."
-            $fat_magic = { ( EB | E9 ) [2] [8] [2] [1] ( 01 | 02 | 04 | 08 | 10 | 20 | 40 | 80 ) [495] 55 AA }
-        condition:
-            $fat_magic
-    """
+            ( EB | E9 ) [13] ( 01 | 02 | 04 | 08 | 10 | 20 | 40 | 80 ) [495] 55 AA
+        """
+        )
+    ]
 
     C_DEFINITIONS = r"""
         // Common between FAT12, FAT16 and FAT32.
@@ -133,9 +133,7 @@ class FATHandler(StructHandler):
             return self.valid_fat32_header(header)
         return True
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.cparser_le.fat12_16_bootsec_t(file)
 
         if header.FileSysType in (b"FAT12   ", b"FAT16   "):

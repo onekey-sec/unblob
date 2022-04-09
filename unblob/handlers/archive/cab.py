@@ -1,10 +1,9 @@
-import io
 from typing import Optional
 
 from structlog import get_logger
 
 from ...extractors import Command
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -12,13 +11,7 @@ logger = get_logger()
 class CABHandler(StructHandler):
     NAME = "cab"
 
-    YARA_RULE = r"""
-        strings:
-            $cab_magic = { 4D 53 43 46 00 00 00 00 } // MSCF, then reserved dword
-        condition:
-            $cab_magic
-    """
-
+    PATTERNS = [HexString("4D 53 43 46 00 00 00 00 // MSCF then reserved dword")]
     C_DEFINITIONS = r"""
         typedef struct cab_header
         {
@@ -49,9 +42,7 @@ class CABHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file)
 
         if header.cbCabinet < len(header):

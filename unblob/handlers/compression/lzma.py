@@ -13,7 +13,7 @@ from ...file_utils import (
     convert_int32,
     convert_int64,
 )
-from ...models import Handler, ValidChunk
+from ...models import File, Handler, HexString, ValidChunk
 
 logger = get_logger()
 
@@ -24,9 +24,9 @@ MAX_UNCOMPRESSED_SIZE = 256 * 1024 * 1024 * 1024
 class LZMAHandler(Handler):
     NAME = "lzma"
 
-    YARA_RULE = r"""
-        strings:
-            $lzma_magic = {
+    PATTERNS = [
+        HexString(
+            """
                 // pre-computed valid properties bytes
                 (
                     51 | 5A | 5B | 5C | 5D | 5E | 63 | 64 | 65 | 66 | 6C | 6D | 6E | 75 | 76 | 7E |
@@ -35,17 +35,13 @@ class LZMAHandler(Handler):
                 )
                 // dictionary size
                 00 00 ( 00 | 01 | 04 | 08 | 10 | 20 | 40 | 80) ( 00 | 01 | 02 | 04 | 08 )
-            }
-        condition:
-            // LZMA file format: https://svn.python.org/projects/external/xz-5.0.3/doc/lzma-file-format.txt
-            $lzma_magic
-    """
+        """
+        )
+    ]
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         read_size = 0
         file.seek(start_offset + 1)

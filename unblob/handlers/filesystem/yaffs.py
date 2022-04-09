@@ -16,7 +16,7 @@ from unblob.file_utils import (
 )
 
 from ...extractors import Command
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -123,9 +123,7 @@ class _YAFFSBase(StructHandler):
             return False
         return True
 
-    def get_files(
-        self, file: io.BufferedIOBase, start_offset: int, eof: int, config: YAFFSConfig
-    ):
+    def get_files(self, file: File, start_offset: int, eof: int, config: YAFFSConfig):
         files = 0
         current_offset = start_offset
         while current_offset < eof:
@@ -158,9 +156,7 @@ class _YAFFSBase(StructHandler):
             current_offset += blocks * (config.page_size + config.spare_size)
         return files, current_offset
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         end_offset = 0
         total_files = 0
@@ -194,13 +190,12 @@ class YAFFS2Handler(_YAFFSBase):
 
     NAME = "yaffs2"
 
-    YARA_RULE = r"""
-        strings:
-            $yaffs2_le = { 01 00 00 00 01 00 00 00 ff ff } // Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name
-            $yaffs2_be = { 00 00 00 01 00 00 00 01 ff ff }
-        condition:
-            $yaffs2_le or $yaffs2_be
-    """
+    PATTERNS = [
+        HexString(
+            "01 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name"
+        ),
+        HexString("00 00 00 01 00 00 00 01 ff ff // BE"),
+    ]
 
     BIG_ENDIAN_MAGIC = 0x00_00_00_01
 
@@ -209,12 +204,11 @@ class YAFFSHandler(_YAFFSBase):
 
     NAME = "yaffs"
 
-    YARA_RULE = r"""
-        strings:
-            $yaffs_le = { 03 00 00 00 01 00 00 00 ff ff } // Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name
-            $yaffs_be = { 00 00 00 03 00 00 00 01 ff ff }
-        condition:
-            $yaffs_le or $yaffs_be
-    """
+    PATTERNS = [
+        HexString(
+            "03 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name"
+        ),
+        HexString("00 00 00 03 00 00 00 01 ff ff // BE"),
+    ]
 
     BIG_ENDIAN_MAGIC = 0x00_00_00_03

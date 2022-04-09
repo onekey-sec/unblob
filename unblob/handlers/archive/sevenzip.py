@@ -18,14 +18,13 @@ https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zForm
 https://py7zr.readthedocs.io/en/latest/archive_format.html
 """
 import binascii
-import io
 from typing import Optional
 
 from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -36,15 +35,14 @@ START_HEADER_SIZE = 8 + 8 + 4
 class SevenZipHandler(StructHandler):
     NAME = "sevenzip"
 
-    # Yara doesn't like the rule starting with a number
-    # yara.SyntaxError: line 21: syntax error, unexpected integer number, expecting identifier
-    YARA_RULE = r"""
-        strings:
+    PATTERNS = [
+        HexString(
+            """
             // '7', 'z', 0xBC, 0xAF, 0x27, 0x1C
-            $sevenzip_magic = { 37 7A BC AF 27 1C }
-        condition:
-            $sevenzip_magic
-    """
+            37 7A BC AF 27 1C
+        """
+        )
+    ]
     C_DEFINITIONS = r"""
         typedef struct sevenzip_header {
             char magic[6];
@@ -59,9 +57,7 @@ class SevenZipHandler(StructHandler):
     HEADER_STRUCT = "sevenzip_header_t"
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file)
 
         # CRC includes the StartHeader (next_header_offset, next_header_size, next_header_crc)
