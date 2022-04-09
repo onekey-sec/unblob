@@ -36,6 +36,25 @@ class File(mmap.mmap):
         return self.tell()
 
 
+class OffsetFile:
+    def __init__(self, file: File, offset: int):
+        self._file = file
+        self._offset = offset
+        self._file.seek(offset)
+
+    def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:
+        if whence == os.SEEK_SET:
+            pos += self._offset
+        self._file.seek(pos, whence)
+        return self._file.tell() - self._offset
+
+    def read(self, n=None):
+        return self._file.read(n)
+
+    def tell(self):
+        return self._file.tell() - self._offset
+
+
 class InvalidInputFormat(Exception):
     pass
 

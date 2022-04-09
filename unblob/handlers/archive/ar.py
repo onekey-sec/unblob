@@ -30,6 +30,8 @@ class ARHandler(Handler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+        offset_file = OffsetFile(file, start_offset)
+        ar = arpy.Archive(fileobj=offset_file)  # type: ignore
 
         try:
             ar.read_all_headers()
@@ -43,7 +45,7 @@ class ARHandler(Handler):
             # the first match, which means malformed AR archive
             ar.file.seek(-HEADER_LENGTH, os.SEEK_CUR)
             # we check if we failed on the first match
-            if start_offset == ar.file.tell():
+            if start_offset == file.tell():
                 return
             # otherwise we seek past the signature (failure on malformed AR archive
             # within the whole file, not at the start)
@@ -51,5 +53,5 @@ class ARHandler(Handler):
 
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=ar.file.tell(),
+            end_offset=file.tell(),
         )
