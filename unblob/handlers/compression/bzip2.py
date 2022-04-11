@@ -14,7 +14,7 @@ logger = get_logger()
 BLOCK_HEADER = 0x0000_3141_5926_5359
 BLOCK_ENDMARK = 0x0000_1772_4538_5090
 # BCD-encoded digits of BLOCK_HEADER
-COMPRESSED_MAGIC = b"1AY&SY\x86\xc6"
+COMPRESSED_MAGIC = b"1AY&SY"
 COMPRESSED_MAGIC_LENGTH = 6 * 8
 
 BLOCK_ENDMARK_SHIFTED = BLOCK_ENDMARK << COMPRESSED_MAGIC_LENGTH
@@ -32,10 +32,13 @@ class BZip2Handler(StructHandler):
 
     C_DEFINITIONS = r"""
         typedef struct bzip2_header {
+            // stream header
             char magic[2];              // 'BZ' signature/magic number
             uint8 version;              // 'h' for Bzip2 ('H'uffman coding), '0' for Bzip1 (deprecated)
             uint8 hundred_k_blocksize;  // '1'..'9' block-size 100 kB-900 kB (uncompressed)
-            char compressed_magic[8];   // 0x314159265359 (BCD (pi))
+
+            // block header (also repeated for every block)
+            char compressed_magic[6];   // 0x314159265359 (BCD (pi))
             uint32 crc;                 // checksum for this block
             uint8 randomised;           // 0=>normal, 1=>randomised (deprecated)
         } bzip2_header_t;
