@@ -123,6 +123,7 @@ def test_invalid_hexstring_pattern_raises():
             id="overflowing-chunk-ignored-scan-continues",
         ),
         pytest.param(b"A2345", [ValidChunk(0, 5)], id="whole-file-chunk"),
+        pytest.param(b"00000A2345", [ValidChunk(5, 10)], id="chunk-till-end-of-file"),
         pytest.param(
             b"BB34A678900",
             [ValidChunk(4, 9)],

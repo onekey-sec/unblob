@@ -107,9 +107,9 @@ def _hyperscan_match(
     logger.debug("Found valid chunk", chunk=chunk, handler=handler.NAME, _verbosity=2)
     context.all_chunks.append(chunk)
 
-    # Terminate scan  if we have a full file match
-    if chunk.start_offset == 0 and chunk.end_offset == context.file_size:
-        logger.debug("Chunk covers the whole file", chunk=chunk)
+    # Terminate scan if we match till the end of the file
+    if chunk.end_offset == context.file_size:
+        logger.debug("Chunk covers till end of the file", chunk=chunk)
         return _HyperscanScan.Terminate
 
     return _HyperscanScan.Continue
@@ -147,7 +147,7 @@ def search_chunks(  # noqa: C901
     except hyperscan.error as e:
         if e.args and e.args[0] == f"error code {hyperscan.HS_SCAN_TERMINATED}":
             logger.debug(
-                "Scanning terminated as whole file chunk is found",
+                "Scanning terminated as chunk matches till end of file",
             )
             return all_chunks
         else:
