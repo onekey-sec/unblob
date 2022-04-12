@@ -34,7 +34,9 @@ _hex_string_parser = Lark(
     SECONDNIBLE: HEXDIGIT "?"
     JUMP: "[" NUMBER "]"
     RANGE_JUMP: "[" NUMBER "-" NUMBER "]"
-"""
+""",
+    parser="lalr",
+    lexer="basic",
 )
 
 
