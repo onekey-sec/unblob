@@ -1,6 +1,6 @@
 import pytest
 
-from unblob.parser import hexstring2regex
+from unblob.parser import InvalidHexString, hexstring2regex
 
 
 @pytest.mark.parametrize(
@@ -73,5 +73,5 @@ def test_single_comment():
 
 
 def test_invalid_hexstring():
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidHexString):
         hexstring2regex("invalid hexstring")

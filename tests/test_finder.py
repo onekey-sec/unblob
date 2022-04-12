@@ -11,6 +11,7 @@ from unblob.models import (
     TaskResult,
     ValidChunk,
 )
+from unblob.parser import InvalidHexString
 
 
 class TestHandlerA(Handler):
@@ -107,7 +108,7 @@ def test_invalid_hexstring_pattern_raises():
         def calculate_chunk(self, file, start_offset: int):
             pass
 
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidHexString):
         build_hyperscan_database(tuple([TestHandlerA, TestHandlerB, InvalidHandler]))
 
 

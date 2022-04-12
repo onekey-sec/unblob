@@ -82,10 +82,14 @@ class _HexStringToRegex(Transformer):
         return "".join(s).encode()
 
 
+class InvalidHexString(ValueError):
+    pass
+
+
 def hexstring2regex(hexastr):
     try:
         parsed = _hex_string_parser.parse(hexastr)
     except UnexpectedCharacters as e:
-        raise ValueError(str(e)) from e
+        raise InvalidHexString(str(e)) from e
     regex = _HexStringToRegex().transform(parsed)
     return regex

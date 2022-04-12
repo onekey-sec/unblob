@@ -14,6 +14,7 @@ from .file_utils import InvalidInputFormat
 from .handlers import Handlers
 from .logging import noformat
 from .models import File, Handler, TaskResult, ValidChunk
+from .parser import InvalidHexString
 from .report import CalculateChunkExceptionReport
 
 logger = get_logger()
@@ -186,7 +187,7 @@ def build_hyperscan_database(
                 patterns.append(
                     (pattern.as_regex(), pattern_id, hyperscan.HS_FLAG_SOM_LEFTMOST)
                 )
-            except ValueError as e:
+            except InvalidHexString as e:
                 logger.error(
                     "Invalid pattern",
                     handler=handler.NAME,
