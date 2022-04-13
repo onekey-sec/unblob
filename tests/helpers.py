@@ -98,7 +98,6 @@ class _HexDumpToBin(Transformer):
         return Discard
 
     def trailing(self, s):
-        print(s)
         return _HexdumpLine(
             int.from_bytes(binascii.unhexlify(s[0]), byteorder="big"), b""
         )
