@@ -2,7 +2,6 @@
 Searching Chunk related functions.
 The main "entry point" is search_chunks_by_priority.
 """
-import os
 from enum import Flag
 from functools import lru_cache
 from typing import Dict, List, Optional, Tuple, Type
@@ -176,7 +175,6 @@ def search_chunks_by_priority(  # noqa: C901
 def build_hyperscan_database(
     handlers: Tuple[Type[Handler], ...]
 ) -> Tuple[hyperscan.Database, Dict]:
-    print("++++++++++++++++++++++++++ fooooo", hash(handlers), os.getpid())
     db = hyperscan.Database(mode=hyperscan.HS_MODE_VECTORED)
     handler_map = dict()
 
