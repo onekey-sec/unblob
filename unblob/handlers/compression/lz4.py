@@ -9,7 +9,7 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int8, convert_int32
-from ...models import Handler, ValidChunk
+from ...models import File, Handler, HexString, ValidChunk
 
 logger = get_logger()
 
@@ -62,7 +62,7 @@ class FLG:
 class _LZ4HandlerBase(Handler):
     """A common base for all LZ4 formats."""
 
-    def _skip_magic_bytes(self, file: io.BufferedIOBase):
+    def _skip_magic_bytes(self, file: File):
         file.seek(MAGIC_LEN, io.SEEK_CUR)
 
     EXTRACTOR = Command("lz4", "--decompress", "{inpath}", "{outdir}/{infile}")
@@ -70,16 +70,9 @@ class _LZ4HandlerBase(Handler):
 
 class LegacyFrameHandler(_LZ4HandlerBase):
     NAME = "lz4_legacy"
-    YARA_RULE = r"""
-        strings:
-            $lz4_legacy_frame = { 02 21 4C 18 }
-        condition:
-            $lz4_legacy_frame
-    """
+    PATTERNS = [HexString("02 21 4C 18")]
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         self._skip_magic_bytes(file)
 
@@ -106,16 +99,9 @@ class SkippableFrameHandler(_LZ4HandlerBase):
     """This can be anything, basically uncompressed data."""
 
     NAME = "lz4_skippable"
-    YARA_RULE = r"""
-        strings:
-            $lz4_skippable_frame = { 5? 2A 4D 18 }
-        condition:
-            $lz4_skippable_frame
-    """
+    PATTERNS = [HexString("5? 2A 4D 18")]
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         self._skip_magic_bytes(file)
         frame_size = convert_int32(file.read(FRAME_SIZE_LEN), Endian.LITTLE)
         file.seek(frame_size, io.SEEK_CUR)
@@ -128,16 +114,10 @@ class DefaultFrameHandler(_LZ4HandlerBase):
 
     NAME = "lz4_default"
 
-    YARA_RULE = r"""
-        strings:
-            $lz4_default_frame = { 04 22 4D 18 }
-
-        condition:
-            $lz4_default_frame
-    """
+    PATTERNS = [HexString("04 22 4D 18")]
 
     def calculate_chunk(  # noqa: C901
-        self, file: io.BufferedIOBase, start_offset: int
+        self, file: File, start_offset: int
     ) -> Optional[ValidChunk]:
 
         self._skip_magic_bytes(file)

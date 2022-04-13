@@ -1,5 +1,4 @@
 import binascii
-import io
 from typing import Optional
 
 from dissect.cstruct import Instance
@@ -7,7 +6,7 @@ from dissect.cstruct import Instance
 from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int32, get_endian
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 BIG_ENDIAN_MAGIC = 0x28_CD_3D_45
 
@@ -16,13 +15,10 @@ class CramFSHandler(StructHandler):
 
     NAME = "cramfs"
 
-    YARA_RULE = r"""
-        strings:
-            $cramfs_magic_be = { 28 CD 3D 45 }
-            $cramfs_magic_le = { 45 3D CD 28 }
-        condition:
-            $cramfs_magic_be or $cramfs_magic_le
-    """
+    PATTERNS = [
+        HexString("28 CD 3D 45"),  # big endian
+        HexString("45 3D CD 28"),  # little endian
+    ]
 
     C_DEFINITIONS = r"""
         typedef struct cramfs_header {
@@ -42,9 +38,7 @@ class CramFSHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         endian = get_endian(file, BIG_ENDIAN_MAGIC)
         header = self.parse_header(file, endian)
         valid_signature = header.signature == b"Compressed ROMFS"
@@ -57,7 +51,7 @@ class CramFSHandler(StructHandler):
 
     def _is_crc_valid(
         self,
-        file: io.BufferedIOBase,
+        file: File,
         start_offset: int,
         header: Instance,
         endian: Endian,

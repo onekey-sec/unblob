@@ -1,4 +1,3 @@
-import io
 from typing import Optional
 
 from structlog import get_logger
@@ -6,7 +5,7 @@ from structlog import get_logger
 from unblob.extractors.command import Command
 
 from ...file_utils import Endian
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -14,13 +13,14 @@ logger = get_logger()
 class DMGHandler(StructHandler):
     NAME = "dmg"
 
-    YARA_RULE = r"""
-        strings:
+    PATTERNS = [
+        HexString(
+            """
             // 'koly' magic, followed by version from 1 to 4, followed by fixed header size of 512
-            $dmg_magic = { 6b 6f 6c 79 00 00 00 04 00 00 02 00 }
-        condition:
-            $dmg_magic
-    """
+            6b 6f 6c 79 00 00 00 04 00 00 02 00
+        """
+        )
+    ]
 
     C_DEFINITIONS = r"""
         // source: http://newosxbook.com/DMG.html
@@ -68,9 +68,7 @@ class DMGHandler(StructHandler):
         "7z", "x", "-xr!*HFS+ Private Data*", "-y", "{inpath}", "-o{outdir}"
     )
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, endian=Endian.BIG)
 
         # NOTE: the koly block is a trailer

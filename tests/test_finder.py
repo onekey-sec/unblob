@@ -1,65 +1,176 @@
-from pathlib import Path
+import pytest
 
-from conftest import TestHandler
-
-from unblob.finder import make_handler_map, make_yara_rules, search_yara_patterns
-
-
-class TestHandler1(TestHandler):
-    NAME = "handler1"
-    YARA_RULE = r"""
-        strings:
-            $handler1_magic = { 21 3C }
-        condition:
-            $handler1_magic
-    """
-
-
-class TestHandler2(TestHandler):
-    NAME = "handler2"
-    YARA_RULE = r"""
-        strings:
-            $tar_magic = { 75 73 74 61 72 }
-        condition:
-            $tar_magic
-    """
+from unblob.file_utils import InvalidInputFormat
+from unblob.finder import build_hyperscan_database, search_chunks_by_priority
+from unblob.models import (
+    File,
+    Handler,
+    Handlers,
+    HexString,
+    Regex,
+    TaskResult,
+    ValidChunk,
+)
+from unblob.parser import InvalidHexString
 
 
-def test_make_yara_rules():
-    rules = make_yara_rules(tuple([TestHandler1, TestHandler2]))
-    matches = rules.match(data=b"!<        ustar")
+class TestHandlerA(Handler):
+    NAME = "handlerA"
+    PATTERNS = [Regex("A")]
+
+    def calculate_chunk(self, file, start_offset: int):
+        return ValidChunk(start_offset=start_offset, end_offset=start_offset + 5)
+
+
+class TestHandlerB(Handler):
+    NAME = "handlerB"
+    PATTERNS = [Regex("BB"), Regex("BC")]
+
+    PATTERN_MATCH_OFFSET = -1
+
+    def calculate_chunk(self, file, start_offset: int):
+        return ValidChunk(start_offset=start_offset, end_offset=start_offset + 10)
+
+
+class TestHandlerD(Handler):
+    NAME = "handlerD"
+    PATTERNS = [Regex("D"), HexString("ff ff ff")]
+
+    def calculate_chunk(self, file, start_offset: int):
+        return None
+
+
+class TestHandlerEof(Handler):
+    NAME = "handlerEOF"
+    PATTERNS = [Regex("EOF")]
+
+    def calculate_chunk(self, file, start_offset: int):
+        raise EOFError()
+
+
+class TestHandlerInvalid(Handler):
+    NAME = "handlerInvalid"
+    PATTERNS = [Regex("I")]
+
+    def calculate_chunk(self, file, start_offset: int):
+        raise InvalidInputFormat()
+
+
+class TestHandlerExc(Handler):
+    NAME = "handlerEXC"
+    PATTERNS = [Regex("EXC")]
+
+    def calculate_chunk(self, file, start_offset: int):
+        raise Exception("Error")
+
+
+def test_build_hyperscan_database():
+    db, handler_map = build_hyperscan_database((TestHandlerA, TestHandlerB))
+    matches = []
+    db.scan(
+        [bytearray(b"A123456789BB")],
+        match_event_handler=lambda pattern_id, start, end, flags, m: m.append(
+            (pattern_id, start, end)
+        ),
+        context=matches,
+    )
+
+    assert len(handler_map) == 3
+
     assert len(matches) == 2
-    assert matches[0].strings == [(0, "$handler1_magic", b"!<")]
-    assert matches[1].strings == [(10, "$tar_magic", b"ustar")]
+    assert isinstance(handler_map[matches[0][0]], TestHandlerA)
+    assert isinstance(handler_map[matches[1][0]], TestHandlerB)
+    assert matches[0][1] == 0
+    assert matches[1][1] == 10
 
 
-def test_search_yara_patterns(tmp_path: Path):
-    handler1 = TestHandler1()
-    handler2 = TestHandler2
-    rules = make_yara_rules(tuple([TestHandler1, TestHandler2]))
-    handler_map = {"handler1": handler1, "handler2": handler2}
-    test_file = tmp_path / "test_file"
-    test_file.write_bytes(b"!<        ustar")
-    results = search_yara_patterns(rules, handler_map, test_file)
-
-    assert len(results) == 2
-    result1, result2 = results
-
-    assert result1.handler is handler1
-    assert result1.match.strings == [(0, "$handler1_magic", b"!<")]
-
-    assert result2.handler is handler2
-    assert result2.match.strings == [(10, "$tar_magic", b"ustar")]
+def test_db_and_handler_map_instances_are_cached():
+    db1, handler_map1 = build_hyperscan_database(tuple([TestHandlerA, TestHandlerB]))
+    db2, handler_map2 = build_hyperscan_database(tuple([TestHandlerA, TestHandlerB]))
+    db3, handler_map3 = build_hyperscan_database(
+        tuple(
+            [
+                TestHandlerA,
+            ]
+        )
+    )
+    assert db1 is db2
+    assert handler_map1 is handler_map2
+    assert db1 is not db3
+    assert handler_map1 is not handler_map3
 
 
-def test_make_handler_map():
-    handler_map = make_handler_map(tuple([TestHandler1, TestHandler2]))
-    assert isinstance(handler_map["handler1"], TestHandler1)
-    assert isinstance(handler_map["handler2"], TestHandler2)
+def test_invalid_hexstring_pattern_raises():
+    class InvalidHandler(Handler):
+        NAME = "InvalidHandler"
+        PATTERNS = [HexString("invalid pattern")]
+
+        def calculate_chunk(self, file, start_offset: int):
+            pass
+
+    with pytest.raises(InvalidHexString):
+        build_hyperscan_database(tuple([TestHandlerA, TestHandlerB, InvalidHandler]))
 
 
-def test_make_handler_map_instances_are_cached():
-    handler_map1 = make_handler_map(tuple([TestHandler1, TestHandler2]))
-    handler_map2 = make_handler_map(tuple([TestHandler1, TestHandler2]))
-    assert handler_map1["handler1"] is handler_map2["handler1"]
-    assert handler_map1["handler2"] is handler_map2["handler2"]
+@pytest.mark.parametrize(
+    "content, expected_chunks",
+    [
+        pytest.param(b"00A23450", [ValidChunk(2, 7)], id="single-chunk"),
+        pytest.param(
+            b"0BB34A678900", [ValidChunk(0, 10)], id="chunk-with-relative-match-offset"
+        ),
+        pytest.param(
+            b"A23450BB3456789",
+            [ValidChunk(0, 5), ValidChunk(5, 15)],
+            id="multiple-chunk",
+        ),
+        pytest.param(b"0BC34A67890", [ValidChunk(0, 10)], id="inner-chunk-ignored"),
+        pytest.param(
+            b"0BC34A67890A2345",
+            [ValidChunk(0, 10), ValidChunk(11, 16)],
+            id="inner-chunk-ignored-scan-continues",
+        ),
+        pytest.param(b"A23450BB34", [ValidChunk(0, 5)], id="overflowing-chunk-ignored"),
+        pytest.param(
+            b"0BBA2345",
+            [ValidChunk(3, 8)],
+            id="overflowing-chunk-ignored-scan-continues",
+        ),
+        pytest.param(b"A2345", [ValidChunk(0, 5)], id="whole-file-chunk"),
+        pytest.param(
+            b"BB34A678900",
+            [ValidChunk(4, 9)],
+            id="chunk-with-invalid-relative-match-offset-ignored",
+        ),
+        pytest.param(b"00D00A2345", [ValidChunk(5, 10)], id="invalid-chunk-ignored"),
+        pytest.param(b"EOFA2345", [ValidChunk(3, 8)], id="eof-ignored-scan-continues"),
+        pytest.param(
+            b"IA2345", [ValidChunk(1, 6)], id="invalid-chunk-ignored-scan-continues"
+        ),
+        pytest.param(
+            b"EXCA2345", [ValidChunk(3, 8)], id="exception-ignored-scan-continues"
+        ),
+    ],
+)
+def test_search_chunks(content, expected_chunks):
+    file = File.from_bytes(content)
+
+    task_result = TaskResult()
+    handlers = Handlers(
+        [
+            (
+                TestHandlerA,
+                TestHandlerB,
+                TestHandlerD,
+                TestHandlerEof,
+                TestHandlerInvalid,
+                TestHandlerExc,
+            )
+        ]
+    )
+
+    chunks = search_chunks_by_priority(file, len(content), handlers, task_result)
+
+    assert len(chunks) == len(expected_chunks)
+    for expected_chunk, chunk in zip(expected_chunks, chunks):
+        assert chunk == expected_chunk

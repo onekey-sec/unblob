@@ -6,7 +6,7 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, InvalidInputFormat, iterbits, round_up
-from ...models import StructHandler, ValidChunk
+from ...models import File, Regex, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -27,13 +27,8 @@ class BZip2Handler(StructHandler):
 
     NAME = "bzip2"
 
-    YARA_RULE = r"""
-        strings:
-            // magic + version + block_size + compressed_magic
-            $bzip2_magic = /\x42\x5a\x68[\x31-\x39]\x31\x41\x59\x26\x53\x59/
-        condition:
-            $bzip2_magic
-    """
+    # magic + version + block_size + compressed_magic
+    PATTERNS = [Regex(r"\x42\x5a\x68[\x31-\x39]\x31\x41\x59\x26\x53\x59")]
 
     C_DEFINITIONS = r"""
         typedef struct bzip2_header {
@@ -49,9 +44,7 @@ class BZip2Handler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         header = self.parse_header(file, Endian.BIG)
         end_block_offset = -1
@@ -69,7 +62,7 @@ class BZip2Handler(StructHandler):
             end_offset=end_block_offset + FOOTER_SIZE,
         )
 
-    def bzip2_recover(self, file: io.BufferedIOBase, start_offset: int) -> int:
+    def bzip2_recover(self, file: File, start_offset: int) -> int:
         """Emulate the behavior of bzip2recover, matching on compressed magic and end of stream
         magic to identify the end offset of the whole bzip2 chunk.
         Count from absolute start_offset and returns absolute end_offset

@@ -12,7 +12,6 @@ build = "build.py"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-yara-python = "^4.1.0"
 click = "^8.0.1"
 "dissect.cstruct" = "^2.0"
 attrs = "^21.2.0"
@@ -27,10 +26,11 @@ yaffshiv = { git = "https://github.com/IoT-Inspector/yaffshiv.git", rev = "24e6e
 plotext = "^4.1.5"
 pluggy = "^1.0.0"
 file-magic = "^0.4.0"
+hyperscan = "^0.2.0"
+lark = "^1.1.2"
 
 
 [tool.poetry.dev-dependencies]
-lark = "^1.0.0"
 pytest = "^6.2.4"
 pyright = "^0.0.12"
 pre-commit = "^2.15.0"
@@ -56,9 +56,11 @@ norecursedirs = """
 """
 
 [tool.vulture]
-paths = ["unblob/" ]
+paths = ["unblob/", "vulture_whitelist.py" ]
 exclude = ["unblob/_py/", "unblob/testing.py"]
-ignore_names = ["breakpointhook", "context_class", "hookimpl"]
+
+[tool.pyright]
+exclude = ["build"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools>=60.9.3"]

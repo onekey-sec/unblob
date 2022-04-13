@@ -1,10 +1,10 @@
 import enum
 import io
 import math
+import mmap
 import os
 import shutil
 import struct
-import sys
 from pathlib import Path
 from typing import Iterator, Tuple
 
@@ -13,6 +13,52 @@ from dissect.cstruct import cstruct
 from .logging import format_hex
 
 DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
+
+
+class File(mmap.mmap):
+    @classmethod
+    def from_bytes(cls, content: bytes):
+        m = cls(-1, len(content))
+        m.write(content)
+        m.seek(0)
+        return m
+
+    @classmethod
+    def from_path(cls, path: Path):
+        with path.open("rb") as base_file:
+            return cls(base_file.fileno(), 0, access=mmap.ACCESS_READ)
+
+    def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:
+        try:
+            super().seek(pos, whence)
+        except ValueError:
+            raise EOFError
+        return self.tell()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
+        self.close()
+
+
+class OffsetFile:
+    def __init__(self, file: File, offset: int):
+        self._file = file
+        self._offset = offset
+        self._file.seek(offset)
+
+    def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:
+        if whence == os.SEEK_SET:
+            pos += self._offset
+        self._file.seek(pos, whence)
+        return self._file.tell() - self._offset
+
+    def read(self, n=None):
+        return self._file.read(n)
+
+    def tell(self):
+        return self._file.tell() - self._offset
 
 
 class InvalidInputFormat(Exception):
@@ -24,7 +70,7 @@ class Endian(enum.Enum):
     BIG = ">"
 
 
-def iterbits(file: io.BufferedIOBase) -> Iterator[int]:
+def iterbits(file: File) -> Iterator[int]:
     """bit-wise reading of file in little-endian mode"""
     while cur_bytes := file.read(DEFAULT_BUFSIZE):
         for b in cur_bytes:
@@ -106,7 +152,7 @@ def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
 
 
 def iterate_patterns(
-    file: io.BufferedIOBase, pattern: bytes, chunk_size: int = 0x1000
+    file: File, pattern: bytes, chunk_size: int = 0x1000
 ) -> Iterator[int]:
     """Iterate on the file searching for pattern until all occurences has been found.
 
@@ -159,7 +205,7 @@ def iterate_patterns(
 
 
 def iterate_file(
-    file: io.BufferedIOBase,
+    file: File,
     start_offset: int,
     size: int,
     # default buffer size in shutil for unix based systems
@@ -188,43 +234,6 @@ def iterate_file(
         yield data
 
 
-class LimitedStartReader(io.BufferedIOBase):
-    """Wrapper for open files, which
-    enforces that seekeng earlier than the start offset is not possible.
-    """
-
-    def __init__(self, file: io.BufferedIOBase, start: int):
-        self._file = file
-        self._start = start
-        self._file.seek(start)
-
-    def seek(self, offset: int, whence=io.SEEK_SET):
-        if (sys.maxsize < offset) or (offset < -(sys.maxsize + 1)):
-            raise InvalidInputFormat("File offset is greater than off_t (int64).")
-        new_pos = self._file.seek(offset, whence)
-        if new_pos < self._start:
-            new_pos = self._file.seek(self._start, io.SEEK_SET)
-        return new_pos
-
-    def write(self, *args, **kwargs):
-        raise TypeError("MUST NOT call write method")
-
-    def detach(self, *args, **kwargs):
-        return self._file.detach(*args, **kwargs)
-
-    def read(self, *args, **kwargs):
-        return self._file.read(*args, **kwargs)
-
-    def read1(self, *args, **kwargs):
-        return self._file.read1(*args, **kwargs)
-
-    def readinto(self, *args, **kwargs):
-        return self._file.readinto(*args, **kwargs)
-
-    def readinto1(self, *args, **kwargs):
-        return self._file.readinto1(*args, **kwargs)
-
-
 class StructParser:
     """Wrapper for dissect.cstruct to handle different endianness parsing dynamically."""
 
@@ -248,13 +257,13 @@ class StructParser:
             self.__cparser_be.load(self._definitions)
         return self.__cparser_be
 
-    def parse(self, struct_name: str, file: io.BufferedIOBase, endian: Endian):
+    def parse(self, struct_name: str, file: File, endian: Endian):
         cparser = self.cparser_le if endian is Endian.LITTLE else self.cparser_be
         struct_parser = getattr(cparser, struct_name)
         return struct_parser(file)
 
 
-def get_endian(file: io.BufferedIOBase, big_endian_magic: int) -> Endian:
+def get_endian(file: File, big_endian_magic: int) -> Endian:
     """Reads a four bytes magic and derive endianness from it by
     comparing it with the big endian magic. It reads four bytes and
     seeks back after that.
@@ -268,7 +277,7 @@ def get_endian(file: io.BufferedIOBase, big_endian_magic: int) -> Endian:
     return endian
 
 
-def read_until_past(file: io.BufferedIOBase, pattern: bytes):
+def read_until_past(file: File, pattern: bytes):
     """Read until the bytes are not 0x00 or 0xff."""
     while True:
         next_byte = file.read(1)

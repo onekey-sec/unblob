@@ -1,8 +1,8 @@
-import io
 from pathlib import Path
 
 import pytest
 
+from unblob.file_utils import File
 from unblob.handlers.filesystem.romfs import get_string, is_safe_path, valid_checksum
 
 
@@ -18,7 +18,7 @@ from unblob.handlers.filesystem.romfs import get_string, is_safe_path, valid_che
 )
 def test_get_string(content, expected):
 
-    f = io.BytesIO(content)
+    f = File.from_bytes(content)
     assert get_string(f) == expected
 
 

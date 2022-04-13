@@ -3,7 +3,7 @@ from typing import Optional
 
 from ...extractors import Command
 from ...file_utils import Endian
-from ...models import StructHandler, ValidChunk
+from ...models import File, Regex, StructHandler, ValidChunk
 
 PADDING_LEN = 2
 # CPP/7zip/Archive/LzhHandler.cpp
@@ -14,25 +14,22 @@ class LZHHandler(StructHandler):
 
     NAME = "lzh"
 
-    YARA_RULE = r"""
-        strings:
-            $lzh_magic_lh0 = "-lh0-"
-            $lzh_magic_lzs = "-lzs-"
-            $lzh_magic_lz4 = "-lz4-"
-            $lzh_magic_lh1 = "-lh1-"
-            $lzh_magic_lh2 = "-lh2-"
-            $lzh_magic_lh3 = "-lh3-"
-            $lzh_magic_lh4 = "-lh4-"
-            $lzh_magic_lh5 = "-lh5-"
-            $lzh_magic_lh6 = "-lh6-"
-            $lzh_magic_lh7 = "-lh7-"
-            $lzh_magic_lh8 = "-lh8-"
-            $lzh_magic_lhd = "-lhd-"
-        condition:
-            any of them
-    """
+    PATTERNS = [
+        Regex(r"-lh0-"),
+        Regex(r"-lzs-"),
+        Regex(r"-lz4-"),
+        Regex(r"-lh1-"),
+        Regex(r"-lh2-"),
+        Regex(r"-lh3-"),
+        Regex(r"-lh4-"),
+        Regex(r"-lh5-"),
+        Regex(r"-lh6-"),
+        Regex(r"-lh7-"),
+        Regex(r"-lh8-"),
+        Regex(r"-lhd-"),
+    ]
 
-    YARA_MATCH_OFFSET = -2
+    PATTERN_MATCH_OFFSET = -2
 
     C_DEFINITIONS = r"""
         typedef struct lzh_default_header {
@@ -60,9 +57,7 @@ class LZHHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         header = self.parse_header(file, Endian.LITTLE)
 

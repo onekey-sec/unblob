@@ -1,4 +1,3 @@
-import io
 from typing import Optional
 
 from structlog import get_logger
@@ -6,7 +5,7 @@ from structlog import get_logger
 from unblob.file_utils import InvalidInputFormat
 
 from ...extractors import Command
-from ...models import StructHandler, ValidChunk
+from ...models import File, Regex, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -15,16 +14,15 @@ class NTFSHandler(StructHandler):
 
     NAME = "ntfs"
 
-    YARA_RULE = r"""
-        strings:
-            // An initial x86 short jump instruction (EB 52 90)
-            // OEMName (8 bytes) = 'NTFS    '
-            // bytes per sector, the rule enforce a non-zero value
-            // 55 AA is the end of sector marker
-            $ntfs_magic = /\xEB\x52\x90\x4E\x54\x46\x53\x20\x20\x20\x20[\x00-\xFF][\x01-\xFF][\x00-\xFF]{497}\x55\xAA/
-        condition:
-            $ntfs_magic
-    """
+    PATTERNS = [
+        # An initial x86 short jump instruction (EB 52 90)
+        # OEMName (8 bytes) = 'NTFS    '
+        # bytes per sector, the rule enforce a non-zero value
+        # 55 AA is the end of sector marker
+        Regex(
+            r"\xEB\x52\x90\x4E\x54\x46\x53\x20\x20\x20\x20[\x00-\xFF][\x01-\xFF][\x00-\xFF]{497}\x55\xAA"
+        )
+    ]
 
     C_DEFINITIONS = r"""
         typedef struct ntfs_boot {
@@ -64,9 +62,7 @@ class NTFSHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-x![SYSTEM]", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file)
 
         fsize = header.total_sectors * header.bytes_per_sector

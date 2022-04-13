@@ -6,7 +6,7 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int64
-from ...models import Handler, ValidChunk
+from ...models import File, Handler, HexString, ValidChunk
 
 logger = get_logger()
 
@@ -19,16 +19,9 @@ LZMA_ALIGNMENT = 2
 class LZipHandler(Handler):
     NAME = "lzip"
 
-    YARA_RULE = r"""
-        strings:
-            $lzip_magic = { 4C 5A 49 50 01 }
-        condition:
-            $lzip_magic
-    """
+    PATTERNS = [HexString("4C 5A 49 50 01")]
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         file.seek(HEADER_LEN, io.SEEK_CUR)
         # quite the naive idea but it works

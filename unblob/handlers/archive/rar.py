@@ -6,7 +6,6 @@ RAR Version 5.x
 https://www.rarlab.com/technote.htm#rarsign
 """
 
-import io
 from typing import Optional
 
 import rarfile
@@ -14,7 +13,7 @@ from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...models import Handler, ValidChunk
+from ...models import File, Handler, HexString, ValidChunk
 
 logger = get_logger()
 
@@ -22,19 +21,17 @@ logger = get_logger()
 class RarHandler(Handler):
     NAME = "rar"
 
-    YARA_RULE = r"""
-        strings:
+    PATTERNS = [
+        HexString(
+            """
             // RAR v4.x ends with 00, RAR v5.x ends with 01 00
-            $rar_magic = { 52 61 72 21 1A 07 ( 00 | 01 00 ) }
-
-        condition:
-            $rar_magic
-    """
+            52 61 72 21 1A 07 ( 00 | 01 00 )
+        """
+        )
+    ]
     EXTRACTOR = Command("unar", "-p", "", "{inpath}", "-o", "{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         try:
             rar_file = rarfile.RarFile(file)

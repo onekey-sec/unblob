@@ -1,7 +1,6 @@
 """
 File extraction related functions.
 """
-import io
 import os
 from pathlib import Path
 from typing import List
@@ -9,13 +8,13 @@ from typing import List
 from structlog import get_logger
 
 from .file_utils import iterate_file
-from .models import Chunk, TaskResult, UnknownChunk, ValidChunk
+from .models import Chunk, File, TaskResult, UnknownChunk, ValidChunk
 from .report import MaliciousSymlinkRemoved
 
 logger = get_logger()
 
 
-def carve_chunk_to_file(carve_path: Path, file: io.BufferedIOBase, chunk: Chunk):
+def carve_chunk_to_file(carve_path: Path, file: File, chunk: Chunk):
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
     carve_path.parent.mkdir(parents=True, exist_ok=True)
     logger.debug("Carving chunk", path=carve_path)
@@ -97,7 +96,7 @@ def fix_extracted_directory(outdir: Path, task_result: TaskResult):
 
 
 def carve_unknown_chunks(
-    extract_dir: Path, file: io.BufferedIOBase, unknown_chunks: List[UnknownChunk]
+    extract_dir: Path, file: File, unknown_chunks: List[UnknownChunk]
 ) -> List[Path]:
     if not unknown_chunks:
         return []
@@ -115,9 +114,7 @@ def carve_unknown_chunks(
     return carved_paths
 
 
-def carve_valid_chunk(
-    extract_dir: Path, file: io.BufferedIOBase, chunk: ValidChunk
-) -> Path:
+def carve_valid_chunk(extract_dir: Path, file: File, chunk: ValidChunk) -> Path:
     filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
     carve_path = extract_dir / filename
     logger.info("Extracting valid chunk", path=carve_path, chunk=chunk)

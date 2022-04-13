@@ -1,15 +1,13 @@
 import io
-import sys
 from pathlib import Path
 from typing import List
-from unittest.mock import MagicMock
 
 import pytest
 
 from unblob.file_utils import (
     Endian,
+    File,
     InvalidInputFormat,
-    LimitedStartReader,
     StructParser,
     convert_int8,
     convert_int16,
@@ -54,67 +52,14 @@ def test_round_up(size, alignment, result):
 
 
 @pytest.fixture()
-def fake_file() -> io.BytesIO:
-    return io.BytesIO(b"0123456789abcdefghijklmnopqrst")
-
-
-class TestLimitedStartReader:
-    def test_seek_forward(self, fake_file):
-        reader = LimitedStartReader(fake_file, 5)
-        reader.seek(10)
-        assert reader.tell() == 10
-
-    def test_seek_backward(self, fake_file):
-        reader = LimitedStartReader(fake_file, 5)
-        reader.seek(10)
-        reader.seek(-4, io.SEEK_CUR)
-        assert reader.tell() == 6
-
-    def test_seek_before_start(self, fake_file):
-        reader = LimitedStartReader(fake_file, 5)
-        reader.seek(10)
-        reader.seek(-6, io.SEEK_CUR)
-        assert reader.tell() == 5
-
-    def test_seek_to_end_of_file(self, fake_file):
-        reader = LimitedStartReader(fake_file, 5)
-        reader.seek(-1, io.SEEK_END)
-        assert reader.tell() == len(fake_file.getvalue()) - 1
-
-    def test_seek_to_above_max_off_t(self, fake_file):
-        reader = LimitedStartReader(fake_file, 5)
-        with pytest.raises(InvalidInputFormat):
-            reader.seek(sys.maxsize + 1)
-
-    def test_seek_to_below_min_off_t(self, fake_file):
-        reader = LimitedStartReader(fake_file, 5)
-        with pytest.raises(InvalidInputFormat):
-            reader.seek(-(sys.maxsize + 2), io.SEEK_END)
-
-    @pytest.mark.parametrize(
-        "method_name",
-        ("detach", "read", "read1", "readinto", "readinto1"),
-    )
-    def test_methods_dispatched_to_file(self, method_name):
-        mock_file = MagicMock(io.BufferedReader)
-        reader = LimitedStartReader(mock_file, 10)
-
-        method = getattr(reader, method_name)
-        method("arg1", "arg2", kw1="kw1", kw2="kw2")
-
-        mock_method = getattr(mock_file, method_name)
-        mock_method.assert_called_with("arg1", "arg2", kw1="kw1", kw2="kw2")
-
-    def test_read_only(self, fake_file):
-        reader = LimitedStartReader(fake_file, 5)
-        with pytest.raises(TypeError):
-            reader.write(b"something")
+def fake_file() -> File:
+    return File.from_bytes(b"0123456789abcdefghijklmnopqrst")
 
 
 class TestStructParser:
     def test_parse_correct_endianness(self):
         test_content = b"\x01\x02\x03\x04"
-        fake_file = io.BytesIO(test_content)
+        fake_file = File.from_bytes(test_content)
 
         definitions = r"""
         struct squashfs_header
@@ -127,7 +72,7 @@ class TestStructParser:
         header = parser.parse("squashfs_header", fake_file, Endian.BIG)
         assert header.inodes == 0x01_02_03_04
 
-        fake_file = io.BytesIO(test_content)
+        fake_file = File.from_bytes(test_content)
         header2 = parser.parse("squashfs_header", fake_file, Endian.LITTLE)
         assert header2.inodes == 0x04_03_02_01
 
@@ -307,7 +252,6 @@ class TestMultibytesInteger:
 @pytest.mark.parametrize(
     "content, pattern, expected",
     (
-        (b"", b"", []),
         (b"abcdef 123", b"abcdef", [0]),
         (b"abcdef abc", b"abcdef", [0]),
         (b"abcdef abcdef", b"abcdef", [0, 7]),
@@ -316,14 +260,13 @@ class TestMultibytesInteger:
     ),
 )
 def test_iterate_patterns(content: bytes, pattern: bytes, expected: List[int]):
-    file = io.BytesIO(content)
+    file = File.from_bytes(content)
     assert list(iterate_patterns(file, pattern)) == expected
 
 
 @pytest.mark.parametrize(
     "content, start_offset, size, buffer_size, expected",
     (
-        pytest.param(b"", 0, 1, 10, [], id="empty_file"),
         pytest.param(b"0123456789", 0, 6, 3, [b"012", b"345"], id="from_start"),
         pytest.param(b"0123456789", 0, 0, 3, [], id="zero_size"),
         pytest.param(b"0123456789", 0, 5, 3, [b"012", b"34"], id="size_buffersize"),
@@ -342,7 +285,7 @@ def test_iterate_file(
     buffer_size: int,
     expected: List[bytes],
 ):
-    file = io.BytesIO(content)
+    file = File.from_bytes(content)
     assert list(iterate_file(file, start_offset, size, buffer_size)) == expected
 
 
@@ -356,7 +299,7 @@ def test_iterate_file(
 def test_iterate_file_errors(
     content: bytes, start_offset: int, size: int, buffer_size: int
 ):
-    file = io.BytesIO(content)
+    file = File.from_bytes(content)
     with pytest.raises(ValueError):
         list(iterate_file(file, start_offset, size, buffer_size))
 
@@ -374,7 +317,7 @@ class TestGetEndian:
         ),
     )
     def test_get_endian(self, content: bytes, big_endian_magic: int, expected: Endian):
-        file = io.BytesIO(content)
+        file = File.from_bytes(content)
         assert get_endian(file, big_endian_magic) == expected
 
     @pytest.mark.parametrize(
@@ -382,12 +325,12 @@ class TestGetEndian:
         (pytest.param(b"\x00\x00\x00\x01", 0xFF_FF_FF_FF_FF, id="larger_than_32bit"),),
     )
     def test_get_endian_errors(self, content: bytes, big_endian_magic: int):
-        file = io.BytesIO(content)
+        file = File.from_bytes(content)
         with pytest.raises(ValueError):
             get_endian(file, big_endian_magic)
 
     def test_get_endian_resets_the_file_pointer(self):
-        file = io.BytesIO(bytes.fromhex("FFFF 0000"))
+        file = File.from_bytes(bytes.fromhex("FFFF 0000"))
         file.seek(-1, io.SEEK_END)
         pos = file.tell()
         with pytest.raises(InvalidInputFormat):

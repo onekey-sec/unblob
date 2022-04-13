@@ -13,7 +13,7 @@ from ...file_utils import (
     iterate_patterns,
     round_up,
 )
-from ...models import Handler, ValidChunk
+from ...models import File, Handler, HexString, ValidChunk
 
 logger = get_logger()
 
@@ -31,7 +31,7 @@ CRC32_LEN = 4
 FLAG_LEN = 2
 
 
-def read_multibyte_int(file: io.BufferedIOBase) -> Tuple[int, int]:
+def read_multibyte_int(file: File) -> Tuple[int, int]:
     """Read a multibyte integer and return the number of bytes read and the integer itself."""
     data = bytearray(file.read(MAX_MBI_LEN))
     file.seek(-MAX_MBI_LEN, io.SEEK_CUR)
@@ -43,18 +43,11 @@ def read_multibyte_int(file: io.BufferedIOBase) -> Tuple[int, int]:
 class XZHandler(Handler):
     NAME = "xz"
 
-    YARA_RULE = r"""
-        strings:
-            $xz_stream_header_magic = { FD 37 7A 58 5A 00 }
-        condition:
-            $xz_stream_header_magic
-    """
+    PATTERNS = [HexString("FD 37 7A 58 5A 00")]
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         file.seek(MAGIC_BYTES_SIZE, io.SEEK_CUR)
         stream_flags = file.read(FLAG_LEN)

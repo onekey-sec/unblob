@@ -126,6 +126,14 @@ docs = ["furo (>=2021.8.17b43)", "sphinx (>=4.1)", "sphinx-autodoc-typehints (>=
 testing = ["covdefaults (>=1.2.0)", "coverage (>=4)", "pytest (>=4)", "pytest-cov", "pytest-timeout (>=1.4.2)"]
 
 [[package]]
+name = "hyperscan"
+version = "0.2.0"
+description = "Python bindings for Hyperscan."
+category = "main"
+optional = false
+python-versions = ">=3.6.1,<4.0"
+
+[[package]]
 name = "identify"
 version = "2.3.7"
 description = "File identification library for Python"
@@ -161,9 +169,9 @@ resolved_reference = "1a0ee577d7c7238303b8d76abb9a44422ac062f5"
 
 [[package]]
 name = "lark"
-version = "1.0.0"
+version = "1.1.2"
 description = "a modern parsing library"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -450,18 +458,10 @@ url = "https://github.com/IoT-Inspector/yaffshiv.git"
 reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
 resolved_reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
 
-[[package]]
-name = "yara-python"
-version = "4.2.0"
-description = "Python interface for YARA"
-category = "main"
-optional = false
-python-versions = "*"
-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "f7a7c444f691d8d2a6a2f1be7aee04f5e045f70d7a058c7d9057e45c515fded5"
+content-hash = "077c0fb3b9e8443b4b7948def71fad60ffdee476979d08b128964b2da7da2b46"
 
 [metadata.files]
 arpy = [
@@ -554,6 +554,13 @@ filelock = [
     {file = "filelock-3.4.0-py3-none-any.whl", hash = "sha256:2e139a228bcf56dd8b2274a65174d005c4a6b68540ee0bdbb92c76f43f29f7e8"},
     {file = "filelock-3.4.0.tar.gz", hash = "sha256:93d512b32a23baf4cac44ffd72ccf70732aeff7b8050fcaf6d3ec406d954baf4"},
 ]
+hyperscan = [
+    {file = "hyperscan-0.2.0-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:47ef10b4297f9976d257b7f260ae4ae8834e87e1abb7f46cf0707ba496fb6e49"},
+    {file = "hyperscan-0.2.0-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:78e97de71896b9fda4368c185e6609e53bb240c85302909ac46e738f14621f40"},
+    {file = "hyperscan-0.2.0-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:794eecc13fa9bcf061004340582aab342471fb22b710f92020e3ea508776ff53"},
+    {file = "hyperscan-0.2.0-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:fd0d0fe64484443b9e5ee1e8b156a30f2ba91494b1343fae5c943130ff847607"},
+    {file = "hyperscan-0.2.0.tar.gz", hash = "sha256:10cb8939d7db85d522ed319031ff5ab86fd0133126b986290f01aa83dbfb9ff7"},
+]
 identify = [
     {file = "identify-2.3.7-py2.py3-none-any.whl", hash = "sha256:12f204544d1b718d5be2c82d95d30ff163614d7e15ae180bfbe923614a5f9a9f"},
     {file = "identify-2.3.7.tar.gz", hash = "sha256:eda2c9ad2d53fcc1ff110fc9816206a9ec236a5cc8469f815fc8d8193d58363a"},
@@ -564,8 +571,8 @@ iniconfig = [
 ]
 jefferson = []
 lark = [
-    {file = "lark-1.0.0-py2.py3-none-any.whl", hash = "sha256:10818563b44e18ea264b5013a80fe04406999ad51bacc74214f69f13d95af6e1"},
-    {file = "lark-1.0.0.tar.gz", hash = "sha256:2269dee215e6c689d5ce9d34fdc6e749d0c1c763add3fc7935938ebd7da159cb"},
+    {file = "lark-1.1.2-py2.py3-none-any.whl", hash = "sha256:c1ab213fc5e2d273fe2d91da218ccc8b5b92d065b17faa5e743499cb16594b7d"},
+    {file = "lark-1.1.2.tar.gz", hash = "sha256:7a8d0c07d663da9391d7faee1bf1d7df4998c47ca43a593cbef5c7566acd057a"},
 ]
 nodeenv = [
     {file = "nodeenv-1.6.0-py2.py3-none-any.whl", hash = "sha256:621e6b7076565ddcacd2db0294c0381e01fd28945ab36bcf00f41c5daf63bef7"},
@@ -687,18 +694,3 @@ virtualenv = [
     {file = "virtualenv-20.10.0.tar.gz", hash = "sha256:576d05b46eace16a9c348085f7d0dc8ef28713a2cabaa1cf0aea41e8f12c9218"},
 ]
 yaffshiv = []
-yara-python = [
-    {file = "yara-python-4.2.0.tar.gz", hash = "sha256:d02f239f429c6c94e60b500246d376595fbed8d9124209d332b6f8e7cfb5ec6e"},
-    {file = "yara_python-4.2.0-cp310-cp310-win32.whl", hash = "sha256:1faec6480be87964056ac19cddae052da4c88755426c81c83bce53ed7d57ebfe"},
-    {file = "yara_python-4.2.0-cp310-cp310-win_amd64.whl", hash = "sha256:76f711603de6a66a42be4501219288353397b032d6239b01a34e2bbcce4a2e50"},
-    {file = "yara_python-4.2.0-cp35-cp35m-win32.whl", hash = "sha256:cabef9144d35357ba9815f6ecacfaeed05fa2cc2a2ae0a0c37766839500555d9"},
-    {file = "yara_python-4.2.0-cp35-cp35m-win_amd64.whl", hash = "sha256:300581837e17114432d52599075bb8348dc2ce3e9ec8d3c325f5a797424791a4"},
-    {file = "yara_python-4.2.0-cp36-cp36m-win32.whl", hash = "sha256:c4c147495267a26b2d5fc39a486e1561bc501b170f973ab1ab0f39f2c00791da"},
-    {file = "yara_python-4.2.0-cp36-cp36m-win_amd64.whl", hash = "sha256:9d43bb5a5148f1c50e972e8fc4653620d63bb0d1cb02701d41fa580eb44a1bcf"},
-    {file = "yara_python-4.2.0-cp37-cp37m-win32.whl", hash = "sha256:0de9d9482a6def6ef719ac9024dceae89809fa05d02656518a146374df93eb94"},
-    {file = "yara_python-4.2.0-cp37-cp37m-win_amd64.whl", hash = "sha256:963e089f5d70d614408d08830a9244f3146a63c87a2daedc130af72f6569d2af"},
-    {file = "yara_python-4.2.0-cp38-cp38-win32.whl", hash = "sha256:5da322141985e95f5018856603761ad908c3eb6dd8add566066c082fca8b4541"},
-    {file = "yara_python-4.2.0-cp38-cp38-win_amd64.whl", hash = "sha256:4853d0bf9a320fd98f5a0beb94eb651639073f8ccc2e2f40c132c66f3ed64d74"},
-    {file = "yara_python-4.2.0-cp39-cp39-win32.whl", hash = "sha256:e5adfdcf01e2cc6bc07603eaadb314cf3515cab577e529db86c4de7bf9b327dd"},
-    {file = "yara_python-4.2.0-cp39-cp39-win_amd64.whl", hash = "sha256:a92dc977e5e6add276ebdf5c8e0ddae7a79a85993c407a9c1d198dab518116e6"},
-]

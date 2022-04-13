@@ -13,7 +13,7 @@ from unblob.file_utils import (
 )
 
 from ...extractors import Command
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -54,7 +54,7 @@ class _JFFS2Base(StructHandler):
 
     EXTRACTOR = Command("jefferson", "-v", "-f", "-d", "{outdir}", "{inpath}")
 
-    def guess_endian(self, file: io.BufferedIOBase) -> Endian:
+    def guess_endian(self, file: File) -> Endian:
         magic = convert_int16(file.read(2), Endian.BIG)
         if magic == self.BIG_ENDIAN_MAGIC:
             endian = Endian.BIG
@@ -92,9 +92,7 @@ class _JFFS2Base(StructHandler):
             return False
         return True
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         file.seek(0, io.SEEK_END)
         eof = file.tell()
@@ -130,7 +128,6 @@ class _JFFS2Base(StructHandler):
                 return
 
             node_len = round_up(header.totlen, BLOCK_ALIGNMENT)
-            file.seek(node_len, io.SEEK_CUR)
             current_offset += node_len
 
         if current_offset > eof:
@@ -146,13 +143,10 @@ class JFFS2OldHandler(_JFFS2Base):
 
     NAME = "jffs2_old"
 
-    YARA_RULE = r"""
-        strings:
-            $jffs2_old_le = { 84 19 ( 01 | 02 | 03 | 04 | 06 | 08 | 09 ) ( e0 | 20 ) }
-            $jffs2_old_be = { 19 84 ( e0 | 20 ) ( 01 | 02 | 03 | 04 | 06 | 08 | 09 ) }
-        condition:
-            $jffs2_old_le or $jffs2_old_be
-    """
+    PATTERNS = [
+        HexString("84 19 ( 01 | 02 | 03 | 04 | 06 | 08 | 09 ) ( e0 | 20 )"),  # LE
+        HexString("19 84 ( e0 | 20 ) ( 01 | 02 | 03 | 04 | 06 | 08 | 09 )"),  # BE
+    ]
 
     BIG_ENDIAN_MAGIC = 0x19_84
 
@@ -161,12 +155,9 @@ class JFFS2NewHandler(_JFFS2Base):
 
     NAME = "jffs2_new"
 
-    YARA_RULE = r"""
-        strings:
-            $jffs2_new_le = { 85 19 ( 01 | 02 | 03 | 04 | 06 | 08 | 09 ) ( e0 | 20 ) }
-            $jffs2_new_be = { 19 85 ( e0 | 20 ) ( 01 | 02 | 03 | 04 | 06 | 08 | 09 ) }
-        condition:
-            $jffs2_new_le or $jffs2_new_be
-    """
+    PATTERNS = [
+        HexString("85 19 ( 01 | 02 | 03 | 04 | 06 | 08 | 09 ) ( e0 | 20 )"),  # LE
+        HexString("19 85 ( e0 | 20 ) ( 01 | 02 | 03 | 04 | 06 | 08 | 09 )"),  # BE
+    ]
 
     BIG_ENDIAN_MAGIC = 0x19_85

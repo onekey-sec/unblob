@@ -7,7 +7,7 @@ from structlog import get_logger
 
 from ...extractors import Command
 from ...file_utils import InvalidInputFormat, iterate_patterns
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -18,13 +18,7 @@ EOCD_RECORD_HEADER = 0x6054B50
 class ZIPHandler(StructHandler):
     NAME = "zip"
 
-    YARA_RULE = r"""
-        strings:
-            $zip_header = { 50 4B 03 04 } // Local file header only
-        condition:
-            $zip_header
-    """
-
+    PATTERNS = [HexString("50 4B 03 04 // Local file header only")]
     C_DEFINITIONS = r"""
 
         typedef struct cd_file_header {
@@ -69,7 +63,7 @@ class ZIPHandler(StructHandler):
 
     def has_encrypted_files(
         self,
-        file: io.BufferedIOBase,
+        file: File,
         start_offset: int,
         end_of_central_directory: Instance,
     ) -> bool:
@@ -80,9 +74,7 @@ class ZIPHandler(StructHandler):
                 return True
         return False
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         has_encrypted_files = False
         file.seek(start_offset, io.SEEK_SET)

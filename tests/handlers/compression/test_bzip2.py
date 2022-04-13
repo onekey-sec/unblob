@@ -1,8 +1,6 @@
-import io
-
 import pytest
 
-from unblob.file_utils import InvalidInputFormat
+from unblob.file_utils import File, InvalidInputFormat
 from unblob.handlers.compression.bzip2 import BZip2Handler
 
 BLOCK_HEADER = b"\x31\x41\x59\x26\x53\x59"
@@ -109,7 +107,7 @@ def shift_left(value: bytes, bits: int) -> bytes:
 )
 def test_bzip2_recover(content: bytes, start_offset: int, expected_end_offset: int):
     handler = BZip2Handler()
-    fake_file = io.BytesIO(content)
+    fake_file = File.from_bytes(content)
     end_offset = handler.bzip2_recover(fake_file, start_offset)
     assert end_offset == expected_end_offset
 
@@ -126,6 +124,6 @@ def test_bzip2_recover(content: bytes, start_offset: int, expected_end_offset: i
 )
 def test_bzip2_recover_error(content: bytes):
     handler = BZip2Handler()
-    fake_file = io.BytesIO(content)
+    fake_file = File.from_bytes(content)
     with pytest.raises(InvalidInputFormat):
         handler.bzip2_recover(fake_file, 0)

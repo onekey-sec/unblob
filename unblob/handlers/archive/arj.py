@@ -6,7 +6,7 @@ from structlog import get_logger
 
 from ...extractors import Command
 from ...file_utils import Endian, convert_int32
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -35,12 +35,7 @@ class ARJExtendedHeader(ARJError):
 class ARJHandler(StructHandler):
     NAME = "arj"
 
-    YARA_RULE = r"""
-        strings:
-            $arj_magic = { 60 EA [5] 0? [2] 0? }
-        condition:
-            $arj_magic
-    """
+    PATTERNS = [HexString("60 EA [5] 0? [2] 0?")]
 
     # https://docs.fileformat.com/compression/arj/
     # https://github.com/tripsin/unarj/blob/master/UNARJ.H#L203
@@ -106,7 +101,7 @@ class ARJHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def _read_arj_main_header(self, file: io.BufferedIOBase, start_offset: int) -> int:
+    def _read_arj_main_header(self, file: File, start_offset: int) -> int:
         file.seek(start_offset)
         main_header = self.cparser_le.arj_header(file)
         logger.debug("Main header parsed", header=main_header, _verbosity=3)
@@ -130,7 +125,7 @@ class ARJHandler(StructHandler):
         self._read_headers(file)
         return file.tell()
 
-    def _read_arj_files(self, file: io.BufferedIOBase) -> int:
+    def _read_arj_files(self, file: File) -> int:
         while True:
             start = file.tell()
             basic_header = self.cparser_le.basic_header(file)
@@ -159,9 +154,7 @@ class ARJHandler(StructHandler):
         if extended_header.size != 0:
             raise ARJExtendedHeader
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         try:
             # Read past the main header.
             self._read_arj_main_header(file, start_offset)

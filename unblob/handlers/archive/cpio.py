@@ -5,7 +5,7 @@ from structlog import get_logger
 
 from ...extractors import Command
 from ...file_utils import decode_int, round_up, snull
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -51,9 +51,7 @@ class _CPIOHandlerBase(StructHandler):
     _PAD_ALIGN: int
     _FILE_PAD_ALIGN: int = 512
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         offset = start_offset
         while True:
             file.seek(offset)
@@ -133,13 +131,7 @@ class _CPIOHandlerBase(StructHandler):
 
 class BinaryHandler(_CPIOHandlerBase):
     NAME = "cpio_binary"
-    YARA_RULE = r"""
-        strings:
-            $cpio_binary_magic= { c7 71 } // (default, bin, hpbin)
-
-        condition:
-            $cpio_binary_magic
-    """
+    PATTERNS = [HexString("c7 71 // (default, bin, hpbin)")]
 
     C_DEFINITIONS = r"""
         typedef struct old_cpio_header
@@ -177,13 +169,8 @@ class BinaryHandler(_CPIOHandlerBase):
 class PortableOldASCIIHandler(_CPIOHandlerBase):
     NAME = "cpio_portable_old_ascii"
 
-    YARA_RULE = r"""
-        strings:
-            $cpio_portable_old_ascii_magic = { 30 37 30 37 30 37 } // 07 07 07
+    PATTERNS = [HexString("30 37 30 37 30 37 // 07 07 07")]
 
-        condition:
-            $cpio_portable_old_ascii_magic
-    """
     C_DEFINITIONS = r"""
         typedef struct old_ascii_header
         {
@@ -244,13 +231,7 @@ class _NewASCIICommon(StructHandler):
 
 class PortableASCIIHandler(_NewASCIICommon, _CPIOHandlerBase):
     NAME = "cpio_portable_ascii"
-    YARA_RULE = r"""
-        strings:
-            $cpio_portable_ascii_magic = { 30 37 30 37 30 31 } // 07 07 01 (newc)
-
-        condition:
-            $cpio_portable_ascii_magic
-    """
+    PATTERNS = [HexString("30 37 30 37 30 31 // 07 07 01 (newc)")]
 
     @staticmethod
     def _calculate_file_size(header) -> int:
@@ -267,13 +248,7 @@ class PortableASCIIHandler(_NewASCIICommon, _CPIOHandlerBase):
 
 class PortableASCIIWithCRCHandler(_NewASCIICommon, _CPIOHandlerBase):
     NAME = "cpio_portable_ascii_crc"
-    YARA_RULE = r"""
-        strings:
-            $cpio_portable_ascii_crc_magic = { 30 37 30 37 30 32 } // 07 07 02
-
-        condition:
-            $cpio_portable_ascii_crc_magic
-    """
+    PATTERNS = [HexString("30 37 30 37 30 32 // 07 07 02")]
 
     @staticmethod
     def _calculate_file_size(header):

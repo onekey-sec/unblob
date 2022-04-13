@@ -1,4 +1,3 @@
-import io
 import tarfile
 from typing import Optional
 
@@ -7,7 +6,7 @@ from structlog import get_logger
 from unblob.extractors.command import Command
 
 from ...file_utils import decode_int, round_down, round_up, snull
-from ...models import StructHandler, ValidChunk
+from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -17,7 +16,7 @@ BLOCK_SIZE = 512
 MAGIC_OFFSET = 257
 
 
-def _get_tar_end_offset(file: io.BufferedIOBase):
+def _get_tar_end_offset(file: File):
     # First find the end of the last entry in the file
     last_offset = _get_end_of_last_tar_entry(file)
     if last_offset == -1:
@@ -26,7 +25,7 @@ def _get_tar_end_offset(file: io.BufferedIOBase):
     return _find_end_of_padding(file, find_from=last_offset)
 
 
-def _get_end_of_last_tar_entry(file: io.BufferedIOBase) -> int:
+def _get_end_of_last_tar_entry(file: File) -> int:
 
     try:
         tf = tarfile.TarFile(mode="r", fileobj=file)
@@ -45,7 +44,7 @@ def _get_end_of_last_tar_entry(file: io.BufferedIOBase) -> int:
     return last_member.offset_data + last_file_size
 
 
-def _find_end_of_padding(file: io.BufferedIOBase, *, find_from: int) -> int:
+def _find_end_of_padding(file: File, *, find_from: int) -> int:
     file.seek(find_from)
     find_to = round_up(find_from, tarfile.RECORDSIZE)
     padding_len = find_to - find_from
@@ -65,18 +64,14 @@ def _find_end_of_padding(file: io.BufferedIOBase, *, find_from: int) -> int:
 class TarHandler(StructHandler):
     NAME = "tar"
 
-    YARA_RULE = r"""
-        strings:
-            $gnu_tar_magic = {75 73 74 61 72 20 20 00}
-            $posix_tar_magic =  {75 73 74 61 72 00 30 30}
-
-        condition:
-            $gnu_tar_magic or $posix_tar_magic
-    """
+    PATTERNS = [
+        HexString("75 73 74 61 72 20 20 00"),
+        HexString("75 73 74 61 72 00 30 30"),
+    ]
 
     # Since the magic is at 257, we have to subtract that from the match offset
     # to get to the start of the file.
-    YARA_MATCH_OFFSET = -MAGIC_OFFSET
+    PATTERN_MATCH_OFFSET = -MAGIC_OFFSET
 
     C_DEFINITIONS = r"""
         typedef struct posix_header
@@ -106,9 +101,7 @@ class TarHandler(StructHandler):
         "7z", "x", "-xr!PaxHeaders*", "-xr!GlobalHead*", "-y", "{inpath}", "-o{outdir}"
     )
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file)
         header_size = snull(header.size)
         decode_int(header_size, 8)

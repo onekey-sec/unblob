@@ -15,6 +15,8 @@
 , simg2img
 , unar
 , file
+, hyperscan
+, pkg-config
 }:
 
 let
@@ -62,6 +64,16 @@ let
         patchPhase = ''
           substituteInPlace magic.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
         '';
+      });
+
+      hyperscan = super.hyperscan.overridePythonAttrs (_: {
+        buildInputs = [
+          self.poetry
+          hyperscan
+        ];
+        nativeBuildInputs = [
+          pkg-config
+        ];
       });
     });
 

@@ -1,4 +1,3 @@
-import io
 import statistics
 from typing import Optional
 
@@ -8,7 +7,7 @@ from unblob.extractors import Command
 
 from ...file_utils import InvalidInputFormat, get_endian, iterate_patterns
 from ...iter_utils import get_intervals
-from ...models import Handler, StructHandler, ValidChunk
+from ...models import File, Handler, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -27,15 +26,12 @@ class UBIFSHandler(StructHandler):
     # superblock, and then many other kinds of nodes, it will take forever to run caculate_chunk()
     # against all the other nodes, and we waste loads of time and resources.
 
-    YARA_RULE = r"""
-        strings:
-            // magic (4 bytes), 16 bytes, node type (1 byte, 0x06 is superblock),
-            // group type (1 byte), 2 nulls.
-            $ubifs_superblock_magic_le = { 31 18 10 06 [16] 06 ( 00 | 01 | 02 ) 00 00 }
-            $ubifs_superblock_magic_be = { 06 10 18 31 [16] 06 ( 00 | 01 | 02 ) 00 00 }
-        condition:
-            $ubifs_superblock_magic_le or $ubifs_superblock_magic_be
-    """
+    # magic (4 bytes), 16 bytes, node type (1 byte, 0x06 is superblock),
+    # group type (1 byte), 2 nulls.
+    PATTERNS = [
+        HexString("31 18 10 06 [16] 06 ( 00 | 01 | 02 ) 00 00"),  # LE
+        HexString("06 10 18 31 [16] 06 ( 00 | 01 | 02 ) 00 00"),  # BE
+    ]
 
     C_DEFINITIONS = r"""
         typedef struct ubifs_ch {
@@ -85,9 +81,7 @@ class UBIFSHandler(StructHandler):
 
     EXTRACTOR = Command("ubireader_extract_files", "{inpath}", "-o", "{outdir}")
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         endian = get_endian(file, self._BIG_ENDIAN_MAGIC)
         sb_header = self.parse_header(file, endian)
 
@@ -106,16 +100,11 @@ class UBIHandler(Handler):
 
     _UBI_EC_HEADER = b"UBI#"
 
-    YARA_RULE = r"""
-        strings:
-            $ubi_magic = { 55 42 49 23 01 }  // UBI# and version 1
-        condition:
-            $ubi_magic
-    """
+    PATTERNS = [HexString("55 42 49 23 01  // UBI# and version 1")]
 
     EXTRACTOR = Command("ubireader_extract_images", "{inpath}", "-o", "{outdir}")
 
-    def _guess_peb_size(self, file: io.BufferedIOBase) -> int:
+    def _guess_peb_size(self, file: File) -> int:
         # Since we don't know the PEB size, we need to guess it. At the moment we just find the
         # most common interval between every erase block header we find in the image. This _might_
         # cause an issue if we had a blob containing multiple UBI images, with different PEB sizes.
@@ -127,7 +116,7 @@ class UBIHandler(Handler):
 
         return statistics.mode(offset_intervals)
 
-    def _walk_ubi(self, file: io.BufferedIOBase, peb_size: int) -> int:
+    def _walk_ubi(self, file: File, peb_size: int) -> int:
         """Walk from the start_offset, at PEB-sized intervals, until we don't hit an erase block."""
         while True:
             offset = file.tell()
@@ -138,9 +127,7 @@ class UBIHandler(Handler):
 
         return offset
 
-    def calculate_chunk(
-        self, file: io.BufferedIOBase, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
         peb_size = self._guess_peb_size(file)
 

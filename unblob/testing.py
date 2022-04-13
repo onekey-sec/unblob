@@ -6,7 +6,9 @@ from typing import List
 import pytest
 from pytest_cov.embed import cleanup_on_sigterm
 
+from unblob.finder import build_hyperscan_database
 from unblob.logging import configure_logger
+from unblob.processing import ExtractionConfig
 from unblob.report import Report
 
 
@@ -35,6 +37,22 @@ def gather_integration_tests(test_data_path: Path):
         ), f"Integration test input dir should contain at least 1 file: {input_dir}"
 
         yield pytest.param(input_dir, output_dir, id=test_id)
+
+
+@pytest.fixture
+def extraction_config(tmp_path: Path):
+    config = ExtractionConfig(
+        extract_root=tmp_path,
+        entropy_depth=0,
+        keep_extracted_chunks=True,
+    )
+
+    # Warmup lru_cache before ``process_files`` forks, so child
+    # processes can reuse the prebuilt databases without overhead
+    for handlers in config.handlers.by_priority:
+        build_hyperscan_database(handlers)
+
+    return config
 
 
 def check_output_is_the_same(reference_dir: Path, extract_dir: Path):

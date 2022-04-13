@@ -1,4 +1,3 @@
-import io
 from pathlib import Path, PosixPath
 
 import pytest
@@ -9,18 +8,18 @@ from unblob.extractor import (
     fix_permission,
     fix_symlink,
 )
-from unblob.models import TaskResult, UnknownChunk
+from unblob.models import File, TaskResult, UnknownChunk
 
 
 class TestCarveUnknownChunks:
     def test_no_chunks(self, tmp_path: Path):
-        test_file = io.BytesIO(b"some file")
+        test_file = File.from_bytes(b"some file")
         carve_unknown_chunks(tmp_path, test_file, [])
         assert list(tmp_path.iterdir()) == []
 
     def test_one_chunk(self, tmp_path: Path):
         content = b"test file"
-        test_file = io.BytesIO(content)
+        test_file = File.from_bytes(content)
         chunk = UnknownChunk(0, len(content))
         carve_unknown_chunks(tmp_path, test_file, [chunk])
         written_path = tmp_path / "0-9.unknown"
@@ -29,7 +28,7 @@ class TestCarveUnknownChunks:
 
     def test_multiple_chunks(self, tmp_path: Path):
         content = b"test file"
-        test_file = io.BytesIO(content)
+        test_file = File.from_bytes(content)
         chunks = [UnknownChunk(0, 4), UnknownChunk(4, 9)]
         carve_unknown_chunks(tmp_path, test_file, chunks)
         written_path1 = tmp_path / "0-4.unknown"
