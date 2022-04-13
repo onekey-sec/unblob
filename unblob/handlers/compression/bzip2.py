@@ -1,103 +1,167 @@
-import io
 from typing import Optional
 
+import attr
+import hyperscan
 from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...file_utils import Endian, InvalidInputFormat, iterbits, round_up
-from ...models import File, Regex, StructHandler, ValidChunk
+from ...file_utils import InvalidInputFormat, StructParser
+from ...models import File, Handler, HexString, Regex, ValidChunk
 
 logger = get_logger()
 
+C_DEFINITIONS = r"""
+    typedef struct stream_header {
+        char magic[2];              // 'BZ' signature/magic number
+        uint8 version;              // 'h' 0x68 for Bzip2 ('H'uffman coding), '0' for Bzip1 (deprecated)
+        uint8 hundred_k_blocksize;  // '1'..'9' block-size 100 kB-900 kB (uncompressed)
+    } stream_header_t;
 
-BLOCK_HEADER = 0x0000_3141_5926_5359
-BLOCK_ENDMARK = 0x0000_1772_4538_5090
-# BCD-encoded digits of BLOCK_HEADER
-COMPRESSED_MAGIC = b"1AY&SY"
-COMPRESSED_MAGIC_LENGTH = 6 * 8
-
-BLOCK_ENDMARK_SHIFTED = BLOCK_ENDMARK << COMPRESSED_MAGIC_LENGTH
-
-
-FOOTER_SIZE = 4  # 4 bytes CRC
+    typedef struct block_header {
+        char magic[6];              // 0x314159265359 (BCD (pi))
+        uint32 crc;                 // checksum for this block
+        uint8 randomised;           // 0=>normal, 1=>randomised (deprecated)
+    } block_header_t;
+"""
 
 
-class BZip2Handler(StructHandler):
+STREAM_MAGIC = b"BZ"
+HUFFMAN_VERSION = ord("h")
+HUNDRED_K_BLOCK_MIN = ord("1")
+HUNDRED_K_BLOCK_MAX = ord("9")
 
+# 0x314159265359 (BCD (pi))
+BLOCK_MAGIC = b"1AY&SY"
+
+# Stream ends with a magic 0x177245385090 though it is not aligned
+# to byte offsets, so we pre-calculated all possible 8 shifts
+# for bit_shift in range(8):
+#   print(hex(0x1772_4538_5090 << bit_shift))
+STREAM_END_MAGIC_PATTERNS = [
+    HexString("17 72 45 38 50 90"),
+    HexString("2e e4 8a 70 a1 2?"),
+    HexString("5d c9 14 e1 42 4?"),
+    HexString("bb 92 29 c2 84 8?"),
+    HexString("?1 77 24 53 85 09"),
+    HexString("?2 ee 48 a7 0a 12"),
+    HexString("?5 dc 91 4e 14 24"),
+    HexString("?b b9 22 9c 28 48"),
+]
+
+# 6 bytes magic + 4 bytes combined CRC
+STREAM_FOOTER_SIZE = 6 + 4
+
+
+def build_stream_end_scan_db(pattern_list):
+    patterns = []
+    for pattern_id, pattern in enumerate(pattern_list):
+        patterns.append(
+            (
+                pattern.as_regex(),
+                pattern_id,
+                hyperscan.HS_FLAG_SOM_LEFTMOST | hyperscan.HS_FLAG_DOTALL,
+            )
+        )
+
+    expressions, ids, flags = zip(*patterns)
+    db = hyperscan.Database(mode=hyperscan.HS_MODE_VECTORED)
+    db.compile(expressions=expressions, ids=ids, elements=len(patterns), flags=flags)
+    return db
+
+
+hyperscan_stream_end_magic_db = build_stream_end_scan_db(STREAM_END_MAGIC_PATTERNS)
+parser = StructParser(C_DEFINITIONS)
+
+
+@attr.define
+class Bzip2SearchContext:
+    start_offset: int
+    file: File
+    end_block_offset: int
+
+
+def _validate_stream_header(file: File):
+    try:
+        header = parser.cparser_be.stream_header_t(file)
+    except EOFError:
+        return False
+
+    return (
+        header.magic == STREAM_MAGIC
+        and header.version == HUFFMAN_VERSION
+        and HUNDRED_K_BLOCK_MIN <= header.hundred_k_blocksize <= HUNDRED_K_BLOCK_MAX
+    )
+
+
+def _validate_block_header(file: File):
+    try:
+        header = parser.cparser_be.block_header_t(file)
+    except EOFError:
+        return False
+
+    return header.magic == BLOCK_MAGIC
+
+
+def _hyperscan_match(
+    pattern_id: int, offset: int, end: int, flags: int, context: Bzip2SearchContext
+) -> bool:
+    # Ignore any match before the start of this chunk
+    if offset < context.start_offset:
+        return False
+
+    last_block_end = offset + STREAM_FOOTER_SIZE
+    if pattern_id > 3:
+        last_block_end += 1
+
+    # We try seek to the end of the stream
+    try:
+        context.file.seek(last_block_end)
+    except EOFError:
+        return True
+
+    context.end_block_offset = last_block_end
+
+    # Check if there is a next stream starting after the end of this stream
+    # and try to continue processing that as well
+    if _validate_stream_header(context.file) and _validate_block_header(context.file):
+        return False
+    else:
+        return True
+
+
+class BZip2Handler(Handler):
     NAME = "bzip2"
 
-    # magic + version + block_size + compressed_magic
+    # magic + version + block_size + block header magic
     PATTERNS = [Regex(r"\x42\x5a\x68[\x31-\x39]\x31\x41\x59\x26\x53\x59")]
-
-    C_DEFINITIONS = r"""
-        typedef struct bzip2_header {
-            // stream header
-            char magic[2];              // 'BZ' signature/magic number
-            uint8 version;              // 'h' for Bzip2 ('H'uffman coding), '0' for Bzip1 (deprecated)
-            uint8 hundred_k_blocksize;  // '1'..'9' block-size 100 kB-900 kB (uncompressed)
-
-            // block header (also repeated for every block)
-            char compressed_magic[6];   // 0x314159265359 (BCD (pi))
-            uint32 crc;                 // checksum for this block
-            uint8 randomised;           // 0=>normal, 1=>randomised (deprecated)
-        } bzip2_header_t;
-    """
-    HEADER_STRUCT = "bzip2_header_t"
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+        if not _validate_stream_header(file):
+            raise InvalidInputFormat("Invalid bzip2 stream header")
 
-        header = self.parse_header(file, Endian.BIG)
-        end_block_offset = -1
-        while header.compressed_magic == COMPRESSED_MAGIC:
-            current_offset = file.tell() - len(header)
-            end_block_offset = self.bzip2_recover(file, current_offset)
-            try:
-                file.seek(end_block_offset + FOOTER_SIZE, io.SEEK_SET)
-                header = self.parse_header(file, Endian.BIG)
-            except EOFError:
-                break
+        if not _validate_block_header(file):
+            raise InvalidInputFormat("Invalid bzip2 block header")
 
-        return ValidChunk(
-            start_offset=start_offset,
-            end_offset=end_block_offset + FOOTER_SIZE,
+        context = Bzip2SearchContext(
+            start_offset=start_offset, file=file, end_block_offset=-1
         )
+        try:
+            hyperscan_stream_end_magic_db.scan(
+                [file], match_event_handler=_hyperscan_match, context=context
+            )
+        except hyperscan.error as e:
+            if e.args and e.args[0] != f"error code {hyperscan.HS_SCAN_TERMINATED}":
+                logger.debug(
+                    "Error scanning for bzip2 patterns",
+                    error=e,
+                )
 
-    def bzip2_recover(self, file: File, start_offset: int) -> int:
-        """Emulate the behavior of bzip2recover, matching on compressed magic and end of stream
-        magic to identify the end offset of the whole bzip2 chunk.
-        Count from absolute start_offset and returns absolute end_offset
-        (first byte after the chunk ends).
-        """
+        if context.end_block_offset > 0:
+            return ValidChunk(
+                start_offset=start_offset, end_offset=context.end_block_offset
+            )
 
-        bits_read = 0
-        buff = 0
-        current_block_end = 0
-        start_block_found = False
-        end_block_found = False
-
-        file.seek(start_offset)
-
-        for b in iterbits(file):
-            bits_read += 1
-
-            buff = (buff << 1 | b) & 0xFFFF_FFFF_FFFF_FFFF_FFFF_FFFF
-
-            if buff & 0xFFFF_FFFF_FFFF == BLOCK_HEADER:
-                start_block_found = True
-            elif buff & 0xFFFF_FFFF_FFFF == BLOCK_ENDMARK:
-                end_block_found = True
-                current_block_end = bits_read
-            elif buff & 0xFFFF_FFFF_FFFF_0000_0000_0000 == BLOCK_ENDMARK_SHIFTED:
-                if buff & 0xFFFF_FFFF_FFFF == BLOCK_HEADER:
-                    continue
-                break
-
-        if not (start_block_found and end_block_found):
-            raise InvalidInputFormat("Couldn't find valid bzip2 content")
-
-        # blocks are counted in bits but we need an offset in bytes
-        end_block_offset = round_up(current_block_end, 8) // 8
-        return start_offset + end_block_offset
+        raise InvalidInputFormat("No valid bzip2 compression block was detected")
