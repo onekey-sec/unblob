@@ -29,15 +29,12 @@ HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
 @pytest.mark.parametrize(
     "input_dir, output_dir", gather_integration_tests(TEST_DATA_PATH)
 )
-def test_all_handlers(input_dir: Path, output_dir: Path, tmp_path: Path):
-    config = ExtractionConfig(
-        extract_root=tmp_path,
-        entropy_depth=0,
-        keep_extracted_chunks=True,
-    )
-    all_reports = process_files(config, input_dir)
+def test_all_handlers(
+    input_dir: Path, output_dir: Path, extraction_config: ExtractionConfig
+):
+    all_reports = process_files(extraction_config, input_dir)
 
-    check_output_is_the_same(output_dir, tmp_path)
+    check_output_is_the_same(output_dir, extraction_config.extract_root)
     check_reports(all_reports)
 
 

@@ -1,6 +1,9 @@
 from unblob.extractors import Command
 from unblob.models import Handler, HexString
-from unblob.testing import configure_logging  # noqa: F401 (module imported but unused)
+from unblob.testing import (  # noqa: F401 (module imported but unused)
+    configure_logging,
+    extraction_config,
+)
 
 
 class TestHandler(Handler):
