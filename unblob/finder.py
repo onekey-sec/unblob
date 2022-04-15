@@ -176,7 +176,11 @@ def build_hyperscan_database(handlers: Handlers) -> Tuple[hyperscan.Database, Di
         for pattern in handler.PATTERNS:
             try:
                 patterns.append(
-                    (pattern.as_regex(), pattern_id, hyperscan.HS_FLAG_SOM_LEFTMOST)
+                    (
+                        pattern.as_regex(),
+                        pattern_id,
+                        hyperscan.HS_FLAG_SOM_LEFTMOST | hyperscan.HS_FLAG_DOTALL,
+                    )
                 )
             except InvalidHexString as e:
                 logger.error(
