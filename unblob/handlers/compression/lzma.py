@@ -20,6 +20,8 @@ logger = get_logger()
 # 256GB
 MAX_UNCOMPRESSED_SIZE = 256 * 1024 * 1024 * 1024
 
+MIN_READ_RATIO = 0.1
+
 
 class LZMAHandler(Handler):
     NAME = "lzma"
@@ -69,12 +71,15 @@ class LZMAHandler(Handler):
             while read_size < uncompressed_size and not decompressor.eof:
                 data = file.read(DEFAULT_BUFSIZE)
                 if not data:
-                    logger.warn(
-                        "LZMA stream is truncated.",
-                        read_size=read_size,
-                        uncompressed_size=uncompressed_size,
-                    )
-                    break
+                    if read_size < (uncompressed_size * MIN_READ_RATIO):
+                        raise InvalidInputFormat("Very early truncated LZMA stream")
+                    else:
+                        logger.debug(
+                            "LZMA stream is truncated.",
+                            read_size=read_size,
+                            uncompressed_size=uncompressed_size,
+                        )
+                        break
                 read_size += len(decompressor.decompress(data))
 
         except lzma.LZMAError as exc:
