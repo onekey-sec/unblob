@@ -201,7 +201,7 @@ class _FileTask:
         self.size = size
         self.result = result
 
-        self.extract_dir = get_extract_dir_for_input(config, self.task.path)
+        self.carve_dir = get_extract_dir_for_input(config, self.task.path)
 
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
@@ -229,7 +229,7 @@ class _FileTask:
         unknown_chunks: List[UnknownChunk],
     ):
         carved_unknown_paths = carve_unknown_chunks(
-            self.extract_dir, file, unknown_chunks
+            self.carve_dir, file, unknown_chunks
         )
         self._calculate_entropies(carved_unknown_paths)
 
@@ -239,7 +239,7 @@ class _FileTask:
     def _ensure_root_extract_dir(self):
         # ensure that the root extraction directory is created even for empty extractions
         if self.task.depth == 0:
-            self.extract_dir.mkdir(parents=True, exist_ok=True)
+            self.carve_dir.mkdir(parents=True, exist_ok=True)
 
     def _calculate_entropies(self, paths: List[Path]):
         if self.task.depth < self.config.entropy_depth:
@@ -247,20 +247,20 @@ class _FileTask:
                 calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
     def _extract_chunk(self, file, chunk: ValidChunk):
-        # Skip carving whole file and thus duplicating the file and creating more directories
         is_whole_file_chunk = chunk.start_offset == 0 and chunk.end_offset == self.size
+
         skip_carving = is_whole_file_chunk
         if skip_carving:
             inpath = self.task.path
-            outdir = self.extract_dir
+            extract_dir = self.carve_dir
             carved_path = None
         else:
-            inpath = carve_valid_chunk(self.extract_dir, file, chunk)
-            outdir = self.extract_dir / (inpath.name + self.config.extract_suffix)
+            inpath = carve_valid_chunk(self.carve_dir, file, chunk)
+            extract_dir = self.carve_dir / (inpath.name + self.config.extract_suffix)
             carved_path = inpath
 
         try:
-            chunk.extract(inpath, outdir)
+            chunk.extract(inpath, extract_dir)
 
             if carved_path and not self.config.keep_extracted_chunks:
                 logger.debug("Removing extracted chunk", path=carved_path)
@@ -275,12 +275,12 @@ class _FileTask:
             self.result.add_report(UnknownError(exception=exc))
 
         # we want to get consistent partial output even in case of unforeseen problems
-        fix_extracted_directory(outdir, self.result)
+        fix_extracted_directory(extract_dir, self.result)
 
-        if outdir.exists():
+        if extract_dir.exists():
             self.result.add_subtask(
                 Task(
-                    path=outdir,
+                    path=extract_dir,
                     depth=self.task.depth + 1,
                 )
             )
