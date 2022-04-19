@@ -5,8 +5,9 @@ We identify the end offset of any identified unix compress'ed chunk by performin
 Lempel-Ziv-Welch decompression on a chunk starting from the identified start offset,
 and ending at the end of the whole file being analyzed.
 
-If we reach an invalid code or the stream ends in the middle of a code, we recursively
-call the decompression, this time with a chunk ending at the failing position - 1.
+If we reach an invalid code or the stream ends in the middle of a code, we do not
+recursively call the decompression with -1 size, rather just fail on the chunk as
+we have seen too many false-positives picked up by this heuristic.
 
 Once the decompression procedure works without errors, that means we have a valid
 chunk and can return its current end offset.
@@ -154,14 +155,9 @@ class UnixCompressHandler(StructHandler):
             left += 8
             if left < bits_per_symbol:
                 if nxt == max_len:
-                    logger.debug(
+                    raise InvalidInputFormat(
                         "Invalid Data: Stream ended in the middle of a code",
-                        code=code,
-                        end=end,
-                        prev=prev,
-                        nxt=nxt,
                     )
-                    return self.unlzw(file, start_offset, nxt - 1)
                 buf += convert_int8(file.read(1), Endian.LITTLE) << left
                 nxt += 1
 
@@ -199,14 +195,7 @@ class UnixCompressHandler(StructHandler):
                 # code we drop through (prev) will be a valid index so that
                 # random input does not cause an exception
                 if (code != end + 1) or (prev > end):
-                    logger.debug(
-                        "Invalid Data: Invalid code detected",
-                        code=code,
-                        end=end,
-                        prev=prev,
-                        nxt=nxt,
-                    )
-                    return self.unlzw(file, start_offset, nxt - 1)
+                    raise InvalidInputFormat("Invalid Data: Invalid code detected")
                 code = prev
 
             # Walk through linked list to generate output in reverse order
@@ -232,6 +221,10 @@ class UnixCompressHandler(StructHandler):
         max_len = file.tell()
 
         end_offset = self.unlzw(file, start_offset, max_len)
+
+        chunk_length = end_offset - start_offset
+        if chunk_length <= 5:
+            raise InvalidInputFormat("Compressed chunk is too short")
 
         return ValidChunk(
             start_offset=start_offset,
