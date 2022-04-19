@@ -15,7 +15,7 @@ from unblob.handlers import BUILTIN_HANDLERS, Handlers
 
 from .extractor import carve_unknown_chunks, carve_valid_chunk, fix_extracted_directory
 from .file_utils import iterate_file, valid_path
-from .finder import search_chunks_by_priority
+from .finder import search_chunks
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
@@ -194,7 +194,7 @@ class _FileTask:
         logger.debug("Processing file", path=self.task.path, size=self.size)
 
         with File.from_path(self.task.path) as file:
-            all_chunks = search_chunks_by_priority(
+            all_chunks = search_chunks(
                 file, self.size, self.config.handlers, self.result
             )
             outer_chunks = remove_inner_chunks(all_chunks)

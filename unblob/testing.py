@@ -49,8 +49,7 @@ def extraction_config(tmp_path: Path):
 
     # Warmup lru_cache before ``process_files`` forks, so child
     # processes can reuse the prebuilt databases without overhead
-    for handlers in config.handlers.by_priority:
-        build_hyperscan_database(handlers)
+    build_hyperscan_database(config.handlers)
 
     return config
 

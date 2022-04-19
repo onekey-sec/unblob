@@ -18,7 +18,7 @@ NOT_INSTALLED = "✗"
 
 def get_dependencies(handlers: Handlers) -> List[Dependency]:
     all_commands = set()
-    for handler in handlers.flat:
+    for handler in handlers:
         commands = handler.get_dependencies()
         all_commands.update(commands)
     rv = []

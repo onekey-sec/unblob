@@ -4,7 +4,7 @@ The main "entry point" is search_chunks_by_priority.
 """
 from enum import Flag
 from functools import lru_cache
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple
 
 import attr
 import hyperscan
@@ -12,7 +12,6 @@ from structlog import get_logger
 
 from .file_utils import InvalidInputFormat
 from .handlers import Handlers
-from .logging import noformat
 from .models import File, Handler, TaskResult, ValidChunk
 from .parser import InvalidHexString
 from .report import CalculateChunkExceptionReport
@@ -108,73 +107,65 @@ def _hyperscan_match(
     logger.debug("Found valid chunk", chunk=chunk, handler=handler.NAME, _verbosity=2)
     context.all_chunks.append(chunk)
 
-    # Terminate scan  if we have a full file match
-    if chunk.start_offset == 0 and chunk.end_offset == context.file_size:
-        logger.debug("Chunk covers the whole file", chunk=chunk)
+    # Terminate scan if we match till the end of the file
+    if chunk.end_offset == context.file_size:
+        logger.debug("Chunk covers till end of the file", chunk=chunk)
         return _HyperscanScan.Terminate
 
     return _HyperscanScan.Continue
 
 
-def search_chunks_by_priority(  # noqa: C901
+def search_chunks(  # noqa: C901
     file: File,
     file_size: int,
     handlers: Handlers,
     task_result: TaskResult,
 ) -> List[ValidChunk]:
     """Search all ValidChunks within the file.
-    Collect all the registered handlers by priority, search for patterns and run
-    Handler.calculate_chunk() on the found matches.
+    Search for patterns and run Handler.calculate_chunk() on the found matches.
     We don't deal with offset within already found ValidChunks and invalid chunks are thrown away.
     If chunk covers the whole file we stop any further search and processing.
     """
     all_chunks = []
 
-    for priority_level, handler_classes in enumerate(handlers.by_priority, start=1):
-        logger.debug("Starting priority level", priority_level=noformat(priority_level))
-        hyperscan_db, handler_map = build_hyperscan_database(handler_classes)
+    hyperscan_db, handler_map = build_hyperscan_database(handlers)
 
-        hyperscan_context = HyperscanMatchContext(
-            handler_map=handler_map,
-            file=file,
-            file_size=file_size,
-            all_chunks=all_chunks,
-            task_result=task_result,
+    hyperscan_context = HyperscanMatchContext(
+        handler_map=handler_map,
+        file=file,
+        file_size=file_size,
+        all_chunks=all_chunks,
+        task_result=task_result,
+    )
+
+    try:
+        hyperscan_db.scan(
+            [file],
+            match_event_handler=_hyperscan_match,
+            context=hyperscan_context,
         )
-
-        try:
-            hyperscan_db.scan(
-                [file],
-                match_event_handler=_hyperscan_match,
-                context=hyperscan_context,
+    except hyperscan.error as e:
+        if e.args and e.args[0] == f"error code {hyperscan.HS_SCAN_TERMINATED}":
+            logger.debug(
+                "Scanning terminated as chunk matches till end of file",
             )
-        except hyperscan.error as e:
-            if e.args and e.args[0] == f"error code {hyperscan.HS_SCAN_TERMINATED}":
-                logger.debug(
-                    "Scanning terminated as whole file chunk is found",
-                    priority_level=noformat(priority_level),
-                )
-                return all_chunks
-            else:
-                logger.error(
-                    "Error scanning for patterns",
-                    priority_level=noformat(priority_level),
-                    error=e,
-                )
+            return all_chunks
+        else:
+            logger.error(
+                "Error scanning for patterns",
+                error=e,
+            )
 
-        logger.debug(
-            "Ended priority level",
-            priority_level=noformat(priority_level),
-            all_chunks=all_chunks,
-        )
+    logger.debug(
+        "Ended searching for chunks",
+        all_chunks=all_chunks,
+    )
 
     return all_chunks
 
 
 @lru_cache
-def build_hyperscan_database(
-    handlers: Tuple[Type[Handler], ...]
-) -> Tuple[hyperscan.Database, Dict]:
+def build_hyperscan_database(handlers: Handlers) -> Tuple[hyperscan.Database, Dict]:
     db = hyperscan.Database(mode=hyperscan.HS_MODE_VECTORED)
     handler_map = dict()
 

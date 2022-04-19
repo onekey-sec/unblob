@@ -242,21 +242,4 @@ class StructHandler(Handler):
         return header
 
 
-class Handlers:
-    def __init__(self, by_priority: List[Tuple[Type[Handler], ...]]):
-        self._by_priority = by_priority
-        self._flat = [h for handlers in by_priority for h in handlers]
-
-    def with_prepended(self, by_priority):
-        if not by_priority:
-            # No additions
-            return self
-        return Handlers([tuple(by_priority)] + self._by_priority)
-
-    @property
-    def by_priority(self):
-        return self._by_priority
-
-    @property
-    def flat(self):
-        return self._flat
+Handlers = Tuple[Type[Handler], ...]

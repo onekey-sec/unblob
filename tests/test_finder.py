@@ -1,16 +1,8 @@
 import pytest
 
 from unblob.file_utils import InvalidInputFormat
-from unblob.finder import build_hyperscan_database, search_chunks_by_priority
-from unblob.models import (
-    File,
-    Handler,
-    Handlers,
-    HexString,
-    Regex,
-    TaskResult,
-    ValidChunk,
-)
+from unblob.finder import build_hyperscan_database, search_chunks
+from unblob.models import File, Handler, HexString, Regex, TaskResult, ValidChunk
 from unblob.parser import InvalidHexString
 
 
@@ -85,15 +77,9 @@ def test_build_hyperscan_database():
 
 
 def test_db_and_handler_map_instances_are_cached():
-    db1, handler_map1 = build_hyperscan_database(tuple([TestHandlerA, TestHandlerB]))
-    db2, handler_map2 = build_hyperscan_database(tuple([TestHandlerA, TestHandlerB]))
-    db3, handler_map3 = build_hyperscan_database(
-        tuple(
-            [
-                TestHandlerA,
-            ]
-        )
-    )
+    db1, handler_map1 = build_hyperscan_database((TestHandlerA, TestHandlerB))
+    db2, handler_map2 = build_hyperscan_database((TestHandlerA, TestHandlerB))
+    db3, handler_map3 = build_hyperscan_database((TestHandlerA,))
     assert db1 is db2
     assert handler_map1 is handler_map2
     assert db1 is not db3
@@ -137,6 +123,7 @@ def test_invalid_hexstring_pattern_raises():
             id="overflowing-chunk-ignored-scan-continues",
         ),
         pytest.param(b"A2345", [ValidChunk(0, 5)], id="whole-file-chunk"),
+        pytest.param(b"00000A2345", [ValidChunk(5, 10)], id="chunk-till-end-of-file"),
         pytest.param(
             b"BB34A678900",
             [ValidChunk(4, 9)],
@@ -156,20 +143,16 @@ def test_search_chunks(content, expected_chunks):
     file = File.from_bytes(content)
 
     task_result = TaskResult()
-    handlers = Handlers(
-        [
-            (
-                TestHandlerA,
-                TestHandlerB,
-                TestHandlerD,
-                TestHandlerEof,
-                TestHandlerInvalid,
-                TestHandlerExc,
-            )
-        ]
+    handlers = (
+        TestHandlerA,
+        TestHandlerB,
+        TestHandlerD,
+        TestHandlerEof,
+        TestHandlerInvalid,
+        TestHandlerExc,
     )
 
-    chunks = search_chunks_by_priority(file, len(content), handlers, task_result)
+    chunks = search_chunks(file, len(content), handlers, task_result)
 
     assert len(chunks) == len(expected_chunks)
     for expected_chunk, chunk in zip(expected_chunks, chunks):
