@@ -28,7 +28,17 @@ logger = get_logger()
 
 DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
-DEFAULT_SKIP_MAGIC = ("ELF", "JPEG", "GIF", "PNG")
+DEFAULT_SKIP_MAGIC = (
+    "ELF",
+    "JPEG",
+    "GIF",
+    "PNG",
+    "compiled Java class",
+    "TrueType Font data",
+    "PDF document",
+    "magic binary file",
+    "MS Windows icon resource",
+)
 
 
 @attr.define(kw_only=True)
