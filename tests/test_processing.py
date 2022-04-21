@@ -10,7 +10,6 @@ from unblob.processing import (
     calculate_entropy,
     calculate_unknown_chunks,
     draw_entropy_plot,
-    get_existing_extract_dirs,
     get_extract_dir_for_input,
     remove_inner_chunks,
 )
@@ -163,26 +162,3 @@ def test_get_extract_dir_for_input(
     assert get_extract_dir_for_input(cfg, Path(path)) == (
         cfg.extract_root / Path(extract_dir_prefix + cfg.extract_suffix)
     )
-
-
-def test_existing_extract_dirs_can_be_found(tmp_path: Path):
-    cfg = ExtractionConfig(extract_root=tmp_path, entropy_depth=0)
-
-    already_extracted_files = [
-        Path("have_been_extracted"),
-        Path("some_directory") / "also_have_been_extacted",
-    ]
-    existing_extract_dirs = [
-        tmp_path / (e.name + cfg.extract_suffix) for e in already_extracted_files
-    ]
-
-    for e in existing_extract_dirs:
-        e.mkdir()
-
-    to_be_extracted_files = [
-        Path("yet_to_extract"),
-        Path("some_other_directory") / "also_yet_to_extract",
-    ]
-    files_to_extract = already_extracted_files + to_be_extracted_files
-
-    assert get_existing_extract_dirs(cfg, files_to_extract) == existing_extract_dirs

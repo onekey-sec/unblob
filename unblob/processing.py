@@ -96,22 +96,6 @@ def check_extract_directory(task: Task, config: ExtractionConfig):
 
     return errors
 
-def get_existing_extract_dirs(
-    config: ExtractionConfig, paths: Iterable[Path]
-) -> List[Path]:
-    extract_dirs = []
-    for path in paths:
-        if path.is_dir():
-            subpaths = path.iterdir()
-        else:
-            subpaths = [path]
-        for path in subpaths:
-            d = get_extract_dir_for_input(config, path)
-            if d.exists():
-                extract_dirs.append(d)
-
-    return extract_dirs
-
 
 def _process_one_file(config: ExtractionConfig, root_task: Task) -> ProcessResult:
     processor = Processor(config)
