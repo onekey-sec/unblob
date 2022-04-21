@@ -79,7 +79,7 @@ class UnblobContext(click.Context):
 @click.command(help=get_help_text())
 @click.argument(
     "file",
-    type=click.Path(path_type=Path, exists=True, resolve_path=True),
+    type=click.Path(path_type=Path, dir_okay=False, exists=True, resolve_path=True),
     required=True,
 )
 @click.option(

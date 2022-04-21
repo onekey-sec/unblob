@@ -68,6 +68,9 @@ class ExtractionConfig:
 
 @terminate_gracefully
 def process_file(config: ExtractionConfig, path: Path) -> ProcessResult:
+    if not path.is_file():
+        raise ValueError("path is not a file", path)
+
     task = Task(
         path=path,
         depth=0,

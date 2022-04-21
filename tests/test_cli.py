@@ -127,10 +127,10 @@ def test_non_existing_file(tmp_path: Path):
     result = runner.invoke(unblob.cli.cli, ["--extract-dir", str(tmp_path), str(path)])
     assert result.exit_code == 2
     assert "Invalid value for 'FILE'" in result.output
-    assert f"Path '{str(path)}' does not exist" in result.output
+    assert f"File '{str(path)}' does not exist" in result.output
 
 
-def test_empty_dir_as_file(tmp_path: Path):
+def test_dir_for_file(tmp_path: Path):
     runner = CliRunner()
     out_path = tmp_path.joinpath("out")
     out_path.mkdir()
@@ -139,7 +139,7 @@ def test_empty_dir_as_file(tmp_path: Path):
     result = runner.invoke(
         unblob.cli.cli, ["--extract-dir", str(out_path), str(in_path)]
     )
-    assert result.exit_code == 0
+    assert result.exit_code != 0
 
 
 @pytest.mark.parametrize(
@@ -172,7 +172,8 @@ def test_archive_success(
         / "archive"
         / "zip"
         / "regular"
-        / "__input__/"
+        / "__input__"
+        / "apple.zip"
     )
     process_file_mock = mock.MagicMock()
     logger_config_mock = mock.MagicMock()
@@ -214,7 +215,8 @@ def test_keep_extracted_chunks(
         / "archive"
         / "zip"
         / "regular"
-        / "__input__/"
+        / "__input__"
+        / "apple.zip"
     )
     params = args + ["--extract-dir", str(tmp_path), str(in_path)]
 

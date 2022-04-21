@@ -32,10 +32,11 @@ HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
 def test_all_handlers(
     input_dir: Path, output_dir: Path, extraction_config: ExtractionConfig
 ):
-    all_reports = process_file(extraction_config, input_dir)
+    for input_file in input_dir.iterdir():
+        reports = process_file(extraction_config, input_file)
+        check_result(reports)
 
     check_output_is_the_same(output_dir, extraction_config.extract_root)
-    check_result(all_reports)
 
 
 @pytest.mark.parametrize(
