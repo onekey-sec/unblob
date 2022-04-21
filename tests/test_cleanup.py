@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from unblob.models import File, Handler, Regex, ValidChunk
-from unblob.processing import ExtractionConfig, process_files
+from unblob.processing import ExtractionConfig, process_file
 from unblob.testing import check_result
 
 _ZIP_CONTENT = b"good file"
@@ -54,7 +54,7 @@ def test_remove_extracted_chunks(input_dir: Path, output_dir: Path):
         entropy_depth=0,
     )
 
-    all_reports = process_files(config, input_dir)
+    all_reports = process_file(config, input_dir)
     assert list(output_dir.glob("**/*.zip")) == []
     check_result(all_reports)
 
@@ -66,7 +66,7 @@ def test_keep_all_problematic_chunks(input_dir: Path, output_dir: Path):
         entropy_depth=0,
     )
 
-    all_reports = process_files(config, input_dir)
+    all_reports = process_file(config, input_dir)
     # damaged zip file should not be removed
     assert all_reports.errors != [], "Unexpectedly no errors found!"
     assert list(output_dir.glob("**/*.zip"))
@@ -79,7 +79,7 @@ def test_keep_all_unknown_chunks(input_dir: Path, output_dir: Path):
         entropy_depth=0,
     )
 
-    all_reports = process_files(config, input_dir)
+    all_reports = process_file(config, input_dir)
     assert list(output_dir.glob("**/*.unknown"))
     check_result(all_reports)
 
@@ -100,6 +100,6 @@ def test_keep_chunks_with_null_extractor(input_dir: Path, output_dir: Path):
         entropy_depth=0,
         handlers=(_HandlerWithNullExtractor,),
     )
-    all_reports = process_files(config, input_dir)
+    all_reports = process_file(config, input_dir)
     assert list(output_dir.glob("**/*.null"))
     check_result(all_reports)

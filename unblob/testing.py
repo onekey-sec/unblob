@@ -46,7 +46,7 @@ def extraction_config(tmp_path: Path):
         keep_extracted_chunks=True,
     )
 
-    # Warmup lru_cache before ``process_files`` forks, so child
+    # Warmup lru_cache before ``process_file`` forks, so child
     # processes can reuse the prebuilt databases without overhead
     build_hyperscan_database(config.handlers)
 

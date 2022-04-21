@@ -15,7 +15,7 @@ import pytest
 
 from unblob import handlers
 from unblob.models import Handler
-from unblob.processing import ExtractionConfig, process_files
+from unblob.processing import ExtractionConfig, process_file
 from unblob.testing import (
     check_output_is_the_same,
     check_result,
@@ -32,7 +32,7 @@ HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
 def test_all_handlers(
     input_dir: Path, output_dir: Path, extraction_config: ExtractionConfig
 ):
-    all_reports = process_files(extraction_config, input_dir)
+    all_reports = process_file(extraction_config, input_dir)
 
     check_output_is_the_same(output_dir, extraction_config.extract_root)
     check_result(all_reports)

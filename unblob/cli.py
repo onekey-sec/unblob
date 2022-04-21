@@ -19,7 +19,7 @@ from .processing import (
     DEFAULT_PROCESS_NUM,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
-    process_files,
+    process_file,
 )
 
 logger = get_logger()
@@ -192,7 +192,7 @@ def cli(
     )
 
     logger.info("Start processing file", file=file)
-    all_reports = process_files(config, file)
+    all_reports = process_file(config, file)
     return all_reports
 
 

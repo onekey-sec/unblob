@@ -67,7 +67,7 @@ class ExtractionConfig:
 
 
 @terminate_gracefully
-def process_files(config: ExtractionConfig, path: Path) -> ProcessResult:
+def process_file(config: ExtractionConfig, path: Path) -> ProcessResult:
     task = Task(
         path=path,
         depth=0,

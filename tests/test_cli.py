@@ -174,11 +174,11 @@ def test_archive_success(
         / "regular"
         / "__input__/"
     )
-    process_files_mock = mock.MagicMock()
+    process_file_mock = mock.MagicMock()
     logger_config_mock = mock.MagicMock()
     new_params = params + ["--extract-dir", str(tmp_path), str(in_path)]
     with mock.patch.object(
-        unblob.cli, "process_files", process_files_mock
+        unblob.cli, "process_file", process_file_mock
     ), mock.patch.object(unblob.cli, "configure_logger", logger_config_mock):
         result = runner.invoke(unblob.cli.cli, new_params)
     assert result.exit_code == 0
@@ -192,7 +192,7 @@ def test_archive_success(
         process_num=expected_process_num,
         handlers=BUILTIN_HANDLERS,
     )
-    process_files_mock.assert_called_once_with(config, in_path)
+    process_file_mock.assert_called_once_with(config, in_path)
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
 
 
@@ -218,13 +218,13 @@ def test_keep_extracted_chunks(
     )
     params = args + ["--extract-dir", str(tmp_path), str(in_path)]
 
-    process_files_mock = mock.MagicMock()
-    with mock.patch.object(unblob.cli, "process_files", process_files_mock):
+    process_file_mock = mock.MagicMock()
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
         result = runner.invoke(unblob.cli.cli, params)
 
     assert result.exit_code == 0
-    process_files_mock.assert_called_once()
+    process_file_mock.assert_called_once()
     assert (
-        process_files_mock.call_args.args[0].keep_extracted_chunks
+        process_file_mock.call_args.args[0].keep_extracted_chunks
         == keep_extracted_chunks
     ), fail_message
