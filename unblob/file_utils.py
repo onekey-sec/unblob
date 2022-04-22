@@ -234,6 +234,12 @@ def iterate_file(
         yield data
 
 
+def copy_to_file(input_file: File, output_path: Path, offset: int, length: int):
+    with output_path.open("wb") as f:
+        for line in iterate_file(input_file, offset, length):
+            f.write(line)
+
+
 class StructParser:
     """Wrapper for dissect.cstruct to handle different endianness parsing dynamically."""
 
