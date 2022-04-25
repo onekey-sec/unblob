@@ -76,7 +76,9 @@ class UnblobContext(click.Context):
         self.params["plugin_manager"] = plugin_manager
 
 
-@click.command(help=get_help_text())
+@click.command(
+    help=get_help_text(), context_settings=dict(help_option_names=["--help", "-h"])
+)
 @click.argument(
     "file",
     type=click.Path(path_type=Path, dir_okay=False, exists=True, resolve_path=True),
