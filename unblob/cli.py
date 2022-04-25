@@ -192,8 +192,11 @@ def cli(
     )
 
     logger.info("Start processing file", file=file)
-    all_reports = process_file(config, file)
-    return all_reports
+    results = process_file(config, file)
+
+    with file.with_suffix(".result.json").open("w") as fd:
+        fd.write(results.to_json())
+    return results
 
 
 cli.context_class = UnblobContext

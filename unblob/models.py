@@ -1,5 +1,7 @@
 import abc
 import itertools
+import json
+from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Tuple, Type
 
@@ -127,6 +129,25 @@ class ProcessResult:
 
     def register(self, result: TaskResult):
         self.results.append(result)
+
+    def to_json(self, indent="  "):
+        return json.dumps(self.results, cls=_JSONEncoder, indent=indent)
+
+
+class _JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.name
+
+        if attr.has(type(obj)):
+            extend_attr_output = True
+            attr_output = attr.asdict(obj, recurse=not extend_attr_output)
+            attr_output["__typename__"] = obj.__class__.__name__
+            return attr_output
+
+        if isinstance(obj, Path):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 class ExtractError(Exception):
