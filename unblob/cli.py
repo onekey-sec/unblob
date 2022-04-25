@@ -144,6 +144,12 @@ class UnblobContext(click.Context):
     show_default=True,
 )
 @click.option(
+    "--report",
+    "report_file",
+    type=click.Path(path_type=Path),
+    help="File to store metadata generated during the extraction process (in JSON format).",
+)
+@click.option(
     "-k",
     "--keep-extracted-chunks",
     "keep_extracted_chunks",
@@ -162,16 +168,17 @@ class UnblobContext(click.Context):
 def cli(
     file: Path,
     extract_root: Path,
+    report_file: Optional[Path],
     force: bool,
+    process_num: int,
     depth: int,
     entropy_depth: int,
     skip_magic: Iterable[str],
-    process_num: int,
     keep_extracted_chunks: bool,
-    verbose: int,
-    plugins_path: Optional[Path],
     handlers: Handlers,
+    plugins_path: Optional[Path],
     plugin_manager: UnblobPluginManager,
+    verbose: int,
 ) -> ProcessResult:
     configure_logger(verbose, extract_root)
 
@@ -194,8 +201,16 @@ def cli(
     logger.info("Start processing file", file=file)
     results = process_file(config, file)
 
-    with file.with_suffix(".result.json").open("w") as fd:
-        fd.write(results.to_json())
+    if report_file:
+        try:
+            report_file.write_text(results.to_json())
+        except IOError as e:
+            logger.error("Can not write JSON report", path=report_file, msg=str(e))
+        except Exception:
+            logger.exception("Can not write JSON report", path=report_file)
+        else:
+            logger.info("JSON report written", path=report_file)
+
     return results
 
 
