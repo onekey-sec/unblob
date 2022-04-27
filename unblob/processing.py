@@ -256,6 +256,7 @@ class _FileTask:
             extract_dir = self.carve_dir / (inpath.name + self.config.extract_suffix)
             carved_path = inpath
 
+        extraction_reports = []
         try:
             chunk.extract(inpath, extract_dir)
 
@@ -264,12 +265,13 @@ class _FileTask:
                 carved_path.unlink()
 
         except ExtractError as e:
-            for report in e.reports:
-                self.result.add_report(report)
+            extraction_reports.extend(e.reports)
 
         except Exception as exc:
             logger.exception("Unknown error happened while extracting chunk")
-            self.result.add_report(UnknownError(exception=exc))
+            extraction_reports.append(UnknownError(exception=exc))
+
+        self.result.add_report(chunk.as_report(extraction_reports))
 
         # we want to get consistent partial output even in case of unforeseen problems
         fix_extracted_directory(extract_dir, self.result)

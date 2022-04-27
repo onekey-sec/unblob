@@ -10,7 +10,7 @@ from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .parser import hexstring2regex
-from .report import ErrorReport, Report
+from .report import ChunkReport, ErrorReport, Report
 
 logger = get_logger()
 
@@ -90,6 +90,16 @@ class ValidChunk(Chunk):
 
         self.handler.extract(inpath, outdir)
 
+    def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
+        return ChunkReport(
+            start_offset=self.start_offset,
+            end_offset=self.end_offset,
+            size=self.size,
+            handler_name=self.handler.NAME,
+            is_encrypted=self.is_encrypted,
+            extraction_reports=extraction_reports,
+        )
+
 
 @attr.define(repr=False)
 class UnknownChunk(Chunk):
@@ -125,7 +135,14 @@ class ProcessResult:
         reports = itertools.chain.from_iterable(
             r.reports for r in self.results
         )
-        return [r for r in reports if isinstance(r, ErrorReport)]
+        interesting_reports = (r for r in reports if isinstance(r, (ErrorReport, ChunkReport)))
+        errors = []
+        for report in interesting_reports:
+            if isinstance(report, ErrorReport):
+                errors.append(report)
+            else:
+                errors.extend(r for r in report.extraction_reports if isinstance(r, ErrorReport))
+        return errors
 
     def register(self, result: TaskResult):
         self.results.append(result)

@@ -143,8 +143,19 @@ class StatReport(Report):
 @attr.define(kw_only=True)
 class FileMagicReport(Report):
     magic: str
+    mime_type: str
 
     @classmethod
     def from_path(cls, path: Path):
         detected = magic.detect_from_filename(path)
-        return cls(magic=detected.name)
+        return cls(magic=detected.name, mime_type=detected.mime_type)
+
+
+@attr.define(kw_only=True)
+class ChunkReport(Report):
+    handler_name: str
+    start_offset: int
+    end_offset: int
+    size: int
+    is_encrypted: bool
+    extraction_reports: List[Report]
