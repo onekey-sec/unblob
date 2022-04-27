@@ -65,6 +65,17 @@ class ExtractionConfig:
     extract_suffix: str = "_extract"
     handlers: Handlers = BUILTIN_HANDLERS
 
+    def get_extract_dir_for(self, path: Path) -> Path:
+        """Extraction dir under root with the name of path."""
+        try:
+            relative_path = path.relative_to(self.extract_root)
+        except ValueError:
+            # path is not inside root, i.e. it is an input file
+            relative_path = Path(path.name)
+        extract_name = path.name + self.extract_suffix
+        extract_dir = self.extract_root / relative_path.with_name(extract_name)
+        return extract_dir.expanduser().resolve()
+
 
 @terminate_gracefully
 def process_file(config: ExtractionConfig, path: Path) -> ProcessResult:
@@ -104,7 +115,7 @@ def process_file(config: ExtractionConfig, path: Path) -> ProcessResult:
 def check_extract_directory(task: Task, config: ExtractionConfig):
     errors = []
 
-    extract_dir = get_extract_dir_for_input(config, task.path)
+    extract_dir = config.get_extract_dir_for(task.path)
     if extract_dir.exists():
         if config.force_extract:
             shutil.rmtree(extract_dir)
@@ -198,7 +209,7 @@ class _FileTask:
         self.size = size
         self.result = result
 
-        self.carve_dir = get_extract_dir_for_input(config, self.task.path)
+        self.carve_dir = config.get_extract_dir_for(self.task.path)
 
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
@@ -283,18 +294,6 @@ class _FileTask:
                     depth=self.task.depth + 1,
                 )
             )
-
-
-def get_extract_dir_for_input(config: ExtractionConfig, path: Path) -> Path:
-    """Extraction dir under root with the name of path."""
-    try:
-        relative_path = path.relative_to(config.extract_root)
-    except ValueError:
-        # path is not inside root, i.e. it is an input file
-        relative_path = Path(path.name)
-    extract_name = path.name + config.extract_suffix
-    extract_dir = config.extract_root / relative_path.with_name(extract_name)
-    return extract_dir.expanduser().resolve()
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:

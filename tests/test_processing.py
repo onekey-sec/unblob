@@ -10,7 +10,6 @@ from unblob.processing import (
     calculate_entropy,
     calculate_unknown_chunks,
     draw_entropy_plot,
-    get_extract_dir_for_input,
     remove_inner_chunks,
 )
 
@@ -155,10 +154,10 @@ def test_calculate_entropy_no_exception(path: Path, draw_plot: bool):
         ("/extract", "/some/place/else/firmware", "firmware"),
     ],
 )
-def test_get_extract_dir_for_input(
+def test_ExtractionConfig_get_extract_dir_for(
     extract_root: str, path: str, extract_dir_prefix: str
 ):
     cfg = ExtractionConfig(extract_root=Path(extract_root), entropy_depth=0)
-    assert get_extract_dir_for_input(cfg, Path(path)) == (
+    assert cfg.get_extract_dir_for(Path(path)) == (
         cfg.extract_root / Path(extract_dir_prefix + cfg.extract_suffix)
     )
