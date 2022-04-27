@@ -136,18 +136,29 @@ class ProcessResult:
 
 class _JSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, Enum):
-            return obj.name
-
         if attr.has(type(obj)):
             extend_attr_output = True
             attr_output = attr.asdict(obj, recurse=not extend_attr_output)
             attr_output["__typename__"] = obj.__class__.__name__
             return attr_output
 
+        if isinstance(obj, Enum):
+            return obj.name
+
         if isinstance(obj, Path):
             return str(obj)
-        return json.JSONEncoder.default(self, obj)
+
+        if isinstance(obj, bytes):
+            try:
+                return obj.decode()
+            except UnicodeDecodeError:
+                return str(obj)
+
+        logger.error(f"JSONEncoder met a non-JSON encodable value: {obj}")
+        # the usual fail path of custom JSONEncoders is to call the parent and let it fail
+        #     return json.JSONEncoder.default(self, obj)
+        # instead of failing, just return something usable
+        return f"Non-JSON encodable value: {obj}"
 
 
 class ExtractError(Exception):
