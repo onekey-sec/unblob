@@ -4,12 +4,21 @@ from typing import List
 
 import pytest
 from click.testing import CliRunner
-from conftest import TestHandler
 
 import unblob.cli
 from unblob.extractors import Command
 from unblob.handlers import BUILTIN_HANDLERS
+from unblob.models import Handler, HexString
 from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
+
+
+class TestHandler(Handler):
+    NAME = "test_handler"
+    PATTERNS = [HexString("21 3C")]
+    EXTRACTOR = Command("testcommand", "for", "test", "handler")
+
+    def calculate_chunk(self, *args, **kwargs):
+        pass
 
 
 class ExistingCommandHandler(TestHandler):
