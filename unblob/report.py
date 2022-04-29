@@ -153,6 +153,7 @@ class FileMagicReport(Report):
 
 @attr.define(kw_only=True)
 class ChunkReport(Report):
+    id: str
     handler_name: str
     start_offset: int
     end_offset: int

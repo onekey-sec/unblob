@@ -83,6 +83,7 @@ def process_file(
     config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
 ) -> ProcessResult:
     task = Task(
+        chunk_id="",
         path=input_path,
         depth=0,
     )
@@ -233,6 +234,7 @@ class Processor:
             for path in task.path.iterdir():
                 result.add_subtask(
                     Task(
+                        chunk_id=task.chunk_id,
                         path=path,
                         depth=task.depth,
                     )
@@ -359,6 +361,7 @@ class _FileTask:
         if extract_dir.exists():
             self.result.add_subtask(
                 Task(
+                    chunk_id=chunk.id,
                     path=extract_dir,
                     depth=self.task.depth + 1,
                 )

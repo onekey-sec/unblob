@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List
 
+import attr
 import pytest
 
 from unblob.models import UnknownChunk, ValidChunk
@@ -12,6 +13,14 @@ from unblob.processing import (
     draw_entropy_plot,
     remove_inner_chunks,
 )
+
+
+def assert_same_chunks(expected, actual, explanation=None):
+    """An assert, that ignores the chunk.id-s"""
+
+    assert len(expected) == len(actual), explanation
+    for i, (e, a) in enumerate(zip(expected, actual)):
+        assert attr.evolve(e, id="") == attr.evolve(a, id=""), explanation
 
 
 @pytest.mark.parametrize(
@@ -74,7 +83,7 @@ from unblob.processing import (
 def test_remove_inner_chunks(
     chunks: List[ValidChunk], expected: List[ValidChunk], explanation: str
 ):
-    assert expected == remove_inner_chunks(chunks), explanation
+    assert_same_chunks(expected, remove_inner_chunks(chunks), explanation)
 
 
 @pytest.mark.parametrize(
@@ -97,7 +106,7 @@ def test_remove_inner_chunks(
 def test_calculate_unknown_chunks(
     chunks: List[ValidChunk], file_size: int, expected: List[UnknownChunk]
 ):
-    assert expected == calculate_unknown_chunks(chunks, file_size)
+    assert_same_chunks(expected, calculate_unknown_chunks(chunks, file_size))
 
 
 @pytest.mark.parametrize(

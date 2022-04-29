@@ -9,6 +9,7 @@ import attr
 from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
+from .identifiers import new_id
 from .parser import hexstring2regex
 from .report import ChunkReport, ErrorReport, Report
 
@@ -24,6 +25,7 @@ logger = get_logger()
 class Task:
     path: Path
     depth: int
+    chunk_id: str
 
 
 @attr.define
@@ -42,6 +44,8 @@ class Chunk:
 
     end_offset: int
     """The index of the first byte after the end of the chunk"""
+
+    id: str = attr.field(factory=new_id)
 
     def __attrs_post_init__(self):
         if self.start_offset < 0 or self.end_offset < 0:
@@ -92,6 +96,7 @@ class ValidChunk(Chunk):
 
     def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
         return ChunkReport(
+            id=self.id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
