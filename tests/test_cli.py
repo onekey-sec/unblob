@@ -202,7 +202,7 @@ def test_archive_success(
         process_num=expected_process_num,
         handlers=BUILTIN_HANDLERS,
     )
-    process_file_mock.assert_called_once_with(config, in_path)
+    process_file_mock.assert_called_once_with(config, in_path, None)
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
 
 

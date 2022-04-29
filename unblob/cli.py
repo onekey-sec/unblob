@@ -97,7 +97,7 @@ class UnblobContext(click.Context):
     "--force",
     is_flag=True,
     show_default=True,
-    help="Force extraction removing previously extracted files.",
+    help="Force extraction even if outputs already exist (they are removed).",
 )
 @click.option(
     "-d",
@@ -201,17 +201,7 @@ def cli(
     )
 
     logger.info("Start processing file", file=file)
-    results = process_file(config, file)
-
-    if report_file:
-        try:
-            report_file.write_text(results.to_json())
-        except IOError as e:
-            logger.error("Can not write JSON report", path=report_file, msg=str(e))
-        except Exception:
-            logger.exception("Can not write JSON report", path=report_file)
-        else:
-            logger.info("JSON report written", path=report_file)
+    results = process_file(config, file, report_file)
 
     return results
 

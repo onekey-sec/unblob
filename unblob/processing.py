@@ -3,7 +3,7 @@ import shutil
 import statistics
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import attr
 import plotext as plt
@@ -30,6 +30,7 @@ from .pool import make_pool
 from .report import (
     ExtractDirectoryExistsReport,
     FileMagicReport,
+    Report,
     StatReport,
     UnknownError,
 )
@@ -78,19 +79,36 @@ class ExtractionConfig:
 
 
 @terminate_gracefully
-def process_file(config: ExtractionConfig, path: Path) -> ProcessResult:
-    if not path.is_file():
-        raise ValueError("path is not a file", path)
-
+def process_file(
+    config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
+) -> ProcessResult:
     task = Task(
-        path=path,
+        path=input_path,
         depth=0,
     )
 
-    errors = check_extract_directory(task, config)
-    if errors:
-        return ProcessResult(errors)
+    if not input_path.is_file():
+        raise ValueError("input_path is not a file", input_path)
 
+    errors = prepare_extract_dir(config, input_path)
+    if not prepare_report_file(config, report_file):
+        logger.error(
+            "File not processed, as report could not be written", file=input_path
+        )
+        return ProcessResult()
+
+    if errors:
+        process_result = ProcessResult([TaskResult(task, errors)])
+    else:
+        process_result = _process_task(config, task)
+
+    if report_file:
+        write_json_report(report_file, process_result)
+
+    return process_result
+
+
+def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
     processor = Processor(config)
     aggregated_result = ProcessResult()
 
@@ -112,19 +130,70 @@ def process_file(config: ExtractionConfig, path: Path) -> ProcessResult:
     return aggregated_result
 
 
-def check_extract_directory(task: Task, config: ExtractionConfig):
+def prepare_extract_dir(config: ExtractionConfig, input_file: Path) -> List[Report]:
     errors = []
 
-    extract_dir = config.get_extract_dir_for(task.path)
+    extract_dir = config.get_extract_dir_for(input_file)
     if extract_dir.exists():
         if config.force_extract:
+            logger.info("Removing extract dir", path=extract_dir)
             shutil.rmtree(extract_dir)
         else:
             report = ExtractDirectoryExistsReport(path=extract_dir)
             logger.error("Extraction directory already exist", path=str(extract_dir))
-            errors.append(TaskResult(task, [report]))
+            errors.append(report)
 
     return errors
+
+
+def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -> bool:
+    """An in advance preparation to prevent report writing failing after an expensive extraction.
+
+    Returns True if there is no foreseen problem,
+            False if report writing is known in advance to fail.
+    """
+    if not report_file:
+        # we will not write report at all
+        return True
+
+    if report_file.exists():
+        if config.force_extract:
+            logger.warning("Removing existing report file", path=report_file)
+            try:
+                report_file.unlink()
+            except OSError as e:
+                logger.error(
+                    "Can not remove existing report file",
+                    path=report_file,
+                    msg=str(e),
+                )
+                return False
+        else:
+            logger.error(
+                "Report file exists and --force not specified", path=report_file
+            )
+            return False
+
+    # check that the report directory can be written to
+    try:
+        report_file.write_text("")
+        report_file.unlink()
+    except OSError as e:
+        logger.error("Can not create report file", path=report_file, msg=str(e))
+        return False
+
+    return True
+
+
+def write_json_report(report_file: Path, process_result: ProcessResult):
+    try:
+        report_file.write_text(process_result.to_json())
+    except OSError as e:
+        logger.error("Can not write JSON report", path=report_file, msg=str(e))
+    except Exception:
+        logger.exception("Can not write JSON report", path=report_file)
+    else:
+        logger.info("JSON report written", path=report_file)
 
 
 class Processor:
