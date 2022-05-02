@@ -160,3 +160,11 @@ class ChunkReport(Report):
     size: int
     is_encrypted: bool
     extraction_reports: List[Report]
+
+
+@attr.define(kw_only=True)
+class UnknownChunkReport(Report):
+    id: str
+    start_offset: int
+    end_offset: int
+    size: int

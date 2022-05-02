@@ -11,7 +11,7 @@ from structlog import get_logger
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .identifiers import new_id
 from .parser import hexstring2regex
-from .report import ChunkReport, ErrorReport, Report
+from .report import ChunkReport, ErrorReport, Report, UnknownChunkReport
 
 logger = get_logger()
 
@@ -114,8 +114,16 @@ class UnknownChunk(Chunk):
     entropy, other chunks inside it, metadata, etc.
 
     These are not extracted, just logged for information purposes and further analysis,
-    like most common bytest (like \x00 and \xFF), ASCII strings, high entropy, etc.
+    like most common bytes (like \x00 and \xFF), ASCII strings, high entropy, etc.
     """
+
+    def as_report(self) -> UnknownChunkReport:
+        return UnknownChunkReport(
+            id=self.id,
+            start_offset=self.start_offset,
+            end_offset=self.end_offset,
+            size=self.size,
+        )
 
 
 @attr.define
@@ -137,16 +145,18 @@ class ProcessResult:
 
     @property
     def errors(self) -> List[ErrorReport]:
-        reports = itertools.chain.from_iterable(
-            r.reports for r in self.results
+        reports = itertools.chain.from_iterable(r.reports for r in self.results)
+        interesting_reports = (
+            r for r in reports if isinstance(r, (ErrorReport, ChunkReport))
         )
-        interesting_reports = (r for r in reports if isinstance(r, (ErrorReport, ChunkReport)))
         errors = []
         for report in interesting_reports:
             if isinstance(report, ErrorReport):
                 errors.append(report)
             else:
-                errors.extend(r for r in report.extraction_reports if isinstance(r, ErrorReport))
+                errors.extend(
+                    r for r in report.extraction_reports if isinstance(r, ErrorReport)
+                )
         return errors
 
     def register(self, result: TaskResult):

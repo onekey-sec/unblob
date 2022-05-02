@@ -11,7 +11,7 @@ from structlog import get_logger
 
 from unblob.handlers import BUILTIN_HANDLERS, Handlers
 
-from .extractor import carve_unknown_chunks, carve_valid_chunk, fix_extracted_directory
+from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
 from .file_utils import iterate_file, valid_path
 from .finder import search_chunks
 from .iter_utils import pairwise
@@ -297,7 +297,7 @@ class _FileTask:
             else:
                 # we don't consider whole files as unknown chunks, but we still want to
                 # calculate entropy for whole files which produced no valid chunks
-                self._calculate_entropies([self.task.path])
+                self._calculate_entropy(self.task.path)
 
         self._ensure_root_extract_dir()
 
@@ -307,10 +307,13 @@ class _FileTask:
         outer_chunks: List[ValidChunk],
         unknown_chunks: List[UnknownChunk],
     ):
-        carved_unknown_paths = carve_unknown_chunks(
-            self.carve_dir, file, unknown_chunks
-        )
-        self._calculate_entropies(carved_unknown_paths)
+        if unknown_chunks:
+            logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+
+        for chunk in unknown_chunks:
+            carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
+            self._calculate_entropy(carved_unknown_path)
+            self.result.add_report(chunk.as_report())
 
         for chunk in outer_chunks:
             self._extract_chunk(file, chunk)
@@ -320,10 +323,9 @@ class _FileTask:
         if self.task.depth == 0:
             self.carve_dir.mkdir(parents=True, exist_ok=True)
 
-    def _calculate_entropies(self, paths: List[Path]):
+    def _calculate_entropy(self, path: Path):
         if self.task.depth < self.config.entropy_depth:
-            for path in paths:
-                calculate_entropy(path, draw_plot=self.config.entropy_plot)
+            calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
     def _extract_chunk(self, file, chunk: ValidChunk):
         is_whole_file_chunk = chunk.start_offset == 0 and chunk.end_offset == self.size
