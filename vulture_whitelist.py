@@ -2,7 +2,7 @@ import sys
 
 import unblob.plugins
 from unblob import cli
-from unblob.file_utils import File, iterbits
+from unblob.file_utils import File, iterbits, round_down
 from unblob.parser import _HexStringToRegex
 
 _HexStringToRegex.literal
@@ -18,3 +18,4 @@ unblob.plugins.hookimpl
 File.from_bytes
 
 iterbits
+round_down

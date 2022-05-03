@@ -223,3 +223,74 @@ def test_truncated_files(contents: bytes, start_complete: bool, message: str):
         assert offset == len(contents), message
     else:
         assert offset == -1, message
+
+
+X9216_TAR = unhex(
+    """\
+00000000  78 39 32 31 36 00 00 00  00 00 00 00 00 00 00 00  |x9216...........|
+00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000060  00 00 00 00 30 30 30 30  36 36 34 00 30 30 30 30  |....0000664.0000|
+00000070  30 30 30 00 30 30 30 30  30 30 30 00 30 30 30 30  |000.0000000.0000|
+00000080  30 30 32 32 30 30 30 00  31 34 32 33 34 32 31 37  |0022000.14234217|
+00000090  33 32 34 00 30 31 30 32  36 36 00 20 30 00 00 00  |324.010266. 0...|
+000000a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000100  00 75 73 74 61 72 20 20  00 72 6f 6f 74 00 00 00  |.ustar  .root...|
+00000110  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000120  00 00 00 00 00 00 00 00  00 72 6f 6f 74 00 00 00  |.........root...|
+00000130  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000200  78 78 78 78 78 78 78 78  78 78 78 78 78 78 78 78  |xxxxxxxxxxxxxxxx|
+*
+00002600  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00005000
+"""
+)
+
+
+def test_end_of_tar_archive_marker_split_between_records():
+    # X9216_TAR is a GNU tar file, that has a file in it of size 9216
+    # This means, that with the default blocking factor of 20,
+    # the record size is 0x2800 = 10240 = 512 + 9216 + 512, thus the second closing
+    # block of 512 0 bytes do not fit in the first record.
+    # The end result is that the second half of the tar file is all 0,
+    # but needed to be properly formatted.
+    content = File.from_bytes(X9216_TAR)
+    assert len(content) == 0x5000
+    assert _get_tar_end_offset(content) == len(content)
+
+
+X9216_TAR_BLOCKING_1 = unhex(
+    """\
+00000000  78 39 32 31 36 00 00 00  00 00 00 00 00 00 00 00  |x9216...........|
+00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000060  00 00 00 00 30 30 30 30  36 36 34 00 30 30 30 30  |....0000664.0000|
+00000070  30 30 30 00 30 30 30 30  30 30 30 00 30 30 30 30  |000.0000000.0000|
+00000080  30 30 32 32 30 30 30 00  31 34 32 33 34 32 31 37  |0022000.14234217|
+00000090  33 32 34 00 30 31 30 32  36 36 00 20 30 00 00 00  |324.010266. 0...|
+000000a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000100  00 75 73 74 61 72 20 20  00 72 6f 6f 74 00 00 00  |.ustar  .root...|
+00000110  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000120  00 00 00 00 00 00 00 00  00 72 6f 6f 74 00 00 00  |.........root...|
+00000130  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000200  78 78 78 78 78 78 78 78  78 78 78 78 78 78 78 78  |xxxxxxxxxxxxxxxx|
+*
+00002600  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00002a00
+"""
+)
+
+
+def test_different_blocking_factor():
+    # X9216_TAR_BLOCKING_1 is created from the same file with GNU tar
+    # but this time with a --blocking-factor=1
+    assert X9216_TAR.startswith(X9216_TAR_BLOCKING_1)
+    content = File.from_bytes(X9216_TAR_BLOCKING_1)
+    assert len(content) == 0x2A00
+    assert _get_tar_end_offset(content) == len(content)
