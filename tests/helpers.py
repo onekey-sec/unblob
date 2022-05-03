@@ -20,9 +20,14 @@ def unhex(hexdump: str) -> bytes:
     relative to the start position.
 
     The printable ASCII column is discarded during parsing.
+
+    NOTE: all lines MUST contain exactly 16 bytes, except the last line, which can have less.
     """
     parsed = _hexdump_parser.parse(hexdump)
     return _HexDumpToBin().transform(parsed)
+
+
+BYTES_PER_LINE = 16
 
 
 _hexdump_parser = Lark(
@@ -85,22 +90,19 @@ class _HexDumpToBin(Transformer):
         if not self._last_line:
             raise ValueError("Squeezed line cannot be the first line in a hexdump")
 
+        assert len(self._last_line) % BYTES_PER_LINE == 0
+
         delta = line.offset - (self._last_line.offset + len(self._last_line))
-        count = delta // len(self._last_line)
+        count = delta // BYTES_PER_LINE
 
         return _HexdumpLine(
             self._last_line.offset + len(self._last_line),
-            self._last_line.data * count + line.data,
+            self._last_line.data[-BYTES_PER_LINE:] * count + line.data,
         )
 
     def squeezed(self, _s):
         self._squeezing = True
         return Discard
-
-    def trailing(self, s):
-        return _HexdumpLine(
-            int.from_bytes(binascii.unhexlify(s[0]), byteorder="big"), b""
-        )
 
     def start(self, s):
         rv = io.BytesIO()
