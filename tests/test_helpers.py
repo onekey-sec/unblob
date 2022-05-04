@@ -61,3 +61,22 @@ def test_with_squized_end():
     binary = unhex(WITH_SQUEEZED_END)
     assert len(binary) == 0x40
     assert binary == b"\xFF" * 0x40
+
+
+WITH_SQUEEZE_AFTER_SQUEEZE = """\
+00000000  20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20  |                |
+*
+00000040  78 78 78 78 78 78 78 78  78 78 78 78 78 78 78 78  |xxxxxxxxxxxxxxxx|
+*
+00000080  20 20 20 20 20 20 20 20  20 20 20 20 20 20 20 20  |                |
+*
+000000C0
+"""
+
+
+def test_with_squeeze_after_squeeze():
+    binary = unhex(WITH_SQUEEZE_AFTER_SQUEEZE)
+    assert len(binary) == 0xC0
+    assert binary[:0x40] == b" " * 0x40
+    assert binary[0x40:0x80] == b"x" * 0x40
+    assert binary[0x80:] == b" " * 0x40

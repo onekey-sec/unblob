@@ -5,27 +5,33 @@ from structlog import get_logger
 
 from unblob.extractors.command import Command
 
-from ...file_utils import decode_int, round_down, round_up, snull
+from ...file_utils import OffsetFile, decode_int, round_up, snull
 from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
 
 BLOCK_SIZE = 512
+END_OF_ARCHIVE_MARKER_SIZE = 2 * BLOCK_SIZE
 
 MAGIC_OFFSET = 257
 
+ZERO_BLOCK = bytes([0]) * BLOCK_SIZE
 
-def _get_tar_end_offset(file: File):
+
+def _get_tar_end_offset(file: File, offset=0):
+    file_with_offset = OffsetFile(file, offset)
+
     # First find the end of the last entry in the file
-    last_offset = _get_end_of_last_tar_entry(file)
+    last_offset = _get_end_of_last_tar_entry(file_with_offset)
     if last_offset == -1:
-        return last_offset
+        return -1
+
     # Then find where the final zero blocks end
-    return _find_end_of_padding(file, find_from=last_offset)
+    return offset + _find_end_of_padding(file_with_offset, find_from=last_offset)
 
 
-def _get_end_of_last_tar_entry(file: File) -> int:
+def _get_end_of_last_tar_entry(file) -> int:
 
     try:
         tf = tarfile.TarFile(mode="r", fileobj=file)
@@ -40,25 +46,24 @@ def _get_end_of_last_tar_entry(file: File) -> int:
     if not members:
         return -1
     last_member = members[-1]
-    last_file_size = BLOCK_SIZE * (1 + (last_member.size // BLOCK_SIZE))
+    last_file_size = round_up(last_member.size, BLOCK_SIZE)
     return last_member.offset_data + last_file_size
 
 
-def _find_end_of_padding(file: File, *, find_from: int) -> int:
+def _find_end_of_padding(file, *, find_from: int) -> int:
+    find_from = round_up(find_from, BLOCK_SIZE)
+    find_to = round_up(find_from + END_OF_ARCHIVE_MARKER_SIZE, tarfile.RECORDSIZE)
+
+    max_padding_blocks = (find_to - find_from) // BLOCK_SIZE
+
     file.seek(find_from)
-    find_to = round_up(find_from, tarfile.RECORDSIZE)
-    padding_len = find_to - find_from
-    padding = file.read(padding_len)
-
-    first_nonzero = find_from + len(padding)
-    for i, b in enumerate(padding, find_from):
-        if b != 0:
-            first_nonzero = i
+    for padding_blocks in range(max_padding_blocks):
+        if file.read(BLOCK_SIZE) != ZERO_BLOCK:
             break
+    else:
+        padding_blocks = max_padding_blocks
 
-    # if the first nonzero would be inside a possible next chunk, we
-    # round it down
-    return round_down(first_nonzero, BLOCK_SIZE)
+    return find_from + padding_blocks * BLOCK_SIZE
 
 
 class TarHandler(StructHandler):
@@ -102,12 +107,12 @@ class TarHandler(StructHandler):
     )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+        file.seek(start_offset)
         header = self.parse_header(file)
         header_size = snull(header.size)
         decode_int(header_size, 8)
 
-        file.seek(start_offset)
-        end_offset = _get_tar_end_offset(file)
+        end_offset = _get_tar_end_offset(file, start_offset)
         if end_offset == -1:
             return
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
