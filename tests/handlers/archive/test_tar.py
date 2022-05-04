@@ -2,7 +2,7 @@ import pytest
 from helpers import unhex
 
 from unblob.file_utils import File
-from unblob.handlers.archive.tar import _get_tar_end_offset
+from unblob.handlers.archive.tar import TarHandler, _get_tar_end_offset
 
 GNU_TAR_CONTENTS = unhex(
     """\
@@ -294,3 +294,21 @@ def test_different_blocking_factor():
     content = File.from_bytes(X9216_TAR_BLOCKING_1)
     assert len(content) == 0x2A00
     assert _get_tar_end_offset(content) == len(content)
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    (
+        pytest.param(b"", id="zero-prefix"),
+        pytest.param(b"some prefix ", id="nonzero-prefix"),
+    ),
+)
+def test_calculate_chunk(prefix):
+    tar_file = File.from_bytes(prefix + GNU_TAR_CONTENTS)
+    handler = TarHandler()
+
+    chunk = handler.calculate_chunk(tar_file, len(prefix))
+
+    assert chunk is not None
+    assert chunk.start_offset == len(prefix)
+    assert chunk.end_offset == len(prefix) + len(GNU_TAR_CONTENTS)
