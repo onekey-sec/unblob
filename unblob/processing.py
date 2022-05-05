@@ -17,12 +17,19 @@ from .finder import search_chunks
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
-from .models import ExtractError, File, Task, TaskResult, UnknownChunk, ValidChunk
+from .models import (
+    ExtractError,
+    File,
+    ProcessResult,
+    Task,
+    TaskResult,
+    UnknownChunk,
+    ValidChunk,
+)
 from .pool import make_pool
 from .report import (
     ExtractDirectoryExistsReport,
     FileMagicReport,
-    Report,
     StatReport,
     UnknownError,
 )
@@ -60,7 +67,7 @@ class ExtractionConfig:
 
 
 @terminate_gracefully
-def process_files(config: ExtractionConfig, path: Path) -> List[Report]:
+def process_files(config: ExtractionConfig, path: Path) -> ProcessResult:
     task = Task(
         path=path,
         depth=0,
@@ -68,7 +75,7 @@ def process_files(config: ExtractionConfig, path: Path) -> List[Report]:
 
     errors = check_extract_directory(task, config)
     if errors:
-        return errors
+        return ProcessResult(errors)
 
     result = _process_one_file(config, task)
 
@@ -85,7 +92,7 @@ def check_extract_directory(task: Task, config: ExtractionConfig):
         else:
             report = ExtractDirectoryExistsReport(path=extract_dir)
             logger.error("Extraction directory already exist", **report.asdict())
-            errors.append(report)
+            errors.append(TaskResult(task, [report]))
 
     return errors
 
@@ -106,14 +113,14 @@ def get_existing_extract_dirs(
     return extract_dirs
 
 
-def _process_one_file(config: ExtractionConfig, root_task: Task) -> List[Report]:
+def _process_one_file(config: ExtractionConfig, root_task: Task) -> ProcessResult:
     processor = Processor(config)
-    all_reports = []
+    aggregated_result = ProcessResult()
 
     def process_result(pool, result):
         for new_task in result.subtasks:
             pool.submit(new_task)
-        all_reports.extend(result.reports)
+        aggregated_result.register(result)
 
     pool = make_pool(
         process_num=config.process_num,
@@ -124,7 +131,8 @@ def _process_one_file(config: ExtractionConfig, root_task: Task) -> List[Report]
     with pool:
         pool.submit(root_task)
         pool.process_until_done()
-    return all_reports
+
+    return aggregated_result
 
 
 class Processor:

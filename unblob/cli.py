@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 import click
 from structlog import get_logger
 
+from unblob.models import ProcessResult
 from unblob.plugins import UnblobPluginManager
-from unblob.report import Report, Severity
+from unblob.report import Severity
 
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
 from .handlers import BUILTIN_HANDLERS, Handlers
-from .logging import configure_logger, noformat
+from .logging import configure_logger
 from .processing import (
     DEFAULT_DEPTH,
     DEFAULT_PROCESS_NUM,
@@ -171,7 +172,7 @@ def cli(
     plugins_path: Optional[Path],
     handlers: Handlers,
     plugin_manager: UnblobPluginManager,
-) -> List[Report]:
+) -> ProcessResult:
     configure_logger(verbose, extract_root)
 
     plugin_manager.import_plugins(plugins_path)
@@ -198,14 +199,12 @@ def cli(
 cli.context_class = UnblobContext
 
 
-def get_exit_code_from_reports(reports: List[Report]) -> int:
+def get_exit_code_from_reports(reports: ProcessResult) -> int:
     severity_to_exit_code = [
         (Severity.ERROR, 1),
         (Severity.WARNING, 0),
     ]
-    severities = {
-        report.severity for report in reports if isinstance(report, ErrorReport)
-    }
+    severities = {error.severity for error in reports.errors}
 
     for severity, exit_code in severity_to_exit_code:
         if severity in severities:

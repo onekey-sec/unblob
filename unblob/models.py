@@ -1,4 +1,5 @@
 import abc
+import itertools
 from pathlib import Path
 from typing import List, Optional, Tuple, Type
 
@@ -7,7 +8,7 @@ from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .parser import hexstring2regex
-from .report import Report
+from .report import ErrorReport, Report
 
 logger = get_logger()
 
@@ -17,7 +18,7 @@ logger = get_logger()
 #
 
 
-@attr.define
+@attr.define(frozen=True)
 class Task:
     path: Path
     depth: int
@@ -111,6 +112,21 @@ class TaskResult:
 
     def add_subtask(self, task: Task):
         self.subtasks.append(task)
+
+
+@attr.define
+class ProcessResult:
+    results: List[TaskResult] = attr.field(factory=list)
+
+    @property
+    def errors(self) -> List[ErrorReport]:
+        reports = itertools.chain.from_iterable(
+            r.reports for r in self.results
+        )
+        return [r for r in reports if isinstance(r, ErrorReport)]
+
+    def register(self, result: TaskResult):
+        self.results.append(result)
 
 
 class ExtractError(Exception):

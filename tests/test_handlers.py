@@ -18,7 +18,7 @@ from unblob.models import Handler
 from unblob.processing import ExtractionConfig, process_files
 from unblob.testing import (
     check_output_is_the_same,
-    check_reports,
+    check_result,
     gather_integration_tests,
 )
 
@@ -35,7 +35,7 @@ def test_all_handlers(
     all_reports = process_files(extraction_config, input_dir)
 
     check_output_is_the_same(output_dir, extraction_config.extract_root)
-    check_reports(all_reports)
+    check_result(all_reports)
 
 
 @pytest.mark.parametrize(
