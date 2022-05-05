@@ -4,6 +4,7 @@ LZ4 frame format definition: https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_f
 import io
 from typing import Optional
 
+from lz4.block import decompress
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -28,6 +29,7 @@ BLOCK_SIZE_LEN = (
     FRAME_SIZE_LEN
 ) = BLOCK_CHECKSUM_LEN = CONTENT_CHECKSUM_LEN = MAGIC_LEN = DICTID_LEN = 4
 FLG_LEN = BD_LEN = HC_LEN = 1
+MAX_LEGACY_BLOCK_SIZE = 8 * 1024 * 1024  # 8 MB
 
 
 class FLG:
@@ -89,7 +91,12 @@ class LegacyFrameHandler(_LZ4HandlerBase):
                 file.seek(-4, io.SEEK_CUR)
                 break
 
-            file.seek(block_compressed_size, io.SEEK_CUR)
+            compressed_block = file.read(block_compressed_size)
+            uncompressed_block = decompress(compressed_block, MAX_LEGACY_BLOCK_SIZE)
+
+            # See 'fixed block size' in https://android.googlesource.com/platform/external/lz4/+/HEAD/doc/lz4_Frame_format.md#legacy-frame
+            if len(uncompressed_block) < MAX_LEGACY_BLOCK_SIZE:
+                break
 
         end_offset = file.tell()
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
