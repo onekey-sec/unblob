@@ -80,27 +80,6 @@ def process_file(config: ExtractionConfig, path: Path) -> ProcessResult:
     if errors:
         return ProcessResult(errors)
 
-    result = _process_one_file(config, task)
-
-    return result
-
-
-def check_extract_directory(task: Task, config: ExtractionConfig):
-    errors = []
-
-    extract_dir = get_extract_dir_for_input(config, task.path)
-    if extract_dir.exists():
-        if config.force_extract:
-            shutil.rmtree(extract_dir)
-        else:
-            report = ExtractDirectoryExistsReport(path=extract_dir)
-            logger.error("Extraction directory already exist", **report.asdict())
-            errors.append(TaskResult(task, [report]))
-
-    return errors
-
-
-def _process_one_file(config: ExtractionConfig, root_task: Task) -> ProcessResult:
     processor = Processor(config)
     aggregated_result = ProcessResult()
 
@@ -116,10 +95,25 @@ def _process_one_file(config: ExtractionConfig, root_task: Task) -> ProcessResul
     )
 
     with pool:
-        pool.submit(root_task)
+        pool.submit(task)
         pool.process_until_done()
 
     return aggregated_result
+
+
+def check_extract_directory(task: Task, config: ExtractionConfig):
+    errors = []
+
+    extract_dir = get_extract_dir_for_input(config, task.path)
+    if extract_dir.exists():
+        if config.force_extract:
+            shutil.rmtree(extract_dir)
+        else:
+            report = ExtractDirectoryExistsReport(path=extract_dir)
+            logger.error("Extraction directory already exist", path=str(extract_dir))
+            errors.append(TaskResult(task, [report]))
+
+    return errors
 
 
 class Processor:
