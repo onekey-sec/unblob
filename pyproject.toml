@@ -18,7 +18,7 @@ attrs = "^21.2.0"
 structlog = "^21.2.0"
 arpy = "^2.2.0"
 rarfile = "^4.0"
-ubi-reader = { git = "https://github.com/IoT-Inspector/ubi_reader.git", rev = "1b7f0d0d3b9ad936bc127601ebe9144c1a115215" }
+ubi-reader = { git = "https://github.com/IoT-Inspector/ubi_reader.git", rev = "a906ed39f15a10a2e54ca8fcbde74c15c4540a3b" }
 python-lzo = "^1.14"
 cstruct = "2.1"
 jefferson = { git = "https://github.com/IoT-Inspector/jefferson.git", rev = "1a0ee577d7c7238303b8d76abb9a44422ac062f5" }
