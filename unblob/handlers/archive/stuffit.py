@@ -36,7 +36,7 @@ class _StuffItHandlerBase(StructHandler):
             end_offset=start_offset + header.archive_length,
         )
 
-    EXTRACTOR = Command("unar", "-o", "{outdir}", "{inpath}")
+    EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
 
 
 class StuffItSITHandler(_StuffItHandlerBase):

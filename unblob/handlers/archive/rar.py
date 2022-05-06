@@ -29,7 +29,7 @@ class RarHandler(Handler):
         """
         )
     ]
-    EXTRACTOR = Command("unar", "-p", "", "{inpath}", "-o", "{outdir}")
+    EXTRACTOR = Command("unar", "-no-directory", "-p", "", "{inpath}", "-o", "{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
