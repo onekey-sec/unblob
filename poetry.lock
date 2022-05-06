@@ -421,8 +421,8 @@ python-lzo = "*"
 [package.source]
 type = "git"
 url = "https://github.com/IoT-Inspector/ubi_reader.git"
-reference = "1b7f0d0d3b9ad936bc127601ebe9144c1a115215"
-resolved_reference = "1b7f0d0d3b9ad936bc127601ebe9144c1a115215"
+reference = "a906ed39f15a10a2e54ca8fcbde74c15c4540a3b"
+resolved_reference = "a906ed39f15a10a2e54ca8fcbde74c15c4540a3b"
 
 [[package]]
 name = "virtualenv"
@@ -461,7 +461,7 @@ resolved_reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "077c0fb3b9e8443b4b7948def71fad60ffdee476979d08b128964b2da7da2b46"
+content-hash = "754f949d2c9bacfcc13f5aba6fa8ece4a20381757e15e75f1ce61b4d0af1aed4"
 
 [metadata.files]
 arpy = [
