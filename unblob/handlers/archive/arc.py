@@ -41,7 +41,7 @@ class ARCHandler(StructHandler):
     """
 
     HEADER_STRUCT = "arc_head_t"
-    EXTRACTOR = Command("unar", "-o", "{outdir}", "{inpath}")
+    EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
 
     def valid_name(self, name: bytes) -> bool:
         try:
