@@ -27,7 +27,7 @@ class ARHandler(Handler):
         )
     ]
 
-    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+    EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         offset_file = OffsetFile(file, start_offset)
