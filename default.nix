@@ -111,7 +111,7 @@ self // {
 
         # romfs sample file contains some funky symlinks which get
         # removed when source is copyed to the nix store.
-        pytest -k "not test_all_handlers[filesystem.romfs]" --no-cov
+        pytest -vvv -k "not test_all_handlers[filesystem.romfs]" --no-cov
       )
     '';
   });
