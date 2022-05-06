@@ -4,7 +4,7 @@ from typing import Optional
 from structlog import get_logger
 
 from ...extractors import Command
-from ...file_utils import decode_int, round_up, snull
+from ...file_utils import OffsetFile, decode_int, round_up, snull
 from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
@@ -52,9 +52,11 @@ class _CPIOHandlerBase(StructHandler):
     _FILE_PAD_ALIGN: int = 512
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-        offset = start_offset
+
+        file_with_offset = OffsetFile(file, start_offset)
+        current_offset = start_offset
         while True:
-            file.seek(offset)
+            file.seek(current_offset)
             header = self.parse_header(file)
 
             c_filesize = self._calculate_file_size(header)
@@ -65,17 +67,15 @@ class _CPIOHandlerBase(StructHandler):
                 return
 
             if c_namesize > 0:
-                file.seek(offset + len(header))
-                tmp_filename = file.read(c_namesize)
+                tmp_filename = file_with_offset.read(c_namesize)
 
                 # heuristics 2: check that filename is null-byte terminated
                 if not tmp_filename.endswith(b"\x00"):
                     return
 
                 filename = snull(tmp_filename)
-
                 if filename == CPIO_TRAILER_NAME:
-                    offset += self._pad_content(header, c_filesize, c_namesize)
+                    current_offset += self._pad_content(header, c_filesize, c_namesize)
                     break
 
             c_mode = self._calculate_mode(header)
@@ -88,26 +88,26 @@ class _CPIOHandlerBase(StructHandler):
             if not is_valid:
                 return
 
-            file.seek(c_filesize, io.SEEK_CUR)
-            # Rounding up the total of the header size, and the c_filesize, again. Because
-            # some CPIO implementations don't align the first chunk, but do align the 2nd.
-            # In theory, with a "normal" CPIO file, we should just be aligned on the
-            # 4-byte boundary already, but if we are not for some reason, then we just
-            # need to round up again.
+            file_with_offset.seek(c_filesize, io.SEEK_CUR)
+            current_offset += self._pad_content(header, c_filesize, c_namesize)
 
-            if c_filesize > 0:
-                offset += self._pad_content(header, c_filesize, c_namesize)
-            else:
-                offset = round_up(file.tell(), self._PAD_ALIGN)
-
-        # Add padding that could exists between the cpio trailer and the end-of-file.
-        # cpio aligns the file to 512 bytes
-        offset = round_up(offset, self._FILE_PAD_ALIGN)
-
+        end_offset = start_offset + self._pad_file(
+            file_with_offset, current_offset - start_offset
+        )
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=offset,
+            end_offset=end_offset,
         )
+
+    @classmethod
+    def _pad_file(cls, file: OffsetFile, end_offset: int) -> int:
+        """CPIO archives can have a 512 bytes block padding at the end."""
+        file.seek(end_offset, io.SEEK_SET)
+        padded_end_offset = round_up(end_offset, cls._FILE_PAD_ALIGN)
+        padding_size = padded_end_offset - end_offset
+        if file.read(padding_size) == bytes([0]) * padding_size:
+            return padded_end_offset
+        return end_offset
 
     @classmethod
     def _pad_content(cls, header, c_filesize: int, c_namesize: int) -> int:
