@@ -91,7 +91,9 @@ class _CPIOHandlerBase(StructHandler):
             file_with_offset.seek(c_filesize, io.SEEK_CUR)
             current_offset += self._pad_content(header, c_filesize, c_namesize)
 
-        end_offset = start_offset + self._pad_file(file_with_offset, current_offset)
+        end_offset = start_offset + self._pad_file(
+            file_with_offset, current_offset - start_offset
+        )
         return ValidChunk(
             start_offset=start_offset,
             end_offset=end_offset,
