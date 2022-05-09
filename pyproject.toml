@@ -28,6 +28,7 @@ pluggy = "^1.0.0"
 file-magic = "^0.4.0"
 hyperscan = "^0.2.0"
 lark = "^1.1.2"
+lz4 = "^4.0.0"
 
 
 [tool.poetry.dev-dependencies]
