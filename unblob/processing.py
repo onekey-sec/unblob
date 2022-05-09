@@ -30,7 +30,6 @@ DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 DEFAULT_SKIP_MAGIC = (
     "BFLT",
-    "ELF",
     "JPEG",
     "GIF",
     "PNG",

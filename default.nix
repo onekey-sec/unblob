@@ -16,7 +16,6 @@
 , unar
 , file
 , hyperscan
-, pkg-config
 }:
 
 let
@@ -36,9 +35,11 @@ let
   self = mkPoetryApp {
     projectDir = ./.;
 
+    preferWheels = true;
+
     # Python dependencies that need special care, like non-python
     # build dependencies
-    overrides = poetry2nix.overrides.withDefaults (self: super: {
+    overrides = poetry2nix.overrides.withoutDefaults (self: super: {
       python-lzo = super.python-lzo.overridePythonAttrs (_: {
         buildInputs = [
           lzo
@@ -60,7 +61,7 @@ let
         ];
       });
 
-      file-magic = super.file-magic.overridePythonAttrs (_: {
+      file-magic = (super.file-magic.override { preferWheel = false; }).overridePythonAttrs (_: {
         patchPhase = ''
           substituteInPlace magic.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
         '';
@@ -68,11 +69,7 @@ let
 
       hyperscan = super.hyperscan.overridePythonAttrs (_: {
         buildInputs = [
-          self.poetry
           hyperscan
-        ];
-        nativeBuildInputs = [
-          pkg-config
         ];
       });
     });
