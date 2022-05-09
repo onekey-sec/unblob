@@ -1,9 +1,20 @@
+import os
+import stat
 import traceback
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Union
 
 import attr
+import magic
+
+
+@attr.define(kw_only=True, frozen=True)
+class Report:
+    """A common base class for different reports"""
+
+    def asdict(self) -> dict:
+        return attr.asdict(self)
 
 
 class Severity(Enum):
@@ -13,17 +24,9 @@ class Severity(Enum):
     WARNING = "WARNING"
 
 
-@attr.define(kw_only=True, frozen=True)
-class Report:
-    """A common base class for different reports"""
-
+@attr.define(kw_only=True)
+class ErrorReport(Report):
     severity: Severity
-
-    # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
-    handler: Optional[str] = None
-
-    def asdict(self) -> dict:
-        return attr.asdict(self)
 
 
 STR = Union[str, Exception]
@@ -51,7 +54,7 @@ def _convert_exception_to_str(obj: Union[str, Exception]) -> str:
 
 
 @attr.define(kw_only=True)
-class UnknownError(Report):
+class UnknownError(ErrorReport):
     """Describes an exception raised during file processing"""
 
     severity: Severity = attr.field(default=Severity.ERROR)
@@ -71,10 +74,12 @@ class CalculateChunkExceptionReport(UnknownError):
     """Describes an exception raised during calculate_chunk execution"""
 
     start_offset: int
+    # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
+    handler: str
 
 
 @attr.define(kw_only=True)
-class ExtractCommandFailedReport(Report):
+class ExtractCommandFailedReport(ErrorReport):
     """Describes an error when failed to run the extraction command"""
 
     severity: Severity = Severity.WARNING
@@ -85,13 +90,13 @@ class ExtractCommandFailedReport(Report):
 
 
 @attr.define(kw_only=True)
-class ExtractDirectoriesExistReport(Report):
+class ExtractDirectoryExistsReport(ErrorReport):
     severity: Severity = Severity.ERROR
-    paths: List[Path]
+    path: Path
 
 
 @attr.define(kw_only=True)
-class ExtractorDependencyNotFoundReport(Report):
+class ExtractorDependencyNotFoundReport(ErrorReport):
     """Describes an error when the dependency of an extractor doesn't exist"""
 
     severity: Severity = Severity.ERROR
@@ -99,9 +104,67 @@ class ExtractorDependencyNotFoundReport(Report):
 
 
 @attr.define(kw_only=True)
-class MaliciousSymlinkRemoved(Report):
+class MaliciousSymlinkRemoved(ErrorReport):
     """Describes an error when malicious symlinks have been removed from disk."""
 
     severity: Severity = Severity.WARNING
     link: str
     target: str
+
+
+@attr.define(kw_only=True)
+class StatReport(Report):
+    path: Path
+    size: int
+    is_dir: bool
+    is_file: bool
+    is_link: bool
+    link_target: Optional[Path]
+
+    @classmethod
+    def from_path(cls, path: Path):
+        st = path.lstat()
+        mode = st.st_mode
+        try:
+            link_target = Path(os.readlink(path))
+        except OSError:
+            link_target = None
+
+        return cls(
+            path=path,
+            size=st.st_size,
+            is_dir=stat.S_ISDIR(mode),
+            is_file=stat.S_ISREG(mode),
+            is_link=stat.S_ISLNK(mode),
+            link_target=link_target,
+        )
+
+
+@attr.define(kw_only=True)
+class FileMagicReport(Report):
+    magic: str
+    mime_type: str
+
+    @classmethod
+    def from_path(cls, path: Path):
+        detected = magic.detect_from_filename(path)
+        return cls(magic=detected.name, mime_type=detected.mime_type)
+
+
+@attr.define(kw_only=True)
+class ChunkReport(Report):
+    id: str
+    handler_name: str
+    start_offset: int
+    end_offset: int
+    size: int
+    is_encrypted: bool
+    extraction_reports: List[Report]
+
+
+@attr.define(kw_only=True)
+class UnknownChunkReport(Report):
+    id: str
+    start_offset: int
+    end_offset: int
+    size: int

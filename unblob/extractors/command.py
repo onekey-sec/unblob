@@ -23,19 +23,14 @@ class Command(Extractor):
         try:
             res = subprocess.run(
                 cmd,
-                encoding="utf-8",
-                errors="surrogateescape",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
             if res.returncode != 0:
-                stdout = res.stdout.encode("utf-8", errors="surrogateescape")
-                stderr = res.stderr.encode("utf-8", errors="surrogateescape")
-
                 error_report = ExtractCommandFailedReport(
                     command=command,
-                    stdout=stdout,
-                    stderr=stderr,
+                    stdout=res.stdout,
+                    stderr=res.stderr,
                     exit_code=res.returncode,
                 )
 

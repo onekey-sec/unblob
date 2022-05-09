@@ -4,12 +4,21 @@ from typing import List
 
 import pytest
 from click.testing import CliRunner
-from conftest import TestHandler
 
 import unblob.cli
 from unblob.extractors import Command
 from unblob.handlers import BUILTIN_HANDLERS
+from unblob.models import Handler, HexString
 from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
+
+
+class TestHandler(Handler):
+    NAME = "test_handler"
+    PATTERNS = [HexString("21 3C")]
+    EXTRACTOR = Command("testcommand", "for", "test", "handler")
+
+    def calculate_chunk(self, *args, **kwargs):
+        pass
 
 
 class ExistingCommandHandler(TestHandler):
@@ -86,7 +95,7 @@ def test_help(params):
     result = runner.invoke(unblob.cli.cli, params)
     assert result.exit_code == 0
     # NOTE: In practice, it writes "Usage: unblob ...", this is done in the `cli.main` with `click.make_context`
-    assert result.output.startswith("Usage: cli [OPTIONS] FILES...")
+    assert result.output.startswith("Usage: cli [OPTIONS] FILE")
 
 
 @pytest.mark.parametrize(
@@ -118,7 +127,7 @@ def test_without_file(params: List[str]):
     runner = CliRunner()
     result = runner.invoke(unblob.cli.cli, params)
     assert result.exit_code == 2
-    assert "Missing argument 'FILES...'" in result.output
+    assert "Missing argument 'FILE'" in result.output
 
 
 def test_non_existing_file(tmp_path: Path):
@@ -126,11 +135,11 @@ def test_non_existing_file(tmp_path: Path):
     path = Path("non/existing/path/54")
     result = runner.invoke(unblob.cli.cli, ["--extract-dir", str(tmp_path), str(path)])
     assert result.exit_code == 2
-    assert "Invalid value for 'FILES...'" in result.output
-    assert f"Path '{str(path)}' does not exist" in result.output
+    assert "Invalid value for 'FILE'" in result.output
+    assert f"File '{str(path)}' does not exist" in result.output
 
 
-def test_empty_dir_as_file(tmp_path: Path):
+def test_dir_for_file(tmp_path: Path):
     runner = CliRunner()
     out_path = tmp_path.joinpath("out")
     out_path.mkdir()
@@ -139,7 +148,7 @@ def test_empty_dir_as_file(tmp_path: Path):
     result = runner.invoke(
         unblob.cli.cli, ["--extract-dir", str(out_path), str(in_path)]
     )
-    assert result.exit_code == 0
+    assert result.exit_code != 0
 
 
 @pytest.mark.parametrize(
@@ -172,13 +181,14 @@ def test_archive_success(
         / "archive"
         / "zip"
         / "regular"
-        / "__input__/"
+        / "__input__"
+        / "apple.zip"
     )
-    process_files_mock = mock.MagicMock()
+    process_file_mock = mock.MagicMock()
     logger_config_mock = mock.MagicMock()
     new_params = params + ["--extract-dir", str(tmp_path), str(in_path)]
     with mock.patch.object(
-        unblob.cli, "process_files", process_files_mock
+        unblob.cli, "process_file", process_file_mock
     ), mock.patch.object(unblob.cli, "configure_logger", logger_config_mock):
         result = runner.invoke(unblob.cli.cli, new_params)
     assert result.exit_code == 0
@@ -192,7 +202,7 @@ def test_archive_success(
         process_num=expected_process_num,
         handlers=BUILTIN_HANDLERS,
     )
-    process_files_mock.assert_called_once_with(config, in_path)
+    process_file_mock.assert_called_once_with(config, in_path, None)
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
 
 
@@ -214,17 +224,18 @@ def test_keep_extracted_chunks(
         / "archive"
         / "zip"
         / "regular"
-        / "__input__/"
+        / "__input__"
+        / "apple.zip"
     )
     params = args + ["--extract-dir", str(tmp_path), str(in_path)]
 
-    process_files_mock = mock.MagicMock()
-    with mock.patch.object(unblob.cli, "process_files", process_files_mock):
+    process_file_mock = mock.MagicMock()
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
         result = runner.invoke(unblob.cli.cli, params)
 
     assert result.exit_code == 0
-    process_files_mock.assert_called_once()
+    process_file_mock.assert_called_once()
     assert (
-        process_files_mock.call_args.args[0].keep_extracted_chunks
+        process_file_mock.call_args.args[0].keep_extracted_chunks
         == keep_extracted_chunks
     ), fail_message

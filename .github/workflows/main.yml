@@ -66,4 +66,4 @@ jobs:
         uses: ./.github/actions/setup-git-lfs
 
       - name: Run pytest
-        run: poetry run pytest
+        run: poetry run pytest -vvv

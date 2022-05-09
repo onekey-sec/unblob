@@ -51,7 +51,6 @@ def test_command_execution_failure(tmpdir: Path):
     except ExtractError as e:
         assert list(e.reports) == [
             ExtractCommandFailedReport(
-                handler=None,
                 command=mock.ANY,
                 stdout=b"stdout",
                 stderr=b"stderr",
@@ -70,7 +69,6 @@ def test_command_not_found(tmpdir: Path):
     except ExtractError as e:
         assert list(e.reports) == [
             ExtractorDependencyNotFoundReport(
-                handler=None,
                 dependencies=["this-command-should-not-exist-in-any-system"],
             )
         ]

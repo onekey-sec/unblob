@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 import click
 from structlog import get_logger
 
+from unblob.models import ProcessResult
 from unblob.plugins import UnblobPluginManager
-from unblob.report import Report, Severity
+from unblob.report import Severity
 
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
 from .handlers import BUILTIN_HANDLERS, Handlers
-from .logging import configure_logger, noformat
+from .logging import configure_logger
 from .processing import (
     DEFAULT_DEPTH,
     DEFAULT_PROCESS_NUM,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
-    process_files,
+    process_file,
 )
 
 logger = get_logger()
@@ -75,11 +76,12 @@ class UnblobContext(click.Context):
         self.params["plugin_manager"] = plugin_manager
 
 
-@click.command(help=get_help_text())
+@click.command(
+    help=get_help_text(), context_settings=dict(help_option_names=["--help", "-h"])
+)
 @click.argument(
-    "files",
-    nargs=-1,
-    type=click.Path(path_type=Path, exists=True, resolve_path=True),
+    "file",
+    type=click.Path(path_type=Path, dir_okay=False, exists=True, resolve_path=True),
     required=True,
 )
 @click.option(
@@ -95,7 +97,7 @@ class UnblobContext(click.Context):
     "--force",
     is_flag=True,
     show_default=True,
-    help="Force extraction removing previously extracted files.",
+    help="Force extraction even if outputs already exist (they are removed).",
 )
 @click.option(
     "-d",
@@ -144,6 +146,12 @@ class UnblobContext(click.Context):
     show_default=True,
 )
 @click.option(
+    "--report",
+    "report_file",
+    type=click.Path(path_type=Path),
+    help="File to store metadata generated during the extraction process (in JSON format).",
+)
+@click.option(
     "-k",
     "--keep-extracted-chunks",
     "keep_extracted_chunks",
@@ -160,19 +168,20 @@ class UnblobContext(click.Context):
     expose_value=False,
 )
 def cli(
-    files: List[Path],
+    file: Path,
     extract_root: Path,
+    report_file: Optional[Path],
     force: bool,
+    process_num: int,
     depth: int,
     entropy_depth: int,
     skip_magic: Iterable[str],
-    process_num: int,
     keep_extracted_chunks: bool,
-    verbose: int,
-    plugins_path: Optional[Path],
     handlers: Handlers,
+    plugins_path: Optional[Path],
     plugin_manager: UnblobPluginManager,
-) -> List[Report]:
+    verbose: int,
+) -> ProcessResult:
     configure_logger(verbose, extract_root)
 
     plugin_manager.import_plugins(plugins_path)
@@ -191,20 +200,21 @@ def cli(
         keep_extracted_chunks=keep_extracted_chunks,
     )
 
-    logger.info("Start processing files", count=noformat(len(files)))
-    all_reports = process_files(config, *files)
-    return all_reports
+    logger.info("Start processing file", file=file)
+    results = process_file(config, file, report_file)
+
+    return results
 
 
 cli.context_class = UnblobContext
 
 
-def get_exit_code_from_reports(reports: List[Report]) -> int:
+def get_exit_code_from_reports(reports: ProcessResult) -> int:
     severity_to_exit_code = [
         (Severity.ERROR, 1),
         (Severity.WARNING, 0),
     ]
-    severities = {report.severity for report in reports}
+    severities = {error.severity for error in reports.errors}
 
     for severity, exit_code in severity_to_exit_code:
         if severity in severities:

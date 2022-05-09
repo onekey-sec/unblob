@@ -3,7 +3,7 @@ from pathlib import Path, PosixPath
 import pytest
 
 from unblob.extractor import (
-    carve_unknown_chunks,
+    carve_unknown_chunk,
     fix_extracted_directory,
     fix_permission,
     fix_symlink,
@@ -11,31 +11,14 @@ from unblob.extractor import (
 from unblob.models import File, TaskResult, UnknownChunk
 
 
-class TestCarveUnknownChunks:
-    def test_no_chunks(self, tmp_path: Path):
-        test_file = File.from_bytes(b"some file")
-        carve_unknown_chunks(tmp_path, test_file, [])
-        assert list(tmp_path.iterdir()) == []
-
-    def test_one_chunk(self, tmp_path: Path):
-        content = b"test file"
-        test_file = File.from_bytes(content)
-        chunk = UnknownChunk(0, len(content))
-        carve_unknown_chunks(tmp_path, test_file, [chunk])
-        written_path = tmp_path / "0-9.unknown"
-        assert list(tmp_path.iterdir()) == [written_path]
-        assert written_path.read_bytes() == content
-
-    def test_multiple_chunks(self, tmp_path: Path):
-        content = b"test file"
-        test_file = File.from_bytes(content)
-        chunks = [UnknownChunk(0, 4), UnknownChunk(4, 9)]
-        carve_unknown_chunks(tmp_path, test_file, chunks)
-        written_path1 = tmp_path / "0-4.unknown"
-        written_path2 = tmp_path / "4-9.unknown"
-        assert sorted(tmp_path.iterdir()) == [written_path1, written_path2]
-        assert written_path1.read_bytes() == content[:4]
-        assert written_path2.read_bytes() == content[4:]
+def test_carve_unknown_chunk(tmp_path: Path):
+    content = b"test file"
+    test_file = File.from_bytes(content)
+    chunk = UnknownChunk(1, 8)
+    carve_unknown_chunk(tmp_path, test_file, chunk)
+    written_path = tmp_path / "1-8.unknown"
+    assert list(tmp_path.iterdir()) == [written_path]
+    assert written_path.read_bytes() == content[1:8]
 
 
 def test_fix_permission(tmpdir: Path):
@@ -50,7 +33,7 @@ def test_fix_permission(tmpdir: Path):
     assert (tmpfile.stat().st_mode & 0o777) == 0o644
 
 
-def test_fix_extracted_directory(tmpdir: Path):
+def test_fix_extracted_directory(tmpdir: Path, task_result: TaskResult):
     tmpdir = PosixPath(tmpdir)
     subdir = PosixPath(tmpdir / "testdir2")
     subdir.mkdir()
@@ -61,13 +44,13 @@ def test_fix_extracted_directory(tmpdir: Path):
     subdir.chmod(0o200)
     tmpdir.chmod(0o200)
 
-    fix_extracted_directory(tmpdir, TaskResult())
+    fix_extracted_directory(tmpdir, task_result)
     assert (tmpdir.stat().st_mode & 0o777) == 0o775
     assert (subdir.stat().st_mode & 0o777) == 0o775
     assert (tmpfile.stat().st_mode & 0o777) == 0o644
 
 
-def test_fix_recursive_symlink(tmpdir: Path):
+def test_fix_recursive_symlink(tmpdir: Path, task_result: TaskResult):
 
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path("link_a")
@@ -75,11 +58,11 @@ def test_fix_recursive_symlink(tmpdir: Path):
     link_path.symlink_to("link_b")
     second_link_path.symlink_to("link_a")
 
-    fixed_link = fix_symlink(link_path, tmpdir, TaskResult())
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.exists() is False
 
 
-def test_fix_symlink_chain(tmpdir: Path):
+def test_fix_symlink_chain(tmpdir: Path, task_result: TaskResult):
 
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path("link_a")
@@ -87,11 +70,11 @@ def test_fix_symlink_chain(tmpdir: Path):
     target_path = Path(".")
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, TaskResult())
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.resolve() == tmpdir
 
 
-def test_fix_symlink_chain_traversal(tmpdir: Path):
+def test_fix_symlink_chain_traversal(tmpdir: Path, task_result: TaskResult):
 
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path("link_a")
@@ -99,7 +82,7 @@ def test_fix_symlink_chain_traversal(tmpdir: Path):
     target_path = Path("..")
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, TaskResult())
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.exists() is False
 
 
@@ -112,7 +95,9 @@ def test_fix_symlink_chain_traversal(tmpdir: Path):
         ("link_d", "/tmp/out/test/../../target_d", "tmp/target_d"),
     ),
 )
-def test_fix_symlink(link: str, target: str, expected: str, tmpdir: Path):
+def test_fix_symlink(
+    link: str, target: str, expected: str, tmpdir: Path, task_result: TaskResult
+):
 
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path(link)
@@ -121,7 +106,7 @@ def test_fix_symlink(link: str, target: str, expected: str, tmpdir: Path):
 
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, TaskResult())
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.resolve() == expected_link
 
 
@@ -139,7 +124,9 @@ def test_fix_symlink(link: str, target: str, expected: str, tmpdir: Path):
         ("dir_1/link_i", "/etc/passwd", "../etc/passwd"),
     ),
 )
-def test_fix_symlink_subdir(link: str, target: str, expected: str, tmpdir: Path):
+def test_fix_symlink_subdir(
+    link: str, target: str, expected: str, tmpdir: Path, task_result: TaskResult
+):
 
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path(link)
@@ -149,7 +136,7 @@ def test_fix_symlink_subdir(link: str, target: str, expected: str, tmpdir: Path)
     link_path.parent.mkdir(parents=True, exist_ok=True)
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, TaskResult())
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.resolve() == link_path.parent.joinpath(expected_link).resolve()
 
 
@@ -165,7 +152,9 @@ def test_fix_symlink_subdir(link: str, target: str, expected: str, tmpdir: Path)
         ("link_g", "/tmp/out/../../../target_g"),
     ),
 )
-def test_fix_symlink_traversal(link: str, target: str, tmpdir: Path):
+def test_fix_symlink_traversal(
+    link: str, target: str, tmpdir: Path, task_result: TaskResult
+):
 
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path(link)
@@ -173,7 +162,7 @@ def test_fix_symlink_traversal(link: str, target: str, tmpdir: Path):
 
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, TaskResult())
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.exists() is False
 
 
@@ -185,7 +174,9 @@ def test_fix_symlink_traversal(link: str, target: str, tmpdir: Path):
         ("dir_1/dir_2/dir_3/link_f", "../../../../target_f"),
     ),
 )
-def test_fix_symlink_traversal_subdir(link: str, target: str, tmpdir: Path):
+def test_fix_symlink_traversal_subdir(
+    link: str, target: str, tmpdir: Path, task_result: TaskResult
+):
 
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path(link)
@@ -194,5 +185,5 @@ def test_fix_symlink_traversal_subdir(link: str, target: str, tmpdir: Path):
     link_path.parent.mkdir(parents=True, exist_ok=True)
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, TaskResult())
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.exists() is False

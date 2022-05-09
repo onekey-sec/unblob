@@ -1,4 +1,7 @@
 import abc
+import itertools
+import json
+from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Tuple, Type
 
@@ -6,8 +9,9 @@ import attr
 from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
+from .identifiers import new_id
 from .parser import hexstring2regex
-from .report import Report
+from .report import ChunkReport, ErrorReport, Report, UnknownChunkReport
 
 logger = get_logger()
 
@@ -17,10 +21,11 @@ logger = get_logger()
 #
 
 
-@attr.define
+@attr.define(frozen=True)
 class Task:
     path: Path
     depth: int
+    chunk_id: str
 
 
 @attr.define
@@ -39,6 +44,8 @@ class Chunk:
 
     end_offset: int
     """The index of the first byte after the end of the chunk"""
+
+    id: str = attr.field(factory=new_id)
 
     def __attrs_post_init__(self):
         if self.start_offset < 0 or self.end_offset < 0:
@@ -87,6 +94,17 @@ class ValidChunk(Chunk):
 
         self.handler.extract(inpath, outdir)
 
+    def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
+        return ChunkReport(
+            id=self.id,
+            start_offset=self.start_offset,
+            end_offset=self.end_offset,
+            size=self.size,
+            handler_name=self.handler.NAME,
+            is_encrypted=self.is_encrypted,
+            extraction_reports=extraction_reports,
+        )
+
 
 @attr.define(repr=False)
 class UnknownChunk(Chunk):
@@ -96,28 +114,83 @@ class UnknownChunk(Chunk):
     entropy, other chunks inside it, metadata, etc.
 
     These are not extracted, just logged for information purposes and further analysis,
-    like most common bytest (like \x00 and \xFF), ASCII strings, high entropy, etc.
+    like most common bytes (like \x00 and \xFF), ASCII strings, high entropy, etc.
     """
 
+    def as_report(self) -> UnknownChunkReport:
+        return UnknownChunkReport(
+            id=self.id,
+            start_offset=self.start_offset,
+            end_offset=self.end_offset,
+            size=self.size,
+        )
 
+
+@attr.define
 class TaskResult:
-    def __init__(self):
-        self._reports = []
-        self._new_tasks = []
+    task: Task
+    reports: List[Report] = attr.field(factory=list)
+    subtasks: List[Task] = attr.field(factory=list)
 
     def add_report(self, report: Report):
-        self._reports.append(report)
+        self.reports.append(report)
 
-    def add_new_task(self, task: Task):
-        self._new_tasks.append(task)
+    def add_subtask(self, task: Task):
+        self.subtasks.append(task)
+
+
+@attr.define
+class ProcessResult:
+    results: List[TaskResult] = attr.field(factory=list)
 
     @property
-    def new_tasks(self):
-        return self._new_tasks
+    def errors(self) -> List[ErrorReport]:
+        reports = itertools.chain.from_iterable(r.reports for r in self.results)
+        interesting_reports = (
+            r for r in reports if isinstance(r, (ErrorReport, ChunkReport))
+        )
+        errors = []
+        for report in interesting_reports:
+            if isinstance(report, ErrorReport):
+                errors.append(report)
+            else:
+                errors.extend(
+                    r for r in report.extraction_reports if isinstance(r, ErrorReport)
+                )
+        return errors
 
-    @property
-    def reports(self):
-        return self._reports
+    def register(self, result: TaskResult):
+        self.results.append(result)
+
+    def to_json(self, indent="  "):
+        return json.dumps(self.results, cls=_JSONEncoder, indent=indent)
+
+
+class _JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if attr.has(type(obj)):
+            extend_attr_output = True
+            attr_output = attr.asdict(obj, recurse=not extend_attr_output)
+            attr_output["__typename__"] = obj.__class__.__name__
+            return attr_output
+
+        if isinstance(obj, Enum):
+            return obj.name
+
+        if isinstance(obj, Path):
+            return str(obj)
+
+        if isinstance(obj, bytes):
+            try:
+                return obj.decode()
+            except UnicodeDecodeError:
+                return str(obj)
+
+        logger.error(f"JSONEncoder met a non-JSON encodable value: {obj}")
+        # the usual fail path of custom JSONEncoders is to call the parent and let it fail
+        #     return json.JSONEncoder.default(self, obj)
+        # instead of failing, just return something usable
+        return f"Non-JSON encodable value: {obj}"
 
 
 class ExtractError(Exception):

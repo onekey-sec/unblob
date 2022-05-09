@@ -1,27 +1,39 @@
 import multiprocessing
 import shutil
-import stat
 import statistics
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import attr
-import magic
 import plotext as plt
 from structlog import get_logger
 
 from unblob.handlers import BUILTIN_HANDLERS, Handlers
 
-from .extractor import carve_unknown_chunks, carve_valid_chunk, fix_extracted_directory
+from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
 from .file_utils import iterate_file, valid_path
 from .finder import search_chunks
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
-from .models import ExtractError, File, Task, TaskResult, UnknownChunk, ValidChunk
+from .models import (
+    ExtractError,
+    File,
+    ProcessResult,
+    Task,
+    TaskResult,
+    UnknownChunk,
+    ValidChunk,
+)
 from .pool import make_pool
-from .report import ExtractDirectoriesExistReport, Report, UnknownError
+from .report import (
+    ExtractDirectoryExistsReport,
+    FileMagicReport,
+    Report,
+    StatReport,
+    UnknownError,
+)
 from .signals import terminate_gracefully
 
 logger = get_logger()
@@ -54,57 +66,57 @@ class ExtractionConfig:
     extract_suffix: str = "_extract"
     handlers: Handlers = BUILTIN_HANDLERS
 
+    def get_extract_dir_for(self, path: Path) -> Path:
+        """Extraction dir under root with the name of path."""
+        try:
+            relative_path = path.relative_to(self.extract_root)
+        except ValueError:
+            # path is not inside root, i.e. it is an input file
+            relative_path = Path(path.name)
+        extract_name = path.name + self.extract_suffix
+        extract_dir = self.extract_root / relative_path.with_name(extract_name)
+        return extract_dir.expanduser().resolve()
+
 
 @terminate_gracefully
-def process_files(config: ExtractionConfig, *paths: Path) -> List[Report]:
-    existing_extract_dirs = get_existing_extract_dirs(config, paths)
-
-    if config.force_extract:
-        for d in existing_extract_dirs:
-            shutil.rmtree(d)
-    elif existing_extract_dirs:
-        report = ExtractDirectoriesExistReport(paths=existing_extract_dirs)
-        logger.error("Extraction directories already exist", **report.asdict())
-        return [report]
-
-    all_reports = []
-    for path in paths:
-        report = _process_one_file(config, path)
-        all_reports.extend(report)
-
-    return all_reports
-
-
-def get_existing_extract_dirs(
-    config: ExtractionConfig, paths: Iterable[Path]
-) -> List[Path]:
-    extract_dirs = []
-    for path in paths:
-        if path.is_dir():
-            subpaths = path.iterdir()
-        else:
-            subpaths = [path]
-        for path in subpaths:
-            d = get_extract_dir_for_input(config, path)
-            if d.exists():
-                extract_dirs.append(d)
-
-    return extract_dirs
-
-
-def _process_one_file(config: ExtractionConfig, path: Path) -> List[Report]:
-    root_task = Task(
-        path=path,
+def process_file(
+    config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
+) -> ProcessResult:
+    task = Task(
+        chunk_id="",
+        path=input_path,
         depth=0,
     )
 
+    if not input_path.is_file():
+        raise ValueError("input_path is not a file", input_path)
+
+    errors = prepare_extract_dir(config, input_path)
+    if not prepare_report_file(config, report_file):
+        logger.error(
+            "File not processed, as report could not be written", file=input_path
+        )
+        return ProcessResult()
+
+    if errors:
+        process_result = ProcessResult([TaskResult(task, errors)])
+    else:
+        process_result = _process_task(config, task)
+
+    if report_file:
+        write_json_report(report_file, process_result)
+
+    return process_result
+
+
+def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
     processor = Processor(config)
-    all_reports = []
+    aggregated_result = ProcessResult()
 
     def process_result(pool, result):
-        for new_task in result.new_tasks:
+        for new_task in result.subtasks:
             pool.submit(new_task)
-        all_reports.extend(result.reports)
+        aggregated_result.register(result)
 
     pool = make_pool(
         process_num=config.process_num,
@@ -113,9 +125,76 @@ def _process_one_file(config: ExtractionConfig, path: Path) -> List[Report]:
     )
 
     with pool:
-        pool.submit(root_task)
+        pool.submit(task)
         pool.process_until_done()
-    return all_reports
+
+    return aggregated_result
+
+
+def prepare_extract_dir(config: ExtractionConfig, input_file: Path) -> List[Report]:
+    errors = []
+
+    extract_dir = config.get_extract_dir_for(input_file)
+    if extract_dir.exists():
+        if config.force_extract:
+            logger.info("Removing extract dir", path=extract_dir)
+            shutil.rmtree(extract_dir)
+        else:
+            report = ExtractDirectoryExistsReport(path=extract_dir)
+            logger.error("Extraction directory already exist", path=str(extract_dir))
+            errors.append(report)
+
+    return errors
+
+
+def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -> bool:
+    """An in advance preparation to prevent report writing failing after an expensive extraction.
+
+    Returns True if there is no foreseen problem,
+            False if report writing is known in advance to fail.
+    """
+    if not report_file:
+        # we will not write report at all
+        return True
+
+    if report_file.exists():
+        if config.force_extract:
+            logger.warning("Removing existing report file", path=report_file)
+            try:
+                report_file.unlink()
+            except OSError as e:
+                logger.error(
+                    "Can not remove existing report file",
+                    path=report_file,
+                    msg=str(e),
+                )
+                return False
+        else:
+            logger.error(
+                "Report file exists and --force not specified", path=report_file
+            )
+            return False
+
+    # check that the report directory can be written to
+    try:
+        report_file.write_text("")
+        report_file.unlink()
+    except OSError as e:
+        logger.error("Can not create report file", path=report_file, msg=str(e))
+        return False
+
+    return True
+
+
+def write_json_report(report_file: Path, process_result: ProcessResult):
+    try:
+        report_file.write_text(process_result.to_json())
+    except OSError as e:
+        logger.error("Can not write JSON report", path=report_file, msg=str(e))
+    except Exception:
+        logger.exception("Can not write JSON report", path=report_file)
+    else:
+        logger.info("JSON report written", path=report_file)
 
 
 class Processor:
@@ -123,7 +202,7 @@ class Processor:
         self._config = config
 
     def process_task(self, task: Task) -> TaskResult:
-        result = TaskResult()
+        result = TaskResult(task)
         try:
             self._process_task(result, task)
         except Exception as exc:
@@ -147,42 +226,45 @@ class Processor:
             log.warn("Path contains invalid characters, it won't be processed")
             return
 
-        statres = task.path.lstat()
-        mode, size = statres.st_mode, statres.st_size
+        stat_report = StatReport.from_path(task.path)
+        result.add_report(stat_report)
 
-        if stat.S_ISDIR(mode):
+        if stat_report.is_dir:
             log.debug("Found directory")
             for path in task.path.iterdir():
-                result.add_new_task(
+                result.add_subtask(
                     Task(
+                        chunk_id=task.chunk_id,
                         path=path,
                         depth=task.depth,
                     )
                 )
             return
 
-        elif stat.S_ISLNK(mode):
+        if stat_report.is_link:
             log.debug("Ignoring symlink")
             return
 
-        elif size == 0:
+        if stat_report.size == 0:
             log.debug("Ignoring empty file")
             return
 
-        elif self._should_skip_magic(task):
-            log.debug("Ignoring file based on magic")
+        magic_report = FileMagicReport.from_path(task.path)
+        result.add_report(magic_report)
+
+        magic = magic_report.magic
+
+        logger.debug("Detected file-magic", magic=magic, path=task.path, _verbosity=2)
+
+        should_skip_file = any(
+            magic.startswith(pattern) for pattern in self._config.skip_magic
+        )
+
+        if should_skip_file:
+            log.debug("Ignoring file based on magic", magic=magic)
             return
 
-        _FileTask(self._config, task, size, result).process()
-
-    def _should_skip_magic(self, task: Task):
-        detect = magic.detect_from_filename(task.path)
-        logger.debug(
-            "Detected file-magic", magic=detect.name, path=task.path, _verbosity=2
-        )
-        return any(
-            detect.name.startswith(pattern) for pattern in self._config.skip_magic
-        )
+        _FileTask(self._config, task, stat_report.size, result).process()
 
 
 class _FileTask:
@@ -198,7 +280,7 @@ class _FileTask:
         self.size = size
         self.result = result
 
-        self.extract_dir = get_extract_dir_for_input(config, self.task.path)
+        self.carve_dir = config.get_extract_dir_for(self.task.path)
 
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
@@ -215,7 +297,7 @@ class _FileTask:
             else:
                 # we don't consider whole files as unknown chunks, but we still want to
                 # calculate entropy for whole files which produced no valid chunks
-                self._calculate_entropies([self.task.path])
+                self._calculate_entropy(self.task.path)
 
         self._ensure_root_extract_dir()
 
@@ -225,10 +307,13 @@ class _FileTask:
         outer_chunks: List[ValidChunk],
         unknown_chunks: List[UnknownChunk],
     ):
-        carved_unknown_paths = carve_unknown_chunks(
-            self.extract_dir, file, unknown_chunks
-        )
-        self._calculate_entropies(carved_unknown_paths)
+        if unknown_chunks:
+            logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+
+        for chunk in unknown_chunks:
+            carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
+            self._calculate_entropy(carved_unknown_path)
+            self.result.add_report(chunk.as_report())
 
         for chunk in outer_chunks:
             self._extract_chunk(file, chunk)
@@ -236,63 +321,53 @@ class _FileTask:
     def _ensure_root_extract_dir(self):
         # ensure that the root extraction directory is created even for empty extractions
         if self.task.depth == 0:
-            self.extract_dir.mkdir(parents=True, exist_ok=True)
+            self.carve_dir.mkdir(parents=True, exist_ok=True)
 
-    def _calculate_entropies(self, paths: List[Path]):
+    def _calculate_entropy(self, path: Path):
         if self.task.depth < self.config.entropy_depth:
-            for path in paths:
-                calculate_entropy(path, draw_plot=self.config.entropy_plot)
+            calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
     def _extract_chunk(self, file, chunk: ValidChunk):
-        # Skip carving whole file and thus duplicating the file and creating more directories
         is_whole_file_chunk = chunk.start_offset == 0 and chunk.end_offset == self.size
+
         skip_carving = is_whole_file_chunk
         if skip_carving:
             inpath = self.task.path
-            outdir = self.extract_dir
+            extract_dir = self.carve_dir
             carved_path = None
         else:
-            inpath = carve_valid_chunk(self.extract_dir, file, chunk)
-            outdir = self.extract_dir / (inpath.name + self.config.extract_suffix)
+            inpath = carve_valid_chunk(self.carve_dir, file, chunk)
+            extract_dir = self.carve_dir / (inpath.name + self.config.extract_suffix)
             carved_path = inpath
 
+        extraction_reports = []
         try:
-            chunk.extract(inpath, outdir)
+            chunk.extract(inpath, extract_dir)
 
             if carved_path and not self.config.keep_extracted_chunks:
                 logger.debug("Removing extracted chunk", path=carved_path)
                 carved_path.unlink()
 
         except ExtractError as e:
-            for report in e.reports:
-                self.result.add_report(report)
+            extraction_reports.extend(e.reports)
 
         except Exception as exc:
             logger.exception("Unknown error happened while extracting chunk")
-            self.result.add_report(UnknownError(exception=exc))
+            extraction_reports.append(UnknownError(exception=exc))
+
+        self.result.add_report(chunk.as_report(extraction_reports))
 
         # we want to get consistent partial output even in case of unforeseen problems
-        fix_extracted_directory(outdir, self.result)
+        fix_extracted_directory(extract_dir, self.result)
 
-        if outdir.exists():
-            self.result.add_new_task(
+        if extract_dir.exists():
+            self.result.add_subtask(
                 Task(
-                    path=outdir,
+                    chunk_id=chunk.id,
+                    path=extract_dir,
                     depth=self.task.depth + 1,
                 )
             )
-
-
-def get_extract_dir_for_input(config: ExtractionConfig, path: Path) -> Path:
-    """Extraction dir under root with the name of path."""
-    try:
-        relative_path = path.relative_to(config.extract_root)
-    except ValueError:
-        # path is not inside root, i.e. it is an input file
-        relative_path = Path(path.name)
-    extract_name = path.name + config.extract_suffix
-    extract_dir = config.extract_root / relative_path.with_name(extract_name)
-    return extract_dir.expanduser().resolve()
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:

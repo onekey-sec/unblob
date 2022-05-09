@@ -1,8 +1,9 @@
+import attr
 import pytest
 
 from unblob.file_utils import InvalidInputFormat
 from unblob.finder import build_hyperscan_database, search_chunks
-from unblob.models import File, Handler, HexString, Regex, TaskResult, ValidChunk
+from unblob.models import File, Handler, HexString, Regex, ValidChunk
 from unblob.parser import InvalidHexString
 
 
@@ -139,10 +140,9 @@ def test_invalid_hexstring_pattern_raises():
         ),
     ],
 )
-def test_search_chunks(content, expected_chunks):
+def test_search_chunks(content, expected_chunks, task_result):
     file = File.from_bytes(content)
 
-    task_result = TaskResult()
     handlers = (
         TestHandlerA,
         TestHandlerB,
@@ -156,4 +156,4 @@ def test_search_chunks(content, expected_chunks):
 
     assert len(chunks) == len(expected_chunks)
     for expected_chunk, chunk in zip(expected_chunks, chunks):
-        assert chunk == expected_chunk
+        assert attr.evolve(chunk, id="") == attr.evolve(expected_chunk, id="")

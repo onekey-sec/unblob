@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List
 
+import attr
 import pytest
 
 from unblob.models import UnknownChunk, ValidChunk
@@ -10,10 +11,16 @@ from unblob.processing import (
     calculate_entropy,
     calculate_unknown_chunks,
     draw_entropy_plot,
-    get_existing_extract_dirs,
-    get_extract_dir_for_input,
     remove_inner_chunks,
 )
+
+
+def assert_same_chunks(expected, actual, explanation=None):
+    """An assert, that ignores the chunk.id-s"""
+
+    assert len(expected) == len(actual), explanation
+    for i, (e, a) in enumerate(zip(expected, actual)):
+        assert attr.evolve(e, id="") == attr.evolve(a, id=""), explanation
 
 
 @pytest.mark.parametrize(
@@ -76,7 +83,7 @@ from unblob.processing import (
 def test_remove_inner_chunks(
     chunks: List[ValidChunk], expected: List[ValidChunk], explanation: str
 ):
-    assert expected == remove_inner_chunks(chunks), explanation
+    assert_same_chunks(expected, remove_inner_chunks(chunks), explanation)
 
 
 @pytest.mark.parametrize(
@@ -99,7 +106,7 @@ def test_remove_inner_chunks(
 def test_calculate_unknown_chunks(
     chunks: List[ValidChunk], file_size: int, expected: List[UnknownChunk]
 ):
-    assert expected == calculate_unknown_chunks(chunks, file_size)
+    assert_same_chunks(expected, calculate_unknown_chunks(chunks, file_size))
 
 
 @pytest.mark.parametrize(
@@ -156,33 +163,10 @@ def test_calculate_entropy_no_exception(path: Path, draw_plot: bool):
         ("/extract", "/some/place/else/firmware", "firmware"),
     ],
 )
-def test_get_extract_dir_for_input(
+def test_ExtractionConfig_get_extract_dir_for(
     extract_root: str, path: str, extract_dir_prefix: str
 ):
     cfg = ExtractionConfig(extract_root=Path(extract_root), entropy_depth=0)
-    assert get_extract_dir_for_input(cfg, Path(path)) == (
+    assert cfg.get_extract_dir_for(Path(path)) == (
         cfg.extract_root / Path(extract_dir_prefix + cfg.extract_suffix)
     )
-
-
-def test_existing_extract_dirs_can_be_found(tmp_path: Path):
-    cfg = ExtractionConfig(extract_root=tmp_path, entropy_depth=0)
-
-    already_extracted_files = [
-        Path("have_been_extracted"),
-        Path("some_directory") / "also_have_been_extacted",
-    ]
-    existing_extract_dirs = [
-        tmp_path / (e.name + cfg.extract_suffix) for e in already_extracted_files
-    ]
-
-    for e in existing_extract_dirs:
-        e.mkdir()
-
-    to_be_extracted_files = [
-        Path("yet_to_extract"),
-        Path("some_other_directory") / "also_yet_to_extract",
-    ]
-    files_to_extract = already_extracted_files + to_be_extracted_files
-
-    assert get_existing_extract_dirs(cfg, files_to_extract) == existing_extract_dirs

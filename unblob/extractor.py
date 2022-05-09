@@ -3,7 +3,6 @@ File extraction related functions.
 """
 import os
 from pathlib import Path
-from typing import List
 
 from structlog import get_logger
 
@@ -95,23 +94,12 @@ def fix_extracted_directory(outdir: Path, task_result: TaskResult):
             fix_permission(path)
 
 
-def carve_unknown_chunks(
-    extract_dir: Path, file: File, unknown_chunks: List[UnknownChunk]
-) -> List[Path]:
-    if not unknown_chunks:
-        return []
-
-    carved_paths = []
-    logger.warning("Found unknown Chunks", chunks=unknown_chunks)
-
-    for chunk in unknown_chunks:
-        filename = f"{chunk.start_offset}-{chunk.end_offset}.unknown"
-        carve_path = extract_dir / filename
-        logger.info("Extracting unknown chunk", path=carve_path, chunk=chunk)
-        carve_chunk_to_file(carve_path, file, chunk)
-        carved_paths.append(carve_path)
-
-    return carved_paths
+def carve_unknown_chunk(extract_dir: Path, file: File, chunk: UnknownChunk) -> Path:
+    filename = f"{chunk.start_offset}-{chunk.end_offset}.unknown"
+    carve_path = extract_dir / filename
+    logger.info("Extracting unknown chunk", path=carve_path, chunk=chunk)
+    carve_chunk_to_file(carve_path, file, chunk)
+    return carve_path
 
 
 def carve_valid_chunk(extract_dir: Path, file: File, chunk: ValidChunk) -> Path:

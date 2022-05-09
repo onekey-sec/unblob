@@ -52,7 +52,7 @@ jobs:
         run: docker run --rm ${{ env.DOCKER_IMAGE }} --show-external-dependencies
 
       - name: Check unblob - run for a file with --verbose
-        run: docker run --rm -v "$(pwd)"/tests/integration/archive/zip/regular:/test ${{ env.DOCKER_IMAGE }} -v -e /tmp /test
+        run: docker run --rm -v "$(pwd)"/tests/integration/archive/zip/regular:/test ${{ env.DOCKER_IMAGE }} -v -e /tmp /test/__input__/apple.zip
 
       - name: Build and push
         if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
