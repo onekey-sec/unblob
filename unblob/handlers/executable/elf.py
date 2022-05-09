@@ -73,7 +73,7 @@ class ELFKernelExtractor(Extractor):
                     endian=endian,
                 )
 
-            padding = round_up(initramfs_size, 8) - initramfs_size
+            padding = round_up(initramfs_size + 4, 8) - initramfs_size - 4
             initramfs_end = initramfs_size_offset - padding
             initramfs_start = initramfs_end - initramfs_size
 
