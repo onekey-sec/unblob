@@ -12,12 +12,6 @@ HEXDUMP_C = """\
 00000020
 """
 
-WITH_COMMENTS = """\
-# Comments are supported
-00000000  01 02 03 04 05 06 07 08  09 0a 0b 0c 0d 0e 0f 10  |................|
-00000010  41 42 43 44 45 46 47 48  49 4a 4b 4c 4d 4e 4f 44  |ABCDEFGHIJKLMNOD|  # even at the end of lines
-00000020  # also at the last line
-"""
 
 EXPECTED = b"\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10ABCDEFGHIJKLMNOD"
 
@@ -27,7 +21,6 @@ EXPECTED = b"\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10ABCDEFGHI
     (
         pytest.param(EMACS_VIM, id="Vim-Emacs"),
         pytest.param(HEXDUMP_C, id="hexdump-C"),
-        pytest.param(WITH_COMMENTS, id="with-comments"),
     ),
 )
 def test_hexdump(hexdump):
