@@ -66,4 +66,5 @@ jobs:
         uses: ./.github/actions/setup-git-lfs
 
       - name: Run pytest
+        timeout-minutes: 4
         run: poetry run pytest -vvv
