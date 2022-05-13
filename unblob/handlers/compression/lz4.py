@@ -4,12 +4,12 @@ LZ4 frame format definition: https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_f
 import io
 from typing import Optional
 
-from lz4.block import decompress
+from lz4.block import LZ4BlockError, decompress
 from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...file_utils import Endian, convert_int8, convert_int32
+from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int32
 from ...models import File, Handler, HexString, ValidChunk
 
 logger = get_logger()
@@ -92,7 +92,10 @@ class LegacyFrameHandler(_LZ4HandlerBase):
                 break
 
             compressed_block = file.read(block_compressed_size)
-            uncompressed_block = decompress(compressed_block, MAX_LEGACY_BLOCK_SIZE)
+            try:
+                uncompressed_block = decompress(compressed_block, MAX_LEGACY_BLOCK_SIZE)
+            except LZ4BlockError:
+                raise InvalidInputFormat("Invalid LZ4 legacy frame.")
 
             # See 'fixed block size' in https://android.googlesource.com/platform/external/lz4/+/HEAD/doc/lz4_Frame_format.md#legacy-frame
             if len(uncompressed_block) < MAX_LEGACY_BLOCK_SIZE:
