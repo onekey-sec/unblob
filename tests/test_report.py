@@ -373,6 +373,7 @@ def hello_kitty_task_results(
                 FileMagicReport(
                     magic="ASCII text, with no line terminators", mime_type="text/plain"
                 ),
+                UnknownChunkReport(id=ANY, start_offset=0, end_offset=5, size=5),
             ],
             subtasks=[],
         ),
@@ -420,6 +421,7 @@ def hello_kitty_task_results(
                 FileMagicReport(
                     magic="ASCII text, with no line terminators", mime_type="text/plain"
                 ),
+                UnknownChunkReport(id=ANY, start_offset=0, end_offset=5, size=5),
             ],
             subtasks=[],
         ),

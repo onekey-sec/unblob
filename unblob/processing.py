@@ -18,6 +18,7 @@ from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
 from .models import (
+    Chunk,
     ExtractError,
     File,
     ProcessResult,
@@ -292,14 +293,15 @@ class _FileTask:
             outer_chunks = remove_inner_chunks(all_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, self.size)
 
-            if outer_chunks or unknown_chunks:
-                self._process_chunks(file, outer_chunks, unknown_chunks)
-            else:
-                # we don't consider whole files as unknown chunks, but we still want to
-                # calculate entropy for whole files which produced no valid chunks
-                self._calculate_entropy(self.task.path)
+            if unknown_chunks:
+                logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+
+            self._process_chunks(file, outer_chunks, unknown_chunks)
 
         self._ensure_root_extract_dir()
+
+    def is_whole_file_chunk(self, chunk: Chunk):
+        return chunk.start_offset == 0 and chunk.end_offset == self.size
 
     def _process_chunks(
         self,
@@ -307,11 +309,11 @@ class _FileTask:
         outer_chunks: List[ValidChunk],
         unknown_chunks: List[UnknownChunk],
     ):
-        if unknown_chunks:
-            logger.warning("Found unknown Chunks", chunks=unknown_chunks)
-
         for chunk in unknown_chunks:
-            carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
+            if self.is_whole_file_chunk(chunk):
+                carved_unknown_path = self.task.path
+            else:
+                carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
             self._calculate_entropy(carved_unknown_path)
             self.result.add_report(chunk.as_report())
 
@@ -328,9 +330,7 @@ class _FileTask:
             calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
     def _extract_chunk(self, file, chunk: ValidChunk):
-        is_whole_file_chunk = chunk.start_offset == 0 and chunk.end_offset == self.size
-
-        skip_carving = is_whole_file_chunk
+        skip_carving = self.is_whole_file_chunk(chunk)
         if skip_carving:
             inpath = self.task.path
             extract_dir = self.carve_dir
@@ -396,8 +396,11 @@ def calculate_unknown_chunks(
     chunks: List[ValidChunk], file_size: int
 ) -> List[UnknownChunk]:
     """Calculate the empty gaps between chunks."""
-    if not chunks or file_size == 0:
+    if file_size == 0:
         return []
+
+    if chunks == []:
+        return [UnknownChunk(0, file_size)]
 
     sorted_by_offset = sorted(chunks, key=attrgetter("start_offset"))
 
