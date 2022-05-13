@@ -1,3 +1,5 @@
+import binascii
+
 import pytest
 from dissect.cstruct import Instance
 from helpers import unhex
@@ -55,6 +57,10 @@ def get_valid_jffs2_old_be_header():
     return old_handler.parse_header(
         File.from_bytes(VALID_JFFS2_OLD_BE_HEADER_CONTENT), Endian.BIG
     )
+
+
+def calculate_crc(header: Instance):
+    return (binascii.crc32(header.dumps()[:-4], -1) ^ -1) & 0xFFFFFFFF
 
 
 NODE_SIZE = 0x1000
@@ -185,6 +191,7 @@ JFFS2_OLD_BE_HEADER_HIGH_TOTLEN.totlen = len(JFFS2_OLD_BE_HEADER_HIGH_TOTLEN) - 
 def test_valid_header_new(
     header: Instance, node_start_offset: int, eof: int, expected: bool
 ):
+    header.hdr_crc = calculate_crc(header)
     assert new_handler.valid_header(header, node_start_offset, eof) == expected
 
 
@@ -266,4 +273,19 @@ def test_valid_header_new(
 def test_valid_header_old(
     header: Instance, node_start_offset: int, eof: int, expected: bool
 ):
+    header.hdr_crc = calculate_crc(header)
     assert old_handler.valid_header(header, node_start_offset, eof) == expected
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        pytest.param(VALID_JFFS2_NEW_LE_HEADER, id="new LE"),
+        pytest.param(VALID_JFFS2_NEW_BE_HEADER, id="new BE"),
+        pytest.param(VALID_JFFS2_OLD_LE_HEADER, id="old LE"),
+        pytest.param(VALID_JFFS2_OLD_BE_HEADER, id="old BE"),
+    ],
+)
+def test_invalid_crc(header):
+    header.hdr_crc += 1
+    assert old_handler.valid_header(header, 0, NODE_SIZE) is False
