@@ -6,7 +6,7 @@
 
 { lib, mkShell, poetry2nix, stdenv, rustPlatform }:
 
-{ projectDir, overrides, editablePackageSources, ... }@args:
+{ projectDir, overrides, editablePackageSources, preferWheels ? false, ... }@args:
 
 let
   # pass all args which are not specific to mkPoetryEnv
@@ -18,7 +18,7 @@ let
       {
         name = "${app.pname}-editable-env";
         src = poetry2nix.mkPoetryEnv {
-          inherit projectDir editablePackageSources overrides;
+          inherit projectDir editablePackageSources overrides preferWheels;
         };
 
         installPhase = ''
