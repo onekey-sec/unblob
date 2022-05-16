@@ -45,8 +45,12 @@ class ARCHandler(StructHandler):
 
     def valid_name(self, name: bytes) -> bool:
         try:
-            # we can still return False if the name is made out of an array of null bytes
-            return bool(name[:-1].strip(b"\x00").decode("utf-8"))
+            # we return False if the name is made out of an array of null bytes
+            # or if name starts with null.
+            return bool(
+                not name.startswith(b"\x00")
+                and name[:-1].strip(b"\x00").decode("utf-8")
+            )
         except UnicodeDecodeError:
             return False
 
