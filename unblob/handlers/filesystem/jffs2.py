@@ -1,3 +1,4 @@
+import binascii
 import io
 from typing import Optional
 
@@ -64,6 +65,15 @@ class _JFFS2Base(StructHandler):
         return endian
 
     def valid_header(self, header: Instance, node_start_offset: int, eof: int) -> bool:
+        header_crc = (binascii.crc32(header.dumps()[:-4], -1) ^ -1) & 0xFFFFFFFF
+
+        if header_crc != header.hdr_crc:
+            logger.debug(
+                "node header CRC missmatch",
+                _verbosity=2,
+            )
+            return False
+
         if header.nodetype not in JFFS2_NODETYPES:
             if header.nodetype | JFFS2_NODE_ACCURATE not in JFFS2_NODETYPES:
                 logger.debug(
