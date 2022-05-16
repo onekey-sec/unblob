@@ -39,40 +39,47 @@ let
 
     # Python dependencies that need special care, like non-python
     # build dependencies
-    overrides = poetry2nix.overrides.withoutDefaults (self: super: {
-      python-lzo = super.python-lzo.overridePythonAttrs (_: {
-        buildInputs = [
-          lzo
-        ];
-      });
+    overrides = [
+      (self: super: {
+        python-lzo = super.python-lzo.overridePythonAttrs (_: {
+          buildInputs = [
+            lzo
+          ];
+        });
 
-      jefferson = super.jefferson.overridePythonAttrs (_: {
-        propagatedBuildInputs = [
-          # Use the _same_ version as unblob
-          self.cstruct
-          self.python-lzo
-        ];
-      });
+        jefferson = super.jefferson.overridePythonAttrs (_: {
+          propagatedBuildInputs = [
+            # Use the _same_ version as unblob
+            self.cstruct
+            self.python-lzo
+          ];
+        });
 
-      ubi_reader = super.ubi_reader.ovveridePythonAttrs (_: {
-        propagatedBuildInputs = [
-          # Use the _same_ version as unblob
-          self.python-lzo
-        ];
-      });
+        ubi_reader = super.ubi_reader.ovveridePythonAttrs (_: {
+          propagatedBuildInputs = [
+            # Use the _same_ version as unblob
+            self.python-lzo
+          ];
+        });
 
-      file-magic = (super.file-magic.override { preferWheel = false; }).overridePythonAttrs (_: {
-        patchPhase = ''
-          substituteInPlace magic.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
-        '';
-      });
+        file-magic = super.file-magic.override { preferWheel = false; };
 
-      hyperscan = super.hyperscan.overridePythonAttrs (_: {
-        buildInputs = [
-          hyperscan
-        ];
-      });
-    });
+        hyperscan = super.hyperscan.overridePythonAttrs (_: {
+          buildInputs = [
+            hyperscan
+          ];
+        });
+      })
+      # Overrides we want to use from upstream poetry2nix
+      (self: super:
+        let
+          defaultOverrides = poetry2nix.defaultPoetryOverrides super;
+        in
+        {
+          inherit (defaultOverrides) file-magic;
+        }
+      )
+    ];
 
     python = python3;
 
