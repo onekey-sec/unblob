@@ -32,9 +32,6 @@ BYTES_PER_LINE = 16
 
 _hexdump_parser = Lark(
     """
-    COMMENT:    _SPACE* "#" /[^\n]/x* NEWLINE
-    %ignore COMMENT
-
     %import common.NEWLINE
     %import common.HEXDIGIT
 
