@@ -45,6 +45,7 @@ DEFAULT_SKIP_MAGIC = (
     "JPEG",
     "GIF",
     "PNG",
+    "SQLite",
     "compiled Java class",
     "TrueType Font data",
     "PDF document",
