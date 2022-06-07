@@ -56,7 +56,7 @@ DEFAULT_SKIP_MAGIC = (
 
 @attr.define(kw_only=True)
 class ExtractionConfig:
-    extract_root: Path
+    extract_root: Path = attr.field(converter=lambda value: value.resolve())
     force_extract: bool = False
     entropy_depth: int
     entropy_plot: bool = False
