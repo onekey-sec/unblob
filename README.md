@@ -51,7 +51,7 @@ derivation installs all 3rd party dependencies:
 2. Install unblob
 
     ```console
-    $ nix profile install github:IoT-Inspector/unblob
+    $ nix profile install github:onekey-sec/unblob
     $ unblob --show-external-dependencies
     The following executables found installed, which are needed by unblob:
         7z                          ✓
@@ -71,7 +71,7 @@ derivation installs all 3rd party dependencies:
 
 ## Extractors
 
-Unblob relies on various tools for extracting the contents of a blob. These extractors are either third party tools (e.g. 7z), or internally developed extractors (available in [unblob/extractors](https://github.com/IoT-Inspector/unblob/tree/main/unblob/extractors) directory). \
+Unblob relies on various tools for extracting the contents of a blob. These extractors are either third party tools (e.g. 7z), or internally developed extractors (available in [unblob/extractors](https://github.com/onekey-sec/unblob/tree/main/unblob/extractors) directory). \
 To be able to use unblob properly, all extractors needs to be installed.
 
 Hints for extractor installation:
@@ -98,7 +98,7 @@ These are the **external** extractor version recommendations. These are used in 
 ### Internal extractors
 
 These are the **internal** extractors which are automatically installed by unblob. \
-For more info on these extractors, check the [pyproject.toml](https://github.com/IoT-Inspector/unblob/blob/main/pyproject.toml).
+For more info on these extractors, check the [pyproject.toml](https://github.com/onekey-sec/unblob/blob/main/pyproject.toml).
 
 
 | Extractor                |

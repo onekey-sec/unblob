@@ -4,7 +4,7 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.poetry2nix.url = "github:nix-community/poetry2nix";
 
-  inputs.sasquatch.url = "github:IoT-Inspector/sasquatch";
+  inputs.sasquatch.url = "github:onekey-sec/sasquatch";
   inputs.sasquatch.flake = false;
 
   outputs = { self, nixpkgs, poetry2nix, sasquatch }:
