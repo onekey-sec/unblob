@@ -73,7 +73,14 @@ class ELFKernelExtractor(Extractor):
                     endian=endian,
                 )
 
-            padding = round_up(initramfs_size + 4, 8) - initramfs_size - 4
+            max_padding = 0
+            while (
+                file[initramfs_size_offset - max_padding - 1] == 0 and max_padding < 8
+            ):
+                max_padding += 1
+
+            padding = min(max_padding, round_up(initramfs_size, 8) - initramfs_size + 4)
+
             initramfs_end = initramfs_size_offset - padding
             initramfs_start = initramfs_end - initramfs_size
 
