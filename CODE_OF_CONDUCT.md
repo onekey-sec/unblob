@@ -35,9 +35,9 @@ This Code of Conduct applies both within project spaces and in public spaces
 when an individual is representing the project or its community.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project maintainers at research@iot-inspector.com. If
+reported by contacting the project maintainers at research@onekey.com. If
 the incident involves a committer, you may report directly to
-florian.lukavsky@iot-inspector.com.
+florian.lukavsky@onekey.com.
 
 All complaints will be reviewed and investigated and will result in a
 response that is deemed necessary and appropriate to the circumstances.

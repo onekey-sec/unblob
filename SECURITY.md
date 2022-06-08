@@ -1,14 +1,14 @@
 # Security Policy
 
 ## Reporting
-As a security company, IoT Inspector commits to all of its open source products having sound and secure implementations.
+As a security company, ONEKEY commits to all of its open source products having sound and secure implementations.
 
-All security bugs in IoT Inspector products should be reported by email to security@iot-inspector.com. We strongly suggest that you encrypt your email content using our PGP public key (see below). Security bugs must not  be reported through public Github issues.
+All security bugs in ONEKEY products should be reported by email to security@onekey.com. We strongly suggest that you encrypt your email content using our PGP public key (see below). Security bugs must not  be reported through public Github issues.
 
 In accordance with the [Responsible Full Disclosure Policy (RFPolicy) v2.0](https://dl.packetstormsecurity.net/papers/general/rfpolicy-2.0.txt), your email will be acknowledged within five days. The security team will then keep you informed of the progress being made towards a fix and full announcement at least every five days.
 
 ## Disclosure policy
-IoT Inspector has a 5 step disclosure process.
+ONEKEY has a 5 step disclosure process.
 
 1. The security report is received and is assigned a primary handler. This person will coordinate the fix and release process.
 

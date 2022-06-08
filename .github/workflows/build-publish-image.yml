@@ -9,7 +9,7 @@ on:
       - '**'
 
 env:
-  DOCKER_IMAGE: ghcr.io/iot-inspector/unblob:latest
+  DOCKER_IMAGE: ghcr.io/onekey-sec/unblob:latest
 
 jobs:
   build-and-push-image:

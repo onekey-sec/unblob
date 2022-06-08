@@ -2,7 +2,7 @@
 name = "unblob"
 version = "0.1.0"
 description = "Extract files from any kind of container formats"
-authors = ["IoT Inspector <support@iot-inspector.com>"]
+authors = ["ONEKEY <support@onekey.com>"]
 license = "MIT"
 packages = [
     { include = "unblob" },
