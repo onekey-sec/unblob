@@ -95,6 +95,7 @@ class _ELFBase(StructHandler):
 
     EXTRACTOR = ELFKernelExtractor()
     SECTION_HEADER_STRUCT = "elf_shdr_t"
+    PROGRAM_HEADER_STRUCT = "elf_phdr_t"
 
     @staticmethod
     def _check_field(field, value):
@@ -143,12 +144,30 @@ class _ELFBase(StructHandler):
 
         return last_section_end
 
+    def get_last_program_end(
+        self, file: File, programs_start_offset: int, programs_num: int, endian
+    ) -> int:
+        last_program_end = 0
+        file.seek(programs_start_offset)
+
+        for _ in range(programs_num):
+            program_header = self._struct_parser.parse(
+                self.PROGRAM_HEADER_STRUCT, file, endian
+            )
+
+            program_end = program_header.p_offset + program_header.p_filesz
+            if program_end > last_program_end:
+                last_program_end = program_end
+
+        return last_program_end
+
     def get_end_offset(
         self, file: File, start_offset: int, header: Instance, endian
     ) -> int:
         # Usually the section header is the last, but in some cases the program headers are
         # put to the end of the file, and in some cases sections header and actual sections
-        # can be also intermixed, so we need also to check the end of the last section.
+        # can be also intermixed, so we need also to check the end of the last section and
+        # also the last program segment.
         # We check which one is the last and use it as a file size.
         section_headers_end = (
             start_offset + header.e_shoff + (header.e_shnum * header.e_shentsize)
@@ -161,7 +180,13 @@ class _ELFBase(StructHandler):
             file, start_offset + header.e_shoff, header.e_shnum, endian
         )
 
-        return max(section_headers_end, program_headers_end, last_section_end)
+        last_program_end = self.get_last_program_end(
+            file, start_offset + header.e_phoff, header.e_phnum, endian
+        )
+
+        return max(
+            section_headers_end, program_headers_end, last_section_end, last_program_end
+        )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         endian = self.get_endianness(file, start_offset)
@@ -231,6 +256,17 @@ class ELF32Handler(_ELFBase):
                uint32   sh_addralign;
                uint32   sh_entsize;
        } elf_shdr_t;
+
+       typedef struct elf32_phdr {
+               uint32  p_type;
+               uint32  p_offset;
+               uint32  p_vaddr;
+               uint32  p_paddr;
+               uint32  p_filesz;
+               uint32  p_memsz;
+               uint32  p_flags;
+               uint32  p_align;
+           } elf_phdr_t;
     """
     HEADER_STRUCT = "elf_header_32_t"
 
@@ -290,5 +326,16 @@ class ELF64Handler(_ELFBase):
                uint64   sh_addralign;
                uint64   sh_entsize;
        } elf_shdr_t;
+
+       typedef struct elf64_phdr {
+               uint32   p_type;
+               uint32   p_flags;
+               uint64   p_offset;
+               uint64   p_vaddr;
+               uint64   p_paddr;
+               uint64   p_filesz;
+               uint64   p_memsz;
+               uint64   p_align;
+           } elf_phdr_t;
     """
     HEADER_STRUCT = "elf_header_64_t"
