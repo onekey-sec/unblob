@@ -21,7 +21,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     xz-utils \
     zlib1g-dev \
     libmagic1 \
-    libhyperscan5
+    libhyperscan5 \
+    zstd
 RUN curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v1.0/sasquatch_1.0_amd64.deb \
     && dpkg -i sasquatch_1.0_amd64.deb \
     && rm -f sasquatch_1.0_amd64.deb
