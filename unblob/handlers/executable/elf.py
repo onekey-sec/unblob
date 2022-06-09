@@ -16,6 +16,8 @@ from unblob.file_utils import (
 )
 from unblob.models import ExtractError, Extractor, HexString, StructHandler, ValidChunk
 
+lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)
+
 
 class NullExtract(ExtractError):
     pass
