@@ -51,6 +51,7 @@ DEFAULT_SKIP_MAGIC = (
     "PDF document",
     "magic binary file",
     "MS Windows icon resource",
+    "PE32+ executable (EFI application)",
 )
 
 
