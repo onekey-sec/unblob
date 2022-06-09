@@ -1,4 +1,5 @@
 import binascii
+import struct
 from typing import Optional
 
 from dissect.cstruct import Instance
@@ -8,7 +9,12 @@ from unblob.extractors import Command
 from ...file_utils import Endian, convert_int32, get_endian
 from ...models import File, HexString, StructHandler, ValidChunk
 
+CRAMFS_FLAG_FSID_VERSION_2 = 0x00000001
 BIG_ENDIAN_MAGIC = 0x28_CD_3D_45
+
+
+def swap_int32(i):
+    return struct.unpack("<I", struct.pack(">I", i))[0]
 
 
 class CramFSHandler(StructHandler):
@@ -56,6 +62,9 @@ class CramFSHandler(StructHandler):
         header: Instance,
         endian: Endian,
     ) -> bool:
+        # old cramfs format do not support crc
+        if not (header.flags & CRAMFS_FLAG_FSID_VERSION_2):
+            return True
         file.seek(start_offset)
         content = bytearray(file.read(header.size))
         file.seek(start_offset + 32)
@@ -63,4 +72,5 @@ class CramFSHandler(StructHandler):
         header_crc = convert_int32(crc_bytes, endian)
         content[32:36] = b"\x00\x00\x00\x00"
         computed_crc = binascii.crc32(content)
-        return header_crc == computed_crc
+        # some vendors like their CRC's swapped, don't ask why
+        return header_crc == computed_crc or header_crc == swap_int32(computed_crc)
