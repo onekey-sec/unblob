@@ -10,7 +10,7 @@ from structlog import get_logger
 
 from unblob.extractor import is_safe_path
 
-from ...file_utils import Endian, InvalidInputFormat, read_until_past, round_up
+from ...file_utils import Endian, InvalidInputFormat, round_up
 from ...models import Extractor, File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
@@ -25,6 +25,7 @@ WORLD_RW = 0o666
 WORLD_RWX = 0o777
 ROMFS_HEADER_SIZE = 512
 ROMFS_SIGNATURE = b"-rom1fs-"
+PADDING_ALIGNMENT = 1024
 
 
 @unique
@@ -361,29 +362,31 @@ class RomFSFSHandler(StructHandler):
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
-        if not valid_checksum(file.read(512)):
+        checksum = file.read(512)
+        if not valid_checksum(checksum):
             raise InvalidInputFormat("Invalid RomFS checksum.")
 
-        file.seek(-512, io.SEEK_CUR)
+        file.seek(-len(checksum), io.SEEK_CUR)
 
         # Every multi byte value must be in big endian order.
         header = self.parse_header(file, Endian.BIG)
-
-        # The zero terminated name of the volume, padded to 16 byte boundary.
-        get_string(file)
-
-        # seek filesystem size (number of accessible bytes in this fs)
-        # from the actual end of the header
-        file.seek(header.full_size, io.SEEK_CUR)
 
         # Another thing to note is that romfs works on file headers and data
         # aligned to 16 byte boundaries, but most hardware devices and the block
         # device drivers are unable to cope with smaller than block-sized data.
         # To overcome this limitation, the whole size of the file system must be
         # padded to an 1024 byte boundary.
-        read_until_past(file, b"\x00")
+        end_offset = start_offset + round_up(
+            len(header) + header.full_size, PADDING_ALIGNMENT
+        )
+        fs_size = len(header) + header.full_size
+        padding_size = round_up(fs_size, PADDING_ALIGNMENT) - fs_size
+        if padding_size:
+            file.seek(start_offset + fs_size, io.SEEK_SET)
+            if file.read(padding_size) != bytes([0]) * padding_size:
+                raise InvalidInputFormat("Invalid padding.")
 
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=file.tell(),
+            end_offset=end_offset,
         )
