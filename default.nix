@@ -16,6 +16,7 @@
 , unar
 , file
 , hyperscan
+, zstd
 }:
 
 let
@@ -30,6 +31,7 @@ let
     sasquatch.bigEndian
     simg2img
     unar
+    zstd
   ];
 
   self = mkPoetryApp {
