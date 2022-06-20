@@ -63,9 +63,9 @@ let
         ];
       });
 
-      file-magic = (super.file-magic.override { preferWheel = false; }).overridePythonAttrs (_: {
+      python-magic = (super.python-magic.override { preferWheel = false; }).overridePythonAttrs (_: {
         patchPhase = ''
-          substituteInPlace magic.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
+          substituteInPlace magic/loader.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
         '';
       });
 
