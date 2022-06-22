@@ -30,7 +30,7 @@ let
             # cargoSetupHook won't work for building the python environment
             nativeBuildInputs = builtins.filter
               (inp: inp != rustPlatform.cargoSetupHook)
-              args.nativeBuildInputs;
+              (args.nativeBuildInputs or [ ]);
           } // builtins.removeAttrs args [
             "editablePackageSources"
             "nativeBuildInputs"
