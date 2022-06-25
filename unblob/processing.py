@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional
 
 import attr
+import magic
 import plotext as plt
 from structlog import get_logger
 
@@ -67,6 +68,7 @@ class ExtractionConfig:
     keep_extracted_chunks: bool = False
     extract_suffix: str = "_extract"
     handlers: Handlers = BUILTIN_HANDLERS
+    magic_file: Optional[Path] = None
 
     def get_extract_dir_for(self, path: Path) -> Path:
         """Extraction dir under root with the name of path."""
@@ -202,6 +204,20 @@ def write_json_report(report_file: Path, process_result: ProcessResult):
 class Processor:
     def __init__(self, config: ExtractionConfig):
         self._config = config
+        # libmagic helpers
+        # file magic uses a rule-set to guess the file type, however as rules are added they could
+        # shadow each other. File magic uses rule priorities to determine which is the best matching
+        # rule, however this could shadow other valid matches as well, which could eventually break
+        # any further processing that depends on magic.
+        # By enabling keep_going (which eventually enables MAGIC_CONTINUE) all matching patterns
+        # will be included in the magic string at the cost of being a bit slower, but increasing
+        # accuracy by no shadowing rules.
+        self._get_magic = magic.Magic(
+            keep_going=True, magic_file=config.magic_file
+        ).from_file
+        self._get_mime_type = magic.Magic(
+            mime=True, magic_file=config.magic_file
+        ).from_file
 
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult(task)
@@ -251,12 +267,12 @@ class Processor:
             log.debug("Ignoring empty file")
             return
 
-        magic_report = FileMagicReport.from_path(task.path)
-        result.add_report(magic_report)
-
-        magic = magic_report.magic
-
+        magic = self._get_magic(task.path)
+        mime_type = self._get_mime_type(task.path)
         logger.debug("Detected file-magic", magic=magic, path=task.path, _verbosity=2)
+
+        magic_report = FileMagicReport(magic=magic, mime_type=mime_type)
+        result.add_report(magic_report)
 
         should_skip_file = any(
             magic.startswith(pattern) for pattern in self._config.skip_magic

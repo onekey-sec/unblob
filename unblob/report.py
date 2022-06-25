@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 import attr
-import magic
 
 
 @attr.define(kw_only=True, frozen=True)
@@ -140,26 +139,10 @@ class StatReport(Report):
         )
 
 
-# libmagic helpers
-# file magic uses a rule-set to guess the file type, however as rules are added they could
-# shadow each other. File magic uses rule priorities to determine which is the best matching
-# rule, however this could shadow other valid matches as well, which could eventually break
-# any further processing that depends on magic.
-# By enabling keep_going (which eventually enables MAGIC_CONTINUE) all matching patterns
-# will be included in the magic string at the cost of being a bit slower, but increasing
-# accuracy by no shadowing rules.
-get_magic = magic.Magic(keep_going=True).from_file
-get_mime_type = magic.Magic(mime=True).from_file
-
-
 @attr.define(kw_only=True)
 class FileMagicReport(Report):
     magic: str
     mime_type: str
-
-    @classmethod
-    def from_path(cls, path: Path):
-        return cls(magic=get_magic(path), mime_type=get_mime_type(path))
 
 
 @attr.define(kw_only=True)
