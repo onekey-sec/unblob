@@ -4,11 +4,12 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.poetry2nix.url = "github:nix-community/poetry2nix";
   inputs.poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
+  inputs.pyperscan.url = "github:vlaci/pyperscan";
 
   inputs.sasquatch.url = "github:onekey-sec/sasquatch";
   inputs.sasquatch.flake = false;
 
-  outputs = { self, nixpkgs, poetry2nix, sasquatch }:
+  outputs = { self, nixpkgs, poetry2nix, pyperscan, sasquatch }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -20,7 +21,7 @@
     {
       overlays.default = nixpkgs.lib.composeManyExtensions [
         poetry2nix.overlay
-        (import ./overlay.nix { inherit sasquatch; })
+        (import ./overlay.nix { inherit system pyperscan sasquatch; })
       ];
 
       packages.${system} = {
