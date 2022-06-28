@@ -7,14 +7,14 @@
 { lib, mkShell, poetry2nix, stdenv, rustPlatform }:
 
 let
-  self = { projectDir, overrides, editablePackageSources, python, preferWheels ? false, ... }@args:
+  self = { projectDir, overrides, python, preferWheels ? false, passthru ? { }, ... }@args:
 
     let
       # pass all args which are not specific to mkPoetryEnv
       app = poetry2nix.mkPoetryApplication (builtins.removeAttrs args [ "editablePackageSources" ]);
 
       # pass args specific to mkPoetryEnv and all remaining arguments to mkDerivation
-      editableEnv =
+      mkEditableEnv = editablePackageSources:
         stdenv.mkDerivation (
           {
             name = "${app.pname}-editable-env";
@@ -40,7 +40,7 @@ let
         );
     in
     app.overrideAttrs (super: {
-      passthru = super.passthru // { inherit app editableEnv; };
+      passthru = super.passthru // passthru // { inherit app mkEditableEnv; };
     });
 in
 lib.makeOverridable self
