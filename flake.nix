@@ -30,5 +30,6 @@
       defaultPackage.${system} = unblob;
 
       devShell.${system} = import ./shell.nix { inherit pkgs; };
+      legacyPackages."${system}" = pkgs;
     };
 }
