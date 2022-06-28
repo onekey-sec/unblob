@@ -82,14 +82,6 @@ tomli = {version = "*", optional = true, markers = "python_full_version <= \"3.1
 toml = ["tomli"]
 
 [[package]]
-name = "cstruct"
-version = "2.1"
-description = "C-style structs for Python"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "dissect.cstruct"
 version = "2.0"
 description = "Structure parsing in Python made easy."
@@ -482,7 +474,7 @@ resolved_reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "5a046d7c4fcb81e6b34746e359368432125612384756147827362a13479592b5"
+content-hash = "d572e39b9715bc19923cab425c8d8f73ef10b67b6b2e144de591a82e6b057dae"
 
 [metadata.files]
 arpy = [
@@ -554,10 +546,6 @@ coverage = [
     {file = "coverage-6.4.1-cp39-cp39-win_amd64.whl", hash = "sha256:342d4aefd1c3e7f620a13f4fe563154d808b69cccef415415aece4c786665397"},
     {file = "coverage-6.4.1-pp36.pp37.pp38-none-any.whl", hash = "sha256:4803e7ccf93230accb928f3a68f00ffa80a88213af98ed338a57ad021ef06815"},
     {file = "coverage-6.4.1.tar.gz", hash = "sha256:4321f075095a096e70aff1d002030ee612b65a205a0a0f5b815280d5dc58100c"},
-]
-cstruct = [
-    {file = "cstruct-2.1-py2.py3-none-any.whl", hash = "sha256:ed4449bc672a37abbc0ecfbdaf4c26aa6ab1bafe7dfdb83eab2953cdbb153cf4"},
-    {file = "cstruct-2.1.tar.gz", hash = "sha256:9c2741f46fb12613a4f746369ec0a7b3b1f25712178c567437902d446f7c3648"},
 ]
 "dissect.cstruct" = [
     {file = "dissect.cstruct-2.0-py3-none-any.whl", hash = "sha256:e150abcc7500a279126ebf1a0f87c34d857e126ac3d65a980844bfb3296a5492"},

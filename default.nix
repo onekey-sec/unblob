@@ -51,7 +51,6 @@ let
       jefferson = super.jefferson.overridePythonAttrs (_: {
         propagatedBuildInputs = [
           # Use the _same_ version as unblob
-          self.cstruct
           self.python-lzo
         ];
       });
