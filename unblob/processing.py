@@ -68,7 +68,6 @@ class ExtractionConfig:
     keep_extracted_chunks: bool = False
     extract_suffix: str = "_extract"
     handlers: Handlers = BUILTIN_HANDLERS
-    magic_file: Optional[Path] = None
 
     def get_extract_dir_for(self, path: Path) -> Path:
         """Extraction dir under root with the name of path."""
@@ -212,12 +211,8 @@ class Processor:
         # By enabling keep_going (which eventually enables MAGIC_CONTINUE) all matching patterns
         # will be included in the magic string at the cost of being a bit slower, but increasing
         # accuracy by no shadowing rules.
-        self._get_magic = magic.Magic(
-            keep_going=True, magic_file=config.magic_file
-        ).from_file
-        self._get_mime_type = magic.Magic(
-            mime=True, magic_file=config.magic_file
-        ).from_file
+        self._get_magic = magic.Magic(keep_going=True).from_file
+        self._get_mime_type = magic.Magic(mime=True).from_file
 
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult(task)
