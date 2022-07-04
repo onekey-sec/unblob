@@ -258,16 +258,16 @@ class Processor:
             log.debug("Ignoring symlink")
             return
 
-        if stat_report.size == 0:
-            log.debug("Ignoring empty file")
-            return
-
         magic = self._get_magic(task.path)
         mime_type = self._get_mime_type(task.path)
         logger.debug("Detected file-magic", magic=magic, path=task.path, _verbosity=2)
 
         magic_report = FileMagicReport(magic=magic, mime_type=mime_type)
         result.add_report(magic_report)
+
+        if stat_report.size == 0:
+            log.debug("Ignoring empty file")
+            return
 
         should_skip_file = any(
             magic.startswith(pattern) for pattern in self._config.skip_magic
