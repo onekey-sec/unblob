@@ -1,6 +1,6 @@
 # unblob
 
-unblob is a tool for getting information out of any kind of binary blob.
+unblob is an accurate, fast, and easy-to-use extraction suite. unblob parses unknown binary blobs for more than 30 different archive, compression, and file-system formats, extracts their content recursively, and carves out unknown chunks that have not been accounted for. This turns unblob into the perfect companion for extracting, analyzing, and reverse engineering firmware images.
 
 ## Quickstart
 
