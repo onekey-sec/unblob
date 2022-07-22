@@ -1070,4 +1070,13 @@ yaffshiv = []
 zipp = [
     {file = "zipp-3.8.1-py3-none-any.whl", hash = "sha256:47c40d7fe183a6f21403a199b3e4192cca5774656965b0a4988ad2f8feb5f009"},
     {file = "zipp-3.8.1.tar.gz", hash = "sha256:05b45f1ee8f807d0cc928485ca40a07cb491cf092ff587c0df9cb1fd154848d2"},
+ziglang = [
+    {file = "ziglang-0.9.1-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:fedce198fdaace4e8abb89c1a77e25023bb79dec8c30b54e7658dec3f01e9b62"},
+    {file = "ziglang-0.9.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:0a308fa651484a8660e315a53fd7d5c7e8d0b3c4ca3f591f60dab727b1a7bb34"},
+    {file = "ziglang-0.9.1-py3-none-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:819e8e48504d5b6c1a0b2d9e20c714f13c7f27ec982fa2c5adea62935ab17310"},
+    {file = "ziglang-0.9.1-py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:fa1d08040e2b9a7aab40b0c14e1baf52097e845ea7a6801462ec593f48cf3431"},
+    {file = "ziglang-0.9.1-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4fee74a60826fd41a623d535c7a9e6130207e320aede0a9d25b9e5b948e5fe3e"},
+    {file = "ziglang-0.9.1-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:3517b877e9026840dcaee2df4478980389e792881e81fb026f65e57c69a02f23"},
+    {file = "ziglang-0.9.1-py3-none-win32.whl", hash = "sha256:f58f62e0adffe1adcc150d43490e0141496e469d4c5461611cebe56558b95e77"},
+    {file = "ziglang-0.9.1-py3-none-win_amd64.whl", hash = "sha256:bf039d83321ae9957c3688021b9975c60171ffc8ba2b89046fdb08e0d43ddbdb"},
 ]

@@ -39,6 +39,7 @@ pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
 setuptools-rust = "^1.1.2"
 mkdocs-material = "^8.3.9"
+ziglang = "^0.9.1"
 
 [tool.isort]
 profile = "black"
