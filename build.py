@@ -26,15 +26,18 @@ class ZigBuildExt(SetupToolsBuildExt):
         for p in ext.sources:
             assert Path(p).exists()
 
-        build_cmd = self._make_zig_build_cmd(ext)
+        distout = Path(self.get_ext_filename(ext.name))
+        target = Path(self.get_ext_fullpath(ext.name))
+        print("DISTOUT:", distout)
+        print("TARGET:", target)
+
+        build_cmd = self._make_zig_build_cmd(ext, distout.stem)
 
         subprocess.run(build_cmd)
+        output = self._get_output(distout)
+        self._move_output(output, target)
 
-        output = self._check_output(ext)
-        # setuptools will copy the compiled file to a platform-specific name
-        output.unlink()
-
-    def _make_zig_build_cmd(self, ext: Extension):
+    def _make_zig_build_cmd(self, ext: Extension, name: str):
         build_cmd = [
             "python",
             "-m",
@@ -43,7 +46,7 @@ class ZigBuildExt(SetupToolsBuildExt):
             "-dynamic",
             "-DPYHEXVER={}".format(sys.hexversion),
             "--name",
-            ext.name,
+            name,
         ]
         for inc_dir in self.compiler.include_dirs:
             build_cmd.extend(("-I", inc_dir))
@@ -52,14 +55,23 @@ class ZigBuildExt(SetupToolsBuildExt):
         print(f"cmd: {build_cmd}")
         return build_cmd
 
-    def _check_output(self, ext: Extension):
-        output = Path(ext.name).parent / f"lib{ext.name}.so"
+    def _get_output(self, output: Path):
+        # zig prefixes the compiled file with "lib"
+        output = output.parent / ("lib" + output.name)
         if not output.exists():
             raise ZigCompilerError(f"compilation failed: {output} does not exist")
         return output
 
+    def _move_output(self, output: Path, target: Path):
+        if target.exists():
+            target.unlink()
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
 
-def setup_build_zig(dist: Distribution, keyword, value):
+        output.rename(target)
+
+
+def setup_build_zig(dist: Distribution, keyword: str, value):
     assert isinstance(dist, Distribution)
     assert keyword == "build_zig"
     dist.cmdclass["build_ext"] = partial(ZigBuildExt, zig_value=value)
@@ -73,7 +85,7 @@ def build(setup_kwargs):
             },
             "build_zig": True,
             "ext_modules": [
-                Extension("zigmath", ["math.zig"]),
+                Extension("zigmath", ["zig/math.zig"]),
             ],
         }
     )

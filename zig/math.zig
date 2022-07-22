@@ -1,4 +1,3 @@
-const print = std.debug.print;
 const std = @import("std");
 
 export fn shannon_entropy(data : [*]u8, data_len: u32) f64 {
@@ -12,7 +11,6 @@ export fn shannon_entropy(data : [*]u8, data_len: u32) f64 {
         if (c == 0) {
             continue;
         }
-        print("Count: {d:.1}", .{c});
         const p = c / @intToFloat(f64, data_len);
         ent -= p * std.math.log2(p);
     }
