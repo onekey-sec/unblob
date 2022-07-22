@@ -96,8 +96,6 @@ let
       rust.cargo
       rust.rustc
     ];
-
-    editablePackageSources = { "unblob" = ./unblob; };
   };
 in
 self // {

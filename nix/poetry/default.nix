@@ -6,38 +6,41 @@
 
 { lib, mkShell, poetry2nix, stdenv, rustPlatform }:
 
-{ projectDir, overrides, editablePackageSources, preferWheels ? false, ... }@args:
-
 let
-  # pass all args which are not specific to mkPoetryEnv
-  app = poetry2nix.mkPoetryApplication (builtins.removeAttrs args [ "editablePackageSources" ]);
+  self = { projectDir, overrides, python, preferWheels ? false, ... }@args:
 
-  # pass args specific to mkPoetryEnv and all remaining arguments to mkDerivation
-  editableEnv =
-    stdenv.mkDerivation (
-      {
-        name = "${app.pname}-editable-env";
-        src = poetry2nix.mkPoetryEnv {
-          inherit projectDir editablePackageSources overrides preferWheels;
-        };
+    let
+      # pass all args which are not specific to mkPoetryEnv
+      app = poetry2nix.mkPoetryApplication (builtins.removeAttrs args [ "editablePackageSources" ]);
 
-        installPhase = ''
-          mkdir -p $out
-          cp -a * $out
-        '';
+      # pass args specific to mkPoetryEnv and all remaining arguments to mkDerivation
+      mkEditableEnv = editablePackageSources:
+        stdenv.mkDerivation (
+          {
+            name = "${app.pname}-editable-env";
+            src = poetry2nix.mkPoetryEnv {
+              inherit projectDir editablePackageSources overrides preferWheels python;
+            };
 
-        # cargoSetupHook won't work for building the python environment
-        nativeBuildInputs = builtins.filter
-          (inp: inp != rustPlatform.cargoSetupHook)
-          args.nativeBuildInputs;
-      } // builtins.removeAttrs args [
-        "editablePackageSources"
-        "nativeBuildInputs"
-        "overrides"
-        "projectDir"
-      ]
-    );
+            installPhase = ''
+              mkdir -p $out
+              cp -a * $out
+            '';
+
+            # cargoSetupHook won't work for building the python environment
+            nativeBuildInputs = builtins.filter
+              (inp: inp != rustPlatform.cargoSetupHook)
+              (args.nativeBuildInputs or [ ]);
+          } // builtins.removeAttrs args [
+            "editablePackageSources"
+            "nativeBuildInputs"
+            "overrides"
+            "projectDir"
+          ]
+        );
+    in
+    app.overrideAttrs (super: {
+      passthru = super.passthru // { inherit app mkEditableEnv; };
+    });
 in
-app.overrideAttrs (super: {
-  passthru = super.passthru // { inherit app editableEnv; };
-})
+lib.makeOverridable self

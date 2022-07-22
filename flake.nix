@@ -29,8 +29,6 @@
 
       defaultPackage.${system} = unblob;
 
-      devShell.${system} = pkgs.mkShell {
-        packages = [ unblob.editableEnv unblob.runtimeDeps ];
-      };
+      devShell.${system} = import ./shell.nix { inherit pkgs; };
     };
 }

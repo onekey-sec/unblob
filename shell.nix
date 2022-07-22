@@ -1,6 +1,15 @@
 # This file is to let "legacy" nix-shell command work in addition to `nix develop`
 let
   flake = builtins.getFlake (toString ./.);
-  system = builtins.currentSystem;
+  flakePkgs = flake.legacyPackages.${builtins.currentSystem};
 in
-flake.devShell."${system}"
+{ pkgs ? flakePkgs }:
+
+with pkgs; mkShell {
+  packages = [
+    (unblob.mkEditableEnv { "unblob" = ./.; })
+    unblob.runtimeDeps
+    poetry
+    lzo
+  ];
+}
