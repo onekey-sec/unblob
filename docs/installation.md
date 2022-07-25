@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Installation
 
 ## Docker image

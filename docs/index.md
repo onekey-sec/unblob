@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # About
 
 ## What is unblob?
