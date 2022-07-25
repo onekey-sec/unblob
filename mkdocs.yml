@@ -23,6 +23,7 @@ markdown_extensions:
 
 theme:
   name: material
+  custom_dir: docs/overrides
   features:
     - navigation.instant
     - navigation.top
