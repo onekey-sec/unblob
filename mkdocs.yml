@@ -6,6 +6,9 @@ repo_name: Unblob on GitHub
 repo_url: https://github.com/onekey-sec/unblob
 edit_uri: ""
 
+extra:
+  nav_title: unblob
+
 nav:
   - About: index.md
   - User Guide: guide.md
