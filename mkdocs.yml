@@ -4,6 +4,7 @@ copyright: © ONEKEY GmbH
 
 repo_name: Unblob on GitHub
 repo_url: https://github.com/onekey-sec/unblob
+edit_uri: ""
 
 nav:
   - About: index.md
@@ -15,5 +16,13 @@ nav:
   - glossary.md
   - support.md
 
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.magiclink
+
 theme:
   name: material
+  features:
+    - navigation.instant
+    - navigation.top
