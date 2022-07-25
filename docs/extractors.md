@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Extractors
 
 Unblob relies on various tools for extracting the contents of a blob. These
