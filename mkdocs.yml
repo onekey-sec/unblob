@@ -1,0 +1,31 @@
+site_name: unblob - extract all the things!
+site_author: OneKey developers
+copyright: © ONEKEY GmbH
+
+repo_name: Unblob on GitHub
+repo_url: https://github.com/onekey-sec/unblob
+edit_uri: ""
+
+nav:
+  - About: index.md
+  - User Guide: guide.md
+  - installation.md
+  - Supported Formats: formats.md
+  - extractors.md
+  - Unblob as a library: library.md
+  - development.md
+  - glossary.md
+  - support.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.magiclink
+  - def_list
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.tabs
