@@ -7,9 +7,13 @@ hide:
 
 ## Commercial support
 
-unblob is a product of the company [OneKey](https://onekey.com/).  
+unblob is a product of the company [OneKey](https://onekey.com/).
+
 Feel free to contact us [via our website](https://onekey.com/contact/)
 or write an email to support@onekey.com.
+
+If you want to use unblob within your _research projects_, don't hesitate to get
+in touch with us! The research team is directly reachable at research@onekey.com.
 
 ## Community support
 
