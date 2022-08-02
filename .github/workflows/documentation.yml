@@ -1,0 +1,27 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+      - docs
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Restore pipx cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.local/pipx
+          key: pipx-cache
+
+      - run: pipx run --spec "mkdocs-material==8.3.9" mkdocs gh-deploy --force
