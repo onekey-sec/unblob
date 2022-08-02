@@ -105,7 +105,11 @@ don't need this step, otherwise you can run all checks with `pre-commit run --al
 
 ### Running the tests
 
-We have big integrations files in `tests/integration`.
+We are using [pytest](https://docs.pytest.org/) for running our test suite.  
+We have big integration files in the `tests/integration` directory,
+we are using [Git LFS to track them](https://git-lfs.github.com/).  
+Only after you [installed Git LFS](#cloning-the-git-repository), can you
+run all tests, with `python -m pytest tests/` in the activated virtualenv.
 
 ## Writing handlers
 
