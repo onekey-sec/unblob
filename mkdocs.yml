@@ -1,0 +1,71 @@
+site_name: unblob - extract everything!
+site_author: OneKey developers
+site_description: unblob is an accurate, fast, and easy-to-use extraction suite. unblob parses unknown binary blobs for more than 30 different archive, compression, and file-system formats, extracts their content recursively, and carves out unknown chunks that have not been accounted for. This turns unblob into the perfect companion for extracting, analyzing, and reverse engineering firmware images.
+
+repo_name: Unblob on GitHub
+repo_url: https://github.com/onekey-sec/unblob
+edit_uri: ""
+
+nav:
+  - About: index.md
+  - User Guide: guide.md
+  - installation.md
+  - Supported Formats: formats.md
+  - extractors.md
+  - development.md
+  - glossary.md
+  - support.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.magiclink
+  - def_list
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+theme:
+  name: material
+  logo: logo.svg
+  favicon: favicon.png
+  font:
+    text: Artegra Sans
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.tabs
+
+extra_css:
+  - extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/onekey-sec/unblob
+      name: unblob on GitHub
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/onekey_sec
+      name: ONEKEY on Twitter
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/onekey-sec/
+      name: ONEKEY on LinkedIn
+
+
+copyright: >
+  Copyright &copy; 2021 - 2022 ONEKEY Gmbh.
+  | <a href="/privacy/">Privacy policy</a>
