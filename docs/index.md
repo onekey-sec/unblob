@@ -23,7 +23,7 @@ unblob was originally developed and currently maintained by **ONEKEY** and it is
 
 ## Demo
 
-<script id="asciicast-Q71Vc6IrH0SUNoDA51jxHswKj" src="https://asciinema.org/a/Q71Vc6IrH0SUNoDA51jxHswKj.js" async></script>
+![](demo.svg)
 
 ## Why unblob?
 
