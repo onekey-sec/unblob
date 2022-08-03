@@ -13,7 +13,7 @@ file-system formats_, **extracts** their **content recursively**, and **carves**
 out **unknown chunks** that have not been accounted for.
 
 unblob is _free to use_, licensed under _MIT license_, it has a
-[command line interface](guide.md#command-line-interface) and
+[command line interface](guide.md#full-command-line-interface) and
 can be used as a Python library.
 This turns unblob into the perfect companion for extracting, **analyzing**, and
 **reverse engineering firmware images**.
@@ -114,5 +114,5 @@ unblob identifies known and unknown chunks of data within a file:
 
 ## License
 
-unblob is licensed under the permissive [MIT license](../LICENSE), so you can use it without
+unblob is licensed under the permissive [MIT license](https://github.com/onekey-sec/unblob/blob/main/LICENSE), so you can use it without
 restrictions.
