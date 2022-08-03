@@ -13,7 +13,7 @@ file-system formats_, **extracts** their **content recursively**, and **carves**
 out **unknown chunks** that have not been accounted for.
 
 unblob is _free to use_, licensed under _MIT license_, it has a
-[command line interface](guide.md#command-line-interface) and
+[command line interface](guide.md#full-command-line-interface) and
 can be used as a Python library.
 This turns unblob into the perfect companion for extracting, **analyzing**, and
 **reverse engineering firmware images**.
@@ -74,7 +74,7 @@ unblob has been developed with the following objectives in mind:
 - **Speed** - we want unblob to be blazing fast, that's why we use
   multi-processing by default, make sure to write efficient code, use
   memory-mapped files, and use [Hyperscan](https://github.com/intel/hyperscan)
-  as high-performance matching library. Computation intensive functions are
+  as a high-performance matching library. Computation-intensive functions are
   written in [Rust](https://github.com/onekey-sec/unblob/tree/main/rust) and
   called from Python using specific bindings.
 
@@ -102,9 +102,9 @@ unblob identifies known and unknown chunks of data within a file:
 - For quickly searching binary patterns in files, we use [Hyperscan](https://www.hyperscan.io/).
 - For extracting recognized formats, we use all kinds of different [Extractors](extractors.md).
 - For ELF analysis, we are using [LIEF](https://lief-project.github.io/) with
-  it's [Python bindings](https://pypi.org/project/lief/).
+  its [Python bindings](https://pypi.org/project/lief/).
 - For CPU-intensive tasks (e.g. entropy calculation), we use
-  [Rust](https://www.rust-lang.org/) to speed thing up.
+  [Rust](https://www.rust-lang.org/) to speed things up.
 - For the pretty command line interface, we are using the
   [Click library](https://click.palletsprojects.com/).
 - For structured logging, we are using the
@@ -114,5 +114,5 @@ unblob identifies known and unknown chunks of data within a file:
 
 ## License
 
-unblob is licensed under the permissive [MIT license](../LICENSE), so you can use it without
+unblob is licensed under the permissive [MIT license](https://github.com/onekey-sec/unblob/blob/main/LICENSE), so you can use it without
 restrictions.

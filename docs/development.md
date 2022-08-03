@@ -335,7 +335,7 @@ We've implemented integration tests this way:
 We developed a bunch of utility functions which helped us during the development of
 existing unblob handlers. Do not hesitate to take a look at them in
 [unblob/file_utils.py](https://github.com/onekey-sec/unblob/blob/main/unblob/file_utils.py)
-to see if any of those function could help you during your own handler
+to see if any of those functions could help you during your own handler
 development.
 
 ### Hyperscan Rules
