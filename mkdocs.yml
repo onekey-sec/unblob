@@ -52,6 +52,18 @@ theme:
 extra_css:
   - extra.css
 
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/onekey-sec/unblob
+      name: unblob on GitHub
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/onekey_sec
+      name: ONEKEY on Twitter
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/onekey-sec/
+      name: ONEKEY on LinkedIn
+
 
 copyright: >
   Copyright &copy; 2021 - 2022 ONEKEY Gmbh.
