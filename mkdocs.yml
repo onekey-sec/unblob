@@ -1,6 +1,5 @@
 site_name: unblob - extract all the things!
 site_author: OneKey developers
-copyright: © ONEKEY GmbH
 
 repo_name: Unblob on GitHub
 repo_url: https://github.com/onekey-sec/unblob
@@ -53,3 +52,7 @@ theme:
 extra_css:
   - extra.css
 
+
+copyright: >
+  Copyright &copy; 2021 - 2022 ONEKEY Gmbh.
+  | <a href="/privacy/">Privacy policy</a>
