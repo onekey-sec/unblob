@@ -13,7 +13,7 @@ directory or specific ones next to the handler, e.g.:
 
 To use unblob with all supported formats, **all extractors need to be installed**.
 
-See the [Installation section](installation.md) how to install extractors for
+See the [Installation section](installation.md) on how to install extractors for
 various methods. You _don't need_ to install any of these _if you use Docker or Nix_,
 as all extractors are included in those solutions.
 

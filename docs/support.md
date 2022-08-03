@@ -7,7 +7,7 @@ hide:
 
 ## Commercial support
 
-unblob is a maintained by [ONEKEY](https://onekey.com/).
+unblob is maintained by [ONEKEY](https://onekey.com/).
 
 For professional support or commercial enquiries, feel free to contact us [via our website](https://onekey.com/contact/)
 or write an email to support@onekey.com.
@@ -17,7 +17,7 @@ in touch with us! The research team is directly reachable at research@onekey.com
 
 ## Community support
 
-To report _bugs_, _feature requests_, _odd errors_ or behaviours, or recommend
+To report _bugs_, _feature requests_, _odd errors_ or behaviors, or recommend
 _other enhancements_, do not hesitate to
 [use our issue tracker](https://github.com/onekey-sec/unblob/issues).
 

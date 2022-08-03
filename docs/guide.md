@@ -185,7 +185,7 @@ $ unblob -vvv unknown-file | grep -C 15 "Entropy distribution"
 
 ### Skip extraction with file magic
 
-The extraction process can be **faster** and produce **less false positives** if we just
+The extraction process can be **faster** and produce **fewer false positives** if we just
 ignore some files, which we know will not contain meaningful results, or it
 makes no sense to extract them. Examples of such file formats are SQLite, images,
 fonts, or PDF documents.
@@ -204,7 +204,7 @@ $ tree .
 ```
 
 Here gzip has been extracted, but we skipped the tar extraction, so no other
-files has been extracted further.
+files have been extracted further.
 
 ## Full Command line interface
 
