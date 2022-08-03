@@ -5,16 +5,16 @@ hide:
 
 # Extractors
 
-Unblob relies on various tools for extracting the contents of a blob. These
+unblob relies on various tools for extracting the contents of a blob. These
 extractors are either **third party tools (e.g. 7z)**, or part of unblob (available
 in [`unblob/extractors`](https://github.com/onekey-sec/unblob/tree/main/unblob/extractors)
-directory or specific ones next to the handler, eg:
+directory or specific ones next to the handler, e.g.:
 [`unblob/handlers/filesystem/romfs.py`](https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/romfs.py#L334)).
 
-To be able to use unblob with all supported formats, **all extractors needs to be installed**.
+To use unblob with all supported formats, **all extractors need to be installed**.
 
 See the [Installation section](installation.md) how to install extractors for
-various methods. You _don't need_ to install any of these _if you use Docker or nix_,
+various methods. You _don't need_ to install any of these _if you use Docker or Nix_,
 as all extractors are included in those solutions.
 
 ## Checking installed extractors
@@ -72,7 +72,7 @@ for current versions.
 We maintain a fork of several extractors, with many fixes and improvements.
 They are also available on GitHub:
 
-- [Jefferson](https://github.com/onekey-sec/jefferson) for extracting JFFS2 is also a project of OneKey
+- [Jefferson](https://github.com/onekey-sec/jefferson) for extracting JFFS2 is also a project of ONEKEY
 - [Fork of sasquatch](https://github.com/onekey-sec/sasquatch) based on squashfs-tools
 - [Fork of ubi_reader](https://github.com/onekey-sec/ubi_reader) Python scripts for extracting UBI and UBIFS images
 - [Fork of yaffshiv](https://github.com/onekey-sec/yaffshiv) a YAFFS file system parser and extractor

@@ -7,12 +7,12 @@ hide:
 
 ## Docker image
 
-Unblob can be used right away from a `docker` image: `ghcr.io/onekey-sec/unblob:latest`,
+unblob can be used right away from a `docker` image: `ghcr.io/onekey-sec/unblob:latest`,
 which contains everything needed to run unblob, even the [extractors](extractors.md).
 
 The `--pull always` option is recommended, because the project is currently under heavy development, so we expect frequent changes.
 
-The extracted files will be in the `/data/output` inside the container, mount
+The extracted files will be in the `/data/output` folder inside the container. Mount
 your host directory where you want to see the extracted files there:
 
 ```console
@@ -32,7 +32,7 @@ docker run --rm --pull always ghcr.io/onekey-sec/unblob:latest --help
 
 ## nix package
 
-Unblob can be built and run using the [Nix](https://nixos.org) package manager.
+unblob can be built and run using the [Nix](https://nixos.org) package manager.
 The Nix derivation installs all 3rd party dependencies.
 
 1. [Install and configure Nix](https://nixos.org/download.html).
@@ -94,3 +94,23 @@ The Nix derivation installs all 3rd party dependencies.
 6. Check that everything works correctly:
 
         unblob --show-external-dependencies
+
+    - Dependencies are all in place:
+```console
+$ unblob --show-external-dependencies
+The following executables found installed, which are needed by unblob:
+    7z                          ✓
+    debugfs                     ✓
+    jefferson                   ✓
+    lz4                         ✓
+    lziprecover                 ✓
+    lzop                        ✓
+    sasquatch                   ✓
+    sasquatch-v4be              ✓
+    simg2img                    ✓
+    ubireader_extract_files     ✓
+    ubireader_extract_images    ✓
+    unar                        ✓
+    yaffshiv                    ✓
+    zstd                        ✓
+```

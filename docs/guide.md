@@ -7,8 +7,8 @@ hide:
 
 ## Quickstart
 
-unblob has a very _simple_ Command Line Interface with _sensible defaults_,
-all you have to do is just pass it a file you want to extract:
+unblob has a very _simple_ command line interface with _sensible defaults_.
+You just need to pass it a file you want to extract:
 
 ```console
 $ unblob alpine-minirootfs-3.16.1-x86_64.tar.gz
@@ -186,9 +186,9 @@ $ unblob -vvv unknown-file | grep -C 15 "Entropy distribution"
 ### Skip extraction with file magic
 
 The extraction process can be **faster** and produce **less false positives** if we just
-ignore some of the files which we know will not contain meaningful results or it
+ignore some files, which we know will not contain meaningful results, or it
 makes no sense to extract them. Examples of such file formats are SQLite, images,
-fonts, PDF documents.
+fonts, or PDF documents.
 
 We have a [default for the skip list](https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/processing.py#L44-L56),
 but you can change it with the `--skip-magic` CLI option. Here is a silly example:

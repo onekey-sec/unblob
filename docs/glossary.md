@@ -12,7 +12,7 @@ specific file format.
 
 #### Extractor
 
-: A tool which can extract a file format, e.g. `7z`, `unrar`, `jefferson`, etc.
+: A tool, which can extract a file format, e.g. `7z`, `unrar`, `jefferson`, etc.
 One tool might be used for multiple formats.
 
 #### Hyperscan
@@ -22,7 +22,7 @@ We are using it for finding specific bit/byte pattern matching like magic header
 
 #### Unknown chunk
 
-: A bytestream which none of our `Handler`s was able to recognize. They are
+: A byte stream which none of our `Handler`s was able to recognize. They are
 carved to separate files, with the filename including their start and end
 offsets.
 
@@ -34,7 +34,7 @@ offsets.
 
 : unblob is processing input files recursively, which means if we extracted a
 file, that contains further files inside it, those will also be extracted, until
-the recursion depth is reached, beyond that level, no further extraction will
+the recursion depth is reached. Beyond that level, no further extraction will
 happen.  
 For example, if a `tar.gz` contains a `zip` and a text file, the
 recursion depth will be **3**: 1. gzip layer, 2. tar, 3. zip and text file.

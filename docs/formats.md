@@ -5,11 +5,11 @@ hide:
 
 # Supported file formats
 
-Unblob supports more than 30 formats. You can see their code in
+unblob supports more than 30 formats. You can see their code in
 [`unblob/handlers/`](https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/__init__.py).
 
 ✅: Some or all metadata is preserved for the format.  
-❌: Metadata is not preserved.
+❌: Metadata is not preserved (limitation of the format).
 
 ## Archives
 
@@ -53,7 +53,7 @@ Unblob supports more than 30 formats. You can see their code in
 
 ## Compression
 
-For compression formats, metadata cannot be preserved, as they are not container formats like archives.
+For compression formats, metadata cannot be preserved, as this information in most cases is not stored in the format.
 
 | Format        | Handler                                     | Extractor                       |
 | ------------- | ------------------------------------------- | ------------------------------- |
@@ -132,13 +132,14 @@ For compression formats, metadata cannot be preserved, as they are not container
 [yaffs-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/yaffs.py
 [yaffs-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/yaffs.py#L113
 
-## Proprietary formats
+## Didn't find your format supported yet?
 
-We developed about a dozen of proprietary format `Handler`s that we can't
-release to the Open Source version for legal or other reasons.
+unblob is easily extensible, and you can write your own handler and include your own extractors for proprietary formats.
+To learn more about this, see the [development section](development.md).
+Alternatively, just open a [new ticket](https://github.com/onekey-sec/unblob/issues) in the Github issue tracker.
 
-If you are interested in a custom format not supported by the Open Source
-version, check out our platform at https://www.onekey.com or you can
-[Contact Us](support.md).
+Whenever we stumble upon proprietary formats in our ONEKEY analysis platform, we will add support for it.
+At this point, we have developed about a dozen of additional, proprietary format Handlers.
 
-You can write your own format, see how in the [Development section](development.md).
+If you are interested in a custom format not supported by the open source version, check out our platform at
+[https://www.onekey.com](https://www.onekey.com) or you can [Contact Us](support.md).

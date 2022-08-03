@@ -16,9 +16,9 @@ unblob and you can _describe and explain_ it (maybe with nifty
 hex-representations, hand-drawings or smoke signs, or whatever you cup-of-tea
 is), we might help you implement it! Just open a
 [new ticket](https://github.com/onekey-sec/unblob/issues/new)
-in the Github issue tracker.
+in the GitHub issue tracker.
 
-If you know all these stuff and you have all the tools in the world installed,
+If you do know all this stuff, and you have all the tools in the world installed,
 you can just jump to the [How to write handlers](#writing-handlers) section
 where the exciting stuff is.
 
@@ -38,7 +38,7 @@ where the exciting stuff is.
 - **pre-commit**: We are using [pre-commit](https://pre-commit.com/) to run
   checks like linters, type checks and formatting issues.
 
-- **Git LFS**: We have big integration test files and we are using Git LFS to track them.  
+- **Git LFS**: We have big integration test files, and we are using Git LFS to track them.
   [Install `git-lfs`](https://git-lfs.github.com/) from the website.
 
 - **Rust** (_Optional_): unblob has an optional Rust extension for performance
@@ -187,14 +187,14 @@ This class defines new attributes and methods:
 - `parse_header()`: it will parse the file from the current offset in `endian`
   endianness into a structure using `HEADER_STRUCT` defined in `C_DEFINITIONS`.
 
-If you need to parse structure using different endianness, the class expose two properties:
+If you need to parse structure using different endianness, the class exposes two properties:
 
 - `cparser_le`: `dissect.cstruct` parser configured in little endian
 - `cparser_be`: `dissect.cstruct` parser configured in big endian
 
 !!! Recommendation
 
-    If you format allows it, we strongly recommend you to inherit from the
+    If your format allows it, we strongly recommend you to inherit from the
     StructHandler given that it will be strongly typed and less prone to errors.
 
 ### Example Handler implementation
@@ -262,7 +262,7 @@ class MyformatHandler(StructHandler):
         return
 ```
 
-With everything set, all is needed to implement the `calculate_chunk` function:
+With everything set, all that is left is to implement the `calculate_chunk` function:
 
 ```python hl_lines="18-21"
 class MyformatHandler(StructHandler):
@@ -307,9 +307,9 @@ We've implemented integration tests this way:
 
 !!! Important
 
-    Create integration test files that cover **all the possible scenarios of their specific format**.
+    Create integration test files that cover **all the possible scenarios of the target format**.
 
-    That includes different endianness, different versions, different padding, different algorithms. An excellent example of this are the integration test files for JFFS2 filesystems where we have filesystems covering both endianness (big endian, little endian), with or without padding, and with different compression algorithms (no compression, zlib, rtime, lzo):
+    That includes different endianness, different versions, different padding, different algorithms. An excellent example of this is the integration test files for JFFS2 filesystems where we have filesystems covering both endianness (big endian, little endian), with or without padding, and with different compression algorithms (no compression, zlib, rtime, lzo):
 
     ```
     ./fruits.new.be.zlib.padded.jffs2
@@ -332,7 +332,7 @@ We've implemented integration tests this way:
 
 ### Utilities Functions
 
-We developed a bunch of utility functions to help us during the development of
+We developed a bunch of utility functions which helped us during the development of
 existing unblob handlers. Do not hesitate to take a look at them in
 [unblob/file_utils.py](https://github.com/onekey-sec/unblob/blob/main/unblob/file_utils.py)
 to see if any of those function could help you during your own handler
@@ -340,7 +340,7 @@ development.
 
 ### Hyperscan Rules
 
-Our hyperscan-based implementation accepts two different kinds of rules
+Our hyperscan-based implementation accepts two different kinds of rule
 definitions: `Regex` and `HexString`.
 
 #### Regex
@@ -379,7 +379,7 @@ PATTERNS = [
 
 ### Command extractor
 
-This extractor simply runs a command line tool on the carved out file (`inpath`)
+This extractor simply runs a command line tool on the carved-out file (`inpath`)
 to extract into the extraction directory (`outdir`). Below is the `Command`
 extractor instance of the ZIP handler:
 
@@ -408,9 +408,9 @@ class Extractor(abc.ABC):
 
 Two methods are exposed by this class:
 
-- `get_dependencies()`: you should override it if your custom extractor rely on
+- `get_dependencies()`: you should override it if your custom extractor relies on
   external dependencies such as command line tools
-- `extract()`: you must override this function, this is where you'll perform the
+- `extract()`: you must override this function. This is where you'll perform the
   extraction of `inpath` content into `outdir` extraction directory
 
 ### Example Extractor
@@ -443,7 +443,8 @@ This is a collection of all the bad code we've seen during unblob development.
 Learn from us so you can avoid them in the future 🙂
 
 - Use `seek` rather than `read` whenever possible, it's [faster](https://github.com/onekey-sec/unblob/pulls?q=is%3Apr+is%3Aclose+%22seek+rather+%22).
-- You should always keep in mind to `seek` to the position the header starts or make sure you are at the correct offset at all times.
-  For example we made the mistake multiple times that read 4 bytes for file magic and didn't seek back.
+- You should always keep in mind to `seek` to the position the header starts or make sure you are always at the correct
+  offset at all times. For example we made the mistake multiple times that read 4 bytes for file magic and didn't seek
+  back.
 - Watch out for [negative seeking](https://github.com/onekey-sec/unblob/pull/280)
 - Make sure you get your types right! signedness can [get in the way](https://github.com/onekey-sec/unblob/pull/130).
