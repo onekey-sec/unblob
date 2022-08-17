@@ -1,6 +1,18 @@
 from ..models import Handlers
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
-from .compression import bzip2, compress, gzip, lz4, lzh, lzip, lzma, lzo, xz, zstd
+from .compression import (
+    bzip2,
+    compress,
+    gzip,
+    lz4,
+    lzh,
+    lzip,
+    lzma,
+    lzo,
+    xz,
+    zlib,
+    zstd,
+)
 from .executable import elf
 from .filesystem import (
     cramfs,
@@ -65,4 +77,5 @@ BUILTIN_HANDLERS: Handlers = (
     zstd.ZSTDHandler,
     elf.ELF32Handler,
     elf.ELF64Handler,
+    zlib.ZlibHandler,
 )
