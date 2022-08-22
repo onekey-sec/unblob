@@ -1,8 +1,11 @@
+import re
 import zlib
 from pathlib import Path
 from typing import Optional
 
 from structlog import get_logger
+
+from unblob.handlers.archive.dmg import DMGHandler
 
 from ...file_utils import DEFAULT_BUFSIZE, InvalidInputFormat
 from ...models import Extractor, File, Handler, HexString, ValidChunk
@@ -32,6 +35,12 @@ class ZlibHandler(Handler):
     EXTRACTOR = ZlibExtractor()
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+
+        for pattern in DMGHandler.PATTERNS:
+            if re.search(pattern.as_regex(), file[-512:]):
+                raise InvalidInputFormat(
+                    "File is a DMG archive made of zlib streams. Aborting."
+                )
 
         decompressor = zlib.decompressobj()
 
