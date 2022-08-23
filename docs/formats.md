@@ -55,19 +55,19 @@ unblob supports more than 30 formats. You can see their code in
 
 For compression formats, metadata cannot be preserved, as this information in most cases is not stored in the format.
 
-| Format        | Handler                                     | Extractor                       |
-| ------------- | ------------------------------------------- | ------------------------------- |
-| bzip2         | [compression/bzip2.py][bzip2-handler]       | [`7z`][bzip2-extractor]         |
-| UNIX compress | [compression/compress.py][compress-handler] | [`7z`][compress-extractor]      |
-| gzip          | [compression/gzip.py][gzip-handler]         | [`7z`][gzip-extractor]          |
-| LZ4           | [compression/lz4.py][lz4-handler]           | [`lz4`][lz4-extractor]          |
-| LZH           | [compression/lzh.py][lzh-handler]           | [`7z`][lzh-extractor]           |
-| LZIP          | [compression/lzip.py][lzip-handler]         | [`lziprecover`][lzip-extractor] |
-| LZMA          | [compression/lzma.py][lzma-handler]         | [`7z`][lzma-extractor]          |
-| LZO           | [compression/lzo.py][lzo-handler]           | [`lzop`][lzo-extractor]         |
-| XZ            | [compression/xz.py][xz-handler]             | [`7z`][xz-extractor]            |
-| ZLIB          | [compression/zlib.py][zlib-handler]         | [`ZlibExtractor` custom code][zlib-extractor]        |
-| ZSTD          | [compression/zstd.py][zstd-handler]         | [`zstd`][zstd-extractor]        |
+| Format        | Handler                                     | Extractor                                     |
+| ------------- | ------------------------------------------- | --------------------------------------------- |
+| bzip2         | [compression/bzip2.py][bzip2-handler]       | [`7z`][bzip2-extractor]                       |
+| UNIX compress | [compression/compress.py][compress-handler] | [`7z`][compress-extractor]                    |
+| gzip          | [compression/gzip.py][gzip-handler]         | [`7z`][gzip-extractor]                        |
+| LZ4           | [compression/lz4.py][lz4-handler]           | [`lz4`][lz4-extractor]                        |
+| LZH           | [compression/lzh.py][lzh-handler]           | [`7z`][lzh-extractor]                         |
+| LZIP          | [compression/lzip.py][lzip-handler]         | [`lziprecover`][lzip-extractor]               |
+| LZMA          | [compression/lzma.py][lzma-handler]         | [`7z`][lzma-extractor]                        |
+| LZO           | [compression/lzo.py][lzo-handler]           | [`lzop`][lzo-extractor]                       |
+| XZ            | [compression/xz.py][xz-handler]             | [`7z`][xz-extractor]                          |
+| ZLIB          | [compression/zlib.py][zlib-handler]         | [`ZlibExtractor` custom code][zlib-extractor] |
+| ZSTD          | [compression/zstd.py][zstd-handler]         | [`zstd`][zstd-extractor]                      |
 
 [bzip2-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/compression/bzip2.py
 [bzip2-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/compression/bzip2.py#L139
@@ -87,8 +87,8 @@ For compression formats, metadata cannot be preserved, as this information in mo
 [lzo-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/compression/lzo.py#L78
 [xz-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/compression/xz.py
 [xz-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/compression/xz.py#L173
-[zlib-handler]: https://github.com/onekey-sec/unblob/blob/c9c2137f849d5403ba3ee9bd2cf6d0e796fbf53e/unblob/handlers/compression/zlib.py
-[zlib-extractor]: https://github.com/onekey-sec/unblob/blob/c9c2137f849d5403ba3ee9bd2cf6d0e796fbf53e/unblob/handlers/compression/zlib.py#L13
+[zlib-handler]: https://github.com/onekey-sec/unblob/blob/8fe0d558265b87cb5c29dbc8f618b79297732a1a/unblob/handlers/compression/zlib.py
+[zlib-extractor]: https://github.com/onekey-sec/unblob/blob/8fe0d558265b87cb5c29dbc8f618b79297732a1a/unblob/handlers/compression/zlib.py#L16-L22
 [zstd-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/compression/zstd.py
 [zstd-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/compression/zstd.py#L27
 
