@@ -9,6 +9,7 @@ from unblob.finder import build_hyperscan_database
 from unblob.logging import configure_logger
 from unblob.models import ProcessResult
 from unblob.processing import ExtractionConfig
+from unblob.report import ExtractCommandFailedReport
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -80,5 +81,13 @@ def check_output_is_the_same(reference_dir: Path, extract_dir: Path):
 
 def check_result(reports: ProcessResult):
     __tracebackhide__ = True
-
-    assert reports.errors == [], "Unexpected error reports"
+    # filter out error reports about truncated integration test files
+    errors = [
+        error
+        for error in reports.errors
+        if not (
+            isinstance(error, ExtractCommandFailedReport)
+            and error.stderr == b"\nERRORS:\nUnexpected end of archive\n\n"
+        )
+    ]
+    assert errors == [], "Unexpected error reports"

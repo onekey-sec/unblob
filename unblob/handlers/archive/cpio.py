@@ -51,13 +51,18 @@ class _CPIOHandlerBase(StructHandler):
     _PAD_ALIGN: int
     _FILE_PAD_ALIGN: int = 512
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(  # noqa: C901
+        self, file: File, start_offset: int
+    ) -> Optional[ValidChunk]:
 
         file_with_offset = OffsetFile(file, start_offset)
         current_offset = start_offset
         while True:
             file.seek(current_offset)
-            header = self.parse_header(file)
+            try:
+                header = self.parse_header(file)
+            except EOFError:
+                break
 
             c_filesize = self._calculate_file_size(header)
             c_namesize = self._calculate_name_size(header)
@@ -94,6 +99,8 @@ class _CPIOHandlerBase(StructHandler):
         end_offset = start_offset + self._pad_file(
             file_with_offset, current_offset - start_offset
         )
+        if start_offset == end_offset:
+            return
         return ValidChunk(
             start_offset=start_offset,
             end_offset=end_offset,
