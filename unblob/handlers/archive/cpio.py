@@ -99,6 +99,8 @@ class _CPIOHandlerBase(StructHandler):
         end_offset = start_offset + self._pad_file(
             file_with_offset, current_offset - start_offset
         )
+        if start_offset == end_offset:
+            return
         return ValidChunk(
             start_offset=start_offset,
             end_offset=end_offset,
