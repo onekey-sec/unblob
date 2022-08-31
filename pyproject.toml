@@ -66,5 +66,5 @@ exclude = ["unblob/_py/", "unblob/testing.py"]
 exclude = ["build"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "setuptools>=60.9.3"]
+requires = ["poetry-core>=1.0.0", "setuptools>=60.9.3", "setuptools-rust==1.5.1"]
 build-backend = "poetry.core.masonry.api"
