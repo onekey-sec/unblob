@@ -68,6 +68,15 @@ def check_output_is_the_same(reference_dir: Path, extract_dir: Path):
         "--brief",
         "--exclude",
         ".gitkeep",
+        # Special files in test samples follows a strict naming convention
+        # so that we can have them without triggering errors on diff.
+        # Example diff with special files: https://www.mail-archive.com/bug-diffutils@gnu.org/msg00863.html
+        "--exclude",
+        "*.socket",
+        "--exclude",
+        "*.symlink",
+        "--exclude",
+        "*.fifo",
         str(reference_dir),
         str(extract_dir),
     ]
