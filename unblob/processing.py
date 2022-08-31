@@ -255,8 +255,10 @@ class Processor:
                 )
             return
 
-        if stat_report.is_link:
-            log.debug("Ignoring symlink")
+        if not stat_report.is_file:
+            log.debug(
+                "Ignoring special file (link, chrdev, blkdev, fifo, socket, door)."
+            )
             return
 
         magic = self._get_magic(task.path)
