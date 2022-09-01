@@ -31,6 +31,7 @@ from .pool import make_pool
 from .report import (
     ExtractDirectoryExistsReport,
     FileMagicReport,
+    HashReport,
     Report,
     StatReport,
     UnknownError,
@@ -271,6 +272,9 @@ class Processor:
         if stat_report.size == 0:
             log.debug("Ignoring empty file")
             return
+
+        hash_report = HashReport.from_path(task.path)
+        result.add_report(hash_report)
 
         should_skip_file = any(
             magic.startswith(pattern) for pattern in self._config.skip_magic
