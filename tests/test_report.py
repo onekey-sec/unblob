@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import List
 from unittest.mock import ANY
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 
 import pytest
 
@@ -232,11 +232,11 @@ def hello_kitty(tmp_path: Path) -> Path:
     """An input file with 3 unknown chunks and 2 zip files."""
     hello_zip = io.BytesIO()
     with ZipFile(hello_zip, "w") as zf:
-        zf.writestr("hello.kitty", "Hello")
+        zf.writestr(ZipInfo("hello.kitty"), "Hello")
 
     kitty_zip = io.BytesIO()
     with ZipFile(kitty_zip, "w") as zf:
-        zf.writestr("hello.kitty", "Kitty")
+        zf.writestr(ZipInfo("hello.kitty"), "Kitty")
 
     content = (
         b"Hello " + hello_zip.getvalue() + b" Kitty " + kitty_zip.getvalue() + b"!"
@@ -539,7 +539,7 @@ def hello_kitty_container(tmp_path: Path, hello_kitty: Path) -> Path:
     hello_kitty_container = tmp_path / "container"
     container_zip = io.BytesIO()
     with ZipFile(container_zip, "w") as zf:
-        zf.writestr("hello_kitty", hello_kitty.read_bytes())
+        zf.writestr(ZipInfo("hello_kitty"), hello_kitty.read_bytes())
     hello_kitty_container.write_bytes(container_zip.getvalue())
     return hello_kitty_container
 
