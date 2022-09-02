@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import List
 from unittest.mock import ANY
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 
 import pytest
 
@@ -13,6 +13,7 @@ from unblob.report import (
     ChunkReport,
     ExtractCommandFailedReport,
     FileMagicReport,
+    HashReport,
     StatReport,
     UnknownChunkReport,
 )
@@ -71,6 +72,13 @@ class Test_ProcessResult_to_json:
             )
         )
         task_result.add_report(
+            HashReport(
+                md5="9019fcece2433ad7f12c077e84537a74",
+                sha1="36998218d8f43b69ef3adcadf2e8979e81eed166",
+                sha256="7d7ca7e1410b702b0f85d18257aebb964ac34f7fad0a0328d72e765bfcb21118",
+            )
+        )
+        task_result.add_report(
             ChunkReport(
                 id=chunk_id,
                 handler_name="zip",
@@ -113,6 +121,12 @@ class Test_ProcessResult_to_json:
                         "__typename__": "FileMagicReport",
                         "magic": "Zip archive data, at least v2.0 to extract",
                         "mime_type": "application/zip",
+                    },
+                    {
+                        "__typename__": "HashReport",
+                        "md5": "9019fcece2433ad7f12c077e84537a74",
+                        "sha1": "36998218d8f43b69ef3adcadf2e8979e81eed166",
+                        "sha256": "7d7ca7e1410b702b0f85d18257aebb964ac34f7fad0a0328d72e765bfcb21118",
                     },
                     {
                         "__typename__": "ChunkReport",
@@ -232,11 +246,11 @@ def hello_kitty(tmp_path: Path) -> Path:
     """An input file with 3 unknown chunks and 2 zip files."""
     hello_zip = io.BytesIO()
     with ZipFile(hello_zip, "w") as zf:
-        zf.writestr("hello.kitty", "Hello")
+        zf.writestr(ZipInfo("hello.kitty"), "Hello")
 
     kitty_zip = io.BytesIO()
     with ZipFile(kitty_zip, "w") as zf:
-        zf.writestr("hello.kitty", "Kitty")
+        zf.writestr(ZipInfo("hello.kitty"), "Kitty")
 
     content = (
         b"Hello " + hello_zip.getvalue() + b" Kitty " + kitty_zip.getvalue() + b"!"
@@ -293,6 +307,11 @@ def hello_kitty_task_results(
                     link_target=None,
                 ),
                 FileMagicReport(magic="data", mime_type="application/octet-stream"),
+                HashReport(
+                    md5="9db962e810e645c4d230c6bdf59c31b1",
+                    sha1="febca6ed75dc02e0def065e7b08f1cca87b57c74",
+                    sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
+                ),
                 UnknownChunkReport(id=ANY, start_offset=0, end_offset=6, size=6),
                 UnknownChunkReport(id=ANY, start_offset=131, end_offset=138, size=7),
                 UnknownChunkReport(id=ANY, start_offset=263, end_offset=264, size=1),
@@ -373,6 +392,11 @@ def hello_kitty_task_results(
                 FileMagicReport(
                     magic="ASCII text, with no line terminators", mime_type="text/plain"
                 ),
+                HashReport(
+                    md5="798903d076fdd1a8245ada3adfef6483",
+                    sha1="a33027811ed9a95dc65084c59ae0560b81734d54",
+                    sha256="4f0063d4dca40aa3cbcf69841070df91b2ea198ba97c150137f60350651c202d",
+                ),
             ],
             subtasks=[],
         ),
@@ -419,6 +443,11 @@ def hello_kitty_task_results(
                 ),
                 FileMagicReport(
                     magic="ASCII text, with no line terminators", mime_type="text/plain"
+                ),
+                HashReport(
+                    md5="8b1a9953c4611296a827abf8c47804d7",
+                    sha1="f7ff9e8b7bb2e09b70935a5d785e0cc5d9d0abf0",
+                    sha256="185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969",
                 ),
             ],
             subtasks=[],
@@ -488,6 +517,11 @@ def container_task_results(
                     magic=ANY,
                     mime_type="application/zip",
                 ),
+                HashReport(
+                    md5="2392a3f8acf4fa53df566ece92980e1a",
+                    sha1="93b9b836567468f6a9a306256685c146ec6a06d6",
+                    sha256="6bce74badefcddf3020d156f80c99bac7f3d46cd145029d9034a86bfbb5e31aa",
+                ),
                 ChunkReport(
                     id=chunk_id,
                     handler_name="zip",
@@ -539,7 +573,7 @@ def hello_kitty_container(tmp_path: Path, hello_kitty: Path) -> Path:
     hello_kitty_container = tmp_path / "container"
     container_zip = io.BytesIO()
     with ZipFile(container_zip, "w") as zf:
-        zf.writestr("hello_kitty", hello_kitty.read_bytes())
+        zf.writestr(ZipInfo("hello_kitty"), hello_kitty.read_bytes())
     hello_kitty_container.write_bytes(container_zip.getvalue())
     return hello_kitty_container
 

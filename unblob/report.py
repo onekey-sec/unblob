@@ -1,3 +1,4 @@
+import hashlib
 import os
 import stat
 import traceback
@@ -136,6 +137,32 @@ class StatReport(Report):
             is_file=stat.S_ISREG(mode),
             is_link=stat.S_ISLNK(mode),
             link_target=link_target,
+        )
+
+
+@attr.define(kw_only=True)
+class HashReport(Report):
+    md5: str
+    sha1: str
+    sha256: str
+
+    @classmethod
+    def from_path(cls, path: Path):
+        chunk_size = 1024 * 64
+        md5 = hashlib.md5()
+        sha1 = hashlib.sha1()
+        sha256 = hashlib.sha256()
+
+        with path.open("rb") as f:
+            while chunk := f.read(chunk_size):
+                md5.update(chunk)
+                sha1.update(chunk)
+                sha256.update(chunk)
+
+        return cls(
+            md5=md5.hexdigest(),
+            sha1=sha1.hexdigest(),
+            sha256=sha256.hexdigest(),
         )
 
 
