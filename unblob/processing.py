@@ -269,12 +269,12 @@ class Processor:
         magic_report = FileMagicReport(magic=magic, mime_type=mime_type)
         result.add_report(magic_report)
 
+        hash_report = HashReport.from_path(task.path)
+        result.add_report(hash_report)
+
         if stat_report.size == 0:
             log.debug("Ignoring empty file")
             return
-
-        hash_report = HashReport.from_path(task.path)
-        result.add_report(hash_report)
 
         should_skip_file = any(
             magic.startswith(pattern) for pattern in self._config.skip_magic
