@@ -1,11 +1,13 @@
-from typing import Optional
+from pathlib import Path
+from typing import List, Optional
 
+from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...file_utils import get_endian, round_up
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...file_utils import Endian, StructParser, get_endian, round_up
+from ...models import Extractor, File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -216,6 +218,43 @@ class SquashFSv4LEHandler(_SquashFSBase):
     HEADER_STRUCT = "squashfs4_super_block_t"
 
 
+class SquashFSv4BEExtractor(Extractor):
+
+    EXECUTABLE = "sasquatch-v4be"
+
+    def is_avm(self, header: Instance) -> bool:
+        # see https://raw.githubusercontent.com/Freetz/freetz/master/tools/make/squashfs4-host-be/AVM-BE-format.txt
+        return header.bytes_used == header.mkfs_time
+
+    def extract(self, inpath: Path, outdir: Path):
+        struct_parser = StructParser(SquashFSv4LEHandler.C_DEFINITIONS)
+
+        with File.from_path(inpath) as f:
+            header = struct_parser.parse(
+                SquashFSv4LEHandler.HEADER_STRUCT, f, Endian.BIG
+            )
+
+        commands_args = []
+
+        if not self.is_avm(header):
+            commands_args.append("-be")
+
+        commands_args.extend(
+            [
+                "-no-exit-code",
+                "-f",
+                "-d",
+                "{outdir}",
+                "{inpath}",
+            ]
+        )
+        extractor = Command(self.EXECUTABLE, *commands_args)
+        extractor.extract(inpath, outdir)
+
+    def get_dependencies(self) -> List[str]:
+        return [self.EXECUTABLE]
+
+
 class SquashFSv4BEHandler(SquashFSv4LEHandler):
     NAME = "squashfs_v4_be"
 
@@ -230,6 +269,4 @@ class SquashFSv4BEHandler(SquashFSv4LEHandler):
         )
     ]
 
-    EXTRACTOR = Command(
-        "sasquatch-v4be", "-be", "-no-exit-code", "-f", "-d", "{outdir}", "{inpath}"
-    )
+    EXTRACTOR = SquashFSv4BEExtractor()
