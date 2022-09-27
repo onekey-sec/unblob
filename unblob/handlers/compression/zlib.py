@@ -18,8 +18,10 @@ class ZlibExtractor(Extractor):
         decompressor = zlib.decompressobj()
         outpath = outdir.joinpath(inpath.stem)
         with File.from_path(inpath) as f:
-            while not decompressor.eof:
-                outpath.write_bytes(decompressor.decompress(f.read(DEFAULT_BUFSIZE)))
+            content = f.read(DEFAULT_BUFSIZE)
+            while content and not decompressor.eof:
+                outpath.write_bytes(decompressor.decompress(content))
+                content = f.read(DEFAULT_BUFSIZE)
 
 
 class ZlibHandler(Handler):
@@ -45,8 +47,11 @@ class ZlibHandler(Handler):
         decompressor = zlib.decompressobj()
 
         try:
-            while not decompressor.eof:
-                decompressor.decompress(file.read(DEFAULT_BUFSIZE))
+            content = file.read(DEFAULT_BUFSIZE)
+            while content and not decompressor.eof:
+                decompressor.decompress(content)
+                content = file.read(DEFAULT_BUFSIZE)
+
         except zlib.error:
             raise InvalidInputFormat("invalid zlib stream")
 
