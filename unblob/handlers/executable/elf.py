@@ -4,6 +4,7 @@ from typing import Optional
 
 import lief
 from dissect.cstruct import Instance
+from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
 from unblob.file_utils import (
@@ -12,11 +13,17 @@ from unblob.file_utils import (
     convert_int8,
     convert_int32,
     convert_int64,
+    iterate_patterns,
     round_up,
 )
 from unblob.models import ExtractError, Extractor, HexString, StructHandler, ValidChunk
 
 lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)
+
+logger = get_logger()
+
+KERNEL_MODULE_SIGNATURE_INFO_LEN = 12
+KERNEL_MODULE_SIGNATURE_FOOTER = b"~Module signature appended~\n"
 
 
 class NullExtract(ExtractError):
@@ -190,6 +197,41 @@ class _ELFBase(StructHandler):
             section_headers_end, program_headers_end, last_section_end, last_program_end
         )
 
+    def get_signed_kernel_module_end_offset(self, file: File, end_offset: int) -> int:
+        # signed kernel modules are ELF files followed by:
+        #   - a PKCS7 signature
+        #   - a module_signature structure
+        #   - a custom footer value '~~Module signature appended~\n~'
+        # we check if a valid kernel module signature is present after the ELF file
+        # and returns an end_offset that includes that whole signature part.
+
+        file.seek(end_offset, io.SEEK_SET)
+        for footer_offset in iterate_patterns(file, KERNEL_MODULE_SIGNATURE_FOOTER):
+            file.seek(
+                footer_offset - KERNEL_MODULE_SIGNATURE_INFO_LEN,
+                io.SEEK_SET,
+            )
+            module_signature = self._struct_parser.parse(
+                "module_signature_t", file, Endian.BIG
+            )
+            logger.debug(
+                "module_signature_t",
+                module_signature=module_signature,
+                _verbosity=3,
+            )
+            if (
+                footer_offset
+                == end_offset
+                + module_signature.sig_len
+                + KERNEL_MODULE_SIGNATURE_INFO_LEN
+            ):
+                end_offset = footer_offset + len(KERNEL_MODULE_SIGNATURE_FOOTER)
+
+            # We stop at the first SIGNATURE FOOTER match
+            break
+
+        return end_offset
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         endian = self.get_endianness(file, start_offset)
         file.seek(start_offset, io.SEEK_SET)
@@ -197,6 +239,11 @@ class _ELFBase(StructHandler):
         if not self.is_valid_header(header):
             return
         end_offset = self.get_end_offset(file, start_offset, header, endian)
+
+        # kernel modules are always relocatable
+        if header.e_type == lief.ELF.E_TYPE.RELOCATABLE.value:
+            end_offset = self.get_signed_kernel_module_end_offset(file, end_offset)
+
         return ValidChunk(
             start_offset=start_offset,
             end_offset=end_offset,
@@ -269,6 +316,16 @@ class ELF32Handler(_ELFBase):
                uint32  p_flags;
                uint32  p_align;
            } elf_phdr_t;
+
+        typedef struct module_signature {
+            uint8   algo;           /* Public-key crypto algorithm [0] */
+            uint8   hash;           /* Digest algorithm [0] */
+            uint8   id_type;        /* Key identifier type [PKEY_ID_PKCS7] */
+            uint8   signer_len;     /* Length of signer's name [0] */
+            uint8   key_id_len;     /* Length of key identifier [0] */
+            uint8   __pad[3];
+            uint32  sig_len;        /* Length of signature data */
+        } module_signature_t;
     """
     HEADER_STRUCT = "elf_header_32_t"
 
@@ -339,5 +396,15 @@ class ELF64Handler(_ELFBase):
                uint64   p_memsz;
                uint64   p_align;
            } elf_phdr_t;
+
+        typedef struct module_signature {
+            uint8   algo;           /* Public-key crypto algorithm [0] */
+            uint8   hash;           /* Digest algorithm [0] */
+            uint8   id_type;        /* Key identifier type [PKEY_ID_PKCS7] */
+            uint8   signer_len;     /* Length of signer's name [0] */
+            uint8   key_id_len;     /* Length of key identifier [0] */
+            uint8   __pad[3];
+            uint32  sig_len;        /* Length of signature data */
+        } module_signature_t;
     """
     HEADER_STRUCT = "elf_header_64_t"
