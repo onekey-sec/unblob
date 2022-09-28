@@ -55,6 +55,7 @@ DEFAULT_SKIP_MAGIC = (
     "MS Windows icon resource",
     "PE32+ executable (EFI application)",
     "Web Open Font Format",
+    "GNU message catalog",
 )
 
 
