@@ -57,6 +57,10 @@ DEFAULT_SKIP_MAGIC = (
     "Web Open Font Format",
     "GNU message catalog",
     "Xilinx BIT data",
+    "Microsoft Excel",
+    "Microsoft Word",
+    "Microsoft PowerPoint",
+    "OpenDocument",
 )
 
 
