@@ -94,6 +94,9 @@ def get_stream_size(footer_offset: int, file: File) -> int:
     stored_backward_size = convert_int32(backward_bytes, Endian.LITTLE)
     real_backward_size = (stored_backward_size + 1) * 4
 
+    if real_backward_size > footer_offset - CRC32_LEN - BACKWARD_SIZE_LEN:
+        raise InvalidInputFormat("Invalid backward size.")
+
     # skip backwards to the end of the Index
     file.seek(-CRC32_LEN - BACKWARD_SIZE_LEN, io.SEEK_CUR)
 
@@ -140,7 +143,10 @@ def _hyperscan_match(
     if end_offset < context.start_offset:
         return False
 
-    stream_size = get_stream_size(offset, context.file)
+    try:
+        stream_size = get_stream_size(offset, context.file)
+    except InvalidInputFormat:
+        return False
 
     # stream_size does not match, we continue our search
     if stream_size != (end_offset - context.start_offset):
