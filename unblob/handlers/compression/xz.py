@@ -94,6 +94,9 @@ def get_stream_size(footer_offset: int, file: File) -> int:
     stored_backward_size = convert_int32(backward_bytes, Endian.LITTLE)
     real_backward_size = (stored_backward_size + 1) * 4
 
+    if real_backward_size > footer_offset - CRC32_LEN - BACKWARD_SIZE_LEN:
+        raise InvalidInputFormat("Invalid backward size.")
+
     # skip backwards to the end of the Index
     file.seek(-CRC32_LEN - BACKWARD_SIZE_LEN, io.SEEK_CUR)
 
@@ -135,16 +138,19 @@ def get_stream_size(footer_offset: int, file: File) -> int:
 def _hyperscan_match(
     pattern_id: int, offset: int, end: int, flags: int, context: XZSearchContext
 ) -> bool:
-
     # if we matched before our start offset, continue looking
     end_offset = offset + FLAG_LEN + EOS_MAGIC_LEN
     if end_offset < context.start_offset:
         return False
 
-    stream_size = get_stream_size(offset, context.file)
+    try:
+        stream_size = get_stream_size(offset, context.file)
+    except InvalidInputFormat:
+        return False
 
+    # stream_size does not match, we continue our search
     if stream_size != (end_offset - context.start_offset):
-        return True
+        return False
 
     # stream padding validation
     # padding MUST contain only null bytes and be 4 bytes aligned
@@ -153,7 +159,7 @@ def _hyperscan_match(
     padding_size = end_padding_offset - end_offset
     if padding_size % 4 != 0:
         context.end_streams_offset = end_offset
-        return True
+        return False
 
     # next magic validation
     context.end_streams_offset = end_padding_offset
