@@ -83,7 +83,7 @@ class ValidChunk(Chunk):
     handler: "Handler" = attr.ib(init=False, eq=False)
     is_encrypted: bool = attr.ib(default=False)
 
-    def extract(self, inpath: Path, outdir: Path):
+    def extract(self, inpath: Path, outdir: Path, is_whole_file_chunk: bool = False):
         if self.is_encrypted:
             logger.warning(
                 "Encrypted file is not extracted",
@@ -92,7 +92,10 @@ class ValidChunk(Chunk):
             )
             raise ExtractError()
 
-        self.handler.extract(inpath, outdir)
+        if is_whole_file_chunk:
+            self.handler.extract_whole_file(inpath, outdir)
+        else:
+            self.handler.extract(inpath, outdir)
 
     def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
         return ChunkReport(
@@ -201,6 +204,10 @@ class ExtractError(Exception):
         self.reports: Tuple[Report, ...] = reports
 
 
+class ProcessAgainAsRegularFile(ExtractError):
+    """Request processing of the chunk again as a regular file"""
+
+
 class Extractor(abc.ABC):
     def get_dependencies(self) -> List[str]:
         """Returns the external command dependencies."""
@@ -299,6 +306,9 @@ class Handler(abc.ABC):
             except OSError:
                 pass
             raise
+
+    def extract_whole_file(self, inpath: Path, outdir: Path):
+        return self.extract(inpath, outdir)
 
 
 class StructHandler(Handler):

@@ -16,7 +16,14 @@ from unblob.file_utils import (
     iterate_patterns,
     round_up,
 )
-from unblob.models import ExtractError, Extractor, HexString, StructHandler, ValidChunk
+from unblob.models import (
+    ExtractError,
+    Extractor,
+    HexString,
+    ProcessAgainAsRegularFile,
+    StructHandler,
+    ValidChunk,
+)
 
 lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)
 
@@ -115,6 +122,14 @@ class _ELFBase(StructHandler):
     EXTRACTOR = ELFKernelExtractor()
     SECTION_HEADER_STRUCT = "elf_shdr_t"
     PROGRAM_HEADER_STRUCT = "elf_phdr_t"
+
+    def extract(self, inpath: Path, outdir: Path):
+        # We want to report ELF chunks as regular files as well
+        # so deal with the extracted ELF file again in another task
+        raise ProcessAgainAsRegularFile()
+
+    def extract_whole_file(self, inpath: Path, outdir: Path):
+        return super().extract(inpath, outdir)
 
     @staticmethod
     def _check_field(field, value):

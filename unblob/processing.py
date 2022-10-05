@@ -21,6 +21,7 @@ from .math import shannon_entropy
 from .models import (
     ExtractError,
     File,
+    ProcessAgainAsRegularFile,
     ProcessResult,
     Task,
     TaskResult,
@@ -368,11 +369,23 @@ class _FileTask:
 
         extraction_reports = []
         try:
-            chunk.extract(inpath, extract_dir)
+            chunk.extract(inpath, extract_dir, is_whole_file_chunk)
 
             if carved_path and not self.config.keep_extracted_chunks:
                 logger.debug("Removing extracted chunk", path=carved_path)
                 carved_path.unlink()
+
+        except ProcessAgainAsRegularFile:
+            # Reprocessing is somewhat expensive: all the chunk discovery pattern matching is run again
+            # It also breaks the (not really important) pattern of alternating chunks
+            # and extracted directory with regular files layers, as a chunk is converted to a regular file.
+            self.result.add_subtask(
+                Task(
+                    chunk_id=chunk.id,
+                    path=inpath,
+                    depth=self.task.depth + 1,
+                )
+            )
 
         except ExtractError as e:
             extraction_reports.extend(e.reports)

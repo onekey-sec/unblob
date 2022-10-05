@@ -1,9 +1,14 @@
+from pathlib import Path
+from unittest.mock import ANY
+
 import pytest
 from helpers import unhex
 
 from unblob.file_utils import File
 from unblob.handlers.executable.elf import ELF64Handler
 from unblob.models import ValidChunk
+from unblob.processing import ExtractionConfig, Task, process_file
+from unblob.report import ChunkReport
 
 ELF_CONTENT = unhex(
     """\
@@ -96,3 +101,59 @@ def test_invalid_header(offset, byte):
     chunk = ELF64Handler().calculate_chunk(file, 0)
 
     assert chunk is None
+
+
+def test_carved_out_elf_files_are_processed_again(
+    tmp_path: Path, extraction_config: ExtractionConfig
+):
+    """Processing carved out ELF files is special: we want to keep the ELF file around,
+    and also present in the output report as a separate task entity with its reports.
+
+    This is achieved by running the ELF handler twice, once on the carved out chunk,
+    next again on the same physical file, but within the scope of a separate `Task`.
+    """
+    PREFIX = b"-some-prefix"
+    SUFFIX = b"suffix-"
+    input_path = tmp_path / "input_path"
+    input_path.write_bytes(PREFIX + ELF_CONTENT + SUFFIX)
+
+    extraction_config.keep_extracted_chunks = False
+    reports = process_file(extraction_config, input_path)
+
+    # we should still have the carved ELF file, even if deleting extracted chunks was requested
+    carved_elf_path = (
+        extraction_config.extract_root
+        / f"{input_path.name}_extract/{len(PREFIX)}-{len(PREFIX) + len(ELF_CONTENT)}.elf64"
+    )
+    assert carved_elf_path.read_bytes() == ELF_CONTENT
+
+    # we expect results for 2 connected tasks
+    [carve_elf, handle_elf] = reports.results
+
+    # first pass: carve elf file from input_path, but postpone its real processing to a new task
+    [chunk_report] = [r for r in carve_elf.reports if isinstance(r, ChunkReport)]
+    [subtask] = carve_elf.subtasks
+    assert chunk_report == ChunkReport(
+        id=subtask.chunk_id,
+        handler_name="elf64",
+        start_offset=len(PREFIX),
+        end_offset=len(PREFIX) + len(ELF_CONTENT),
+        size=len(ELF_CONTENT),
+        is_encrypted=False,
+        extraction_reports=[],
+    )
+
+    # second pass: process carved out elf file
+    assert handle_elf.task == Task(
+        path=carved_elf_path, depth=1, chunk_id=subtask.chunk_id
+    )
+    [chunk_report] = [r for r in handle_elf.reports if isinstance(r, ChunkReport)]
+    assert chunk_report == ChunkReport(
+        id=ANY,
+        handler_name="elf64",
+        start_offset=0,
+        end_offset=len(ELF_CONTENT),
+        size=len(ELF_CONTENT),
+        is_encrypted=False,
+        extraction_reports=[],
+    )
