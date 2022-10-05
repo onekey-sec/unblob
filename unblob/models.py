@@ -290,7 +290,15 @@ class Handler(abc.ABC):
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
 
-        self.EXTRACTOR.extract(inpath, outdir)
+        try:
+            self.EXTRACTOR.extract(inpath, outdir)
+        except ExtractError:
+            # do not leave behind empty extraction directories
+            try:
+                outdir.rmdir()
+            except OSError:
+                pass
+            raise
 
 
 class StructHandler(Handler):
