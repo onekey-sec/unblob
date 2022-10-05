@@ -93,11 +93,21 @@ class ELFKernelExtractor(Extractor):
             initramfs_end = initramfs_size_offset - padding
             initramfs_start = initramfs_end - initramfs_size
 
-            carve_chunk_to_file(
-                outdir.joinpath("initramfs"),
-                file,
-                ValidChunk(start_offset=initramfs_start, end_offset=initramfs_end),
-            )
+            # initramfs can be turned off (https://www.linux.com/training-tutorials/kernel-newbie-corner-initrd-and-initramfs-whats/)
+            # in which case the above calculations most probably end up with bogus chunk offsets
+            if (
+                init_data.file_offset
+                <= initramfs_start
+                < initramfs_end
+                <= init_data_end_offset
+            ):
+                carve_chunk_to_file(
+                    outdir.joinpath("initramfs"),
+                    file,
+                    ValidChunk(start_offset=initramfs_start, end_offset=initramfs_end),
+                )
+            else:
+                raise NullExtract()
 
 
 class _ELFBase(StructHandler):
