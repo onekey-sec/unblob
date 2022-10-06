@@ -1,9 +1,12 @@
+import io
+from pathlib import Path
 from typing import Optional
 
 from structlog import get_logger
 
-from unblob.file_utils import Endian, File
-from unblob.models import HexString, StructHandler, ValidChunk
+from unblob.extractor import carve_chunk_to_file
+from unblob.file_utils import Endian, File, StructParser
+from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -24,6 +27,28 @@ CHK_HEADER = r"""
     """
 
 
+class CHKExtractor(Extractor):
+    def __init__(self):
+        self._struct_parser = StructParser(CHK_HEADER)
+
+    def extract(self, inpath: Path, outdir: Path):
+        with File.from_path(inpath) as file:
+            header = self._struct_parser.parse("chk_header_t", file, Endian.BIG)
+
+            file.seek(header.header_len, io.SEEK_SET)
+
+            self._dump_file(file, outdir, Path("kernel"), header.kernel_len)
+            self._dump_file(file, outdir, Path("rootfs"), header.rootfs_len)
+
+    def _dump_file(self, file: File, outdir: Path, path: Path, length: int):
+        if not length:
+            return
+
+        start = file.tell()
+        chunk = Chunk(start_offset=start, end_offset=start + length)
+        carve_chunk_to_file(outdir.joinpath(path), file, chunk)
+
+
 class NetgearCHKHandler(StructHandler):
 
     NAME = "chk"
@@ -32,7 +57,7 @@ class NetgearCHKHandler(StructHandler):
 
     C_DEFINITIONS = CHK_HEADER
     HEADER_STRUCT = "chk_header_t"
-    EXTRACTOR = None
+    EXTRACTOR = CHKExtractor()
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, endian=Endian.BIG)
