@@ -48,6 +48,7 @@ BUILTIN_HANDLERS: Handlers = (
     yaffs.YAFFSHandler,
     yaffs.YAFFS2Handler,
     netgear.NetgearCHKHandler,
+    netgear.NetgearTRXHandler,
     sparse.SparseHandler,
     ar.ARHandler,
     arc.ARCHandler,
