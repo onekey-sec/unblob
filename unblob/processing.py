@@ -80,6 +80,7 @@ class ExtractionConfig:
     entropy_plot: bool = False
     max_depth: int = DEFAULT_DEPTH
     skip_magic: Iterable[str] = DEFAULT_SKIP_MAGIC
+    skip_extraction: bool = False
     process_num: int = DEFAULT_PROCESS_NUM
     keep_extracted_chunks: bool = False
     extract_suffix: str = "_extract"
@@ -373,6 +374,10 @@ class _FileTask:
             inpath = carve_valid_chunk(self.carve_dir, file, chunk)
             extract_dir = self.carve_dir / (inpath.name + self.config.extract_suffix)
             carved_path = inpath
+
+        if self.config.skip_extraction:
+            fix_extracted_directory(extract_dir, self.result)
+            return
 
         extraction_reports = []
         try:

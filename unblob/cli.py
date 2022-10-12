@@ -152,6 +152,14 @@ class UnblobContext(click.Context):
     help="File to store metadata generated during the extraction process (in JSON format).",
 )
 @click.option(
+    "-s",
+    "--skip_extraction",
+    "skip_extraction",
+    is_flag=True,
+    show_default=True,
+    help="Only carve chunks and skip further extraction",
+)
+@click.option(
     "-k",
     "--keep-extracted-chunks",
     "keep_extracted_chunks",
@@ -176,6 +184,7 @@ def cli(
     depth: int,
     entropy_depth: int,
     skip_magic: Iterable[str],
+    skip_extraction: bool,
     keep_extracted_chunks: bool,
     handlers: Handlers,
     plugins_path: Optional[Path],
@@ -194,6 +203,7 @@ def cli(
         max_depth=depth,
         entropy_depth=entropy_depth,
         entropy_plot=bool(verbose >= 3),
+        skip_extraction=skip_extraction,
         skip_magic=skip_magic,
         process_num=process_num,
         handlers=handlers,
