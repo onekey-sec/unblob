@@ -3,6 +3,7 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.poetry2nix.url = "github:nix-community/poetry2nix";
+  inputs.poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
   inputs.sasquatch.url = "github:onekey-sec/sasquatch";
   inputs.sasquatch.flake = false;
