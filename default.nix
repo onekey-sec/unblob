@@ -41,34 +41,46 @@ let
 
     # Python dependencies that need special care, like non-python
     # build dependencies
-    overrides = poetry2nix.overrides.withoutDefaults (self: super: {
-      python-lzo = super.python-lzo.overridePythonAttrs (_: {
-        buildInputs = [
-          lzo
-        ];
-      });
+    overrides = poetry2nix.overrides.withoutDefaults (self: super:
+      let
+        # Inject setuptools to dependencies that is required by many non-wheel distributed packages
+        overrideWithSetuptools = drv: overrides: (drv.overridePythonAttrs overrides).overridePythonAttrs (prev: {
+          buildInputs = prev.buildInputs or [ ] ++ [
+            self.setuptools
+          ];
+        });
+      in
+      {
+        python-lzo = overrideWithSetuptools super.python-lzo (_: {
+          buildInputs = [
+            lzo
+          ];
+        });
 
-      jefferson = super.jefferson.overridePythonAttrs (_: {
-        propagatedBuildInputs = [
-          # Use the _same_ version as unblob
-          self.cstruct
-          self.python-lzo
-        ];
-      });
+        jefferson = overrideWithSetuptools super.jefferson (_: {
+          propagatedBuildInputs = [
+            # Use the _same_ version as unblob
+            self.cstruct
+            self.python-lzo
+          ];
+        });
 
+        python-magic = overrideWithSetuptools (super.python-magic.override { preferWheel = false; }) (_: {
+          patchPhase = ''
+            substituteInPlace magic/loader.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
+          '';
+        });
 
-      python-magic = (super.python-magic.override { preferWheel = false; }).overridePythonAttrs (_: {
-        patchPhase = ''
-          substituteInPlace magic/loader.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
-        '';
-      });
+        hyperscan = super.hyperscan.overridePythonAttrs (_: {
+          buildInputs = [
+            hyperscan
+          ];
+        });
 
-      hyperscan = super.hyperscan.overridePythonAttrs (_: {
-        buildInputs = [
-          hyperscan
-        ];
+        arpy = overrideWithSetuptools super.arpy { };
+        yaffshiv = overrideWithSetuptools super.yaffshiv { };
+        ubi-reader = overrideWithSetuptools super.ubi-reader { };
       });
-    });
 
     python = python3;
 
