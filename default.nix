@@ -56,12 +56,6 @@ let
         ];
       });
 
-      ubi_reader = super.ubi_reader.ovveridePythonAttrs (_: {
-        propagatedBuildInputs = [
-          # Use the _same_ version as unblob
-          self.python-lzo
-        ];
-      });
 
       python-magic = (super.python-magic.override { preferWheel = false; }).overridePythonAttrs (_: {
         patchPhase = ''
