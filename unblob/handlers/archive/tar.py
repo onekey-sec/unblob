@@ -1,12 +1,12 @@
 import tarfile
+from pathlib import Path
 from typing import Optional
 
 from structlog import get_logger
 
-from unblob.extractors.command import Command
-
 from ...file_utils import OffsetFile, decode_int, round_up, snull
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import Extractor, File, HexString, StructHandler, ValidChunk
+from ._safe_tarfile import SafeTarFile as safe_tarfile
 
 logger = get_logger()
 
@@ -66,6 +66,12 @@ def _find_end_of_padding(file, *, find_from: int) -> int:
     return find_from + padding_blocks * BLOCK_SIZE
 
 
+class TarExtractor(Extractor):
+    def extract(self, inpath: Path, outdir: Path):
+        tf = safe_tarfile.open(inpath.as_posix())
+        tf.extractall(outdir.as_posix())
+
+
 class TarHandler(StructHandler):
     NAME = "tar"
 
@@ -102,7 +108,7 @@ class TarHandler(StructHandler):
     """
     HEADER_STRUCT = "posix_header_t"
 
-    EXTRACTOR = Command("python3", "-m", "tarfile", "-e", "{inpath}", "{outdir}")
+    EXTRACTOR = TarExtractor()
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         file.seek(start_offset)
