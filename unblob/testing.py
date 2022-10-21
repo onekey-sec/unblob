@@ -7,9 +7,9 @@ from pytest_cov.embed import cleanup_on_sigterm
 
 from unblob.finder import build_hyperscan_database
 from unblob.logging import configure_logger
-from unblob.models import ProcessResult
 from unblob.processing import ExtractionConfig
 from unblob.report import ExtractCommandFailedReport
+from unblob.tasks import ProcessResult
 
 
 @pytest.fixture(scope="session", autouse=True)

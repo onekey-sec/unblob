@@ -12,9 +12,10 @@ from structlog import get_logger
 
 from .file_utils import InvalidInputFormat, SeekError
 from .handlers import Handlers
-from .models import File, Handler, TaskResult, ValidChunk
+from .models import File, Handler, ValidChunk
 from .parser import InvalidHexString
 from .report import CalculateChunkExceptionReport
+from .tasks import TaskResult
 
 logger = get_logger()
 

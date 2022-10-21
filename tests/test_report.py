@@ -7,7 +7,6 @@ from zipfile import ZipFile, ZipInfo
 
 import pytest
 
-from unblob.models import ProcessResult, Task, TaskResult
 from unblob.processing import ExtractionConfig, process_file
 from unblob.report import (
     ChunkReport,
@@ -17,6 +16,7 @@ from unblob.report import (
     StatReport,
     UnknownChunkReport,
 )
+from unblob.tasks import ProcessResult, Task, TaskResult
 
 
 @pytest.fixture

@@ -9,7 +9,7 @@ import unblob.cli
 from unblob.extractors import Command
 from unblob.handlers import BUILTIN_HANDLERS
 from unblob.models import Handler, HexString
-from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
+from unblob.tasks import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
 
 
 class TestHandler(Handler):

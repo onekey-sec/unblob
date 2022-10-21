@@ -6,20 +6,19 @@ from typing import Iterable, Optional
 import click
 from structlog import get_logger
 
-from unblob.models import ProcessResult
-from unblob.plugins import UnblobPluginManager
-from unblob.report import Severity
-
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
 from .handlers import BUILTIN_HANDLERS, Handlers
 from .logging import configure_logger
-from .processing import (
+from .plugins import UnblobPluginManager
+from .processing import process_file
+from .report import Severity
+from .tasks import (
     DEFAULT_DEPTH,
     DEFAULT_PROCESS_NUM,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
-    process_file,
+    ProcessResult,
 )
 
 logger = get_logger()

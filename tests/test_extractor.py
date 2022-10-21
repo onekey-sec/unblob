@@ -8,7 +8,8 @@ from unblob.extractor import (
     fix_permission,
     fix_symlink,
 )
-from unblob.models import File, TaskResult, UnknownChunk
+from unblob.models import File, UnknownChunk
+from unblob.tasks import TaskResult
 
 
 def test_carve_unknown_chunk(tmp_path: Path):
