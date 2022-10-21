@@ -1,16 +1,12 @@
-import multiprocessing
 import shutil
 import statistics
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
-import attr
 import magic
 import plotext as plt
 from structlog import get_logger
-
-from unblob.handlers import BUILTIN_HANDLERS, Handlers
 
 from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
 from .file_utils import iterate_file, valid_path
@@ -18,15 +14,7 @@ from .finder import search_chunks
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
-from .models import (
-    ExtractError,
-    File,
-    ProcessResult,
-    Task,
-    TaskResult,
-    UnknownChunk,
-    ValidChunk,
-)
+from .models import ExtractError, File, UnknownChunk, ValidChunk
 from .pool import make_pool
 from .report import (
     ExtractDirectoryExistsReport,
@@ -37,56 +25,9 @@ from .report import (
     UnknownError,
 )
 from .signals import terminate_gracefully
+from .tasks import ExtractionConfig, ProcessResult, Task, TaskResult
 
 logger = get_logger()
-
-DEFAULT_DEPTH = 10
-DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
-DEFAULT_SKIP_MAGIC = (
-    "BFLT",
-    "JPEG",
-    "GIF",
-    "PNG",
-    "SQLite",
-    "compiled Java class",
-    "TrueType Font data",
-    "PDF document",
-    "magic binary file",
-    "MS Windows icon resource",
-    "PE32+ executable (EFI application)",
-    "Web Open Font Format",
-    "GNU message catalog",
-    "Xilinx BIT data",
-    "Microsoft Excel",
-    "Microsoft Word",
-    "Microsoft PowerPoint",
-    "OpenDocument",
-)
-
-
-@attr.define(kw_only=True)
-class ExtractionConfig:
-    extract_root: Path = attr.field(converter=lambda value: value.resolve())
-    force_extract: bool = False
-    entropy_depth: int
-    entropy_plot: bool = False
-    max_depth: int = DEFAULT_DEPTH
-    skip_magic: Iterable[str] = DEFAULT_SKIP_MAGIC
-    process_num: int = DEFAULT_PROCESS_NUM
-    keep_extracted_chunks: bool = False
-    extract_suffix: str = "_extract"
-    handlers: Handlers = BUILTIN_HANDLERS
-
-    def get_extract_dir_for(self, path: Path) -> Path:
-        """Extraction dir under root with the name of path."""
-        try:
-            relative_path = path.relative_to(self.extract_root)
-        except ValueError:
-            # path is not inside root, i.e. it is an input file
-            relative_path = Path(path.name)
-        extract_name = path.name + self.extract_suffix
-        extract_dir = self.extract_root / relative_path.with_name(extract_name)
-        return extract_dir.expanduser().resolve()
 
 
 @terminate_gracefully

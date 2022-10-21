@@ -1,7 +1,4 @@
 import abc
-import itertools
-import json
-from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Tuple, Type
 
@@ -11,7 +8,7 @@ from structlog import get_logger
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .identifiers import new_id
 from .parser import hexstring2regex
-from .report import ChunkReport, ErrorReport, Report, UnknownChunkReport
+from .report import ChunkReport, Report, UnknownChunkReport
 
 logger = get_logger()
 
@@ -19,13 +16,6 @@ logger = get_logger()
 #
 # file ──► pattern match ──► ValidChunk
 #
-
-
-@attr.define(frozen=True)
-class Task:
-    path: Path
-    depth: int
-    chunk_id: str
 
 
 @attr.define
@@ -124,73 +114,6 @@ class UnknownChunk(Chunk):
             end_offset=self.end_offset,
             size=self.size,
         )
-
-
-@attr.define
-class TaskResult:
-    task: Task
-    reports: List[Report] = attr.field(factory=list)
-    subtasks: List[Task] = attr.field(factory=list)
-
-    def add_report(self, report: Report):
-        self.reports.append(report)
-
-    def add_subtask(self, task: Task):
-        self.subtasks.append(task)
-
-
-@attr.define
-class ProcessResult:
-    results: List[TaskResult] = attr.field(factory=list)
-
-    @property
-    def errors(self) -> List[ErrorReport]:
-        reports = itertools.chain.from_iterable(r.reports for r in self.results)
-        interesting_reports = (
-            r for r in reports if isinstance(r, (ErrorReport, ChunkReport))
-        )
-        errors = []
-        for report in interesting_reports:
-            if isinstance(report, ErrorReport):
-                errors.append(report)
-            else:
-                errors.extend(
-                    r for r in report.extraction_reports if isinstance(r, ErrorReport)
-                )
-        return errors
-
-    def register(self, result: TaskResult):
-        self.results.append(result)
-
-    def to_json(self, indent="  "):
-        return json.dumps(self.results, cls=_JSONEncoder, indent=indent)
-
-
-class _JSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if attr.has(type(obj)):
-            extend_attr_output = True
-            attr_output = attr.asdict(obj, recurse=not extend_attr_output)
-            attr_output["__typename__"] = obj.__class__.__name__
-            return attr_output
-
-        if isinstance(obj, Enum):
-            return obj.name
-
-        if isinstance(obj, Path):
-            return str(obj)
-
-        if isinstance(obj, bytes):
-            try:
-                return obj.decode()
-            except UnicodeDecodeError:
-                return str(obj)
-
-        logger.error(f"JSONEncoder met a non-JSON encodable value: {obj}")
-        # the usual fail path of custom JSONEncoders is to call the parent and let it fail
-        #     return json.JSONEncoder.default(self, obj)
-        # instead of failing, just return something usable
-        return f"Non-JSON encodable value: {obj}"
 
 
 class ExtractError(Exception):
