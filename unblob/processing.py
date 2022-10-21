@@ -8,9 +8,10 @@ import magic
 import plotext as plt
 from structlog import get_logger
 
-from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
+from .extractor import carve_unknown_chunk, carve_valid_chunk
 from .file_utils import iterate_file, valid_path
 from .finder import search_chunks
+from .fixers import fix_extracted_directory
 from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy

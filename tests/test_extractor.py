@@ -2,12 +2,8 @@ from pathlib import Path, PosixPath
 
 import pytest
 
-from unblob.extractor import (
-    carve_unknown_chunk,
-    fix_extracted_directory,
-    fix_permission,
-    fix_symlink,
-)
+from unblob.extractor import carve_unknown_chunk
+from unblob.fixers import fix_extracted_directory, fix_permission, fix_symlink
 from unblob.models import File, UnknownChunk
 from unblob.tasks import TaskResult
 
