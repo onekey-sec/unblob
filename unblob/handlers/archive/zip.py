@@ -101,7 +101,15 @@ class ZIPHandler(StructHandler):
 
     @staticmethod
     def is_zip64_eocd(end_of_central_directory: Instance):
-        return end_of_central_directory.offset_of_cd == 0xFFFFFFFF
+        # see https://pkware.cachefly.net/webdocs/APPNOTE/APPNOTE-6.3.1.TXT section J
+        return (
+            end_of_central_directory.disk_number == 0xFFFF
+            or end_of_central_directory.disk_number_with_cd == 0xFFFF
+            or end_of_central_directory.disk_entries == 0xFFFF
+            or end_of_central_directory.total_entries == 0xFFFF
+            or end_of_central_directory.central_directory_size == 0xFFFFFFFF
+            or end_of_central_directory.offset_of_cd == 0xFFFFFFFF
+        )
 
     def _parse_zip64(self, file: File, start_offset: int, offset: int) -> int:
         file.seek(start_offset, io.SEEK_SET)
