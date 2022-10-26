@@ -410,6 +410,9 @@ class _JSONEncoder(json.JSONEncoder):
             except UnicodeDecodeError:
                 return str(obj)
 
+        if isinstance(obj, Handler):
+            return str(obj.__class__)
+
         logger.error(f"JSONEncoder met a non-JSON encodable value: {obj}")
         # the usual fail path of custom JSONEncoders is to call the parent and let it fail
         #     return json.JSONEncoder.default(self, obj)
