@@ -201,6 +201,8 @@ def test_archive_success(
         entropy_plot=bool(expected_verbosity >= 3),
         process_num=expected_process_num,
         handlers=BUILTIN_HANDLERS,
+        get_magic=mock.ANY,
+        get_mime_type=mock.ANY,
     )
     process_file_mock.assert_called_once_with(config, in_path, None)
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
