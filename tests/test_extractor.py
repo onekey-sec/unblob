@@ -2,17 +2,18 @@ from pathlib import Path, PosixPath
 
 import pytest
 
-from unblob.extractor import carve_unknown_chunk
+from unblob.extractor import carve_chunk
 from unblob.fixers import fix_extracted_directory, fix_permission, fix_symlink
-from unblob.models import File, UnknownChunk
-from unblob.tasks import TaskResult
+from unblob.models import Chunk, File
+from unblob.tasks import TaskResult, UnknownHandler
 
 
-def test_carve_unknown_chunk(tmp_path: Path):
+def test_carve_chunk(tmp_path: Path):
     content = b"test file"
     test_file = File.from_bytes(content)
-    chunk = UnknownChunk(1, 8)
-    carve_unknown_chunk(tmp_path, test_file, chunk)
+    chunk = Chunk(1, 8)
+    handler = UnknownHandler(do_entropy_calculation=False, do_entropy_plot=False)
+    carve_chunk(tmp_path, test_file, chunk, handler)
     written_path = tmp_path / "1-8.unknown"
     assert list(tmp_path.iterdir()) == [written_path]
     assert written_path.read_bytes() == content[1:8]

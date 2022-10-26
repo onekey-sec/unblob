@@ -14,7 +14,6 @@ from unblob.report import (
     FileMagicReport,
     HashReport,
     StatReport,
-    UnknownChunkReport,
 )
 from unblob.tasks import ProcessResult, Task, TaskResult
 
@@ -57,7 +56,6 @@ class Test_ProcessResult_to_json:
 
         task_result.add_report(
             StatReport(
-                path=task.path,
                 size=384,
                 is_dir=False,
                 is_file=True,
@@ -299,7 +297,6 @@ def hello_kitty_task_results(
             task=Task(path=hello_kitty, depth=start_depth, chunk_id=container_id),
             reports=[
                 StatReport(
-                    path=hello_kitty,
                     size=264,
                     is_dir=False,
                     is_file=True,
@@ -312,9 +309,33 @@ def hello_kitty_task_results(
                     sha1="febca6ed75dc02e0def065e7b08f1cca87b57c74",
                     sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
                 ),
-                UnknownChunkReport(id=ANY, start_offset=0, end_offset=6, size=6),
-                UnknownChunkReport(id=ANY, start_offset=131, end_offset=138, size=7),
-                UnknownChunkReport(id=ANY, start_offset=263, end_offset=264, size=1),
+                ChunkReport(
+                    id=ANY,
+                    start_offset=0,
+                    end_offset=6,
+                    size=6,
+                    handler_name="unknown",
+                    is_encrypted=False,
+                    extraction_reports=[],
+                ),
+                ChunkReport(
+                    id=ANY,
+                    start_offset=131,
+                    end_offset=138,
+                    size=7,
+                    handler_name="unknown",
+                    is_encrypted=False,
+                    extraction_reports=[],
+                ),
+                ChunkReport(
+                    id=ANY,
+                    start_offset=263,
+                    end_offset=264,
+                    size=1,
+                    handler_name="unknown",
+                    is_encrypted=False,
+                    extraction_reports=[],
+                ),
                 ChunkReport(
                     id=hello_id,
                     handler_name="zip",
@@ -355,7 +376,6 @@ def hello_kitty_task_results(
             ),
             reports=[
                 StatReport(
-                    path=extract_root / "hello_kitty_extract/138-263.zip_extract",
                     size=ANY,
                     is_dir=True,
                     is_file=False,
@@ -381,8 +401,6 @@ def hello_kitty_task_results(
             ),
             reports=[
                 StatReport(
-                    path=extract_root
-                    / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
                     size=5,
                     is_dir=False,
                     is_file=True,
@@ -408,7 +426,6 @@ def hello_kitty_task_results(
             ),
             reports=[
                 StatReport(
-                    path=extract_root / "hello_kitty_extract/6-131.zip_extract",
                     size=ANY,
                     is_dir=True,
                     is_file=False,
@@ -433,8 +450,6 @@ def hello_kitty_task_results(
             ),
             reports=[
                 StatReport(
-                    path=extract_root
-                    / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
                     size=5,
                     is_dir=False,
                     is_file=True,
@@ -506,7 +521,6 @@ def container_task_results(
             ),
             reports=[
                 StatReport(
-                    path=container,
                     size=384,
                     is_dir=False,
                     is_file=True,
@@ -548,7 +562,6 @@ def container_task_results(
             ),
             reports=[
                 StatReport(
-                    path=extract_root / "container_extract",
                     size=ANY,
                     is_dir=True,
                     is_file=False,
