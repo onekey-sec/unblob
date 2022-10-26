@@ -112,7 +112,6 @@ class Test_ProcessResult_to_json:
                         "is_file": True,
                         "is_link": False,
                         "link_target": None,
-                        "path": "/nonexistent",
                         "size": 384,
                     },
                     {
