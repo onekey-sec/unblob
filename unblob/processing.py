@@ -1,32 +1,14 @@
 import shutil
-import statistics
-from operator import attrgetter
 from pathlib import Path
 from typing import List, Optional
 
-import magic
-import plotext as plt
 from structlog import get_logger
 
-from .extractor import carve_unknown_chunk, carve_valid_chunk
-from .file_utils import iterate_file, valid_path
-from .finder import search_chunks
-from .fixers import fix_extracted_directory
-from .iter_utils import pairwise
-from .logging import noformat
-from .math import shannon_entropy
-from .models import ExtractError, File, UnknownChunk, ValidChunk
+from .file_utils import valid_path
 from .pool import make_pool
-from .report import (
-    ExtractDirectoryExistsReport,
-    FileMagicReport,
-    HashReport,
-    Report,
-    StatReport,
-    UnknownError,
-)
+from .report import ExtractDirectoryExistsReport, Report, UnknownError
 from .signals import terminate_gracefully
-from .tasks import ExtractionConfig, ProcessResult, Task, TaskResult
+from .tasks import ClassifierTask, ExtractionConfig, ProcessResult, Task, TaskResult
 
 logger = get_logger()
 
@@ -35,7 +17,7 @@ logger = get_logger()
 def process_file(
     config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
 ) -> ProcessResult:
-    task = Task(
+    task = ClassifierTask(
         chunk_id="",
         path=input_path,
         depth=0,
@@ -92,6 +74,7 @@ def prepare_extract_dir(config: ExtractionConfig, input_file: Path) -> List[Repo
         if config.force_extract:
             logger.info("Removing extract dir", path=extract_dir)
             shutil.rmtree(extract_dir)
+            extract_dir.mkdir(parents=True, exist_ok=True)
         else:
             report = ExtractDirectoryExistsReport(path=extract_dir)
             logger.error("Extraction directory already exist", path=str(extract_dir))
@@ -153,16 +136,6 @@ def write_json_report(report_file: Path, process_result: ProcessResult):
 class Processor:
     def __init__(self, config: ExtractionConfig):
         self._config = config
-        # libmagic helpers
-        # file magic uses a rule-set to guess the file type, however as rules are added they could
-        # shadow each other. File magic uses rule priorities to determine which is the best matching
-        # rule, however this could shadow other valid matches as well, which could eventually break
-        # any further processing that depends on magic.
-        # By enabling keep_going (which eventually enables MAGIC_CONTINUE) all matching patterns
-        # will be included in the magic string at the cost of being a bit slower, but increasing
-        # accuracy by no shadowing rules.
-        self._get_magic = magic.Magic(keep_going=True).from_file
-        self._get_mime_type = magic.Magic(mime=True).from_file
 
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult(task)
@@ -179,6 +152,7 @@ class Processor:
 
     def _process_task(self, result: TaskResult, task: Task):
         log = logger.bind(path=task.path)
+        log.error("task", task=task)
 
         if task.depth >= self._config.max_depth:
             # TODO: Use the reporting feature to warn the user (ONLY ONCE) at the end of execution, that this limit was reached.
@@ -189,277 +163,4 @@ class Processor:
             log.warn("Path contains invalid characters, it won't be processed")
             return
 
-        stat_report = StatReport.from_path(task.path)
-        result.add_report(stat_report)
-
-        if stat_report.is_dir:
-            log.debug("Found directory")
-            for path in task.path.iterdir():
-                result.add_subtask(
-                    Task(
-                        chunk_id=task.chunk_id,
-                        path=path,
-                        depth=task.depth,
-                    )
-                )
-            return
-
-        if not stat_report.is_file:
-            log.debug(
-                "Ignoring special file (link, chrdev, blkdev, fifo, socket, door)."
-            )
-            return
-
-        magic = self._get_magic(task.path)
-        mime_type = self._get_mime_type(task.path)
-        logger.debug("Detected file-magic", magic=magic, path=task.path, _verbosity=2)
-
-        magic_report = FileMagicReport(magic=magic, mime_type=mime_type)
-        result.add_report(magic_report)
-
-        hash_report = HashReport.from_path(task.path)
-        result.add_report(hash_report)
-
-        if stat_report.size == 0:
-            log.debug("Ignoring empty file")
-            return
-
-        should_skip_file = any(
-            magic.startswith(pattern) for pattern in self._config.skip_magic
-        )
-
-        if should_skip_file:
-            log.debug("Ignoring file based on magic", magic=magic)
-            return
-
-        _FileTask(self._config, task, stat_report.size, result).process()
-
-
-class _FileTask:
-    def __init__(
-        self,
-        config: ExtractionConfig,
-        task: Task,
-        size: int,
-        result: TaskResult,
-    ):
-        self.config = config
-        self.task = task
-        self.size = size
-        self.result = result
-
-        self.carve_dir = config.get_extract_dir_for(self.task.path)
-
-    def process(self):
-        logger.debug("Processing file", path=self.task.path, size=self.size)
-
-        with File.from_path(self.task.path) as file:
-            all_chunks = search_chunks(
-                file, self.size, self.config.handlers, self.result
-            )
-            outer_chunks = remove_inner_chunks(all_chunks)
-            unknown_chunks = calculate_unknown_chunks(outer_chunks, self.size)
-
-            if outer_chunks or unknown_chunks:
-                self._process_chunks(file, outer_chunks, unknown_chunks)
-            else:
-                # we don't consider whole files as unknown chunks, but we still want to
-                # calculate entropy for whole files which produced no valid chunks
-                self._calculate_entropy(self.task.path)
-
-        self._ensure_root_extract_dir()
-
-    def _process_chunks(
-        self,
-        file: File,
-        outer_chunks: List[ValidChunk],
-        unknown_chunks: List[UnknownChunk],
-    ):
-        if unknown_chunks:
-            logger.warning("Found unknown Chunks", chunks=unknown_chunks)
-
-        for chunk in unknown_chunks:
-            carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
-            self._calculate_entropy(carved_unknown_path)
-            self.result.add_report(chunk.as_report())
-
-        for chunk in outer_chunks:
-            self._extract_chunk(file, chunk)
-
-    def _ensure_root_extract_dir(self):
-        # ensure that the root extraction directory is created even for empty extractions
-        if self.task.depth == 0:
-            self.carve_dir.mkdir(parents=True, exist_ok=True)
-
-    def _calculate_entropy(self, path: Path):
-        if self.task.depth < self.config.entropy_depth:
-            calculate_entropy(path, draw_plot=self.config.entropy_plot)
-
-    def _extract_chunk(self, file, chunk: ValidChunk):
-        is_whole_file_chunk = chunk.start_offset == 0 and chunk.end_offset == self.size
-
-        skip_carving = is_whole_file_chunk
-        if skip_carving:
-            inpath = self.task.path
-            extract_dir = self.carve_dir
-            carved_path = None
-        else:
-            inpath = carve_valid_chunk(self.carve_dir, file, chunk)
-            extract_dir = self.carve_dir / (inpath.name + self.config.extract_suffix)
-            carved_path = inpath
-
-        extraction_reports = []
-        try:
-            chunk.extract(inpath, extract_dir)
-
-            if carved_path and not self.config.keep_extracted_chunks:
-                logger.debug("Removing extracted chunk", path=carved_path)
-                carved_path.unlink()
-
-        except ExtractError as e:
-            extraction_reports.extend(e.reports)
-
-        except Exception as exc:
-            logger.exception("Unknown error happened while extracting chunk")
-            extraction_reports.append(UnknownError(exception=exc))
-
-        self.result.add_report(chunk.as_report(extraction_reports))
-
-        # we want to get consistent partial output even in case of unforeseen problems
-        fix_extracted_directory(extract_dir, self.result)
-
-        if extract_dir.exists():
-            self.result.add_subtask(
-                Task(
-                    chunk_id=chunk.id,
-                    path=extract_dir,
-                    depth=self.task.depth + 1,
-                )
-            )
-
-
-def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
-    """Remove all chunks from the list which are within another bigger chunks."""
-    if not chunks:
-        return []
-
-    chunks_by_size = sorted(chunks, key=attrgetter("size"), reverse=True)
-    outer_chunks = [chunks_by_size[0]]
-    for chunk in chunks_by_size[1:]:
-        if not any(outer.contains(chunk) for outer in outer_chunks):
-            outer_chunks.append(chunk)
-
-    outer_count = len(outer_chunks)
-    removed_count = len(chunks) - outer_count
-    logger.debug(
-        "Removed inner chunks",
-        outer_chunk_count=noformat(outer_count),
-        removed_inner_chunk_count=noformat(removed_count),
-        _verbosity=2,
-    )
-    return outer_chunks
-
-
-def calculate_unknown_chunks(
-    chunks: List[ValidChunk], file_size: int
-) -> List[UnknownChunk]:
-    """Calculate the empty gaps between chunks."""
-    if not chunks or file_size == 0:
-        return []
-
-    sorted_by_offset = sorted(chunks, key=attrgetter("start_offset"))
-
-    unknown_chunks = []
-
-    first = sorted_by_offset[0]
-    if first.start_offset != 0:
-        unknown_chunk = UnknownChunk(0, first.start_offset)
-        unknown_chunks.append(unknown_chunk)
-
-    for chunk, next_chunk in pairwise(sorted_by_offset):
-        diff = next_chunk.start_offset - chunk.end_offset
-        if diff != 0:
-            unknown_chunk = UnknownChunk(
-                start_offset=chunk.end_offset,
-                end_offset=next_chunk.start_offset,
-            )
-            unknown_chunks.append(unknown_chunk)
-
-    last = sorted_by_offset[-1]
-    if last.end_offset < file_size:
-        unknown_chunk = UnknownChunk(
-            start_offset=last.end_offset,
-            end_offset=file_size,
-        )
-        unknown_chunks.append(unknown_chunk)
-
-    return unknown_chunks
-
-
-def calculate_entropy(path: Path, *, draw_plot: bool):
-    """Calculate and log shannon entropy divided by 8 for the file in 1mB chunks.
-
-    Shannon entropy returns the amount of information (in bits) of some numeric
-    sequence. We calculate the average entropy of byte chunks, which in theory
-    can contain 0-8 bits of entropy. We normalize it for visualization to a
-    0-100% scale, to make it easier to interpret the graph.
-    """
-    percentages = []
-
-    # We could use the chunk size instead of another syscall,
-    # but we rely on the actual file size written to the disk
-    file_size = path.stat().st_size
-    logger.debug("Calculating entropy for file", path=path, size=file_size)
-
-    # Smaller chuk size would be very slow to calculate.
-    # 1Mb chunk size takes ~ 3sec for a 4,5 GB file.
-    buffer_size = calculate_buffer_size(
-        file_size, chunk_count=80, min_limit=1024, max_limit=1024 * 1024
-    )
-
-    with File.from_path(path) as file:
-        for chunk in iterate_file(file, 0, file_size, buffer_size=buffer_size):
-            entropy = shannon_entropy(chunk)
-            entropy_percentage = round(entropy / 8 * 100, 2)
-            percentages.append(entropy_percentage)
-
-    logger.debug(
-        "Entropy calculated",
-        mean=round(statistics.mean(percentages), 2),
-        highest=max(percentages),
-        lowest=min(percentages),
-    )
-
-    if draw_plot:
-        draw_entropy_plot(percentages)
-
-
-def calculate_buffer_size(
-    file_size, *, chunk_count: int, min_limit: int, max_limit: int
-) -> int:
-    """Split the file into even sized chunks, limited by lower and upper values."""
-    # We don't care about floating point precision here
-    buffer_size = file_size // chunk_count
-    buffer_size = max(min_limit, buffer_size)
-    buffer_size = min(buffer_size, max_limit)
-    return buffer_size
-
-
-def draw_entropy_plot(percentages: List[float]):
-    plt.clear_data()
-    plt.colorless()
-    plt.title("Entropy distribution")
-    plt.xlabel("mB")
-    plt.ylabel("entropy %")
-
-    plt.scatter(percentages, marker="dot")
-    # 16 height leaves no gaps between the lines
-    plt.plot_size(100, 16)
-    plt.ylim(0, 100)
-    # Draw ticks every 1Mb on the x axis.
-    plt.xticks(range(len(percentages) + 1))
-    # Always show 0% and 100%
-    plt.yticks(range(0, 101, 10))
-
-    # New line so that chart title will be aligned correctly in the next line
-    logger.debug("Entropy chart", chart="\n" + plt.build(), _verbosity=3)
+        return task.run(self._config, result)

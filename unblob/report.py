@@ -4,7 +4,7 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Union
 
 import attr
 
@@ -15,6 +15,9 @@ class Report:
 
     def asdict(self) -> dict:
         return attr.asdict(self)
+
+
+ReportCallback = Callable[[Report], None]
 
 
 class Severity(Enum):
@@ -114,7 +117,6 @@ class MaliciousSymlinkRemoved(ErrorReport):
 
 @attr.define(kw_only=True)
 class StatReport(Report):
-    path: Path
     size: int
     is_dir: bool
     is_file: bool
@@ -131,7 +133,6 @@ class StatReport(Report):
             link_target = None
 
         return cls(
-            path=path,
             size=st.st_size,
             is_dir=stat.S_ISDIR(mode),
             is_file=stat.S_ISREG(mode),
@@ -184,8 +185,5 @@ class ChunkReport(Report):
 
 
 @attr.define(kw_only=True)
-class UnknownChunkReport(Report):
-    id: str
-    start_offset: int
-    end_offset: int
-    size: int
+class DeletedInputReport(Report):
+    pass

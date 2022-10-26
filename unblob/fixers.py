@@ -4,8 +4,7 @@ from pathlib import Path
 from structlog import get_logger
 
 from .extractor import is_recursive_link, is_safe_path
-from .report import MaliciousSymlinkRemoved
-from .tasks import TaskResult
+from .report import MaliciousSymlinkRemoved, ReportCallback
 
 logger = get_logger()
 
@@ -17,7 +16,7 @@ def fix_permission(path: Path):
         path.chmod(0o775)
 
 
-def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
+def fix_symlink(path: Path, outdir: Path, add_report: ReportCallback) -> Path:
     """Fix symlinks by rewriting absolute symlinks to make them point within
     the extraction directory (outdir), if it's not a relative symlink it is
     either removed it it attempts to traverse outside of the extraction directory
@@ -29,7 +28,7 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
         error_report = MaliciousSymlinkRemoved(
             link=path.as_posix(), target=os.readlink(path)
         )
-        task_result.add_report(error_report)
+        add_report(error_report)
         path.unlink()
         return path
 
@@ -47,7 +46,7 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
         error_report = MaliciousSymlinkRemoved(
             link=path.as_posix(), target=target.as_posix()
         )
-        task_result.add_report(error_report)
+        add_report(error_report)
         path.unlink()
     else:
         relative_target = os.path.relpath(outdir.joinpath(target), start=path.parent)
@@ -56,10 +55,10 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
     return path
 
 
-def fix_extracted_directory(outdir: Path, task_result: TaskResult):
+def fix_extracted_directory(outdir: Path, add_report: ReportCallback):
     fix_permission(outdir)
     for path in outdir.rglob("*"):
         if path.is_symlink():
-            fix_symlink(path, outdir, task_result)
+            fix_symlink(path, outdir, add_report)
         else:
             fix_permission(path)

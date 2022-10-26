@@ -41,7 +41,7 @@ def test_fix_extracted_directory(tmpdir: Path, task_result: TaskResult):
     subdir.chmod(0o200)
     tmpdir.chmod(0o200)
 
-    fix_extracted_directory(tmpdir, task_result)
+    fix_extracted_directory(tmpdir, task_result.add_report)
     assert (tmpdir.stat().st_mode & 0o777) == 0o775
     assert (subdir.stat().st_mode & 0o777) == 0o775
     assert (tmpfile.stat().st_mode & 0o777) == 0o644
@@ -55,7 +55,7 @@ def test_fix_recursive_symlink(tmpdir: Path, task_result: TaskResult):
     link_path.symlink_to("link_b")
     second_link_path.symlink_to("link_a")
 
-    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    fixed_link = fix_symlink(link_path, tmpdir, task_result.add_report)
     assert fixed_link.exists() is False
 
 
@@ -67,7 +67,7 @@ def test_fix_symlink_chain(tmpdir: Path, task_result: TaskResult):
     target_path = Path(".")
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    fixed_link = fix_symlink(link_path, tmpdir, task_result.add_report)
     assert fixed_link.resolve() == tmpdir
 
 
@@ -79,7 +79,7 @@ def test_fix_symlink_chain_traversal(tmpdir: Path, task_result: TaskResult):
     target_path = Path("..")
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    fixed_link = fix_symlink(link_path, tmpdir, task_result.add_report)
     assert fixed_link.exists() is False
 
 
@@ -103,7 +103,7 @@ def test_fix_symlink(
 
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    fixed_link = fix_symlink(link_path, tmpdir, task_result.add_report)
     assert fixed_link.resolve() == expected_link
 
 
@@ -133,7 +133,7 @@ def test_fix_symlink_subdir(
     link_path.parent.mkdir(parents=True, exist_ok=True)
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    fixed_link = fix_symlink(link_path, tmpdir, task_result.add_report)
     assert fixed_link.resolve() == link_path.parent.joinpath(expected_link).resolve()
 
 
@@ -159,7 +159,7 @@ def test_fix_symlink_traversal(
 
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    fixed_link = fix_symlink(link_path, tmpdir, task_result.add_report)
     assert fixed_link.exists() is False
 
 
@@ -182,5 +182,5 @@ def test_fix_symlink_traversal_subdir(
     link_path.parent.mkdir(parents=True, exist_ok=True)
     link_path.symlink_to(target_path)
 
-    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    fixed_link = fix_symlink(link_path, tmpdir, task_result.add_report)
     assert fixed_link.exists() is False

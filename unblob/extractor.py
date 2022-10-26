@@ -6,7 +6,7 @@ from pathlib import Path
 from structlog import get_logger
 
 from .file_utils import iterate_file
-from .models import Chunk, File, UnknownChunk, ValidChunk
+from .models import Chunk, File, Handler
 
 logger = get_logger()
 
@@ -37,17 +37,9 @@ def is_recursive_link(path: Path) -> bool:
         return True
 
 
-def carve_unknown_chunk(extract_dir: Path, file: File, chunk: UnknownChunk) -> Path:
-    filename = f"{chunk.start_offset}-{chunk.end_offset}.unknown"
+def carve_chunk(extract_dir: Path, file: File, chunk: Chunk, handler: Handler) -> Path:
+    filename = f"{chunk.start_offset}-{chunk.end_offset}.{handler.NAME}"
     carve_path = extract_dir / filename
-    logger.info("Extracting unknown chunk", path=carve_path, chunk=chunk)
-    carve_chunk_to_file(carve_path, file, chunk)
-    return carve_path
-
-
-def carve_valid_chunk(extract_dir: Path, file: File, chunk: ValidChunk) -> Path:
-    filename = f"{chunk.start_offset}-{chunk.end_offset}.{chunk.handler.NAME}"
-    carve_path = extract_dir / filename
-    logger.info("Extracting valid chunk", path=carve_path, chunk=chunk)
+    logger.info("Extracting chunk", path=carve_path, chunk=chunk)
     carve_chunk_to_file(carve_path, file, chunk)
     return carve_path

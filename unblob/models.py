@@ -5,10 +5,12 @@ from typing import List, Optional, Tuple, Type
 import attr
 from structlog import get_logger
 
+from unblob.singleton import SingletonMeta
+
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .identifiers import new_id
 from .parser import hexstring2regex
-from .report import ChunkReport, Report, UnknownChunkReport
+from .report import Report
 
 logger = get_logger()
 
@@ -70,6 +72,8 @@ class Chunk:
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
 
+    # FIXME: because of `handler`, not all instances can pass a process boundary by Pickle
+    # Think of StructHandler(StructParser) instances, that can not be passed around
     handler: "Handler" = attr.ib(init=False, eq=False)
     is_encrypted: bool = attr.ib(default=False)
 
@@ -84,17 +88,6 @@ class ValidChunk(Chunk):
 
         self.handler.extract(inpath, outdir)
 
-    def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
-        return ChunkReport(
-            id=self.id,
-            start_offset=self.start_offset,
-            end_offset=self.end_offset,
-            size=self.size,
-            handler_name=self.handler.NAME,
-            is_encrypted=self.is_encrypted,
-            extraction_reports=extraction_reports,
-        )
-
 
 @attr.define(repr=False)
 class UnknownChunk(Chunk):
@@ -106,14 +99,6 @@ class UnknownChunk(Chunk):
     These are not extracted, just logged for information purposes and further analysis,
     like most common bytes (like \x00 and \xFF), ASCII strings, high entropy, etc.
     """
-
-    def as_report(self) -> UnknownChunkReport:
-        return UnknownChunkReport(
-            id=self.id,
-            start_offset=self.start_offset,
-            end_offset=self.end_offset,
-            size=self.size,
-        )
 
 
 class ExtractError(Exception):
@@ -183,8 +168,13 @@ class Regex(Pattern):
         return self.encode()
 
 
-class Handler(abc.ABC):
-    """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
+# class Handler(abc.ABC):
+class Handler(metaclass=SingletonMeta):
+    """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs.
+
+    The instances must be stateless (can be cached as singleton instances).
+    Must be pickle-able (see __reduce__).
+    """
 
     NAME: str
     PATTERNS: List[Pattern]
@@ -192,7 +182,19 @@ class Handler(abc.ABC):
     # (e.g. tar magic is in the middle of the header)
     PATTERN_MATCH_OFFSET: int = 0
 
+    # which interface to use to handle internal chunks?
+    # NOTE: direct chunk support (CARVE_CHUNKS == False) is not yet implemented
+    CARVE_CHUNKS = True
+    # what will happen to carved chunk files after extraction?
+    CARVED_FILE_KEPT = False
+    # what will happen to extracted input files?
+    INPUT_FILE_KEPT = True
+
     EXTRACTOR: Optional[Extractor]
+
+    def __reduce__(self):
+        # Makes Handler singletons pickleable
+        return self.__class__, ()
 
     @classmethod
     def get_dependencies(cls):
@@ -206,6 +208,7 @@ class Handler(abc.ABC):
         """Calculate the Chunk offsets from the Blob and the file type headers."""
 
     def extract(self, inpath: Path, outdir: Path):
+        """Extract a whole file."""
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", path=inpath)
             raise ExtractError()
@@ -214,6 +217,13 @@ class Handler(abc.ABC):
         outdir.mkdir(parents=True, exist_ok=False)
 
         self.EXTRACTOR.extract(inpath, outdir)
+
+    # def extract_chunk(self, inpath, outdir, chunk, chunkdir) -> [(file, handler)*]: ...
+    #     # file, chunk -> file_extracted/chunk -> file_extracted/chunk_extracted
+    #     #  - chunkdir = file_extracted
+    #     #  - outdir = file_extracted/chunk_extracted
+    # def extract_file(self, inpath, outdir) -> [(file, handler)*]: ...
+    #     # file -> file_extracted
 
 
 class StructHandler(Handler):

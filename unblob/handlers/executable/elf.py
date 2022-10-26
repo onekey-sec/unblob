@@ -112,6 +112,9 @@ class ELFKernelExtractor(Extractor):
 
 class _ELFBase(StructHandler):
 
+    # what will happen to carved chunk files after extraction?
+    CARVED_FILE_KEPT = True
+
     EXTRACTOR = ELFKernelExtractor()
     SECTION_HEADER_STRUCT = "elf_shdr_t"
     PROGRAM_HEADER_STRUCT = "elf_phdr_t"

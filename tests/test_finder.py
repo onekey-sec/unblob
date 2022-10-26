@@ -152,7 +152,7 @@ def test_search_chunks(content, expected_chunks, task_result):
         TestHandlerExc,
     )
 
-    chunks = search_chunks(file, len(content), handlers, task_result)
+    chunks = search_chunks(file, len(content), handlers, task_result.add_report)
 
     assert len(chunks) == len(expected_chunks)
     for expected_chunk, chunk in zip(expected_chunks, chunks):
