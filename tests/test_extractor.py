@@ -12,7 +12,7 @@ def test_carve_chunk(tmp_path: Path):
     content = b"test file"
     test_file = File.from_bytes(content)
     chunk = Chunk(1, 8)
-    handler = UnknownHandler(do_entropy_calculation=False, do_entropy_plot=False)
+    handler = UnknownHandler()
     carve_chunk(tmp_path, test_file, chunk, handler)
     written_path = tmp_path / "1-8.unknown"
     assert list(tmp_path.iterdir()) == [written_path]

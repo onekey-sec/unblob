@@ -177,10 +177,7 @@ class ClassifierTask(Task):
         outer_chunks = remove_inner_chunks(all_chunks)
         unknown_chunks = calculate_unknown_chunks(outer_chunks, size)
 
-        unknown_handler = UnknownHandler(
-            do_entropy_calculation=self.depth < config.entropy_depth,
-            do_entropy_plot=config.entropy_plot,
-        )
+        unknown_handler = UnknownHandler()
 
         is_whole_file_chunk = len(unknown_chunks) + len(outer_chunks) == 1
         if is_whole_file_chunk:
@@ -234,27 +231,27 @@ class UnknownHandler(Handler):
     Calculates entropy.
     """
 
-    def __reduce__(self):
-        # Makes Handler singletons pickleable
-        return self.__class__, (self.do_entropy_calculation, self.do_entropy_plot)
-
     NAME = "unknown"
     # what will happen to carved chunk files after extraction?
     CARVED_FILE_KEPT = True
     # what will happen to extracted input files?
     INPUT_FILE_KEPT = True
 
-    def __init__(self, do_entropy_calculation: bool, do_entropy_plot: bool):
-        super().__init__()
-        self.do_entropy_calculation = do_entropy_calculation
-        self.do_entropy_plot = do_entropy_plot
+    class FullContextNeeded(Exception):
+        """Unknown handler special access"""
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         raise NotImplementedError("Unknown chunks are calculated differently")
 
     def extract(self, inpath: Path, outdir: Path):
-        if self.do_entropy_calculation:
-            calculate_entropy(inpath, draw_plot=self.do_entropy_plot)
+        raise UnknownHandler.FullContextNeeded
+
+    def extract_unknown(self, task: "FileTask", config: ExtractionConfig):
+        do_entropy_calculation = task.depth < config.entropy_depth
+        do_entropy_plot = config.entropy_plot
+
+        if do_entropy_calculation:
+            calculate_entropy(task.path, draw_plot=do_entropy_plot)
 
 
 class DirTask(Task):
@@ -277,12 +274,19 @@ class FileTask(Task):
     handler: Handler
     keep_input: bool = True
 
-    def run(self, config: ExtractionConfig, result: "TaskResult") -> "TaskResult":
+    def run(  # noqa: C901
+        self, config: ExtractionConfig, result: "TaskResult"
+    ) -> "TaskResult":
         extract_dir = config.get_extract_dir_for(self.path)
         handler = self.handler
         try:
-            # TODO: handle encrypted chunks in handlers (currently: rar & zip)
-            handler.extract(self.path, extract_dir)
+            try:
+                # TODO: handle encrypted chunks in handlers (currently: rar & zip)
+                handler.extract(self.path, extract_dir)
+
+            except UnknownHandler.FullContextNeeded:
+                assert isinstance(handler, UnknownHandler)
+                handler.extract_unknown(self, config)
 
         except ExtractError as e:
             for report in e.reports:
