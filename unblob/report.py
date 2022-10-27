@@ -99,6 +99,12 @@ class ExtractDirectoryExistsReport(ErrorReport):
 
 
 @attr.define(kw_only=True)
+class CanNotCreateExtractDirectoryExistsReport(ErrorReport):
+    severity: Severity = Severity.ERROR
+    path: Path
+
+
+@attr.define(kw_only=True)
 class ExtractorDependencyNotFoundReport(ErrorReport):
     """Describes an error when the dependency of an extractor doesn't exist"""
 

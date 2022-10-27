@@ -6,7 +6,12 @@ from structlog import get_logger
 
 from .file_utils import valid_path
 from .pool import make_pool
-from .report import ExtractDirectoryExistsReport, Report, UnknownError
+from .report import (
+    CanNotCreateExtractDirectoryExistsReport,
+    ExtractDirectoryExistsReport,
+    Report,
+    UnknownError,
+)
 from .signals import terminate_gracefully
 from .tasks import ClassifierTask, ExtractionConfig, ProcessResult, Task, TaskResult
 
@@ -41,6 +46,14 @@ def process_file(
     if report_file:
         write_json_report(report_file, process_result)
 
+    extract_dir = config.get_extract_dir_for(input_path)
+    try:
+        extract_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        logger.error("Can not create extraction directory", path=str(extract_dir))
+        report = CanNotCreateExtractDirectoryExistsReport(path=extract_dir)
+        errors.append(report)
+
     return process_result
 
 
@@ -74,10 +87,9 @@ def prepare_extract_dir(config: ExtractionConfig, input_file: Path) -> List[Repo
         if config.force_extract:
             logger.info("Removing extract dir", path=extract_dir)
             shutil.rmtree(extract_dir)
-            extract_dir.mkdir(parents=True, exist_ok=True)
         else:
-            report = ExtractDirectoryExistsReport(path=extract_dir)
             logger.error("Extraction directory already exist", path=str(extract_dir))
+            report = ExtractDirectoryExistsReport(path=extract_dir)
             errors.append(report)
 
     return errors
@@ -152,7 +164,7 @@ class Processor:
 
     def _process_task(self, result: TaskResult, task: Task):
         log = logger.bind(path=task.path)
-        log.error("task", task=task)
+        log.error("Processing", task=task)
 
         if task.depth >= self._config.max_depth:
             # TODO: Use the reporting feature to warn the user (ONLY ONCE) at the end of execution, that this limit was reached.
