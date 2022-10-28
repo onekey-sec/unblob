@@ -160,7 +160,7 @@ class Processor:
 
     def _process_task(self, result: TaskResult, task: Task):
         log = logger.bind(path=task.path)
-        log.error("Processing", task=task)
+        log.info("Processing", task=task)
 
         if task.depth >= self._config.max_depth:
             # TODO: Use the reporting feature to warn the user (ONLY ONCE) at the end of execution, that this limit was reached.
