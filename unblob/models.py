@@ -73,8 +73,6 @@ class Chunk:
 class ValidChunk(Chunk):
     """Known to be valid chunk of a Blob, can be extracted with an external program."""
 
-    # FIXME: because of `handler`, not all instances can pass a process boundary by Pickle
-    # Think of StructHandler(StructParser) instances, that can not be passed around
     handler: "Handler" = attr.ib(init=False, eq=False)
     is_encrypted: bool = attr.ib(default=False)
 

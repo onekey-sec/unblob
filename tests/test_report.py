@@ -5,17 +5,30 @@ from typing import List
 from unittest.mock import ANY
 from zipfile import ZipFile, ZipInfo
 
+import attr
 import pytest
 
+import unblob.handlers
+import unblob.tasks
+from unblob.models import Chunk
 from unblob.processing import ExtractionConfig, process_file
 from unblob.report import (
     ChunkReport,
+    DeletedInputReport,
     ExtractCommandFailedReport,
     FileMagicReport,
     HashReport,
     StatReport,
 )
-from unblob.tasks import ProcessResult, Task, TaskResult
+from unblob.tasks import (
+    CarveTask,
+    ClassifierTask,
+    DirTask,
+    FileTask,
+    ProcessResult,
+    Task,
+    TaskResult,
+)
 
 
 @pytest.fixture
@@ -258,14 +271,7 @@ def hello_kitty(tmp_path: Path) -> Path:
     return hello_kitty
 
 
-def hello_kitty_task_results(
-    hello_kitty: Path,
-    extract_root: Path,
-    hello_id: str,
-    kitty_id: str,
-    container_id="",
-    start_depth=0,
-):
+def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=0):
     """Expected task reports processing `hello_kitty` fixture.
 
     Note, that it has parameters for ids, which would change between runs.
@@ -291,12 +297,112 @@ def hello_kitty_task_results(
 
     - `StatReport(size=ANY)`
     """
+
     return [
         TaskResult(
-            task=Task(path=hello_kitty, depth=start_depth, chunk_id=container_id),
+            task=CarveTask(
+                path=hello_kitty,
+                depth=start_depth,
+                chunk_id="",
+                chunk=Chunk(start_offset=0x0, end_offset=0x6, id=ANY),
+                handler=unblob.tasks.UnknownHandler(),
+            ),
+            reports=[],
+            subtasks=[
+                FileTask(
+                    path=extract_root / "hello_kitty_extract/0-6.unknown",
+                    depth=start_depth + 1,
+                    chunk_id="",
+                    handler=unblob.tasks.UnknownHandler(),
+                    keep_input=True,
+                )
+            ],
+        ),
+        TaskResult(
+            task=CarveTask(
+                path=hello_kitty,
+                depth=start_depth,
+                chunk_id="",
+                chunk=Chunk(start_offset=0x107, end_offset=0x108, id=ANY),
+                handler=unblob.tasks.UnknownHandler(),
+            ),
+            reports=[],
+            subtasks=[
+                FileTask(
+                    path=extract_root / "hello_kitty_extract/263-264.unknown",
+                    depth=start_depth + 1,
+                    chunk_id="",
+                    handler=unblob.tasks.UnknownHandler(),
+                    keep_input=True,
+                )
+            ],
+        ),
+        TaskResult(
+            task=CarveTask(
+                path=hello_kitty,
+                depth=start_depth,
+                chunk_id="",
+                chunk=Chunk(start_offset=0x6, end_offset=0x83, id=ANY),
+                handler=unblob.handlers.archive.zip.ZIPHandler(),
+            ),
+            reports=[],
+            subtasks=[
+                FileTask(
+                    path=extract_root / "hello_kitty_extract/6-131.zip",
+                    depth=start_depth + 1,
+                    chunk_id="",
+                    handler=unblob.handlers.archive.zip.ZIPHandler(),
+                    keep_input=False,
+                )
+            ],
+        ),
+        TaskResult(
+            task=CarveTask(
+                path=hello_kitty,
+                depth=start_depth,
+                chunk_id="",
+                chunk=Chunk(start_offset=0x83, end_offset=0x8A, id=ANY),
+                handler=unblob.tasks.UnknownHandler(),
+            ),
+            reports=[],
+            subtasks=[
+                FileTask(
+                    path=extract_root / "hello_kitty_extract/131-138.unknown",
+                    depth=start_depth + 1,
+                    chunk_id="",
+                    handler=unblob.tasks.UnknownHandler(),
+                    keep_input=True,
+                )
+            ],
+        ),
+        TaskResult(
+            task=CarveTask(
+                path=hello_kitty,
+                depth=start_depth,
+                chunk_id="",
+                chunk=Chunk(start_offset=0x8A, end_offset=0x107, id=ANY),
+                handler=unblob.handlers.archive.zip.ZIPHandler(),
+            ),
+            reports=[],
+            subtasks=[
+                FileTask(
+                    path=extract_root / "hello_kitty_extract/138-263.zip",
+                    depth=start_depth + 1,
+                    chunk_id="",
+                    handler=unblob.handlers.archive.zip.ZIPHandler(),
+                    keep_input=False,
+                )
+            ],
+        ),
+        TaskResult(
+            task=ClassifierTask(
+                path=hello_kitty,
+                depth=start_depth,
+                chunk_id="",
+            ),
             reports=[
                 StatReport(
-                    size=264,
+                    size=ANY,
                     is_dir=False,
                     is_file=True,
                     is_link=False,
@@ -308,99 +414,154 @@ def hello_kitty_task_results(
                     sha1="febca6ed75dc02e0def065e7b08f1cca87b57c74",
                     sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
                 ),
-                ChunkReport(
-                    id=ANY,
-                    start_offset=0,
-                    end_offset=6,
-                    size=6,
-                    handler_name="unknown",
-                    is_encrypted=False,
-                    extraction_reports=[],
-                ),
-                ChunkReport(
-                    id=ANY,
-                    start_offset=131,
-                    end_offset=138,
-                    size=7,
-                    handler_name="unknown",
-                    is_encrypted=False,
-                    extraction_reports=[],
-                ),
-                ChunkReport(
-                    id=ANY,
-                    start_offset=263,
-                    end_offset=264,
-                    size=1,
-                    handler_name="unknown",
-                    is_encrypted=False,
-                    extraction_reports=[],
-                ),
-                ChunkReport(
-                    id=hello_id,
-                    handler_name="zip",
-                    start_offset=6,
-                    end_offset=131,
-                    size=125,
-                    is_encrypted=False,
-                    extraction_reports=[],
-                ),
-                ChunkReport(
-                    id=kitty_id,
-                    handler_name="zip",
-                    start_offset=138,
-                    end_offset=263,
-                    size=125,
-                    is_encrypted=False,
-                    extraction_reports=[],
-                ),
             ],
             subtasks=[
-                Task(
-                    path=extract_root / "hello_kitty_extract/6-131.zip_extract",
-                    depth=start_depth + 1,
-                    chunk_id=hello_id,
+                CarveTask(
+                    path=hello_kitty,
+                    depth=start_depth,
+                    chunk_id="",
+                    chunk=Chunk(start_offset=0x6, end_offset=0x83, id=ANY),
+                    handler=unblob.handlers.archive.zip.ZIPHandler(),
                 ),
-                Task(
-                    path=extract_root / "hello_kitty_extract/138-263.zip_extract",
-                    depth=start_depth + 1,
-                    chunk_id=kitty_id,
+                CarveTask(
+                    path=hello_kitty,
+                    depth=start_depth,
+                    chunk_id="",
+                    chunk=Chunk(start_offset=0x8A, end_offset=0x107, id=ANY),
+                    handler=unblob.handlers.archive.zip.ZIPHandler(),
+                ),
+                CarveTask(
+                    path=hello_kitty,
+                    depth=start_depth,
+                    chunk_id="",
+                    chunk=Chunk(start_offset=0x0, end_offset=0x6, id=ANY),
+                    handler=unblob.tasks.UnknownHandler(),
+                ),
+                CarveTask(
+                    path=hello_kitty,
+                    depth=start_depth,
+                    chunk_id="",
+                    chunk=Chunk(start_offset=0x83, end_offset=0x8A, id=ANY),
+                    handler=unblob.tasks.UnknownHandler(),
+                ),
+                CarveTask(
+                    path=hello_kitty,
+                    depth=start_depth,
+                    chunk_id="",
+                    chunk=Chunk(start_offset=0x107, end_offset=0x108, id=ANY),
+                    handler=unblob.tasks.UnknownHandler(),
                 ),
             ],
         ),
         TaskResult(
-            task=Task(
-                path=extract_root / "hello_kitty_extract/138-263.zip_extract",
+            task=FileTask(
+                path=extract_root / "hello_kitty_extract/138-263.zip",
                 depth=start_depth + 1,
-                chunk_id=kitty_id,
+                chunk_id="",
+                handler=unblob.handlers.archive.zip.ZIPHandler(),
+                keep_input=False,
+            ),
+            reports=[DeletedInputReport()],
+            subtasks=[
+                DirTask(
+                    path=extract_root / "hello_kitty_extract/138-263.zip_extract",
+                    depth=start_depth + 2,
+                    chunk_id="",
+                )
+            ],
+        ),
+        TaskResult(
+            task=FileTask(
+                path=extract_root / "hello_kitty_extract/6-131.zip",
+                depth=start_depth + 1,
+                chunk_id="",
+                handler=unblob.handlers.archive.zip.ZIPHandler(),
+                keep_input=False,
+            ),
+            reports=[DeletedInputReport()],
+            subtasks=[
+                DirTask(
+                    path=extract_root / "hello_kitty_extract/6-131.zip_extract",
+                    depth=start_depth + 2,
+                    chunk_id="",
+                )
+            ],
+        ),
+        TaskResult(
+            task=FileTask(
+                path=extract_root / "hello_kitty_extract/0-6.unknown",
+                depth=start_depth + 1,
+                chunk_id="",
+                handler=unblob.tasks.UnknownHandler(),
+                keep_input=True,
+            ),
+            reports=[],
+            subtasks=[],
+        ),
+        TaskResult(
+            task=FileTask(
+                path=extract_root / "hello_kitty_extract/131-138.unknown",
+                depth=start_depth + 1,
+                chunk_id="",
+                handler=unblob.tasks.UnknownHandler(),
+                keep_input=True,
+            ),
+            reports=[],
+            subtasks=[],
+        ),
+        TaskResult(
+            task=FileTask(
+                path=extract_root / "hello_kitty_extract/263-264.unknown",
+                depth=start_depth + 1,
+                chunk_id="",
+                handler=unblob.tasks.UnknownHandler(),
+                keep_input=True,
+            ),
+            reports=[],
+            subtasks=[],
+        ),
+        TaskResult(
+            task=DirTask(
+                path=extract_root / "hello_kitty_extract/138-263.zip_extract",
+                depth=start_depth + 2,
+                chunk_id="",
+            ),
+            reports=[],
+            subtasks=[
+                ClassifierTask(
+                    path=extract_root
+                    / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
+                    depth=start_depth + 3,
+                    chunk_id="",
+                )
+            ],
+        ),
+        TaskResult(
+            task=DirTask(
+                path=extract_root / "hello_kitty_extract/6-131.zip_extract",
+                depth=start_depth + 2,
+                chunk_id="",
+            ),
+            reports=[],
+            subtasks=[
+                ClassifierTask(
+                    path=extract_root
+                    / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
+                    depth=start_depth + 3,
+                    chunk_id="",
+                )
+            ],
+        ),
+        TaskResult(
+            task=ClassifierTask(
+                path=extract_root
+                / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
+                depth=start_depth + 3,
+                chunk_id="",
             ),
             reports=[
                 StatReport(
                     size=ANY,
-                    is_dir=True,
-                    is_file=False,
-                    is_link=False,
-                    link_target=None,
-                )
-            ],
-            subtasks=[
-                Task(
-                    path=extract_root
-                    / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
-                    depth=start_depth + 1,
-                    chunk_id=kitty_id,
-                )
-            ],
-        ),
-        TaskResult(
-            task=Task(
-                path=extract_root
-                / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
-                depth=start_depth + 1,
-                chunk_id=kitty_id,
-            ),
-            reports=[
-                StatReport(
-                    size=5,
                     is_dir=False,
                     is_file=True,
                     is_link=False,
@@ -418,38 +579,14 @@ def hello_kitty_task_results(
             subtasks=[],
         ),
         TaskResult(
-            task=Task(
-                path=extract_root / "hello_kitty_extract/6-131.zip_extract",
-                depth=start_depth + 1,
-                chunk_id=hello_id,
+            task=ClassifierTask(
+                path=extract_root / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
+                depth=start_depth + 3,
+                chunk_id="",
             ),
             reports=[
                 StatReport(
                     size=ANY,
-                    is_dir=True,
-                    is_file=False,
-                    is_link=False,
-                    link_target=None,
-                )
-            ],
-            subtasks=[
-                Task(
-                    path=extract_root
-                    / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
-                    depth=start_depth + 1,
-                    chunk_id=hello_id,
-                )
-            ],
-        ),
-        TaskResult(
-            task=Task(
-                path=extract_root / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
-                depth=start_depth + 1,
-                chunk_id=hello_id,
-            ),
-            reports=[
-                StatReport(
-                    size=5,
                     is_dir=False,
                     is_file=True,
                     is_link=False,
@@ -474,20 +611,18 @@ def test_flat_report_structure(hello_kitty: Path, extract_root):
     process_result = process_file(config, hello_kitty)
     task_results = get_normalized_task_results(process_result)
 
-    # extract the ids from the chunks
-    hello_id, kitty_id = get_chunk_ids(task_results[0])
-
-    assert task_results == hello_kitty_task_results(
-        hello_kitty=hello_kitty,
-        extract_root=extract_root,
-        hello_id=hello_id,
-        kitty_id=kitty_id,
+    expected_task_results = get_normalized_task_results(
+        ProcessResult(
+            results=hello_kitty_task_results(
+                hello_kitty=hello_kitty,
+                extract_root=extract_root,
+            )
+        )
     )
+    assert task_results == expected_task_results
 
 
-def container_task_results(
-    container: Path, extract_root: Path, chunk_id: str
-) -> List[TaskResult]:
+def container_task_results(container: Path, extract_root: Path) -> List[TaskResult]:
     """Expected partial task results for processing the `hello_kitty_container` fixture.
 
     Note, that for some values the `unittest.mock.ANY` is substituted.
@@ -513,14 +648,10 @@ def container_task_results(
     """
     return [
         TaskResult(
-            task=Task(
-                path=container,
-                depth=0,
-                chunk_id="",
-            ),
+            task=ClassifierTask(path=container, depth=0, chunk_id=""),
             reports=[
                 StatReport(
-                    size=384,
+                    size=ANY,
                     is_dir=False,
                     is_file=True,
                     is_link=False,
@@ -535,44 +666,38 @@ def container_task_results(
                     sha1="93b9b836567468f6a9a306256685c146ec6a06d6",
                     sha256="6bce74badefcddf3020d156f80c99bac7f3d46cd145029d9034a86bfbb5e31aa",
                 ),
-                ChunkReport(
-                    id=chunk_id,
-                    handler_name="zip",
-                    start_offset=0,
-                    end_offset=384,
-                    size=384,
-                    is_encrypted=False,
-                    extraction_reports=[],
-                ),
             ],
             subtasks=[
-                Task(
-                    path=extract_root / "container_extract",
-                    depth=1,
-                    chunk_id=chunk_id,
+                FileTask(
+                    path=container,
+                    depth=0,
+                    chunk_id="",
+                    handler=unblob.handlers.archive.zip.ZIPHandler(),
+                    keep_input=True,
                 )
             ],
         ),
         TaskResult(
-            task=Task(
-                path=extract_root / "container_extract",
-                depth=1,
-                chunk_id=chunk_id,
+            task=FileTask(
+                path=container,
+                depth=0,
+                chunk_id="",
+                handler=unblob.handlers.archive.zip.ZIPHandler(),
+                keep_input=True,
             ),
-            reports=[
-                StatReport(
-                    size=ANY,
-                    is_dir=True,
-                    is_file=False,
-                    is_link=False,
-                    link_target=None,
-                )
-            ],
+            reports=[],
             subtasks=[
-                Task(
+                DirTask(path=extract_root / "container_extract", depth=1, chunk_id="")
+            ],
+        ),
+        TaskResult(
+            task=DirTask(path=extract_root / "container_extract", depth=1, chunk_id=""),
+            reports=[],
+            subtasks=[
+                ClassifierTask(
                     path=extract_root / "container_extract/hello_kitty",
-                    depth=1,
-                    chunk_id=chunk_id,
+                    depth=2,
+                    chunk_id="",
                 )
             ],
         ),
@@ -590,7 +715,9 @@ def hello_kitty_container(tmp_path: Path, hello_kitty: Path) -> Path:
     return hello_kitty_container
 
 
-def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_root):
+def test_chunk_in_chunk_report_structure(
+    hello_kitty_container: Path, extract_root: Path
+):
     config = ExtractionConfig(extract_root=extract_root, entropy_depth=0)
 
     process_result = process_file(config, hello_kitty_container)
@@ -599,24 +726,15 @@ def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_ro
     # the output is expected to show processing due to the outer container,
     # and then the exact same processing as without the container
 
-    # extract the ids from the chunks: these are different for every run,
-    # and they should be the only differences
-    [main_id] = get_chunk_ids(task_results[0])
-
-    hello_id, kitty_id = get_chunk_ids(task_results[2])
-
-    # We test, that the container is referenced from the internal file
-    # through the chunk id `main_id`
-
     expected_results = container_task_results(
-        container=hello_kitty_container, extract_root=extract_root, chunk_id=main_id
+        container=hello_kitty_container, extract_root=extract_root
     ) + hello_kitty_task_results(
         extract_root / "container_extract/hello_kitty",
         extract_root=extract_root / "container_extract",
-        hello_id=hello_id,
-        kitty_id=kitty_id,
-        container_id=main_id,
-        start_depth=1,
+        start_depth=2,
+    )
+    expected_results = get_normalized_task_results(
+        ProcessResult(results=expected_results)
     )
 
     assert task_results == expected_results
@@ -624,16 +742,15 @@ def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_ro
 
 def get_normalized_task_results(process_result: ProcessResult) -> List[TaskResult]:
     """Normalize away per-run and platform differences."""
+
     # sort the results - they can potentially have different orders due to multiprocessing
-    task_results = sorted(
-        process_result.results, key=lambda tr: (tr.task.depth, tr.task.path)
-    )
+    def task_as_key(task_result: TaskResult):
+        task = attr.asdict(task_result.task, recurse=False)
+        task.pop("handler", None)
+        if "chunk" in task:
+            task["chunk"] = str(task["chunk"])
+        path = task.pop("path")
+        return tuple([len(str(path)), path] + sorted(task.items()))
+
+    task_results = sorted(process_result.results, key=task_as_key)
     return task_results
-
-
-def get_chunk_ids(task_result) -> List[str]:
-    return [
-        chunk_report.id
-        for chunk_report in task_result.reports
-        if isinstance(chunk_report, ChunkReport)
-    ]

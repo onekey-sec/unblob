@@ -218,7 +218,7 @@ class ClassifierTask(Task):
         task = CarveTask(
             path=self.path,
             depth=self.depth,
-            chunk=chunk,
+            chunk=Chunk(chunk.start_offset, chunk.end_offset),
             handler=handler,
             chunk_id=self.chunk_id,
         )
