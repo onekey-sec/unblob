@@ -7,7 +7,7 @@ from structlog import get_logger
 from .file_utils import valid_path
 from .pool import make_pool
 from .report import (
-    CanNotCreateExtractDirectoryExistsReport,
+    CanNotCreateExtractDirectoryReport,
     ExtractDirectoryExistsReport,
     Report,
     UnknownError,
@@ -47,7 +47,7 @@ def process_file(
         extract_dir.mkdir(parents=True, exist_ok=True)
     except OSError:
         logger.error("Can not create extraction directory", path=str(extract_dir))
-        report = CanNotCreateExtractDirectoryExistsReport(path=extract_dir)
+        report = CanNotCreateExtractDirectoryReport(path=extract_dir)
         errors.append(report)
 
     return process_result

@@ -99,7 +99,7 @@ class ExtractDirectoryExistsReport(ErrorReport):
 
 
 @attr.define(kw_only=True)
-class CanNotCreateExtractDirectoryExistsReport(ErrorReport):
+class CanNotCreateExtractDirectoryReport(ErrorReport):
     severity: Severity = Severity.ERROR
     path: Path
 
