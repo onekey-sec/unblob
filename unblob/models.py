@@ -216,14 +216,15 @@ class Handler(metaclass=SingletonMeta):
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
 
-        self.EXTRACTOR.extract(inpath, outdir)
-
-    # def extract_chunk(self, inpath, outdir, chunk, chunkdir) -> [(file, handler)*]: ...
-    #     # file, chunk -> file_extracted/chunk -> file_extracted/chunk_extracted
-    #     #  - chunkdir = file_extracted
-    #     #  - outdir = file_extracted/chunk_extracted
-    # def extract_file(self, inpath, outdir) -> [(file, handler)*]: ...
-    #     # file -> file_extracted
+        try:
+            self.EXTRACTOR.extract(inpath, outdir)
+        except ExtractError:
+            # Clean up empty directories
+            try:
+                outdir.rmdir()
+            except OSError:
+                pass
+            raise
 
 
 class StructHandler(Handler):
