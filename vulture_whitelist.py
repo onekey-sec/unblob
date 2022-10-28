@@ -3,9 +3,9 @@ import sys
 import unblob.plugins
 from unblob import cli
 from unblob.file_utils import File, iterbits, round_down
-from unblob.models import _JSONEncoder
 from unblob.parser import _HexStringToRegex
 from unblob.report import ChunkReport, FileMagicReport, StatReport
+from unblob.tasks import _JSONEncoder
 
 _HexStringToRegex.literal
 _HexStringToRegex.wildcard
