@@ -9,7 +9,6 @@ from structlog import get_logger
 from unblob.singleton import SingletonMeta
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
-from .identifiers import new_id
 from .parser import hexstring2regex
 from .report import Report
 
@@ -37,8 +36,6 @@ class Chunk:
 
     end_offset: int
     """The index of the first byte after the end of the chunk"""
-
-    id: str = attr.field(factory=new_id)
 
     def __attrs_post_init__(self):
         if self.start_offset < 0 or self.end_offset < 0:

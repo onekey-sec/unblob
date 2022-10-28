@@ -1,4 +1,3 @@
-import attr
 import pytest
 
 from unblob.file_utils import InvalidInputFormat
@@ -154,6 +153,4 @@ def test_search_chunks(content, expected_chunks, task_result):
 
     chunks = search_chunks(file, len(content), handlers, task_result.add_report)
 
-    assert len(chunks) == len(expected_chunks)
-    for expected_chunk, chunk in zip(expected_chunks, chunks):
-        assert attr.evolve(chunk, id="") == attr.evolve(expected_chunk, id="")
+    assert chunks == expected_chunks
