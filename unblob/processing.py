@@ -22,11 +22,7 @@ logger = get_logger()
 def process_file(
     config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
 ) -> ProcessResult:
-    task = ClassifierTask(
-        chunk_id="",
-        path=input_path,
-        depth=0,
-    )
+    task = ClassifierTask(path=input_path, depth=0)
 
     if not input_path.is_file():
         raise ValueError("input_path is not a file", input_path)

@@ -63,9 +63,8 @@ def test_process_file_report_output_is_valid_json(
 
 class Test_ProcessResult_to_json:
     def test_simple_conversion(self):
-        task = Task(path=Path("/nonexistent"), depth=0, chunk_id="")
+        task = Task(path=Path("/nonexistent"), depth=0)
         task_result = TaskResult(task)
-        chunk_id = "test_basic_conversion:id"
 
         task_result.add_report(
             StatReport(
@@ -103,7 +102,6 @@ class Test_ProcessResult_to_json:
             Task(
                 path=Path("/extractions/nonexistent_extract"),
                 depth=314,
-                chunk_id=chunk_id,
             )
         )
 
@@ -150,14 +148,12 @@ class Test_ProcessResult_to_json:
                 "subtasks": [
                     {
                         "__typename__": "Task",
-                        "chunk_id": "test_basic_conversion:id",
                         "depth": 314,
                         "path": "/extractions/nonexistent_extract",
                     }
                 ],
                 "task": {
                     "__typename__": "Task",
-                    "chunk_id": "",
                     "depth": 0,
                     "path": "/nonexistent",
                 },
@@ -165,7 +161,7 @@ class Test_ProcessResult_to_json:
         ]
 
     def test_exotic_command_output(self):
-        task = Task(path=Path("/nonexistent"), depth=0, chunk_id="")
+        task = Task(path=Path("/nonexistent"), depth=0)
         task_result = TaskResult(task)
         report = ExtractCommandFailedReport(
             command="dump all bytes",
@@ -239,7 +235,6 @@ class Test_ProcessResult_to_json:
                 "subtasks": [],
                 "task": {
                     "__typename__": "Task",
-                    "chunk_id": "",
                     "depth": 0,
                     "path": "/nonexistent",
                 },
@@ -299,7 +294,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=CarveTask(
                 path=hello_kitty,
                 depth=start_depth,
-                chunk_id="",
                 chunk=Chunk(start_offset=0x0, end_offset=0x6),
                 handler=unblob.tasks.UnknownHandler(),
             ),
@@ -308,7 +302,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 FileTask(
                     path=extract_root / "hello_kitty_extract/0-6.unknown",
                     depth=start_depth + 1,
-                    chunk_id="",
                     handler=unblob.tasks.UnknownHandler(),
                     keep_input=True,
                 )
@@ -318,7 +311,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=CarveTask(
                 path=hello_kitty,
                 depth=start_depth,
-                chunk_id="",
                 chunk=Chunk(start_offset=0x107, end_offset=0x108),
                 handler=unblob.tasks.UnknownHandler(),
             ),
@@ -327,7 +319,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 FileTask(
                     path=extract_root / "hello_kitty_extract/263-264.unknown",
                     depth=start_depth + 1,
-                    chunk_id="",
                     handler=unblob.tasks.UnknownHandler(),
                     keep_input=True,
                 )
@@ -337,7 +328,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=CarveTask(
                 path=hello_kitty,
                 depth=start_depth,
-                chunk_id="",
                 chunk=Chunk(start_offset=0x6, end_offset=0x83),
                 handler=unblob.handlers.archive.zip.ZIPHandler(),
             ),
@@ -346,7 +336,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 FileTask(
                     path=extract_root / "hello_kitty_extract/6-131.zip",
                     depth=start_depth + 1,
-                    chunk_id="",
                     handler=unblob.handlers.archive.zip.ZIPHandler(),
                     keep_input=False,
                 )
@@ -356,7 +345,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=CarveTask(
                 path=hello_kitty,
                 depth=start_depth,
-                chunk_id="",
                 chunk=Chunk(start_offset=0x83, end_offset=0x8A),
                 handler=unblob.tasks.UnknownHandler(),
             ),
@@ -365,7 +353,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 FileTask(
                     path=extract_root / "hello_kitty_extract/131-138.unknown",
                     depth=start_depth + 1,
-                    chunk_id="",
                     handler=unblob.tasks.UnknownHandler(),
                     keep_input=True,
                 )
@@ -375,7 +362,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=CarveTask(
                 path=hello_kitty,
                 depth=start_depth,
-                chunk_id="",
                 chunk=Chunk(start_offset=0x8A, end_offset=0x107),
                 handler=unblob.handlers.archive.zip.ZIPHandler(),
             ),
@@ -384,7 +370,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 FileTask(
                     path=extract_root / "hello_kitty_extract/138-263.zip",
                     depth=start_depth + 1,
-                    chunk_id="",
                     handler=unblob.handlers.archive.zip.ZIPHandler(),
                     keep_input=False,
                 )
@@ -394,7 +379,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=ClassifierTask(
                 path=hello_kitty,
                 depth=start_depth,
-                chunk_id="",
             ),
             reports=[
                 StatReport(
@@ -415,35 +399,30 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 CarveTask(
                     path=hello_kitty,
                     depth=start_depth,
-                    chunk_id="",
                     chunk=Chunk(start_offset=0x6, end_offset=0x83),
                     handler=unblob.handlers.archive.zip.ZIPHandler(),
                 ),
                 CarveTask(
                     path=hello_kitty,
                     depth=start_depth,
-                    chunk_id="",
                     chunk=Chunk(start_offset=0x8A, end_offset=0x107),
                     handler=unblob.handlers.archive.zip.ZIPHandler(),
                 ),
                 CarveTask(
                     path=hello_kitty,
                     depth=start_depth,
-                    chunk_id="",
                     chunk=Chunk(start_offset=0x0, end_offset=0x6),
                     handler=unblob.tasks.UnknownHandler(),
                 ),
                 CarveTask(
                     path=hello_kitty,
                     depth=start_depth,
-                    chunk_id="",
                     chunk=Chunk(start_offset=0x83, end_offset=0x8A),
                     handler=unblob.tasks.UnknownHandler(),
                 ),
                 CarveTask(
                     path=hello_kitty,
                     depth=start_depth,
-                    chunk_id="",
                     chunk=Chunk(start_offset=0x107, end_offset=0x108),
                     handler=unblob.tasks.UnknownHandler(),
                 ),
@@ -453,7 +432,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=FileTask(
                 path=extract_root / "hello_kitty_extract/138-263.zip",
                 depth=start_depth + 1,
-                chunk_id="",
                 handler=unblob.handlers.archive.zip.ZIPHandler(),
                 keep_input=False,
             ),
@@ -462,7 +440,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 DirTask(
                     path=extract_root / "hello_kitty_extract/138-263.zip_extract",
                     depth=start_depth + 2,
-                    chunk_id="",
                 )
             ],
         ),
@@ -470,7 +447,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=FileTask(
                 path=extract_root / "hello_kitty_extract/6-131.zip",
                 depth=start_depth + 1,
-                chunk_id="",
                 handler=unblob.handlers.archive.zip.ZIPHandler(),
                 keep_input=False,
             ),
@@ -479,7 +455,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 DirTask(
                     path=extract_root / "hello_kitty_extract/6-131.zip_extract",
                     depth=start_depth + 2,
-                    chunk_id="",
                 )
             ],
         ),
@@ -487,7 +462,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=FileTask(
                 path=extract_root / "hello_kitty_extract/0-6.unknown",
                 depth=start_depth + 1,
-                chunk_id="",
                 handler=unblob.tasks.UnknownHandler(),
                 keep_input=True,
             ),
@@ -498,7 +472,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=FileTask(
                 path=extract_root / "hello_kitty_extract/131-138.unknown",
                 depth=start_depth + 1,
-                chunk_id="",
                 handler=unblob.tasks.UnknownHandler(),
                 keep_input=True,
             ),
@@ -509,7 +482,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=FileTask(
                 path=extract_root / "hello_kitty_extract/263-264.unknown",
                 depth=start_depth + 1,
-                chunk_id="",
                 handler=unblob.tasks.UnknownHandler(),
                 keep_input=True,
             ),
@@ -520,7 +492,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=DirTask(
                 path=extract_root / "hello_kitty_extract/138-263.zip_extract",
                 depth=start_depth + 2,
-                chunk_id="",
             ),
             reports=[],
             subtasks=[
@@ -528,7 +499,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                     path=extract_root
                     / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
                     depth=start_depth + 3,
-                    chunk_id="",
                 )
             ],
         ),
@@ -536,7 +506,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=DirTask(
                 path=extract_root / "hello_kitty_extract/6-131.zip_extract",
                 depth=start_depth + 2,
-                chunk_id="",
             ),
             reports=[],
             subtasks=[
@@ -544,7 +513,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                     path=extract_root
                     / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
                     depth=start_depth + 3,
-                    chunk_id="",
                 )
             ],
         ),
@@ -553,7 +521,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
                 path=extract_root
                 / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
                 depth=start_depth + 3,
-                chunk_id="",
             ),
             reports=[
                 StatReport(
@@ -578,7 +545,6 @@ def hello_kitty_task_results(hello_kitty: Path, extract_root: Path, start_depth=
             task=ClassifierTask(
                 path=extract_root / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
                 depth=start_depth + 3,
-                chunk_id="",
             ),
             reports=[
                 StatReport(
@@ -644,7 +610,7 @@ def container_task_results(container: Path, extract_root: Path) -> List[TaskResu
     """
     return [
         TaskResult(
-            task=ClassifierTask(path=container, depth=0, chunk_id=""),
+            task=ClassifierTask(path=container, depth=0),
             reports=[
                 StatReport(
                     size=ANY,
@@ -667,7 +633,6 @@ def container_task_results(container: Path, extract_root: Path) -> List[TaskResu
                 FileTask(
                     path=container,
                     depth=0,
-                    chunk_id="",
                     handler=unblob.handlers.archive.zip.ZIPHandler(),
                     keep_input=True,
                 )
@@ -677,23 +642,19 @@ def container_task_results(container: Path, extract_root: Path) -> List[TaskResu
             task=FileTask(
                 path=container,
                 depth=0,
-                chunk_id="",
                 handler=unblob.handlers.archive.zip.ZIPHandler(),
                 keep_input=True,
             ),
             reports=[],
-            subtasks=[
-                DirTask(path=extract_root / "container_extract", depth=1, chunk_id="")
-            ],
+            subtasks=[DirTask(path=extract_root / "container_extract", depth=1)],
         ),
         TaskResult(
-            task=DirTask(path=extract_root / "container_extract", depth=1, chunk_id=""),
+            task=DirTask(path=extract_root / "container_extract", depth=1),
             reports=[],
             subtasks=[
                 ClassifierTask(
                     path=extract_root / "container_extract/hello_kitty",
                     depth=2,
-                    chunk_id="",
                 )
             ],
         ),

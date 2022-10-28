@@ -106,8 +106,6 @@ class Task:
 
     path: Path
     depth: int
-    chunk_id: str
-    # FIXME: chunk_id should be (parent task id?) removed.
 
     @property
     def logger(self):
@@ -130,7 +128,6 @@ class ClassifierTask(Task):
         if stat_report.is_dir:
             self.logger.debug("Found directory")
             task = DirTask(
-                chunk_id=self.chunk_id,
                 path=self.path,
                 depth=self.depth,
             )
@@ -206,7 +203,6 @@ class ClassifierTask(Task):
         return FileTask(
             path=self.path,
             depth=self.depth,
-            chunk_id=self.chunk_id,
             handler=handler,
             keep_input=keep_input,
         )
@@ -220,7 +216,6 @@ class ClassifierTask(Task):
             depth=self.depth,
             chunk=Chunk(chunk.start_offset, chunk.end_offset),
             handler=handler,
-            chunk_id=self.chunk_id,
         )
         return task
 
@@ -259,7 +254,6 @@ class DirTask(Task):
         for path in self.path.iterdir():
             result.add_subtask(
                 ClassifierTask(
-                    chunk_id=self.chunk_id,
                     path=path,
                     depth=self.depth + 1,
                 )
@@ -309,7 +303,6 @@ class FileTask(Task):
         if extract_dir.exists():
             result.add_subtask(
                 DirTask(
-                    chunk_id=self.chunk_id,
                     path=extract_dir,
                     depth=self.depth + 1,
                 )
@@ -335,7 +328,6 @@ class CarveTask(Task):
             handler=self.handler,
             depth=self.depth + 1,
             keep_input=config.keep_extracted_chunks or self.handler.CARVED_FILE_KEPT,
-            chunk_id="",
         )
 
         result.add_subtask(task)
