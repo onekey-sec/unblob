@@ -1,5 +1,6 @@
 import io
 import struct
+from pathlib import Path
 from typing import Optional
 
 from dissect.cstruct import Instance
@@ -7,7 +8,7 @@ from structlog import get_logger
 
 from ...extractors import Command
 from ...file_utils import InvalidInputFormat, iterate_patterns
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import ExtractError, File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
@@ -15,6 +16,28 @@ ENCRYPTED_FLAG = 0b0001
 EOCD_RECORD_HEADER = 0x6054B50
 ZIP64_EOCD_SIGNATURE = 0x06064B50
 ZIP64_EOCD_LOCATOR_HEADER = 0x07064B50
+
+
+def is_encrypted(path: Path):
+    # This is only a PoC.
+    # proper implementation would require extracting
+    # encryption detection functionality from ZIPHandler
+    with File.from_path(path) as file:
+        chunk = ZIPHandler().calculate_chunk(file, 0)
+    if chunk:
+        return chunk.is_encrypted
+
+
+class Extractor(Command):
+    def extract(self, inpath: Path, outdir: Path):
+        if is_encrypted(inpath):
+            logger.warning(
+                "Encrypted file is not extracted",
+                path=inpath,
+                chunk=self,
+            )
+            raise ExtractError()
+        return super().extract(inpath, outdir)
 
 
 class ZIPHandler(StructHandler):
@@ -84,7 +107,7 @@ class ZIPHandler(StructHandler):
     HEADER_STRUCT = "end_of_central_directory_t"
 
     # empty password with -p will make sure the command will not hang
-    EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
+    EXTRACTOR = Extractor("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
     def has_encrypted_files(
         self,
@@ -111,7 +134,7 @@ class ZIPHandler(StructHandler):
             or end_of_central_directory.offset_of_cd == 0xFFFFFFFF
         )
 
-    def _parse_zip64(self, file: File, start_offset: int, offset: int) -> int:
+    def _parse_zip64(self, file: File, start_offset: int, offset: int) -> Instance:
         file.seek(start_offset, io.SEEK_SET)
         for eocd_locator_offset in iterate_patterns(
             file, struct.pack("<I", ZIP64_EOCD_LOCATOR_HEADER)

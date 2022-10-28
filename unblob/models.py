@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Type
 
 import attr
+from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.singleton import SingletonMeta
@@ -243,7 +244,7 @@ class StructHandler(Handler):
     def cparser_be(self):
         return self._struct_parser.cparser_be
 
-    def parse_header(self, file: File, endian=Endian.LITTLE):
+    def parse_header(self, file: File, endian=Endian.LITTLE) -> Instance:
         header = self._struct_parser.parse(self.HEADER_STRUCT, file, endian)
         logger.debug("Header parsed", header=header, _verbosity=3)
         return header

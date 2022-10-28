@@ -6,6 +6,7 @@ RAR Version 5.x
 https://www.rarlab.com/technote.htm#rarsign
 """
 
+from pathlib import Path
 from typing import Optional
 
 import rarfile
@@ -13,9 +14,29 @@ from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...models import File, Handler, HexString, ValidChunk
+from ...models import ExtractError, File, Handler, HexString, ValidChunk
 
 logger = get_logger()
+
+
+def is_encrypted(path: Path):
+    try:
+        with rarfile.RarFile(path) as rar_file:
+            return rar_file.needs_password()
+    except (rarfile.Error, ValueError):
+        return
+
+
+class Extractor(Command):
+    def extract(self, inpath: Path, outdir: Path):
+        if is_encrypted(inpath):
+            logger.warning(
+                "Encrypted file is not extracted",
+                path=inpath,
+                chunk=self,
+            )
+            raise ExtractError()
+        return super().extract(inpath, outdir)
 
 
 class RarHandler(Handler):
@@ -29,7 +50,9 @@ class RarHandler(Handler):
         """
         )
     ]
-    EXTRACTOR = Command("unar", "-no-directory", "-p", "", "{inpath}", "-o", "{outdir}")
+    EXTRACTOR = Extractor(
+        "unar", "-no-directory", "-p", "", "{inpath}", "-o", "{outdir}"
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
