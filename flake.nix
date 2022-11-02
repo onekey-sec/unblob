@@ -13,12 +13,12 @@
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ self.overlay ];
+        overlays = [ self.overlays.default ];
       };
       inherit (pkgs) unblob;
     in
     {
-      overlay = nixpkgs.lib.composeManyExtensions [
+      overlays.default = nixpkgs.lib.composeManyExtensions [
         poetry2nix.overlay
         (import ./overlay.nix { inherit sasquatch; })
       ];
@@ -26,11 +26,10 @@
       packages.${system} = {
         inherit unblob;
         inherit (pkgs) sasquatch;
+        default = unblob;
       };
 
-      defaultPackage.${system} = unblob;
-
-      devShell.${system} = import ./shell.nix { inherit pkgs; };
+      devShells.${system}.default = import ./shell.nix { inherit pkgs; };
 
       legacyPackages.${system} = pkgs;
     };
