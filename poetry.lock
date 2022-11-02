@@ -662,8 +662,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/onekey-sec/yaffshiv.git"
-reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
-resolved_reference = "24e6e453a36a02144ae2d159eb3229f9c6312828"
+reference = "a8f21283c25057740371fd34e9b6f3c4771375f1"
+resolved_reference = "a8f21283c25057740371fd34e9b6f3c4771375f1"
 
 [[package]]
 name = "zipp"
@@ -680,7 +680,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "cd287160bcf9c8ae1df7dc28ced438d45581615f1e6ce6da0cc2412c647eeec0"
+content-hash = "340cf307b458ebccc8796b9196a5d1644ca3cdb740ded8476eaf4da78905208a"
 
 [metadata.files]
 arpy = [
