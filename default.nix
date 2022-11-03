@@ -11,6 +11,7 @@
 , lzo
 , lzop
 , p7zip
+, pkg-config
 , sasquatch
 , simg2img
 , unar
@@ -74,7 +75,16 @@ let
         hyperscan = super.hyperscan.overridePythonAttrs (_: {
           buildInputs = [
             hyperscan
+            self.poetry
+            self.setuptools
           ];
+          nativeBuildInputs = [
+            pkg-config
+          ];
+
+          installPhase = ''
+            ${self.python.pythonForBuild.interpreter} -m pip install --no-build-isolation --no-index --prefix=$out  --ignore-installed --no-dependencies --no-cache .
+          '';
         });
 
         arpy = overrideWithSetuptools super.arpy { };
