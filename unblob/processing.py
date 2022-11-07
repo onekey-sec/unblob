@@ -1,3 +1,4 @@
+import itertools
 import multiprocessing
 import shutil
 import statistics
@@ -15,10 +16,10 @@ from unblob.handlers import BUILTIN_HANDLERS, Handlers
 from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
 from .file_utils import iterate_file, valid_path
 from .finder import search_chunks
-from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
 from .models import (
+    Chunk,
     ExtractError,
     File,
     ProcessResult,
@@ -422,34 +423,23 @@ def calculate_unknown_chunks(
     chunks: List[ValidChunk], file_size: int
 ) -> List[UnknownChunk]:
     """Calculate the empty gaps between chunks."""
-    if not chunks or file_size == 0:
+    if not chunks:
         return []
 
     sorted_by_offset = sorted(chunks, key=attrgetter("start_offset"))
 
     unknown_chunks = []
+    last_end_offset = 0
 
-    first = sorted_by_offset[0]
-    if first.start_offset != 0:
-        unknown_chunk = UnknownChunk(0, first.start_offset)
-        unknown_chunks.append(unknown_chunk)
-
-    for chunk, next_chunk in pairwise(sorted_by_offset):
-        diff = next_chunk.start_offset - chunk.end_offset
-        if diff != 0:
+    for chunk in itertools.chain(sorted_by_offset, [Chunk(file_size, file_size + 1)]):
+        if last_end_offset < chunk.start_offset:
             unknown_chunk = UnknownChunk(
-                start_offset=chunk.end_offset,
-                end_offset=next_chunk.start_offset,
+                start_offset=last_end_offset,
+                end_offset=chunk.start_offset,
             )
             unknown_chunks.append(unknown_chunk)
 
-    last = sorted_by_offset[-1]
-    if last.end_offset < file_size:
-        unknown_chunk = UnknownChunk(
-            start_offset=last.end_offset,
-            end_offset=file_size,
-        )
-        unknown_chunks.append(unknown_chunk)
+        last_end_offset = max(last_end_offset, chunk.end_offset)
 
     return unknown_chunks
 

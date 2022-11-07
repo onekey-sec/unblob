@@ -78,6 +78,11 @@ def assert_same_chunks(expected, actual, explanation=None):
             [ValidChunk(1, 5), ValidChunk(6, 10)],
             "Multiple outer chunks, with chunks inside",
         ),
+        (
+            [ValidChunk(10, 50), ValidChunk(40, 80), ValidChunk(70, 90)],
+            [ValidChunk(10, 50), ValidChunk(40, 80), ValidChunk(70, 90)],
+            "Overlapping chunks",
+        ),
     ],
 )
 def test_remove_inner_chunks(
@@ -100,6 +105,18 @@ def test_remove_inner_chunks(
             [ValidChunk(0x8, 0xA), ValidChunk(0x0, 0x5), ValidChunk(0xF, 0x14)],
             20,
             [UnknownChunk(0x5, 0x8), UnknownChunk(0xA, 0xF)],
+        ),
+        pytest.param(
+            [ValidChunk(10, 50), ValidChunk(40, 80), ValidChunk(70, 90)],
+            100,
+            [UnknownChunk(0, 10), UnknownChunk(90, 100)],
+            id="overlapping-input-chunks",
+        ),
+        pytest.param(
+            [ValidChunk(10, 50), ValidChunk(30, 40), ValidChunk(60, 70)],
+            100,
+            [UnknownChunk(0, 10), UnknownChunk(50, 60), UnknownChunk(70, 100)],
+            id="overlapping-internal-chunk",
         ),
     ],
 )

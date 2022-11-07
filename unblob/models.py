@@ -73,7 +73,7 @@ class Chunk:
         return self.start_offset <= offset < self.end_offset
 
     def __repr__(self) -> str:
-        return self.range_hex
+        return f"{self.__class__.__name__}:{self.range_hex}:{self.size}"
 
 
 @attr.define(repr=False)
@@ -104,6 +104,13 @@ class ValidChunk(Chunk):
             is_encrypted=self.is_encrypted,
             extraction_reports=extraction_reports,
         )
+
+    def __repr__(self) -> str:
+        try:
+            return f"{self.handler.NAME}:{self.range_hex}:{self.size}"
+        except AttributeError:
+            # super() might no work at __attrs_post_init__ time
+            return Chunk.__repr__(self)
 
 
 @attr.define(repr=False)
