@@ -158,7 +158,7 @@ def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
 def iterate_patterns(
     file: File, pattern: bytes, chunk_size: int = 0x1000
 ) -> Iterator[int]:
-    """Iterate on the file searching for pattern until all occurences has been found.
+    """Iterate on the file searching for byte-sequence pattern until all occurences have been found.
 
     Seek the file pointer to the next byte of where we found the pattern or
     seek back to the initial position when the iterator is exhausted.

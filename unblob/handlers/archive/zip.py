@@ -1,30 +1,38 @@
 import io
-import struct
-from typing import Optional
+from typing import Optional, Tuple
 
 from dissect.cstruct import Instance
 from structlog import get_logger
 
 from ...extractors import Command
-from ...file_utils import InvalidInputFormat, iterate_patterns
+from ...file_utils import InvalidInputFormat
 from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
-ENCRYPTED_FLAG = 0b0001
-EOCD_RECORD_HEADER = 0x6054B50
-ZIP64_EOCD_SIGNATURE = 0x06064B50
-ZIP64_EOCD_LOCATOR_HEADER = 0x07064B50
+
+def signature(hex: str) -> bytes:
+    return bytes.fromhex(hex)
 
 
 class ZIPHandler(StructHandler):
     NAME = "zip"
 
-    PATTERNS = [HexString("50 4B 03 04 // Local file header only")]
+    # b'PK' = 50 4B
+    ENCRYPTED_FLAG = 0b0001
+    LOCAL_FILE_HEADER_SIGNATURE = signature("50 4B 03 04")
+    EOCD_SIGNATURE = signature("50 4B 05 06")
+    ZIP64_EOCD_SIGNATURE = signature("50 4B 06 06")
+    ZIP64_EOCD_LOCATOR_SIGNATURE = signature("50 4B 06 07")
+
+    PATTERNS = [HexString("50 4B 05 06 // EOCD")]
+
     C_DEFINITIONS = r"""
+        // every zip structure starts with a signature of 4 bytes, the first 2 being
+        // 'PK' after Phil Katz, the next 2 bytes is structure specific
 
         typedef struct cd_file_header {
-            uint32 magic;
+            char signature[4];
             uint16 version_made_by;
             uint16 version_needed;
             uint16 flags;
@@ -47,12 +55,12 @@ class ZIPHandler(StructHandler):
 
         typedef struct end_of_central_directory
         {
-            uint32 end_of_central_signature;
+            char signature[4];
             uint16 disk_number;
             uint16 disk_number_with_cd;
             uint16 disk_entries;
             uint16 total_entries;
-            uint32 central_directory_size;
+            uint32 size_of_cd;
             uint32 offset_of_cd;
             uint16 comment_len;
             char zip_file_comment[comment_len];
@@ -60,7 +68,7 @@ class ZIPHandler(StructHandler):
 
         typedef struct zip64_end_of_central_directory_locator
         {
-            uint32 signature;
+            char signature[4];
             uint32 disk_number;
             uint64 offset_of_cd;
             uint32 total_disk;
@@ -68,7 +76,7 @@ class ZIPHandler(StructHandler):
 
         typedef struct zip64_end_of_central_directory
         {
-            uint32 signature;
+            char signature[4];
             uint64 size_of_eocd_record;
             uint16 version_made_by;
             uint16 version_needed;
@@ -79,8 +87,8 @@ class ZIPHandler(StructHandler):
             uint64 size_of_cd;
             uint64 offset_of_cd;
         } zip64_end_of_central_directory_t;
-
     """
+
     HEADER_STRUCT = "end_of_central_directory_t"
 
     # empty password with -p will make sure the command will not hang
@@ -92,10 +100,13 @@ class ZIPHandler(StructHandler):
         start_offset: int,
         end_of_central_directory: Instance,
     ) -> bool:
+        # https://pkware.cachefly.net/webdocs/APPNOTE/APPNOTE-6.3.10.TXT
+        # 4.4.4 general purpose bit flag: (2 bytes)
+        # Bit 0: If set, indicates that the file is encrypted.
         file.seek(start_offset + end_of_central_directory.offset_of_cd, io.SEEK_SET)
         for _ in range(0, end_of_central_directory.total_entries):
             cd_header = self.cparser_le.cd_file_header_t(file)
-            if cd_header.flags & ENCRYPTED_FLAG:
+            if cd_header.flags & self.ENCRYPTED_FLAG:
                 return True
         return False
 
@@ -107,70 +118,80 @@ class ZIPHandler(StructHandler):
             or end_of_central_directory.disk_number_with_cd == 0xFFFF
             or end_of_central_directory.disk_entries == 0xFFFF
             or end_of_central_directory.total_entries == 0xFFFF
-            or end_of_central_directory.central_directory_size == 0xFFFFFFFF
+            or end_of_central_directory.size_of_cd == 0xFFFFFFFF
             or end_of_central_directory.offset_of_cd == 0xFFFFFFFF
         )
 
-    def _parse_zip64(self, file: File, start_offset: int, offset: int) -> int:
-        file.seek(start_offset, io.SEEK_SET)
-        for eocd_locator_offset in iterate_patterns(
-            file, struct.pack("<I", ZIP64_EOCD_LOCATOR_HEADER)
-        ):
-            file.seek(eocd_locator_offset, io.SEEK_SET)
-            eocd_locator = self.cparser_le.zip64_end_of_central_directory_locator_t(
-                file
-            )
-            logger.debug("eocd_locator", eocd_locator=eocd_locator, _verbosity=3)
-
-            # ZIP64 EOCD locator is right before the EOCD record
-            if eocd_locator_offset + len(eocd_locator) == offset:
-                file.seek(start_offset + eocd_locator.offset_of_cd)
-                zip64_eocd = self.cparser_le.zip64_end_of_central_directory_t(file)
-                logger.debug("zip64_eocd", zip64_eocd=zip64_eocd, _verbosity=3)
-
-                if zip64_eocd.signature != ZIP64_EOCD_SIGNATURE:
-                    raise InvalidInputFormat(
-                        "Missing ZIP64 EOCD header record header in ZIP chunk."
-                    )
-                return zip64_eocd
-        raise InvalidInputFormat(
-            "Missing ZIP64 EOCD locator record header in ZIP chunk."
+    def _parse_zip64(self, file: File, eocd_offset: int) -> Tuple[int, Instance]:
+        # ZIP64 EOCD locator is right before the EOCD record
+        eocd_locator_offset = eocd_offset - len(
+            self.cparser_le.zip64_end_of_central_directory_locator_t
         )
+        if eocd_locator_offset < 0:
+            raise InvalidInputFormat("Zip64 offset negative")
+        file.seek(eocd_locator_offset, io.SEEK_SET)
+        eocd_locator = self.cparser_le.zip64_end_of_central_directory_locator_t(file)
+        logger.debug("eocd_locator", eocd_locator=eocd_locator, _verbosity=3)
+        if eocd_locator.signature != self.ZIP64_EOCD_LOCATOR_SIGNATURE:
+            raise InvalidInputFormat("Zip64 EOCD Locator not found")
+
+        zip64_eocd_offset = eocd_locator_offset - len(
+            self.cparser_le.zip64_end_of_central_directory_t
+        )
+        if zip64_eocd_offset < 0:
+            raise InvalidInputFormat("Zip64 offset negative")
+        file.seek(zip64_eocd_offset, io.SEEK_SET)
+        zip64_eocd = self.cparser_le.zip64_end_of_central_directory_t(file)
+        if zip64_eocd.signature != self.ZIP64_EOCD_SIGNATURE:
+            raise InvalidInputFormat("Zip64 EOCD not found")
+        return zip64_eocd_offset, zip64_eocd
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+        # start_offset = start of EOCD record
+        # EOCD = end of central directory
+        eocd_offset = start_offset
+        # from here calculate the beginning of the zip file (needs to interpret the CD offsets)
+        # REASON: EOCD SIGNATURE is much rarer when there are many embedded zip files in a blob
+        # while there are a lot of LOCAL FILE HEADER SIGNATUREs
 
-        has_encrypted_files = False
+        end_of_central_directory = self.parse_header(file)
+        assert end_of_central_directory.signature == self.EOCD_SIGNATURE
+        end_offset = eocd_offset + len(end_of_central_directory)
+
+        if self.is_zip64_eocd(end_of_central_directory):
+            logger.debug("Hit Zip64 EOCD")
+            eocd_offset, end_of_central_directory = self._parse_zip64(file, eocd_offset)
+
+        # the EOCD offset is equal to the offset of CD + size of CD
+        start_offset = (
+            eocd_offset
+            - end_of_central_directory.size_of_cd
+            - end_of_central_directory.offset_of_cd
+        )
+
+        logger.debug(
+            "Zip chunk candidate",
+            start_offset=start_offset,
+            end_offset=end_offset,
+            header=end_of_central_directory,
+        )
+        if start_offset < 0:
+            raise InvalidInputFormat("Bad EOCD record header in ZIP chunk candidate.")
+
         file.seek(start_offset, io.SEEK_SET)
-
-        for offset in iterate_patterns(file, struct.pack("<I", EOCD_RECORD_HEADER)):
-            file.seek(offset, io.SEEK_SET)
-            end_of_central_directory = self.parse_header(file)
-
-            if self.is_zip64_eocd(end_of_central_directory):
-                end_of_central_directory = self._parse_zip64(file, start_offset, offset)
-                break
-            else:
-                # the EOCD offset is equal to the offset of CD + size of CD
-                end_of_central_directory_offset = (
-                    start_offset
-                    + end_of_central_directory.offset_of_cd
-                    + end_of_central_directory.central_directory_size
-                )
-
-                if offset == end_of_central_directory_offset:
-                    break
-        else:
-            raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
+        signature = self.cparser_le.char[4](file)
+        if signature != self.LOCAL_FILE_HEADER_SIGNATURE:
+            logger.debug(
+                "Bad local file header signature", signature=signature.hex(" ")
+            )
+            raise InvalidInputFormat("Bad EOCD record header in ZIP chunk candidate.")
 
         has_encrypted_files = self.has_encrypted_files(
             file, start_offset, end_of_central_directory
         )
 
-        file.seek(offset, io.SEEK_SET)
-        self.cparser_le.end_of_central_directory_t(file)
-
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=file.tell(),
+            end_offset=end_offset,
             is_encrypted=has_encrypted_files,
         )
