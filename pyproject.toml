@@ -22,7 +22,7 @@ ubi-reader = { git = "https://github.com/onekey-sec/ubi_reader.git", rev = "8c95
 python-lzo = "^1.14"
 cstruct = "2.1"
 jefferson = { git = "https://github.com/onekey-sec/jefferson.git", rev = "ddbc592edd81e8d53e5d49668da095e7a9293ade" }
-yaffshiv = { git = "https://github.com/onekey-sec/yaffshiv.git", rev = "24e6e453a36a02144ae2d159eb3229f9c6312828" }
+yaffshiv = { git = "https://github.com/onekey-sec/yaffshiv.git", rev = "a8f21283c25057740371fd34e9b6f3c4771375f1" }
 plotext = "^4.1.5"
 pluggy = "^1.0.0"
 python-magic = "^0.4.27"
