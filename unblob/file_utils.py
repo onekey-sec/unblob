@@ -15,6 +15,10 @@ from .logging import format_hex
 DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
 
 
+class SeekError(ValueError):
+    """Specific ValueError for File.seek"""
+
+
 class File(mmap.mmap):
     @classmethod
     def from_bytes(cls, content: bytes):
@@ -31,8 +35,8 @@ class File(mmap.mmap):
     def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:
         try:
             super().seek(pos, whence)
-        except ValueError:
-            raise EOFError
+        except ValueError as e:
+            raise SeekError from e
         return self.tell()
 
     def __enter__(self):

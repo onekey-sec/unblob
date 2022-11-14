@@ -1,10 +1,11 @@
+import os
 import tarfile
 from pathlib import Path
 from typing import Optional
 
 from structlog import get_logger
 
-from ...file_utils import OffsetFile, decode_int, round_up, snull
+from ...file_utils import OffsetFile, SeekError, decode_int, round_up, snull
 from ...models import Extractor, File, HexString, StructHandler, ValidChunk
 from ._safe_tarfile import SafeTarFile as safe_tarfile
 
@@ -31,23 +32,34 @@ def _get_tar_end_offset(file: File, offset=0):
     return offset + _find_end_of_padding(file_with_offset, find_from=last_offset)
 
 
-def _get_end_of_last_tar_entry(file) -> int:
-
+def _get_end_of_last_tar_entry(file) -> int:  # noqa: C901
     try:
         tf = tarfile.TarFile(mode="r", fileobj=file)
     except tarfile.TarError:
         return -1
-    try:
-        members = tf.getmembers()
-    except tarfile.TarError:
-        # recover what's already been parsed
-        members = tf.members  # type: ignore
 
-    if not members:
+    last_member = None
+
+    try:
+        for member in tf:
+            last_member = member
+    except (tarfile.TarError, SeekError):
+        # recover what's already been parsed
+        pass
+
+    if last_member is None:
         return -1
-    last_member = members[-1]
+
     last_file_size = round_up(last_member.size, BLOCK_SIZE)
-    return last_member.offset_data + last_file_size
+    end_of_last_tar_entry = last_member.offset_data + last_file_size
+    try:
+        file.seek(end_of_last_tar_entry)
+    except SeekError:
+        # last tar entry is truncated
+        end_of_last_tar_entry = last_member.offset
+        file.seek(end_of_last_tar_entry)
+
+    return end_of_last_tar_entry
 
 
 def _find_end_of_padding(file, *, find_from: int) -> int:
@@ -56,7 +68,12 @@ def _find_end_of_padding(file, *, find_from: int) -> int:
 
     max_padding_blocks = (find_to - find_from) // BLOCK_SIZE
 
-    file.seek(find_from)
+    try:
+        file.seek(find_from)
+    except SeekError:
+        # match to end of truncated file
+        return file.seek(0, os.SEEK_END)
+
     for padding_blocks in range(max_padding_blocks):
         if file.read(BLOCK_SIZE) != ZERO_BLOCK:
             break
