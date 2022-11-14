@@ -82,9 +82,15 @@ def _hyperscan_match(
     if real_offset < 0:
         return _HyperscanScan.Continue
 
+    # Do not overlap with chunks of the same handler.
+    # This is mostly valid for containers, so should be configurable for each handler.
     # Skip chunk calculation if this would start inside another one,
     # similar to remove_inner_chunks, but before we even begin calculating.
-    if any(chunk.contains_offset(real_offset) for chunk in context.all_chunks):
+    if any(
+        chunk.contains_offset(real_offset)
+        for chunk in context.all_chunks
+        if chunk.handler == handler
+    ):
         logger.debug(
             "Skip chunk calculation as pattern is inside an other chunk",
             handler=handler.NAME,
@@ -114,9 +120,9 @@ def _hyperscan_match(
     logger.debug("Found valid chunk", chunk=chunk, handler=handler.NAME, _verbosity=2)
     context.all_chunks.append(chunk)
 
-    # Terminate scan if we match till the end of the file
-    if chunk.end_offset == context.file_size:
-        logger.debug("Chunk covers till end of the file", chunk=chunk)
+    # Terminate scan if the whole file is matched
+    if chunk.start_offset == 0 and chunk.end_offset == context.file_size:
+        logger.debug("Chunk covers whole file", chunk=chunk)
         return _HyperscanScan.Terminate
 
     return _HyperscanScan.Continue
@@ -154,7 +160,7 @@ def search_chunks(  # noqa: C901
     except hyperscan.error as e:
         if e.args and e.args[0] == f"error code {hyperscan.HS_SCAN_TERMINATED}":
             logger.debug(
-                "Scanning terminated as chunk matches till end of file",
+                "Scanning terminated as chunk matches whole file",
             )
             return all_chunks
         else:
