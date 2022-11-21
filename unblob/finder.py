@@ -10,7 +10,7 @@ import attr
 import hyperscan
 from structlog import get_logger
 
-from .file_utils import InvalidInputFormat
+from .file_utils import InvalidInputFormat, SeekError
 from .handlers import Handlers
 from .models import File, Handler, TaskResult, ValidChunk
 from .parser import InvalidHexString
@@ -50,6 +50,13 @@ def _calculate_chunk(
     except EOFError as exc:
         logger.debug(
             "File ends before header could be read",
+            exc_info=exc,
+            handler=handler.NAME,
+            _verbosity=2,
+        )
+    except SeekError as exc:
+        logger.debug(
+            "Seek outside file during chunk calculation",
             exc_info=exc,
             handler=handler.NAME,
             _verbosity=2,

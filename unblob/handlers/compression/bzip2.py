@@ -6,7 +6,7 @@ from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...file_utils import InvalidInputFormat, StructParser
+from ...file_utils import InvalidInputFormat, SeekError, StructParser
 from ...models import File, Handler, HexString, Regex, ValidChunk
 
 logger = get_logger()
@@ -117,7 +117,7 @@ def _hyperscan_match(
     # We try seek to the end of the stream
     try:
         context.file.seek(last_block_end)
-    except EOFError:
+    except SeekError:
         return True
 
     context.end_block_offset = last_block_end
