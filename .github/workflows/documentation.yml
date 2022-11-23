@@ -24,4 +24,4 @@ jobs:
           path: ~/.local/pipx
           key: pipx-cache
 
-      - run: pipx run --spec "mkdocs-material==8.3.9" mkdocs gh-deploy --force
+      - run: pipx run --spec "mkdocs-material==8.5.10" mkdocs gh-deploy --force
