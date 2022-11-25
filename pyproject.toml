@@ -21,7 +21,7 @@ rarfile = "^4.0"
 ubi-reader = { git = "https://github.com/onekey-sec/ubi_reader.git", rev = "8c956d47b28af4085366e2acfee8d3ba016f6e90" }
 python-lzo = "^1.14"
 cstruct = "2.1"
-jefferson = { git = "https://github.com/onekey-sec/jefferson.git", rev = "ddbc592edd81e8d53e5d49668da095e7a9293ade" }
+jefferson = { git = "https://github.com/onekey-sec/jefferson.git", rev = "51de1f5ba3255ed707bb402bee89e442e11b55c1" }
 yaffshiv = { git = "https://github.com/onekey-sec/yaffshiv.git", rev = "a8f21283c25057740371fd34e9b6f3c4771375f1" }
 plotext = "^4.1.5"
 pluggy = "^1.0.0"

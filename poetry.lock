@@ -164,7 +164,7 @@ python-versions = "*"
 
 [[package]]
 name = "jefferson"
-version = "0.3"
+version = "0.4.1"
 description = ""
 category = "main"
 optional = false
@@ -174,8 +174,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/onekey-sec/jefferson.git"
-reference = "ddbc592edd81e8d53e5d49668da095e7a9293ade"
-resolved_reference = "ddbc592edd81e8d53e5d49668da095e7a9293ade"
+reference = "51de1f5ba3255ed707bb402bee89e442e11b55c1"
+resolved_reference = "51de1f5ba3255ed707bb402bee89e442e11b55c1"
 
 [[package]]
 name = "jinja2"
@@ -680,7 +680,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "340cf307b458ebccc8796b9196a5d1644ca3cdb740ded8476eaf4da78905208a"
+content-hash = "24cb30f072c35978c4d606f7fdfb7db33d05890e1d7d4418aeaec99cfa67f8d4"
 
 [metadata.files]
 arpy = [
