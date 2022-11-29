@@ -16,7 +16,6 @@
 , simg2img
 , unar
 , file
-, hyperscan
 , zstd
 }:
 
@@ -69,21 +68,6 @@ let
         python-magic = overrideWithSetuptools (super.python-magic.override { preferWheel = false; }) (_: {
           patchPhase = ''
             substituteInPlace magic/loader.py --replace "find_library('magic')" "'${file}/lib/libmagic.so'"
-          '';
-        });
-
-        hyperscan = super.hyperscan.overridePythonAttrs (_: {
-          buildInputs = [
-            hyperscan
-            self.poetry
-            self.setuptools
-          ];
-          nativeBuildInputs = [
-            pkg-config
-          ];
-
-          installPhase = ''
-            ${self.python.pythonForBuild.interpreter} -m pip install --no-build-isolation --no-index --prefix=$out  --ignore-installed --no-dependencies --no-cache .
           '';
         });
 

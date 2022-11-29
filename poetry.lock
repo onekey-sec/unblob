@@ -139,14 +139,6 @@ python-dateutil = ">=2.8.1"
 dev = ["wheel", "flake8", "markdown", "twine"]
 
 [[package]]
-name = "hyperscan"
-version = "0.2.0"
-description = "Python bindings for Hyperscan."
-category = "main"
-optional = false
-python-versions = ">=3.6.1,<4.0"
-
-[[package]]
 name = "identify"
 version = "2.5.3"
 description = "File identification library for Python"
@@ -444,6 +436,17 @@ python-versions = ">=3.6.8"
 diagrams = ["railroad-diagrams", "jinja2"]
 
 [[package]]
+name = "pyperscan"
+version = "0.1.0"
+description = ""
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+test = ["mypy (>=0.991,<1.0)", "pytest (>=7.0.0,<7.1.0)"]
+
+[[package]]
 name = "pyright"
 version = "0.0.12"
 description = "Command line wrapper for pyright"
@@ -724,7 +727,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "8dd6bf0e0f37c704f198f69a44bf6f771cf389bc3d5870a4ab3ab93c9bc317fe"
+content-hash = "1417d2dc68de89b38cda34dcbf0e4af4e2b8a196f160f01be502aef010a51648"
 
 [metadata.files]
 arpy = [
@@ -828,13 +831,6 @@ filelock = [
 ghp-import = [
     {file = "ghp-import-2.1.0.tar.gz", hash = "sha256:9c535c4c61193c2df8871222567d7fd7e5014d835f97dc7b7439069e2413d343"},
     {file = "ghp_import-2.1.0-py3-none-any.whl", hash = "sha256:8337dd7b50877f163d4c0289bc1f1c7f127550241988d568c1db512c4324a619"},
-]
-hyperscan = [
-    {file = "hyperscan-0.2.0-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:47ef10b4297f9976d257b7f260ae4ae8834e87e1abb7f46cf0707ba496fb6e49"},
-    {file = "hyperscan-0.2.0-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:78e97de71896b9fda4368c185e6609e53bb240c85302909ac46e738f14621f40"},
-    {file = "hyperscan-0.2.0-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:794eecc13fa9bcf061004340582aab342471fb22b710f92020e3ea508776ff53"},
-    {file = "hyperscan-0.2.0-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:fd0d0fe64484443b9e5ee1e8b156a30f2ba91494b1343fae5c943130ff847607"},
-    {file = "hyperscan-0.2.0.tar.gz", hash = "sha256:10cb8939d7db85d522ed319031ff5ab86fd0133126b986290f01aa83dbfb9ff7"},
 ]
 identify = [
     {file = "identify-2.5.3-py2.py3-none-any.whl", hash = "sha256:25851c8c1370effb22aaa3c987b30449e9ff0cece408f810ae6ce408fdd20893"},
@@ -1015,6 +1011,11 @@ pymdown-extensions = [
 pyparsing = [
     {file = "pyparsing-3.0.9-py3-none-any.whl", hash = "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"},
     {file = "pyparsing-3.0.9.tar.gz", hash = "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb"},
+]
+pyperscan = [
+    {file = "pyperscan-0.1.0-cp38-abi3-macosx_10_9_x86_64.macosx_10_9_arm64.macosx_10_9_universal2.whl", hash = "sha256:d036c3465e6d7e47dec2c494a7aa3f888d4749156b57738fdae174d34951ba1c"},
+    {file = "pyperscan-0.1.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1497035ece80a10ac0faae3f9122ff73c5d2eff20af8c7353b9a964695779fb8"},
+    {file = "pyperscan-0.1.0.tar.gz", hash = "sha256:cd557e2e97a3a99cacaba1a022fc47a23832da33a1be46cad8b49d4c244e4945"},
 ]
 pyright = [
     {file = "pyright-0.0.12-py3-none-any.whl", hash = "sha256:2c829291e23589ce52f2051e9c46830bf067a620caef95818200fa5d0cc2527f"},

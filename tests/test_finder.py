@@ -1,5 +1,6 @@
 import attr
 import pytest
+from pyperscan import Scan
 
 from unblob.file_utils import InvalidInputFormat
 from unblob.finder import build_hyperscan_database, search_chunks
@@ -58,33 +59,26 @@ class TestHandlerExc(Handler):
 
 
 def test_build_hyperscan_database():
-    db, handler_map = build_hyperscan_database((TestHandlerA, TestHandlerB))
+    db = build_hyperscan_database((TestHandlerA, TestHandlerB))
     matches = []
-    db.scan(
-        [bytearray(b"A123456789BB")],
-        match_event_handler=lambda pattern_id, start, end, flags, m: m.append(
-            (pattern_id, start, end)
-        ),
-        context=matches,
-    )
 
-    assert len(handler_map) == 3
+    def on_match(m, pattern_id, start, end):
+        m.append((pattern_id, start, end))
+        return Scan.Continue
+
+    db.build(matches, on_match).scan(b"A123456789BB")
 
     assert len(matches) == 2
-    assert isinstance(handler_map[matches[0][0]], TestHandlerA)
-    assert isinstance(handler_map[matches[1][0]], TestHandlerB)
     assert matches[0][1] == 0
     assert matches[1][1] == 10
 
 
 def test_db_and_handler_map_instances_are_cached():
-    db1, handler_map1 = build_hyperscan_database((TestHandlerA, TestHandlerB))
-    db2, handler_map2 = build_hyperscan_database((TestHandlerA, TestHandlerB))
-    db3, handler_map3 = build_hyperscan_database((TestHandlerA,))
+    db1 = build_hyperscan_database((TestHandlerA, TestHandlerB))
+    db2 = build_hyperscan_database((TestHandlerA, TestHandlerB))
+    db3 = build_hyperscan_database((TestHandlerA,))
     assert db1 is db2
-    assert handler_map1 is handler_map2
     assert db1 is not db3
-    assert handler_map1 is not handler_map3
 
 
 def test_invalid_hexstring_pattern_raises():
