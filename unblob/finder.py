@@ -2,12 +2,11 @@
 Searching Chunk related functions.
 The main "entry point" is search_chunks_by_priority.
 """
-from enum import Flag
 from functools import lru_cache
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional
 
 import attr
-import hyperscan
+from pyperscan import BlockDatabase, Flag, Pattern, Scan
 from structlog import get_logger
 
 from .file_utils import InvalidInputFormat, SeekError
@@ -21,16 +20,10 @@ logger = get_logger()
 
 @attr.define
 class HyperscanMatchContext:
-    handler_map: Dict[int, Handler]
     file: File
     file_size: int
     all_chunks: List
     task_result: TaskResult
-
-
-class _HyperscanScan(Flag):
-    Continue = False
-    Terminate = True
 
 
 def _calculate_chunk(
@@ -74,13 +67,12 @@ def _calculate_chunk(
 
 
 def _hyperscan_match(
-    pattern_id: int, offset: int, end: int, flags: int, context: HyperscanMatchContext
-) -> _HyperscanScan:
-    handler = context.handler_map[pattern_id]
+    context: HyperscanMatchContext, handler: Handler, offset: int, end: int
+) -> Scan:
     real_offset = offset + handler.PATTERN_MATCH_OFFSET
 
     if real_offset < 0:
-        return _HyperscanScan.Continue
+        return Scan.Continue
 
     # Skip chunk calculation if this would start inside another one,
     # similar to remove_inner_chunks, but before we even begin calculating.
@@ -91,7 +83,7 @@ def _hyperscan_match(
             offset=real_offset,
             _verbosity=2,
         )
-        return _HyperscanScan.Continue
+        return Scan.Continue
 
     logger.debug(
         "Calculating chunk for pattern match",
@@ -104,11 +96,11 @@ def _hyperscan_match(
 
     # We found some random bytes this handler couldn't parse
     if chunk is None:
-        return _HyperscanScan.Continue
+        return Scan.Continue
 
     if chunk.end_offset > context.file_size:
         logger.debug("Chunk overflows file", chunk=chunk, _verbosity=2)
-        return _HyperscanScan.Continue
+        return Scan.Continue
 
     chunk.handler = handler
     logger.debug("Found valid chunk", chunk=chunk, handler=handler.NAME, _verbosity=2)
@@ -117,9 +109,9 @@ def _hyperscan_match(
     # Terminate scan if we match till the end of the file
     if chunk.end_offset == context.file_size:
         logger.debug("Chunk covers till end of the file", chunk=chunk)
-        return _HyperscanScan.Terminate
+        return Scan.Terminate
 
-    return _HyperscanScan.Continue
+    return Scan.Continue
 
 
 def search_chunks(  # noqa: C901
@@ -135,33 +127,28 @@ def search_chunks(  # noqa: C901
     """
     all_chunks = []
 
-    hyperscan_db, handler_map = build_hyperscan_database(handlers)
+    hyperscan_db = build_hyperscan_database(handlers)
 
     hyperscan_context = HyperscanMatchContext(
-        handler_map=handler_map,
         file=file,
         file_size=file_size,
         all_chunks=all_chunks,
         task_result=task_result,
     )
 
+    scanner = hyperscan_db.build(hyperscan_context, _hyperscan_match)
+
     try:
-        hyperscan_db.scan(
-            [file],
-            match_event_handler=_hyperscan_match,
-            context=hyperscan_context,
-        )
-    except hyperscan.error as e:
-        if e.args and e.args[0] == f"error code {hyperscan.HS_SCAN_TERMINATED}":
+        if scanner.scan(file) == Scan.Terminate:
             logger.debug(
                 "Scanning terminated as chunk matches till end of file",
             )
             return all_chunks
-        else:
-            logger.error(
-                "Error scanning for patterns",
-                error=e,
-            )
+    except Exception as e:
+        logger.error(
+            "Error scanning for patterns",
+            error=e,
+        )
 
     logger.debug(
         "Ended searching for chunks",
@@ -172,21 +159,18 @@ def search_chunks(  # noqa: C901
 
 
 @lru_cache
-def build_hyperscan_database(handlers: Handlers) -> Tuple[hyperscan.Database, Dict]:
-    db = hyperscan.Database(mode=hyperscan.HS_MODE_VECTORED)
-    handler_map = dict()
-
-    pattern_id = 0
+def build_hyperscan_database(handlers: Handlers):
     patterns = []
     for handler_class in handlers:
         handler = handler_class()
         for pattern in handler.PATTERNS:
             try:
                 patterns.append(
-                    (
+                    Pattern(
                         pattern.as_regex(),
-                        pattern_id,
-                        hyperscan.HS_FLAG_SOM_LEFTMOST | hyperscan.HS_FLAG_DOTALL,
+                        Flag.SOM_LEFTMOST,
+                        Flag.DOTALL,
+                        tag=handler,
                     )
                 )
             except InvalidHexString as e:
@@ -197,10 +181,4 @@ def build_hyperscan_database(handlers: Handlers) -> Tuple[hyperscan.Database, Di
                     error=str(e),
                 )
                 raise
-            handler_map[pattern_id] = handler
-            pattern_id += 1
-
-    expressions, ids, flags = zip(*patterns)
-    db.compile(expressions=expressions, ids=ids, elements=len(patterns), flags=flags)
-
-    return db, handler_map
+    return BlockDatabase(*patterns)

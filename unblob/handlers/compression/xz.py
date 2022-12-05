@@ -2,7 +2,7 @@ import io
 from typing import Optional, Tuple
 
 import attr
-import hyperscan
+from pyperscan import BlockDatabase, Flag, Pattern, Scan
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -52,20 +52,9 @@ STREAM_FOOTER_LEN = CRC32_LEN + BACKWARD_SIZE_LEN + FLAG_LEN + EOS_MAGIC_LEN
 
 
 def build_stream_end_scan_db(pattern_list):
-    patterns = []
-    for pattern_id, pattern in enumerate(pattern_list):
-        patterns.append(
-            (
-                pattern.as_regex(),
-                pattern_id,
-                hyperscan.HS_FLAG_SOM_LEFTMOST | hyperscan.HS_FLAG_DOTALL,
-            )
-        )
-
-    expressions, ids, flags = zip(*patterns)
-    db = hyperscan.Database(mode=hyperscan.HS_MODE_VECTORED)
-    db.compile(expressions=expressions, ids=ids, elements=len(patterns), flags=flags)
-    return db
+    return BlockDatabase(
+        *(Pattern(p.as_regex(), Flag.SOM_LEFTMOST, Flag.DOTALL) for p in pattern_list)
+    )
 
 
 hyperscan_stream_end_magic_db = build_stream_end_scan_db(STREAM_END_MAGIC_PATTERNS)
@@ -136,21 +125,21 @@ def get_stream_size(footer_offset: int, file: File) -> int:
 
 
 def _hyperscan_match(
-    pattern_id: int, offset: int, end: int, flags: int, context: XZSearchContext
-) -> bool:
+    context: XZSearchContext, pattern_id: int, offset: int, end: int
+) -> Scan:
     # if we matched before our start offset, continue looking
     end_offset = offset + FLAG_LEN + EOS_MAGIC_LEN
     if end_offset < context.start_offset:
-        return False
+        return Scan.Continue
 
     try:
         stream_size = get_stream_size(offset, context.file)
     except InvalidInputFormat:
-        return False
+        return Scan.Continue
 
     # stream_size does not match, we continue our search
     if stream_size != (end_offset - context.start_offset):
-        return False
+        return Scan.Continue
 
     # stream padding validation
     # padding MUST contain only null bytes and be 4 bytes aligned
@@ -159,7 +148,7 @@ def _hyperscan_match(
     padding_size = end_padding_offset - end_offset
     if padding_size % 4 != 0:
         context.end_streams_offset = end_offset
-        return False
+        return Scan.Continue
 
     # next magic validation
     context.end_streams_offset = end_padding_offset
@@ -167,8 +156,8 @@ def _hyperscan_match(
     magic = context.file.read(len(STREAM_START_MAGIC))
     if magic == STREAM_START_MAGIC:
         context.start_offset = end_padding_offset
-        return False
-    return True
+        return Scan.Continue
+    return Scan.Terminate
 
 
 class XZHandler(Handler):
@@ -193,15 +182,12 @@ class XZHandler(Handler):
         )
 
         try:
-            hyperscan_stream_end_magic_db.scan(
-                [file], match_event_handler=_hyperscan_match, context=context
+            hyperscan_stream_end_magic_db.build(context, _hyperscan_match).scan(file)
+        except Exception as e:
+            logger.debug(
+                "Error scanning for xz patterns",
+                error=e,
             )
-        except hyperscan.error as e:
-            if e.args and e.args[0] != f"error code {hyperscan.HS_SCAN_TERMINATED}":
-                logger.debug(
-                    "Error scanning for xz patterns",
-                    error=e,
-                )
         if context.end_streams_offset > 0:
             return ValidChunk(
                 start_offset=start_offset, end_offset=context.end_streams_offset

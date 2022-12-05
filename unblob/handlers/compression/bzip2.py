@@ -1,7 +1,7 @@
 from typing import Optional
 
 import attr
-import hyperscan
+from pyperscan import BlockDatabase, Flag, Pattern, Scan
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -54,20 +54,9 @@ STREAM_FOOTER_SIZE = 6 + 4
 
 
 def build_stream_end_scan_db(pattern_list):
-    patterns = []
-    for pattern_id, pattern in enumerate(pattern_list):
-        patterns.append(
-            (
-                pattern.as_regex(),
-                pattern_id,
-                hyperscan.HS_FLAG_SOM_LEFTMOST | hyperscan.HS_FLAG_DOTALL,
-            )
-        )
-
-    expressions, ids, flags = zip(*patterns)
-    db = hyperscan.Database(mode=hyperscan.HS_MODE_VECTORED)
-    db.compile(expressions=expressions, ids=ids, elements=len(patterns), flags=flags)
-    return db
+    return BlockDatabase(
+        *(Pattern(p.as_regex(), Flag.SOM_LEFTMOST, Flag.DOTALL) for p in pattern_list)
+    )
 
 
 hyperscan_stream_end_magic_db = build_stream_end_scan_db(STREAM_END_MAGIC_PATTERNS)
@@ -104,11 +93,11 @@ def _validate_block_header(file: File):
 
 
 def _hyperscan_match(
-    pattern_id: int, offset: int, end: int, flags: int, context: Bzip2SearchContext
-) -> bool:
+    context: Bzip2SearchContext, pattern_id: int, offset: int, end: int
+) -> Scan:
     # Ignore any match before the start of this chunk
     if offset < context.start_offset:
-        return False
+        return Scan.Continue
 
     last_block_end = offset + STREAM_FOOTER_SIZE
     if pattern_id > 3:
@@ -118,16 +107,16 @@ def _hyperscan_match(
     try:
         context.file.seek(last_block_end)
     except SeekError:
-        return True
+        return Scan.Terminate
 
     context.end_block_offset = last_block_end
 
     # Check if there is a next stream starting after the end of this stream
     # and try to continue processing that as well
     if _validate_stream_header(context.file) and _validate_block_header(context.file):
-        return False
+        return Scan.Continue
     else:
-        return True
+        return Scan.Terminate
 
 
 class BZip2Handler(Handler):
@@ -148,16 +137,14 @@ class BZip2Handler(Handler):
         context = Bzip2SearchContext(
             start_offset=start_offset, file=file, end_block_offset=-1
         )
+
         try:
-            hyperscan_stream_end_magic_db.scan(
-                [file], match_event_handler=_hyperscan_match, context=context
+            hyperscan_stream_end_magic_db.build(context, _hyperscan_match).scan(file)
+        except Exception as e:
+            logger.debug(
+                "Error scanning for bzip2 patterns",
+                error=e,
             )
-        except hyperscan.error as e:
-            if e.args and e.args[0] != f"error code {hyperscan.HS_SCAN_TERMINATED}":
-                logger.debug(
-                    "Error scanning for bzip2 patterns",
-                    error=e,
-                )
 
         if context.end_block_offset > 0:
             return ValidChunk(

@@ -1,13 +1,13 @@
 inputs:
   python-version:
-    description: 'Python version to setup'
+    description: "Python version to setup"
     required: false
     default: 3.8
 runs:
   using: "composite"
   steps:
     - name: Install 3rd party from apt
-      run: sudo apt install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lz4 lzop lziprecover img2simg libhyperscan5 libhyperscan-dev zstd
+      run: sudo apt install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lz4 lzop lziprecover img2simg zstd
       shell: bash
 
     - name: Install sasquatch
