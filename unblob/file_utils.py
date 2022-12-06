@@ -39,6 +39,20 @@ class File(mmap.mmap):
             raise SeekError from e
         return self.tell()
 
+    def size(self) -> int:
+        size = 0
+        try:
+            size = super().size()
+        except OSError:
+            # the file was built with from_bytes() so it's not on disk,
+            # triggering an OSError on fstat() call
+            current_offset = self.tell()
+            self.seek(0, io.SEEK_END)
+            size = self.tell()
+            self.seek(current_offset, io.SEEK_SET)
+        finally:
+            return size
+
     def __enter__(self):
         return self
 
