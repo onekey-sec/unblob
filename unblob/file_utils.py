@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Iterator, Tuple
 
 from dissect.cstruct import cstruct
+from pyperscan import Scan
 
 from .logging import format_hex
 
@@ -250,6 +251,13 @@ def iterate_file(
             break
 
         yield data
+
+
+def stream_scan(scanner, file: File):
+    """Scan the whole file by increment of DEFAULT_BUFSIZE using Hyperscan's streaming mode."""
+    for i in range(0, file.size(), DEFAULT_BUFSIZE):
+        if scanner.scan(file[i : i + DEFAULT_BUFSIZE]) == Scan.Terminate:  # noqa: E203
+            break
 
 
 class StructParser:

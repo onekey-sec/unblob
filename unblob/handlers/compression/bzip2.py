@@ -1,12 +1,12 @@
 from typing import Optional
 
 import attr
-from pyperscan import BlockDatabase, Flag, Pattern, Scan
+from pyperscan import Flag, Pattern, Scan, StreamDatabase
 from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...file_utils import InvalidInputFormat, SeekError, StructParser
+from ...file_utils import InvalidInputFormat, SeekError, StructParser, stream_scan
 from ...models import File, Handler, HexString, Regex, ValidChunk
 
 logger = get_logger()
@@ -54,7 +54,7 @@ STREAM_FOOTER_SIZE = 6 + 4
 
 
 def build_stream_end_scan_db(pattern_list):
-    return BlockDatabase(
+    return StreamDatabase(
         *(Pattern(p.as_regex(), Flag.SOM_LEFTMOST, Flag.DOTALL) for p in pattern_list)
     )
 
@@ -139,7 +139,8 @@ class BZip2Handler(Handler):
         )
 
         try:
-            hyperscan_stream_end_magic_db.build(context, _hyperscan_match).scan(file)
+            scanner = hyperscan_stream_end_magic_db.build(context, _hyperscan_match)
+            stream_scan(scanner, file)
         except Exception as e:
             logger.debug(
                 "Error scanning for bzip2 patterns",
