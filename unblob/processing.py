@@ -53,14 +53,22 @@ DEFAULT_SKIP_MAGIC = (
     "PDF document",
     "magic binary file",
     "MS Windows icon resource",
-    "PE32+ executable (EFI application)",
+    "PE32",
     "Web Open Font Format",
     "GNU message catalog",
     "Xilinx BIT data",
     "Microsoft Excel",
     "Microsoft Word",
     "Microsoft PowerPoint",
+    "Microsoft OOXML",
     "OpenDocument",
+    "Macromedia Flash data",
+    "MPEG",
+    "HP Printer Job Language",
+    "Erlang BEAM file",
+    "python",  # (e.g. python 2.7 byte-compiled)
+    "Composite Document File V2 Document",
+    "Windows Embedded CE binary image",
 )
 
 
