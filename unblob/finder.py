@@ -6,10 +6,10 @@ from functools import lru_cache
 from typing import List, Optional
 
 import attr
-from pyperscan import BlockDatabase, Flag, Pattern, Scan
+from pyperscan import Flag, Pattern, Scan, StreamDatabase
 from structlog import get_logger
 
-from .file_utils import InvalidInputFormat, SeekError
+from .file_utils import InvalidInputFormat, SeekError, stream_scan
 from .handlers import Handlers
 from .models import File, Handler, TaskResult, ValidChunk
 from .parser import InvalidHexString
@@ -139,11 +139,7 @@ def search_chunks(  # noqa: C901
     scanner = hyperscan_db.build(hyperscan_context, _hyperscan_match)
 
     try:
-        if scanner.scan(file) == Scan.Terminate:
-            logger.debug(
-                "Scanning terminated as chunk matches till end of file",
-            )
-            return all_chunks
+        stream_scan(scanner, file)
     except Exception as e:
         logger.error(
             "Error scanning for patterns",
@@ -159,7 +155,7 @@ def search_chunks(  # noqa: C901
 
 
 @lru_cache
-def build_hyperscan_database(handlers: Handlers):
+def build_hyperscan_database(handlers: Handlers) -> StreamDatabase:
     patterns = []
     for handler_class in handlers:
         handler = handler_class()
@@ -181,4 +177,4 @@ def build_hyperscan_database(handlers: Handlers):
                     error=str(e),
                 )
                 raise
-    return BlockDatabase(*patterns)
+    return StreamDatabase(*patterns)

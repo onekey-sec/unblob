@@ -2,7 +2,7 @@ import io
 from typing import Optional, Tuple
 
 import attr
-from pyperscan import BlockDatabase, Flag, Pattern, Scan
+from pyperscan import Flag, Pattern, Scan, StreamDatabase
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -15,6 +15,7 @@ from ...file_utils import (
     decode_multibyte_integer,
     read_until_past,
     round_up,
+    stream_scan,
 )
 from ...models import File, Handler, HexString, InvalidInputFormat, ValidChunk
 
@@ -52,7 +53,7 @@ STREAM_FOOTER_LEN = CRC32_LEN + BACKWARD_SIZE_LEN + FLAG_LEN + EOS_MAGIC_LEN
 
 
 def build_stream_end_scan_db(pattern_list):
-    return BlockDatabase(
+    return StreamDatabase(
         *(Pattern(p.as_regex(), Flag.SOM_LEFTMOST, Flag.DOTALL) for p in pattern_list)
     )
 
@@ -182,12 +183,14 @@ class XZHandler(Handler):
         )
 
         try:
-            hyperscan_stream_end_magic_db.build(context, _hyperscan_match).scan(file)
+            scanner = hyperscan_stream_end_magic_db.build(context, _hyperscan_match)
+            stream_scan(scanner, file)
         except Exception as e:
             logger.debug(
                 "Error scanning for xz patterns",
                 error=e,
             )
+
         if context.end_streams_offset > 0:
             return ValidChunk(
                 start_offset=start_offset, end_offset=context.end_streams_offset

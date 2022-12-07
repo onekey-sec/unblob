@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Iterator, Tuple
 
 from dissect.cstruct import cstruct
+from pyperscan import Scan
 
 from .logging import format_hex
 
@@ -38,6 +39,20 @@ class File(mmap.mmap):
         except ValueError as e:
             raise SeekError from e
         return self.tell()
+
+    def size(self) -> int:
+        size = 0
+        try:
+            size = super().size()
+        except OSError:
+            # the file was built with from_bytes() so it's not on disk,
+            # triggering an OSError on fstat() call
+            current_offset = self.tell()
+            self.seek(0, io.SEEK_END)
+            size = self.tell()
+            self.seek(current_offset, io.SEEK_SET)
+        finally:
+            return size
 
     def __enter__(self):
         return self
@@ -236,6 +251,13 @@ def iterate_file(
             break
 
         yield data
+
+
+def stream_scan(scanner, file: File):
+    """Scan the whole file by increment of DEFAULT_BUFSIZE using Hyperscan's streaming mode."""
+    for i in range(0, file.size(), DEFAULT_BUFSIZE):
+        if scanner.scan(file[i : i + DEFAULT_BUFSIZE]) == Scan.Terminate:  # noqa: E203
+            break
 
 
 class StructParser:
