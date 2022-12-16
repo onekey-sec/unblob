@@ -75,7 +75,7 @@ class LZOHandler(StructHandler):
     """
     HEADER_STRUCT = "lzo_header"
 
-    EXTRACTOR = Command("lzop", "-d", "-f", "-N", "-p{outdir}", "{inpath}")
+    EXTRACTOR = Command("lzop", "-d", "-f", "-f", "-N", "-p{outdir}", "{inpath}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
 
