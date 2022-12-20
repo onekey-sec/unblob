@@ -42,7 +42,7 @@ def gather_integration_tests(test_data_path: Path):
 @pytest.fixture
 def extraction_config(tmp_path: Path):
     config = ExtractionConfig(
-        extract_root=tmp_path,
+        extract_root=tmp_path / "extract_root",
         entropy_depth=0,
         keep_extracted_chunks=True,
     )
