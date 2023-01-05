@@ -66,13 +66,7 @@ class _JFFS2Base(StructHandler):
 
     def valid_header(self, header: Instance, node_start_offset: int, eof: int) -> bool:
         header_crc = (binascii.crc32(header.dumps()[:-4], -1) ^ -1) & 0xFFFFFFFF
-
-        if header_crc != header.hdr_crc:
-            logger.debug(
-                "node header CRC missmatch",
-                _verbosity=2,
-            )
-            return False
+        check_crc = True
 
         if header.nodetype not in JFFS2_NODETYPES:
             if header.nodetype | JFFS2_NODE_ACCURATE not in JFFS2_NODETYPES:
@@ -81,8 +75,15 @@ class _JFFS2Base(StructHandler):
                 )
                 return False
             logger.debug(
-                "Not accurate JFFS2 node type", node_type=header.nodetype, _verbosity=2
+                "Not accurate JFFS2 node type, ignore CRC",
+                node_type=header.nodetype,
+                _verbosity=2,
             )
+            check_crc = False
+
+        if check_crc and header_crc != header.hdr_crc:
+            logger.debug("node header CRC missmatch", _verbosity=2)
+            return False
 
         if node_start_offset + header.totlen > eof:
             logger.debug(
