@@ -97,7 +97,7 @@ The Nix derivation installs all 3rd party dependencies.
 
     - Dependencies are all in place:
 ```console
-$ unblob --show-external-dependencies
+$ poetry run unblob --show-external-dependencies
 The following executables found installed, which are needed by unblob:
     7z                          ✓
     debugfs                     ✓
@@ -114,3 +114,16 @@ The following executables found installed, which are needed by unblob:
     yaffshiv                    ✓
     zstd                        ✓
 ```
+
+7. (Optional) Install it system wide.
+
+You can install unblob system wide in two operations:
+
+    1. Build the unblob distribution package:
+
+        cd unblob
+        poetry build
+
+    2. Install the unblob distribution package:
+
+        sudo python3 -m pip install dist/unblob-<version>.tar.gz
