@@ -14,6 +14,7 @@ nav:
   - Supported Formats: formats.md
   - extractors.md
   - development.md
+  - API: api.md
   - glossary.md
   - support.md
 
@@ -55,11 +56,13 @@ extra_css:
   - extra.css
 
 plugins:
+  - search
+  - mkdocstrings
   - social:
-    cards_color:
-      fill: "#002060"
-      text: "#00FFC8"
-    cards_font: Artegra Sans
+      cards: true
+      cards_color:
+        fill: "#002060"
+        text: "#00FFC8"
 
 extra:
   social:

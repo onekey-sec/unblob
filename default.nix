@@ -74,6 +74,7 @@ let
         arpy = overrideWithSetuptools super.arpy { };
         yaffshiv = overrideWithSetuptools super.yaffshiv { };
         ubi-reader = overrideWithSetuptools super.ubi-reader { };
+        cairosvg = overrideWithSetuptools super.cairocffi { };
       });
 
     python = python3;

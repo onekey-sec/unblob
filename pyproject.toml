@@ -39,6 +39,10 @@ pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
 setuptools-rust = "^1.1.2"
 mkdocs-material = "8.5.10"
+mkdocstrings = "^0.19.1"
+pillow = "^9.4.0"
+cairosvg = "^2.6.0"
+mkdocstrings-python = "^0.8.3"
 
 [tool.isort]
 profile = "black"
