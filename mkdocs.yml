@@ -34,7 +34,7 @@ theme:
   logo: logo.svg
   favicon: favicon.png
   font:
-    text: Artegra Sans
+      text: Artegra Sans
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
