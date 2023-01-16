@@ -16,6 +16,7 @@ nav:
   - development.md
   - API: api.md
   - glossary.md
+  - publications.md
   - support.md
 
 markdown_extensions:
