@@ -1,6 +1,7 @@
 site_name: unblob - extract everything!
-site_author: OneKey developers
+site_author: ONEKEY developers
 site_description: unblob is an accurate, fast, and easy-to-use extraction suite. unblob parses unknown binary blobs for more than 30 different archive, compression, and file-system formats, extracts their content recursively, and carves out unknown chunks that have not been accounted for. This turns unblob into the perfect companion for extracting, analyzing, and reverse engineering firmware images.
+site_url: https://unblob.org/
 
 repo_name: Unblob on GitHub
 repo_url: https://github.com/onekey-sec/unblob
@@ -13,7 +14,9 @@ nav:
   - Supported Formats: formats.md
   - extractors.md
   - development.md
+  - API: api.md
   - glossary.md
+  - publications.md
   - support.md
 
 markdown_extensions:
@@ -33,7 +36,7 @@ theme:
   logo: logo.svg
   favicon: favicon.png
   font:
-    text: Artegra Sans
+      text: Artegra Sans
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -52,6 +55,15 @@ theme:
 
 extra_css:
   - extra.css
+
+plugins:
+  - search
+  - mkdocstrings
+  - social:
+      cards: true
+      cards_color:
+        fill: "#002060"
+        text: "#00FFC8"
 
 extra:
   social:

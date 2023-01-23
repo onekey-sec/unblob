@@ -96,6 +96,8 @@ unblob identifies known and unknown chunks of data within a file:
   information about identified chunks (format, offsets, size, entropy) and their
   extracted content if available (ownership, permissions, timestamps, ...).
 
+![unblob_architecture.webp](unblob_architecture.webp)
+
 ## Used technologies
 
 - unblob is written in [Python](https://www.python.org/).
