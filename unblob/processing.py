@@ -389,7 +389,7 @@ class _FileTask:
 
         except ExtractError as e:
             extraction_reports.extend(e.reports)
-
+            delete_empty_extract_dir(extract_dir)
         except Exception as exc:
             logger.exception("Unknown error happened while extracting chunk")
             extraction_reports.append(UnknownError(exception=exc))
@@ -407,6 +407,11 @@ class _FileTask:
                     depth=self.task.depth + 1,
                 )
             )
+
+
+def delete_empty_extract_dir(extract_dir: Path):
+    if extract_dir.exists() and not any(extract_dir.iterdir()):
+        extract_dir.rmdir()
 
 
 def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
