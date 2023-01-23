@@ -18,10 +18,38 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Restore pipx cache
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Restore pip cache
         uses: actions/cache@v2
         with:
-          path: ~/.local/pipx
-          key: pipx-cache
+          path: ~/.cache/pip
+          key: pip-3.8
 
-      - run: pipx run --spec "mkdocs-material==8.5.10" mkdocs gh-deploy --force
+      - name: Upgrade pip and install poetry
+        run: python -m pip install --upgrade pip poetry
+        shell: bash
+
+      - name: Restore poetry cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pypoetry/cache
+            ~/.cache/pypoetry/artifacts
+          key: poetry-cache-and-artifacts-3.8
+
+      - name: Restore virtualenvs
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: venv-${{ hashFiles('poetry.lock') }}-3.8
+
+      - name: Poetry install
+        run: poetry install --only docs
+        shell: bash
+
+      - name: Generate documentation
+        run: poetry run mkdocs gh-deploy --force
