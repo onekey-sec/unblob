@@ -3,8 +3,8 @@
     src: url("ArtegraSans-Regular.ttf");
 }
 
-html {
-    font-family: "Artegra Sans", Sans-serif;
+:root {
+    --md-text-font: "Artegra Sans";
 }
 
 [data-md-color-scheme="default"] {
