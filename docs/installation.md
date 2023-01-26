@@ -5,6 +5,37 @@ hide:
 
 # Installation
 
+Unblob consists of two main parts:
+
+- unblob, the Python package (with optional Rust modules).
+- extractor command line tools like `7zip`, `unar`, etc. (See [Extractors](./extractors.md) for explanation.)
+
+All of these need to be installed to make unblob fully functional.  
+Depending the packaging solution you choose, you might need to
+install external extractors manually.
+
+## Python package
+
+unblob can be installed (without the extractors) from PyPI (Python Package Index).  
+This might be the easiest method, depending on whether you have Python 3 installed already.
+
+1.  First, install the Python package:
+
+        python3 -m pip install --user unblob
+
+    This will install the `unblob` script in `~/.local/bin`. You can put that
+    directory in your `PATH` environment variable, or call it directly.
+
+    !!! Warning
+
+        System-wide installation (with `sudo`) is not recommended, because it can potentially break your system.
+
+2.  Make sure to [install extractors](#install-extractors).
+
+3.  Check that everything works correctly:
+
+        unblob --show-external-dependencies
+
 ## Docker image
 
 unblob can be used right away from a `docker` image: `ghcr.io/onekey-sec/unblob:latest`,
@@ -35,21 +66,21 @@ docker run --rm --pull always ghcr.io/onekey-sec/unblob:latest --help
 unblob can be built and run using the [Nix](https://nixos.org) package manager.
 The Nix derivation installs all 3rd party dependencies.
 
-1. [Install and configure Nix](https://nixos.org/download.html).
+1.  [Install and configure Nix](https://nixos.org/download.html).
 
-1. _Optional_: enable the experimental features so that you don't need to pass  
-  `--extra-experimental-features "nix-command flakes"` to `nix` command invocations:
+1.  _Optional_: enable the experimental features so that you don't need to pass  
+    `--extra-experimental-features "nix-command flakes"` to `nix` command invocations:
 
-        cat > ~/.config/nix/nix.conf <<EOF
-        experimental-features = nix-command flakes
-        EOF
+          cat > ~/.config/nix/nix.conf <<EOF
+          experimental-features = nix-command flakes
+          EOF
 
-1. _Optional_: use pre-built binaries from GitHub using [cachix](https://app.cachix.org/cache/unblob):
+1.  _Optional_: use pre-built binaries from GitHub using [cachix](https://app.cachix.org/cache/unblob):
 
         nix-env -iA cachix -f https://cachix.org/api/v1/install
         cachix use unblob
 
-1. Install unblob:
+1.  Install unblob:
 
         nix profile install github:onekey-sec/unblob
 
@@ -57,12 +88,11 @@ The Nix derivation installs all 3rd party dependencies.
 
         unblob --show-external-dependencies
 
-
 ## From source
 
-1. Install [Git](https://git-scm.com/download/) if you don't have it yet.
-2. Install the [Poetry](https://python-poetry.org/docs/#installation) Python package manager.
-3. **Clone** the unblob **repository from GitHub**:
+1.  Install [Git](https://git-scm.com/download/) if you don't have it yet.
+2.  Install the [Poetry](https://python-poetry.org/docs/#installation) Python package manager.
+3.  **Clone** the unblob **repository from GitHub**:
 
         git clone https://github.com/onekey-sec/unblob.git
 
@@ -74,56 +104,26 @@ The Nix derivation installs all 3rd party dependencies.
             cd unblob
             UNBLOB_BUILD_RUST_EXTENSION=1 poetry install --no-dev
 
-    2. Python packages only:
+    2.  Python packages only:
 
             cd unblob
             poetry install --no-dev
 
-5. Install **required extractors** with your operating system package manager:
+    3.  Make sure you [installed all extractors](#install-extractors).
 
-    - on Ubuntu 22.04, install extractors with APT:
+    4.  Check that everything works correctly:
 
-            sudo apt install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg libhyperscan-dev zstd
+            poetry run unblob --show-external-dependencies
 
-    - If you need squashfs support, install sasquatch:
+## Install extractors
 
-            curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v1.0/sasquatch_1.0_amd64.deb
-            sudo dpkg -i sasquatch_1.0_amd64.deb
-            rm sasquatch_1.0_amd64.deb
+1.  With your operating system package manager:  
+    On Ubuntu 22.04, install extractors with APT:
 
-6. Check that everything works correctly:
+        sudo apt install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg libhyperscan-dev zstd
 
-        unblob --show-external-dependencies
+2.  If you need **squashfs support**, install sasquatch:
 
-    - Dependencies are all in place:
-```console
-$ poetry run unblob --show-external-dependencies
-The following executables found installed, which are needed by unblob:
-    7z                          ✓
-    debugfs                     ✓
-    jefferson                   ✓
-    lz4                         ✓
-    lziprecover                 ✓
-    lzop                        ✓
-    sasquatch                   ✓
-    sasquatch-v4be              ✓
-    simg2img                    ✓
-    ubireader_extract_files     ✓
-    ubireader_extract_images    ✓
-    unar                        ✓
-    yaffshiv                    ✓
-    zstd                        ✓
-```
-
-7. (Optional) Install it system wide.
-
-You can install unblob system wide in two operations:
-
-    1. Build the unblob distribution package:
-
-        cd unblob
-        poetry build
-
-    2. Install the unblob distribution package:
-
-        sudo python3 -m pip install dist/unblob-<version>.tar.gz
+        curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v1.0/sasquatch_1.0_amd64.deb
+        sudo dpkg -i sasquatch_1.0_amd64.deb
+        rm sasquatch_1.0_amd64.deb
