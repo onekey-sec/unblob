@@ -2,7 +2,8 @@ inputs:
   python-version:
     description: "Python version to setup"
     required: false
-    default: 3.8
+    default: "3.8"
+
 runs:
   using: "composite"
   steps:
