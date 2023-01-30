@@ -144,7 +144,7 @@ def convert_int64(value: bytes, endian: Endian) -> int:
         raise InvalidInputFormat from exc
 
 
-def decode_int(value: bytes, base: int) -> int:
+def decode_int(value, base: int) -> int:
     try:
         return int(value, base)
     except ValueError as exc:
