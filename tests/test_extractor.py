@@ -51,7 +51,6 @@ def test_fix_extracted_directory(tmpdir: Path, task_result: TaskResult):
 
 
 def test_fix_recursive_symlink(tmpdir: Path, task_result: TaskResult):
-
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path("link_a")
     second_link_path = tmpdir / Path("link_b")
@@ -63,7 +62,6 @@ def test_fix_recursive_symlink(tmpdir: Path, task_result: TaskResult):
 
 
 def test_fix_symlink_chain(tmpdir: Path, task_result: TaskResult):
-
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path("link_a")
 
@@ -75,7 +73,6 @@ def test_fix_symlink_chain(tmpdir: Path, task_result: TaskResult):
 
 
 def test_fix_symlink_chain_traversal(tmpdir: Path, task_result: TaskResult):
-
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path("link_a")
 
@@ -98,7 +95,6 @@ def test_fix_symlink_chain_traversal(tmpdir: Path, task_result: TaskResult):
 def test_fix_symlink(
     link: str, target: str, expected: str, tmpdir: Path, task_result: TaskResult
 ):
-
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path(link)
     expected_link = tmpdir / Path(expected)
@@ -127,7 +123,6 @@ def test_fix_symlink(
 def test_fix_symlink_subdir(
     link: str, target: str, expected: str, tmpdir: Path, task_result: TaskResult
 ):
-
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path(link)
     expected_link = Path(expected)
@@ -155,7 +150,6 @@ def test_fix_symlink_subdir(
 def test_fix_symlink_traversal(
     link: str, target: str, tmpdir: Path, task_result: TaskResult
 ):
-
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path(link)
     target_path = Path(target)
@@ -177,7 +171,6 @@ def test_fix_symlink_traversal(
 def test_fix_symlink_traversal_subdir(
     link: str, target: str, tmpdir: Path, task_result: TaskResult
 ):
-
     tmpdir = PosixPath(tmpdir)
     link_path = tmpdir / Path(link)
     target_path = Path(target)

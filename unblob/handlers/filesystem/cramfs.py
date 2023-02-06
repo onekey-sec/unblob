@@ -18,7 +18,6 @@ def swap_int32(i):
 
 
 class CramFSHandler(StructHandler):
-
     NAME = "cramfs"
 
     PATTERNS = [

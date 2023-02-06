@@ -11,7 +11,6 @@ HEADER_MIN_SIZE = 2 + 22
 
 
 class LZHHandler(StructHandler):
-
     NAME = "lzh"
 
     PATTERNS = [
@@ -58,7 +57,6 @@ class LZHHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         header = self.parse_header(file, Endian.LITTLE)
 
         if header.level_identifier > 0x2:

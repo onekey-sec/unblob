@@ -78,7 +78,6 @@ class LZOHandler(StructHandler):
     EXTRACTOR = Command("lzop", "-d", "-f", "-f", "-N", "-p{outdir}", "{inpath}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         header = self.cparser_be.lzo_header_no_filter_t(file)
         # maxmimum compression level is 9
         if header.level > 9:

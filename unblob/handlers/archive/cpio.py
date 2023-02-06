@@ -55,7 +55,6 @@ class _CPIOHandlerBase(StructHandler):
     def calculate_chunk(  # noqa: C901
         self, file: File, start_offset: int
     ) -> Optional[ValidChunk]:
-
         file_with_offset = OffsetFile(file, start_offset)
         current_offset = start_offset
         while True:

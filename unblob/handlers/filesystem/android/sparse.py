@@ -24,7 +24,6 @@ VALID_CHUNK_TYPES = [
 
 
 class SparseHandler(StructHandler):
-
     NAME = "sparse"
 
     # magic (0xed26ff3a)
@@ -61,7 +60,6 @@ class SparseHandler(StructHandler):
     EXTRACTOR = Command("simg2img", "{inpath}", "{outdir}/{infile}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         header = self.parse_header(file, Endian.LITTLE)
 
         count = 0

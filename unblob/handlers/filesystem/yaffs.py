@@ -63,7 +63,6 @@ def valid_name(name: bytes) -> bool:
 
 
 class _YAFFSBase(StructHandler):
-
     C_DEFINITIONS = """
         struct yaffs_file_var {
             uint32 file_size;
@@ -157,7 +156,6 @@ class _YAFFSBase(StructHandler):
         return files, current_offset
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         end_offset = 0
         total_files = 0
 
@@ -187,7 +185,6 @@ class _YAFFSBase(StructHandler):
 
 
 class YAFFS2Handler(_YAFFSBase):
-
     NAME = "yaffs2"
 
     PATTERNS = [
@@ -201,7 +198,6 @@ class YAFFS2Handler(_YAFFSBase):
 
 
 class YAFFSHandler(_YAFFSBase):
-
     NAME = "yaffs"
 
     PATTERNS = [

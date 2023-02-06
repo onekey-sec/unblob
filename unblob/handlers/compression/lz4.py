@@ -75,7 +75,6 @@ class LegacyFrameHandler(_LZ4HandlerBase):
     PATTERNS = [HexString("02 21 4C 18")]
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         self._skip_magic_bytes(file)
 
         while True:
@@ -129,7 +128,6 @@ class DefaultFrameHandler(_LZ4HandlerBase):
     def calculate_chunk(  # noqa: C901
         self, file: File, start_offset: int
     ) -> Optional[ValidChunk]:
-
         self._skip_magic_bytes(file)
 
         # 2. we parse the frame descriptor of dynamic size

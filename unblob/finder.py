@@ -29,7 +29,6 @@ class HyperscanMatchContext:
 def _calculate_chunk(
     handler: Handler, file: File, real_offset, task_result: TaskResult
 ) -> Optional[ValidChunk]:
-
     file.seek(real_offset)
     try:
         return handler.calculate_chunk(file, real_offset)

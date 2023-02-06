@@ -37,7 +37,6 @@ class ZlibHandler(Handler):
     EXTRACTOR = ZlibExtractor()
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         for pattern in DMGHandler.PATTERNS:
             if re.search(pattern.as_regex(), file[-512:]):
                 raise InvalidInputFormat(

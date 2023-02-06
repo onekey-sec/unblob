@@ -38,7 +38,6 @@ class ZSTDHandler(Handler):
         )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         file.seek(start_offset, io.SEEK_SET)
         file.seek(MAGIC_LEN, io.SEEK_CUR)
 

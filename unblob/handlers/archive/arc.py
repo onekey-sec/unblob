@@ -64,7 +64,6 @@ class ARCHandler(StructHandler):
         return True
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         # we loop from header to header until we reach the end header
         offset = start_offset
         while True:

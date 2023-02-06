@@ -32,7 +32,6 @@ class RarHandler(Handler):
     EXTRACTOR = Command("unar", "-no-directory", "-p", "", "{inpath}", "-o", "{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         try:
             rar_file = rarfile.RarFile(file)
         except (rarfile.Error, ValueError):

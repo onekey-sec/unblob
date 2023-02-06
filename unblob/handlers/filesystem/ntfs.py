@@ -11,7 +11,6 @@ logger = get_logger()
 
 
 class NTFSHandler(StructHandler):
-
     NAME = "ntfs"
 
     PATTERNS = [
