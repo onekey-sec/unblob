@@ -166,7 +166,6 @@ class RomFSHeader(object):
         file: File,
         extract_root: Path,
     ):
-
         self.file = file
         self.file.seek(0, io.SEEK_END)
         self.eof = self.file.tell()
@@ -248,7 +247,6 @@ class RomFSHeader(object):
         output_path.symlink_to(os.path.relpath(target_path, start=output_path.parent))
 
     def create_hardlink(self, extract_root: Path, link_path: Path, inode: FileHeader):
-
         if inode.spec_info in self.inodes:
             target = str(self.inodes[inode.spec_info].path).lstrip("/")
             target_path = extract_root.joinpath(target).resolve()
@@ -273,7 +271,6 @@ class RomFSHeader(object):
             logger.warn("Invalid hard link target", inode_key=inode.spec_info)
 
     def create_inode(self, extract_root: Path, inode: FileHeader):
-
         output_path = extract_root.joinpath(inode.path).resolve()
         if not is_safe_path(extract_root, inode.path):
             logger.warn("Path traversal attempt, discarding.", output_path=output_path)
@@ -341,7 +338,6 @@ class RomfsExtractor(Extractor):
 
 
 class RomFSFSHandler(StructHandler):
-
     NAME = "romfs"
 
     PATTERNS = [
@@ -360,7 +356,6 @@ class RomFSFSHandler(StructHandler):
     EXTRACTOR = RomfsExtractor()
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         if not valid_checksum(file.read(512)):
             raise InvalidInputFormat("Invalid RomFS checksum.")
 

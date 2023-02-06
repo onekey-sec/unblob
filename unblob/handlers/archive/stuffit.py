@@ -28,7 +28,6 @@ class _StuffItHandlerBase(StructHandler):
     """A common base for all StuffIt formats."""
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         header = self.parse_header(file, endian=Endian.BIG)
 
         return ValidChunk(

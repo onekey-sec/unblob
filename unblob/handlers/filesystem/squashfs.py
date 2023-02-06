@@ -219,7 +219,6 @@ class SquashFSv4LEHandler(_SquashFSBase):
 
 
 class SquashFSv4BEExtractor(Extractor):
-
     EXECUTABLE = "sasquatch-v4be"
 
     def is_avm(self, header: Instance) -> bool:

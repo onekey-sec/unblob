@@ -63,7 +63,6 @@ class GZIPHandler(Handler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         fp = SingleMemberGzipReader(file)
         if not fp.read_header():
             return

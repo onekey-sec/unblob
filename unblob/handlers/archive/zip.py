@@ -138,7 +138,6 @@ class ZIPHandler(StructHandler):
         )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         has_encrypted_files = False
         file.seek(start_offset, io.SEEK_SET)
 

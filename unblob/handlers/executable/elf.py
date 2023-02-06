@@ -111,7 +111,6 @@ class ELFKernelExtractor(Extractor):
 
 
 class _ELFBase(StructHandler):
-
     EXTRACTOR = ELFKernelExtractor()
     SECTION_HEADER_STRUCT = "elf_shdr_t"
     PROGRAM_HEADER_STRUCT = "elf_phdr_t"
@@ -261,7 +260,6 @@ class _ELFBase(StructHandler):
 
 
 class ELF32Handler(_ELFBase):
-
     NAME = "elf32"
 
     PATTERNS = [
@@ -341,7 +339,6 @@ class ELF32Handler(_ELFBase):
 
 
 class ELF64Handler(_ELFBase):
-
     NAME = "elf64"
 
     PATTERNS = [

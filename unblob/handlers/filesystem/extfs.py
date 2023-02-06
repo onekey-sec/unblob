@@ -26,7 +26,6 @@ OS_LIST = [
 
 
 class EXTHandler(StructHandler):
-
     NAME = "extfs"
 
     PATTERNS = [HexString("53 ef ( 01 | 02 ) 00 ( 00 | 01 | 02 | 03 | 04 ) 00")]
@@ -68,7 +67,6 @@ class EXTHandler(StructHandler):
     EXTRACTOR = Command("debugfs", "{inpath}", "-R", "rdump / {outdir}")
 
     def valid_header(self, header) -> bool:
-
         if header.s_state not in [0x1, 0x2]:
             logger.debug("ExtFS header state not valid", state=header.s_state)
             return False
@@ -89,7 +87,6 @@ class EXTHandler(StructHandler):
         return True
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         header = self.parse_header(file)
         end_offset = start_offset + (
             header.s_blocks_count_lo * (EXT_BLOCK_SIZE << header.s_log_block_size)

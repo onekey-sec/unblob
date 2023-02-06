@@ -128,7 +128,6 @@ class UBIHandler(Handler):
         return offset
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         peb_size = self._guess_peb_size(file)
 
         logger.debug("Guessed UBI PEB size", size=peb_size)

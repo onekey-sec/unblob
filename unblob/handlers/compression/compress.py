@@ -42,7 +42,6 @@ logger = get_logger()
 
 
 class UnixCompressHandler(StructHandler):
-
     NAME = "compress"
 
     PATTERNS = [
@@ -216,7 +215,6 @@ class UnixCompressHandler(StructHandler):
             return file.tell() - 1
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         file.seek(0, io.SEEK_END)
         max_len = file.tell()
 

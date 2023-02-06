@@ -44,7 +44,6 @@ class LZMAHandler(Handler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         read_size = 0
         file.seek(start_offset + 1)
         dictionary_size = convert_int32(file.read(4), Endian.LITTLE)

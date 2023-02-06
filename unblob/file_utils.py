@@ -230,7 +230,6 @@ def iterate_file(
     # default buffer size in shutil for unix based systems
     buffer_size: int = DEFAULT_BUFSIZE,
 ) -> Iterator[bytes]:
-
     if buffer_size <= 0:
         raise ValueError(
             "The file needs to be read until a specific size, so buffer_size must be greater than 0"

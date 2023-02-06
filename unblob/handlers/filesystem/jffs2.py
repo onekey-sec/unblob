@@ -104,7 +104,6 @@ class _JFFS2Base(StructHandler):
         return True
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-
         file.seek(0, io.SEEK_END)
         eof = file.tell()
         file.seek(start_offset)
@@ -151,7 +150,6 @@ class _JFFS2Base(StructHandler):
 
 
 class JFFS2OldHandler(_JFFS2Base):
-
     NAME = "jffs2_old"
 
     PATTERNS = [
@@ -163,7 +161,6 @@ class JFFS2OldHandler(_JFFS2Base):
 
 
 class JFFS2NewHandler(_JFFS2Base):
-
     NAME = "jffs2_new"
 
     PATTERNS = [

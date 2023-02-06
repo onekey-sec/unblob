@@ -30,7 +30,6 @@ def from_723(u: bytes) -> int:
 
 
 class ISO9660FSHandler(StructHandler):
-
     NAME = "iso9660"
 
     #
