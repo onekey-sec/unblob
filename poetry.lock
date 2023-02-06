@@ -820,22 +820,12 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
-name = "ubi_reader"
-version = "0.8.0"
-description = ""
+name = "ubi-reader"
+version = "0.8.5"
+description = "Extract files from UBI and UBIFS images."
 category = "main"
 optional = false
 python-versions = "*"
-develop = false
-
-[package.dependencies]
-python-lzo = "*"
-
-[package.source]
-type = "git"
-url = "https://github.com/onekey-sec/ubi_reader.git"
-reference = "8c956d47b28af4085366e2acfee8d3ba016f6e90"
-resolved_reference = "8c956d47b28af4085366e2acfee8d3ba016f6e90"
 
 [[package]]
 name = "urllib3"
@@ -916,7 +906,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "d8f0619745d724d934e1cef6442ccb588d5901dc18b512187a28c787b5198bd1"
+content-hash = "c6151a08e3dd2dd2191daaf14b631ce4ff50bd5e87903b6ff8887db26fb5aadb"
 
 [metadata.files]
 arpy = [
@@ -1492,7 +1482,9 @@ typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
     {file = "typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
 ]
-ubi_reader = []
+ubi-reader = [
+    {file = "ubi_reader-0.8.5.tar.gz", hash = "sha256:0d1467e582a1c9ba574bb1f941e45fb74f92ab8acfcba1586a8a464b0432e81e"},
+]
 urllib3 = [
     {file = "urllib3-1.26.12-py2.py3-none-any.whl", hash = "sha256:b930dd878d5a8afb066a637fbb35144fe7901e3b209d1cd4f524bd0e9deee997"},
     {file = "urllib3-1.26.12.tar.gz", hash = "sha256:3fa96cf423e6987997fc326ae8df396db2a8b7c667747d47ddd8ecba91f4a74e"},
