@@ -47,3 +47,11 @@ repos:
     rev: master
     hooks:
     -   id: nixpkgs-fmt
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.21.0
+    hooks:
+      - id: check-github-actions
+        name: Check Github actions
+      - id: check-github-workflows
+        name: Check Github workflows
