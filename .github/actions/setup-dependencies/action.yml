@@ -19,12 +19,12 @@ runs:
       shell: bash
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
 
     - name: Restore pip cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: pip-${{ inputs.python-version }}
@@ -34,7 +34,7 @@ runs:
       shell: bash
 
     - name: Restore poetry cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ~/.cache/pypoetry/cache
@@ -42,7 +42,7 @@ runs:
         key: poetry-cache-and-artifacts-${{ inputs.python-version }}
 
     - name: Restore virtualenvs
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pypoetry/virtualenvs
         key: venv-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}
