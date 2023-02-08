@@ -18,7 +18,7 @@ attrs = "^21.2.0"
 structlog = "^21.2.0"
 arpy = "^2.2.0"
 rarfile = "^4.0"
-ubi-reader = { git = "https://github.com/onekey-sec/ubi_reader.git", rev = "8c956d47b28af4085366e2acfee8d3ba016f6e90" }
+ubi-reader = "^0.8.5"
 python-lzo = "^1.14"
 cstruct = "2.1"
 jefferson = { git = "https://github.com/onekey-sec/jefferson.git", rev = "51de1f5ba3255ed707bb402bee89e442e11b55c1" }

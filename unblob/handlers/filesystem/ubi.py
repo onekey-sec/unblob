@@ -1,4 +1,6 @@
+import shutil
 import statistics
+from pathlib import Path
 from typing import Optional
 
 from structlog import get_logger
@@ -95,6 +97,18 @@ class UBIFSHandler(StructHandler):
         )
 
 
+class UBIExtractor(Command):
+    def extract(self, inpath: Path, outdir: Path):
+        super().extract(inpath, outdir)
+        # ubireader_extract_images creates a superfluous directory named
+        # after the UBI file (inpath here), so we simply move the files up
+        # and delete the remaining directory.
+        superfluous_dir_path = outdir.joinpath(inpath.name)
+        for file_path in superfluous_dir_path.iterdir():
+            shutil.move(file_path.as_posix(), outdir.as_posix())
+        shutil.rmtree(superfluous_dir_path.as_posix())
+
+
 class UBIHandler(Handler):
     NAME = "ubi"
 
@@ -102,7 +116,7 @@ class UBIHandler(Handler):
 
     PATTERNS = [HexString("55 42 49 23 01  // UBI# and version 1")]
 
-    EXTRACTOR = Command("ubireader_extract_images", "{inpath}", "-o", "{outdir}")
+    EXTRACTOR = UBIExtractor("ubireader_extract_images", "{inpath}", "-o", "{outdir}")
 
     def _guess_peb_size(self, file: File) -> int:
         # Since we don't know the PEB size, we need to guess it. At the moment we just find the
