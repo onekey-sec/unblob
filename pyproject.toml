@@ -20,8 +20,7 @@ arpy = "^2.2.0"
 rarfile = "^4.0"
 ubi-reader = "^0.8.5"
 python-lzo = "^1.14"
-cstruct = "2.1"
-jefferson = { git = "https://github.com/onekey-sec/jefferson.git", rev = "51de1f5ba3255ed707bb402bee89e442e11b55c1" }
+cstruct = "5.2"
 yaffshiv = { git = "https://github.com/onekey-sec/yaffshiv.git", rev = "a8f21283c25057740371fd34e9b6f3c4771375f1" }
 plotext = "^4.1.5"
 pluggy = "^1.0.0"
@@ -30,6 +29,7 @@ pyperscan = "^0.2.0"
 lark = "^1.1.2"
 lz4 = "^4.0.0"
 lief = "^0.12.3"
+jefferson = "^0.4.2"
 
 [tool.poetry.group.dev]
 optional = true
