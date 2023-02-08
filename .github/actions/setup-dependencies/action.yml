@@ -4,6 +4,8 @@ inputs:
     required: false
     default: "3.8"
 
+name: "Setup dependencies"
+description: "Install all required dependencies for worflows to run."
 runs:
   using: "composite"
   steps:

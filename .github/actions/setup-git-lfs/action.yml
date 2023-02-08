@@ -1,3 +1,5 @@
+name: "Setup git LFS"
+description: "Setup git LFS and pull files stored with git-lfs."
 runs:
   using: "composite"
   steps:
