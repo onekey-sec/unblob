@@ -16,6 +16,7 @@ from .handlers import BUILTIN_HANDLERS, Handlers
 from .logging import configure_logger
 from .processing import (
     DEFAULT_DEPTH,
+    DEFAULT_MAX_EXTRACTED_SIZE,
     DEFAULT_PROCESS_NUM,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
@@ -146,6 +147,15 @@ class UnblobContext(click.Context):
     show_default=True,
 )
 @click.option(
+    "-m",
+    "--max-extracted-size",
+    "max_extracted_size",
+    type=click.INT,
+    default=DEFAULT_MAX_EXTRACTED_SIZE,
+    help="Maximum size (in bytes) of the extraction directory.",
+    show_default=True,
+)
+@click.option(
     "--report",
     "report_file",
     type=click.Path(path_type=Path),
@@ -189,6 +199,7 @@ def cli(
     handlers: Handlers,
     plugins_path: Optional[Path],
     plugin_manager: UnblobPluginManager,
+    max_extracted_size: int,
     verbose: int,
 ) -> ProcessResult:
     configure_logger(verbose, extract_root)
@@ -208,6 +219,7 @@ def cli(
         process_num=process_num,
         handlers=handlers,
         keep_extracted_chunks=keep_extracted_chunks,
+        max_extracted_size=max_extracted_size,
     )
 
     logger.info("Start processing file", file=file)

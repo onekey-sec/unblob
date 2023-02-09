@@ -41,6 +41,7 @@ from .signals import terminate_gracefully
 logger = get_logger()
 
 DEFAULT_DEPTH = 10
+DEFAULT_MAX_EXTRACTED_SIZE = 1024 * 1024  # in bytes
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 DEFAULT_SKIP_MAGIC = (
     "BFLT",
@@ -79,6 +80,7 @@ class ExtractionConfig:
     entropy_depth: int
     entropy_plot: bool = False
     max_depth: int = DEFAULT_DEPTH
+    max_extracted_size: int = DEFAULT_MAX_EXTRACTED_SIZE
     skip_magic: Iterable[str] = DEFAULT_SKIP_MAGIC
     skip_extraction: bool = False
     process_num: int = DEFAULT_PROCESS_NUM
@@ -134,8 +136,20 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
     aggregated_result = ProcessResult()
 
     def process_result(pool, result):
-        for new_task in result.subtasks:
-            pool.submit(new_task)
+        logger.info(
+            "processing results, extraction size is",
+            extracted_size=processor.extracted_size,
+            max_extracted_size=config.max_extracted_size,
+        )
+        processor.extracted_size += sum(
+            [r.size for r in result.reports if type(r) == StatReport and not r.is_dir]
+        )
+        if processor.extracted_size > config.max_extracted_size:
+            logger.info("Maximum extraction size exceeded. Aborting.")
+            # TODO: here we need to stop all processing, including subprocesses
+        else:
+            for new_task in result.subtasks:
+                pool.submit(new_task)
         aggregated_result.register(result)
 
     pool = make_pool(
@@ -230,6 +244,7 @@ class Processor:
         # accuracy by no shadowing rules.
         self._get_magic = magic.Magic(keep_going=True).from_file
         self._get_mime_type = magic.Magic(mime=True).from_file
+        self.extracted_size = 0
 
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult(task)
