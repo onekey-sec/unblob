@@ -1,5 +1,6 @@
 from ..models import Handlers
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
+from .archive.netgear import chk
 from .compression import (
     bzip2,
     compress,
@@ -46,6 +47,7 @@ BUILTIN_HANDLERS: Handlers = (
     ubi.UBIFSHandler,
     yaffs.YAFFSHandler,
     yaffs.YAFFS2Handler,
+    chk.NetgearCHKHandler,
     sparse.SparseHandler,
     ar.ARHandler,
     arc.ARCHandler,
