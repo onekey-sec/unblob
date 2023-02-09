@@ -6,7 +6,7 @@ from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
-from unblob.file_utils import Endian, File, StructParser
+from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
 from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
@@ -59,7 +59,7 @@ class NetgearCHKHandler(StructHandler):
     HEADER_STRUCT = "chk_header_t"
     EXTRACTOR = CHKExtractor()
 
-    def is_valid_header(header: Instance) -> bool:
+    def is_valid_header(self, header: Instance) -> bool:
         if header.header_len != len(header):
             return False
         try:
@@ -70,6 +70,9 @@ class NetgearCHKHandler(StructHandler):
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, endian=Endian.BIG)
+
+        if not self.is_valid_header(header):
+            raise InvalidInputFormat("Invalid CHK header.")
 
         return ValidChunk(
             start_offset=start_offset,
