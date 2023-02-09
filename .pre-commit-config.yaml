@@ -3,7 +3,7 @@
 exclude: ^tests/integration|\.patch$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.4.0
     hooks:
       - id: trailing-whitespace
         exclude: ".*\\.md"
@@ -32,7 +32,7 @@ repos:
         name: Check isort
 
   - repo: https://github.com/jendrikseipp/vulture
-    rev: v2.3
+    rev: v2.7
     hooks:
       - id: vulture
         name: Check vulture
@@ -44,6 +44,14 @@ repos:
       - id: clippy
 
   - repo: https://github.com/nix-community/nixpkgs-fmt
-    rev: master
+    rev: v1.3.0
     hooks:
     -   id: nixpkgs-fmt
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.21.0
+    hooks:
+      - id: check-github-actions
+        name: Check Github actions
+      - id: check-github-workflows
+        name: Check Github workflows

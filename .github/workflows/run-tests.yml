@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -27,10 +27,10 @@ jobs:
           toolchain: 1.57.0
 
       - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
 
       - name: Check pre-commit hook
-        uses: pre-commit/action@v2.0.3
+        uses: pre-commit/action@v3.0.0
 
 
   check_pyright:
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
@@ -55,7 +55,7 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
