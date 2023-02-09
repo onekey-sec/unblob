@@ -589,14 +589,15 @@ diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pyperscan"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=3.8"
 
 [package.extras]
-test = ["mypy (>=0.991,<1.0)", "pytest (>=7.0.0,<7.1.0)"]
+dev = ["pre-commit (>=2.20,<3.0)"]
+test = ["pytest (>=7.0.0,<7.1.0)"]
 
 [[package]]
 name = "pyright"
@@ -906,7 +907,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c6151a08e3dd2dd2191daaf14b631ce4ff50bd5e87903b6ff8887db26fb5aadb"
+content-hash = "c13f4c1342bbf338d800db8c61845165cde4d9adc35b1814051b3c2a24cba704"
 
 [metadata.files]
 arpy = [
@@ -1365,9 +1366,10 @@ pyparsing = [
     {file = "pyparsing-3.0.9.tar.gz", hash = "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb"},
 ]
 pyperscan = [
-    {file = "pyperscan-0.1.0-cp38-abi3-macosx_10_9_x86_64.macosx_10_9_arm64.macosx_10_9_universal2.whl", hash = "sha256:d036c3465e6d7e47dec2c494a7aa3f888d4749156b57738fdae174d34951ba1c"},
-    {file = "pyperscan-0.1.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1497035ece80a10ac0faae3f9122ff73c5d2eff20af8c7353b9a964695779fb8"},
-    {file = "pyperscan-0.1.0.tar.gz", hash = "sha256:cd557e2e97a3a99cacaba1a022fc47a23832da33a1be46cad8b49d4c244e4945"},
+    {file = "pyperscan-0.2.0-cp38-abi3-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:4360d44f0022e9819f2c5823f743961a9037a28aeb369bda8cf392b4860f7a7e"},
+    {file = "pyperscan-0.2.0-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:81863adefefd10d19429538621142a156d3290cfd0524e00a3dc4e94987df32a"},
+    {file = "pyperscan-0.2.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4eb968001ed7bdf5a37ba21e127fb7f738c9f054fe53185be57bbd88de182409"},
+    {file = "pyperscan-0.2.0.tar.gz", hash = "sha256:698f06b23872457f7b499c575b8a3528b637b426c5af77f4df3b97c6b4fd1a9e"},
 ]
 pyright = [
     {file = "pyright-0.0.12-py3-none-any.whl", hash = "sha256:2c829291e23589ce52f2051e9c46830bf067a620caef95818200fa5d0cc2527f"},
