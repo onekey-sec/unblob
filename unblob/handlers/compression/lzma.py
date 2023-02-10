@@ -20,6 +20,9 @@ logger = get_logger()
 # 256GB
 MAX_UNCOMPRESSED_SIZE = 256 * 1024 * 1024 * 1024
 
+# This an arbitrary value
+MIN_COMPRESSED_SIZE = 256
+
 MIN_READ_RATIO = 0.1
 
 
@@ -43,24 +46,27 @@ class LZMAHandler(Handler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-        read_size = 0
-        file.seek(start_offset + 1)
-        dictionary_size = convert_int32(file.read(4), Endian.LITTLE)
-
+    def is_valid_stream(self, dictionary_size: int, uncompressed_size: int) -> bool:
         # dictionary size is non-zero (section 1.1.2 of format definition)
         # dictionary size is a power of two  (section 1.1.2 of format definition)
         if dictionary_size == 0 or (dictionary_size & (dictionary_size - 1)) != 0:
-            raise InvalidInputFormat
-
-        uncompressed_size = convert_int64(file.read(8), Endian.LITTLE)
-
+            return False
         # uncompressed size is either unknown (0xFFFFFFFFFFFFFFFF) or
         # smaller than 256GB  (section 1.1.3 of format definition)
         if not (
             uncompressed_size == 0xFFFFFFFFFFFFFFFF
             or uncompressed_size < MAX_UNCOMPRESSED_SIZE
         ):
+            return False
+        return True
+
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+        read_size = 0
+        file.seek(start_offset + 1)
+        dictionary_size = convert_int32(file.read(4), Endian.LITTLE)
+        uncompressed_size = convert_int64(file.read(8), Endian.LITTLE)
+
+        if not self.is_valid_stream(dictionary_size, uncompressed_size):
             raise InvalidInputFormat
 
         file.seek(start_offset, io.SEEK_SET)
@@ -84,7 +90,13 @@ class LZMAHandler(Handler):
         except lzma.LZMAError as exc:
             raise InvalidInputFormat from exc
 
+        end_offset = file.tell() - len(decompressor.unused_data)
+        compressed_size = end_offset - start_offset
+
+        if (read_size < compressed_size) or (compressed_size < MIN_COMPRESSED_SIZE):
+            raise InvalidInputFormat
+
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=file.tell() - len(decompressor.unused_data),
+            end_offset=end_offset,
         )
