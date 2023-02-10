@@ -34,6 +34,7 @@ from .filesystem import (
     yaffs,
 )
 from .filesystem.android import sparse
+from .filesystem.yaffs import yaffs1, yaffs2
 
 BUILTIN_HANDLERS: Handlers = (
     cramfs.CramFSHandler,
@@ -52,8 +53,8 @@ BUILTIN_HANDLERS: Handlers = (
     squashfs.SquashFSv4BEHandler,
     ubi.UBIHandler,
     ubi.UBIFSHandler,
-    yaffs.YAFFSHandler,
-    yaffs.YAFFS2Handler,
+    yaffs1.YAFFS1Handler,
+    yaffs2.YAFFS2Handler,
     chk.NetgearCHKHandler,
     trx.NetgearTRXv1Handler,
     trx.NetgearTRXv2Handler,
