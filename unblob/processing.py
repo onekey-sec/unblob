@@ -397,7 +397,6 @@ class _FileTask:
 
         except ExtractError as e:
             extraction_reports.extend(e.reports)
-            delete_empty_extract_dir(extract_dir)
         except Exception as exc:
             logger.exception("Unknown error happened while extracting chunk")
             extraction_reports.append(UnknownError(exception=exc))
@@ -406,6 +405,7 @@ class _FileTask:
 
         # we want to get consistent partial output even in case of unforeseen problems
         fix_extracted_directory(extract_dir, self.result)
+        delete_empty_extract_dir(extract_dir)
 
         if extract_dir.exists():
             self.result.add_subtask(
