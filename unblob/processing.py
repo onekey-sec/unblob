@@ -32,7 +32,6 @@ from .report import (
     ExtractDirectoryExistsReport,
     FileMagicReport,
     HashReport,
-    Report,
     StatReport,
     UnknownError,
 )
@@ -111,17 +110,21 @@ def process_file(
     if not input_path.is_file():
         raise ValueError("input_path is not a file", input_path)
 
-    errors = prepare_extract_dir(config, input_path)
+    extract_dir = config.get_extract_dir_for(input_path)
+    if config.force_extract and extract_dir.exists():
+        logger.info("Removing extract dir", path=extract_dir)
+        shutil.rmtree(extract_dir)
+
     if not prepare_report_file(config, report_file):
         logger.error(
             "File not processed, as report could not be written", file=input_path
         )
         return ProcessResult()
 
-    if errors:
-        process_result = ProcessResult([TaskResult(task, errors)])
-    else:
-        process_result = _process_task(config, task)
+    process_result = _process_task(config, task)
+
+    # ensure that the root extraction directory is created even for empty extractions
+    extract_dir.mkdir(parents=True, exist_ok=True)
 
     if report_file:
         write_json_report(report_file, process_result)
@@ -149,22 +152,6 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
         pool.process_until_done()
 
     return aggregated_result
-
-
-def prepare_extract_dir(config: ExtractionConfig, input_file: Path) -> List[Report]:
-    errors = []
-
-    extract_dir = config.get_extract_dir_for(input_file)
-    if extract_dir.exists():
-        if config.force_extract:
-            logger.info("Removing extract dir", path=extract_dir)
-            shutil.rmtree(extract_dir)
-        else:
-            report = ExtractDirectoryExistsReport(path=extract_dir)
-            logger.error("Extraction directory already exist", path=str(extract_dir))
-            errors.append(report)
-
-    return errors
 
 
 def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -> bool:
@@ -320,6 +307,19 @@ class _FileTask:
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
 
+        if self.carve_dir.exists():
+            # Extraction directory is not supposed to exist, it is usually a simple mistake of running
+            # unblob again without cleaning up or using --force.
+            # It would cause problems continuing, as it would mix up original and extracted files,
+            # and it would just introduce weird, non-deterministic problems due to interference on paths
+            # by multiple workers (parallel processing, modifying content (fix_symlink),
+            # and `mmap` + open for write with O_TRUNC).
+            logger.error(
+                "Skipped: extraction directory exists", extract_dir=self.carve_dir
+            )
+            self.result.add_report(ExtractDirectoryExistsReport(path=self.carve_dir))
+            return
+
         with File.from_path(self.task.path) as file:
             all_chunks = search_chunks(
                 file, self.size, self.config.handlers, self.result
@@ -333,8 +333,6 @@ class _FileTask:
                 # we don't consider whole files as unknown chunks, but we still want to
                 # calculate entropy for whole files which produced no valid chunks
                 self._calculate_entropy(self.task.path)
-
-        self._ensure_root_extract_dir()
 
     def _process_chunks(
         self,
@@ -353,16 +351,11 @@ class _FileTask:
         for chunk in outer_chunks:
             self._extract_chunk(file, chunk)
 
-    def _ensure_root_extract_dir(self):
-        # ensure that the root extraction directory is created even for empty extractions
-        if self.task.depth == 0:
-            self.carve_dir.mkdir(parents=True, exist_ok=True)
-
     def _calculate_entropy(self, path: Path):
         if self.task.depth < self.config.entropy_depth:
             calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
-    def _extract_chunk(self, file, chunk: ValidChunk):
+    def _extract_chunk(self, file, chunk: ValidChunk):  # noqa: C901
         is_whole_file_chunk = chunk.start_offset == 0 and chunk.end_offset == self.size
 
         skip_carving = is_whole_file_chunk
@@ -374,6 +367,21 @@ class _FileTask:
             inpath = carve_valid_chunk(self.carve_dir, file, chunk)
             extract_dir = self.carve_dir / (inpath.name + self.config.extract_suffix)
             carved_path = inpath
+
+        if extract_dir.exists():
+            # Extraction directory is not supposed to exist, it mixes up original and extracted files,
+            # and it would just introduce weird, non-deterministic problems due to interference on paths
+            # by multiple workers (parallel processing, modifying content (fix_symlink),
+            # and `mmap` + open for write with O_TRUNC).
+            logger.error(
+                "Skipped: extraction directory exists",
+                extract_dir=extract_dir,
+                chunk=chunk,
+            )
+            self.result.add_report(
+                chunk.as_report([ExtractDirectoryExistsReport(path=extract_dir)])
+            )
+            return
 
         if self.config.skip_extraction:
             fix_extracted_directory(extract_dir, self.result)
