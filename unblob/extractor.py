@@ -18,7 +18,7 @@ def carve_chunk_to_file(carve_path: Path, file: File, chunk: Chunk):
     carve_path.parent.mkdir(parents=True, exist_ok=True)
     logger.debug("Carving chunk", path=carve_path)
 
-    with carve_path.open("wb") as f:
+    with carve_path.open("xb") as f:
         for data in iterate_file(file, chunk.start_offset, chunk.size):
             f.write(data)
 

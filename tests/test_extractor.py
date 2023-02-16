@@ -20,6 +20,15 @@ def test_carve_unknown_chunk(tmp_path: Path):
     assert list(tmp_path.iterdir()) == [written_path]
     assert written_path.read_bytes() == content[1:8]
 
+    # carving the second time will fail, while not changing the file
+    unchanged_content = b"content is unchanged"
+    written_path.write_bytes(unchanged_content)
+
+    with pytest.raises(FileExistsError):
+        carve_unknown_chunk(tmp_path, test_file, chunk)
+
+    assert written_path.read_bytes() == unchanged_content
+
 
 def test_fix_permission(tmpdir: Path):
     tmpdir = PosixPath(tmpdir)
