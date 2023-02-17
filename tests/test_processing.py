@@ -1,5 +1,6 @@
+import zipfile
 from pathlib import Path
-from typing import List
+from typing import Collection, List, Tuple
 
 import attr
 import pytest
@@ -11,8 +12,10 @@ from unblob.processing import (
     calculate_entropy,
     calculate_unknown_chunks,
     draw_entropy_plot,
+    process_file,
     remove_inner_chunks,
 )
+from unblob.report import ExtractDirectoryExistsReport
 
 
 def assert_same_chunks(expected, actual, explanation=None):
@@ -177,3 +180,100 @@ def test_ExtractionConfig_get_extract_dir_for(
 ):
     cfg = ExtractionConfig(extract_root=Path(extract_root), entropy_depth=0)
     assert cfg.get_extract_dir_for(Path(path)) == Path(result)
+
+
+def mkzip(dir: Path, output: Path):
+    with zipfile.ZipFile(output, "x") as zf:
+        for path in dir.glob("**/*"):
+            zf.write(path, path.relative_to(dir))
+
+
+@pytest.fixture
+def fw(tmp_path: Path):
+    # _fixture_fw
+    # ├── fw.zip    <------- output
+    # ├── internal
+    # │   └── fw
+    # │       ├── hello
+    # │       └── world
+    # └── outer
+    #     └── fw
+    #         └── internal.zip
+    base = tmp_path / "_fixture_fw"
+
+    internal = base / "internal"
+    (internal / "fw").mkdir(parents=True)
+    (internal / "fw/hello").write_bytes(b"hello")
+    (internal / "fw/world").write_bytes(b"world")
+    outer = base / "outer"
+    (outer / "fw").mkdir(parents=True)
+    mkzip(internal, outer / "fw/internal.zip")
+    mkzip(outer, base / "fw.zip")
+
+    return base / "fw.zip"
+
+
+def sort_paths(paths: Collection[Path], base: Path) -> Tuple[List[Path], List[Path]]:
+    """The paths are sorted into two bins, the first one will contain subpaths of base, the second are not.
+
+    The first bin will also be converted to relative paths.
+    """
+    subpaths = []
+    outsiders = []
+    for path in sorted(paths):
+        try:
+            subpaths.append(path.relative_to(base))
+        except ValueError:
+            outsiders.append(path)
+    return subpaths, outsiders
+
+
+def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
+    # fw_extract_root
+    # └── fw.zip_extract
+    #     └── fw
+    #         ├── internal.zip
+    #         └── internal.zip_extract
+    #             └── fw
+    #                 ├── hello
+    #                 └── world
+    fw_extract_root = tmp_path / "fw_extract_root"
+    config = ExtractionConfig(extract_root=fw_extract_root, entropy_depth=0)
+    process_result = process_file(config, fw)
+    assert process_result.errors == []
+    extracted_fw_paths, outsiders = sort_paths(
+        [t.task.path for t in process_result.results], base=fw_extract_root
+    )
+    assert outsiders == [fw]
+
+    extracted_fw_zip = tmp_path / "extracted_fw.zip"
+    mkzip(fw_extract_root, extracted_fw_zip)
+
+    # fw_extract_of_extract_root
+    # └── extracted_fw.zip_extract
+    #     └── fw.zip_extract
+    #         └── fw
+    #             ├── internal.zip
+    #             └── internal.zip_extract
+    #                 └── fw
+    #                     ├── hello
+    #                     └── world
+    fw_extract_of_extract_root = tmp_path / "fw_extract_of_extract_root"
+    config = ExtractionConfig(extract_root=fw_extract_of_extract_root, entropy_depth=0)
+    process_result = process_file(config, extracted_fw_zip)
+
+    # we expect exactly 1 problem reported, related to the extraction of "internal.zip"
+    [report] = process_result.errors
+    assert isinstance(report, ExtractDirectoryExistsReport)
+    assert report.path.name == "internal.zip_extract"
+
+    # the rest should be the same, except that the extraction is shifted with one extra directory
+    # please note, that repeated processing is also excluded with the below checks
+    # "internal.zip_extract" and thus its content must not be processed twice!
+    extracted_extracted_fw_paths, outsiders = sort_paths(
+        [t.task.path for t in process_result.results],
+        base=fw_extract_of_extract_root / "extracted_fw.zip_extract",
+    )
+    assert outsiders == [extracted_fw_zip]
+
+    assert extracted_extracted_fw_paths == [Path(".")] + extracted_fw_paths
