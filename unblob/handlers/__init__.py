@@ -1,6 +1,7 @@
 from ..models import Handlers
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
 from .archive.dlink import encrpted_img, shrs
+from .archive.engeniustech import engenius
 from .archive.netgear import chk, trx
 from .compression import (
     bzip2,
@@ -85,4 +86,5 @@ BUILTIN_HANDLERS: Handlers = (
     elf.ELF32Handler,
     elf.ELF64Handler,
     zlib.ZlibHandler,
+    engenius.EngeniusHandler,
 )
