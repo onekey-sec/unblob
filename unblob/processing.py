@@ -531,7 +531,6 @@ def calculate_buffer_size(
 
 def draw_entropy_plot(percentages: List[float]):
     plt.clear_data()
-    plt.colorless()
     plt.title("Entropy distribution")
     plt.xlabel("mB")
     plt.ylabel("entropy %")

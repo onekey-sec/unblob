@@ -10,4 +10,5 @@ buildPythonPackage rec {
   };
 
   checkInputs = [ nose ];
+  strictDeps = true;
 }

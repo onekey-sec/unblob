@@ -6,4 +6,5 @@ inputs: final: prev:
   mkPoetryApp = prev.callPackage ./nix/poetry { };
   unblobPython = prev.callPackage ./nix/python { inherit (inputs) pyperscan; };
   unblob = final.unblobPython.pkgs.callPackage ./. { };
+  craneLib = inputs.crane.lib.${final.system};
 }

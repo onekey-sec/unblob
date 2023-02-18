@@ -11,7 +11,7 @@ let
       plotext = final.callPackage ../plotext { };
       ubi-reader = final.callPackage ../ubi-reader { };
       yaffshiv = final.callPackage ../yaffshiv { };
-      pyperscan = pyperscan.packages.${system}.default;
+      pyperscan = pyperscan.packages.${system}.default.vectorscan;
     };
   };
 in

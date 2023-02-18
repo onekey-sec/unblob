@@ -7,8 +7,7 @@ in
 
 with pkgs; mkShell {
   packages = [
-    (unblob.mkEditableEnv { "unblob" = ./.; })
-    unblob.runtimeDeps
+    unblob
     poetry
     lzo
   ];
