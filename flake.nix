@@ -40,6 +40,8 @@
         default = unblob;
       });
 
+      checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests);
+
       devShells = forAllSystems
         (system: {
           default = import ./shell.nix { pkgs = nixpkgsFor.${system}; };
