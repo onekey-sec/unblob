@@ -103,6 +103,7 @@ let
     ];
 
     pythonRelaxDeps = [
+      "plotext"
       "yaffshiv"
     ];
 
