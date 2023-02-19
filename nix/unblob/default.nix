@@ -101,7 +101,11 @@ let
     ];
 
     pythonRelaxDeps = [
+      "attrs"
+      "cstruct"
+      "dissect.cstruct"
       "plotext"
+      "structlog"
       "yaffshiv"
     ];
 
