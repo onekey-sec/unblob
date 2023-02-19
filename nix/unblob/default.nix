@@ -3,6 +3,7 @@
 , buildPythonApplication
 , callPackage
 , makeWrapper
+, pythonRelaxDepsHook
   # Python dependencies
 , arpy
 , attrs
@@ -96,6 +97,11 @@ let
 
     nativeBuildInputs = [
       makeWrapper
+      pythonRelaxDepsHook
+    ];
+
+    pythonRelaxDeps = [
+      "yaffshiv"
     ];
 
     makeWrapperArgs = [
