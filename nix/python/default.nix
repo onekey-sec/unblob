@@ -7,6 +7,7 @@ let
       arpy = final.callPackage ../arpy { };
       cstruct = final.callPackage ../cstruct { };
       jefferson = final.callPackage ../jefferson { };
+      plotext = final.callPackage ../plotext { };
       ubi-reader = final.callPackage ../ubi-reader { };
       yaffshiv = final.callPackage ../yaffshiv { };
       pyperscan = pyperscan.packages.${system}.default.vectorscan;
