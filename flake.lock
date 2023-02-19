@@ -17,11 +17,11 @@
     },
     "filter_2": {
       "locked": {
-        "lastModified": 1666547822,
-        "narHash": "sha256-razwnAybPHyoAyhkKCwXdxihIqJi1G6e1XP4FQOJTEs=",
+        "lastModified": 1676294984,
+        "narHash": "sha256-hdLUa/3RH1VJ+gMUysQE0JGM4F2Q/tIIFbtoxAOurJQ=",
         "owner": "numtide",
         "repo": "nix-filter",
-        "rev": "1a3b735e13e90a8d2fd5629f2f8363bd7ffbbec7",
+        "rev": "fc282c5478e4141842f9644c239a41cfe9586732",
         "type": "github"
       },
       "original": {
@@ -42,23 +42,6 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "maturin": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1670473053,
-        "narHash": "sha256-3TEEmraQ9KGx29ok7IUdVzTW0ilaAci1dOZUlKvQYJE=",
-        "owner": "PyO3",
-        "repo": "maturin",
-        "rev": "3d786cda84a1f1b40f97185fb140b6a213ba7471",
-        "type": "github"
-      },
-      "original": {
-        "owner": "PyO3",
-        "ref": "v0.14.5",
-        "repo": "maturin",
         "type": "github"
       }
     },
@@ -113,17 +96,16 @@
     "pyperscan": {
       "inputs": {
         "filter": "filter_2",
-        "maturin": "maturin",
-        "nixpkgs": "nixpkgs_2",
-        "rust-overlay": "rust-overlay",
+        "nixpkgs": ["nixpkgs"],
+        "rust-overlay": "rust-overlay_2",
         "utils": "utils"
       },
       "locked": {
-        "lastModified": 1674138262,
-        "narHash": "sha256-GKizHdbGYnKPbUZWI5jmiy0xy+uFuoPiLh939MB7x7U=",
+        "lastModified": 1677081717,
+        "narHash": "sha256-jkHeH+vm93nI0NQ5ygQ/csa4/hCuBGJ9ZxJTa5ewRp8=",
         "ref": "refs/heads/main",
-        "rev": "8515545787ca80767393a112cdcf35d4ee0bdcd0",
-        "revCount": 18,
+        "rev": "4bc92387dd2996cb67fdfbe185ebc172b36f4cbd",
+        "revCount": 27,
         "submodules": true,
         "type": "git",
         "url": "https://github.com/vlaci/pyperscan"
@@ -139,8 +121,7 @@
         "filter": "filter",
         "nixpkgs": "nixpkgs",
         "pyperscan": "pyperscan",
-        "sasquatch": "sasquatch",
-        "utils": "utils_2"
+        "sasquatch": "sasquatch"
       }
     },
     "rust-overlay": {
@@ -149,11 +130,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1669516540,
-        "narHash": "sha256-KzAKsPr6s77I2/0wWJ2tSY7Ca5Av/bqfw3aUv8lbuH4=",
+        "lastModified": 1676860326,
+        "narHash": "sha256-Rsvi4Zl6N7phhC7RMoh05gAHSwTzWG+c+iR+/X0RqWU=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "d99b1e8e21de25b97cbadb413d3510cec0ba5bc5",
+        "rev": "98f11700e398cf2ae6da905df56badc17e265021",
         "type": "github"
       },
       "original": {
@@ -179,21 +160,6 @@
       }
     },
     "utils": {
-      "locked": {
-        "lastModified": 1667395993,
-        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "utils_2": {
       "locked": {
         "lastModified": 1676283394,
         "narHash": "sha256-XX2f9c3iySLCw54rJ/CZs+ZK6IQy7GXNY4nSOyu2QG4=",
