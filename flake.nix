@@ -36,6 +36,8 @@
             default = pkgs.unblob;
           };
 
+          checks = pkgs.unblob.tests;
+
           devShells.default = import ./shell.nix { inherit pkgs; };
 
           legacyPackages = pkgs;
