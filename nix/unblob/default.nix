@@ -56,6 +56,8 @@ let
     pkgs.lz4
   ];
 
+  tests = callPackage ./tests.nix { inherit pname version; };
+
   unblob = buildPythonApplication rec {
     inherit pname version;
     format = "pyproject";
@@ -113,6 +115,12 @@ let
       "--prefix PATH : ${lib.makeBinPath runtimeDeps}"
     ];
 
+    passthru = {
+      inherit runtimeDeps;
+      tests = {
+        pytest = tests;
+      };
+    };
   };
 in
 unblob
