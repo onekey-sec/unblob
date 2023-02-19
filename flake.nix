@@ -7,10 +7,14 @@
     url = "git+https://github.com/vlaci/pyperscan?submodules=1";
     inputs.nixpkgs.follows = "nixpkgs";
   };
+  inputs.crane = {
+    url = "github:ipetkov/crane";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
   inputs.sasquatch.url = "github:onekey-sec/sasquatch";
   inputs.sasquatch.flake = false;
 
-  outputs = { self, nixpkgs, filter, pyperscan, sasquatch }:
+  outputs = { self, nixpkgs, filter, crane, pyperscan, sasquatch }:
     let
       # System types to support.
       supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -29,7 +33,7 @@
     in
     {
       overlays.default = import ./overlay.nix {
-        inherit pyperscan sasquatch;
+        inherit pyperscan sasquatch crane;
       };
       packages = forAllSystems (system: rec {
         inherit (nixpkgsFor.${system}) unblob sasquatch;
