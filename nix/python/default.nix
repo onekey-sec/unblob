@@ -8,6 +8,7 @@ let
       cstruct = final.callPackage ../cstruct { };
       jefferson = final.callPackage ../jefferson { };
       ubi-reader = final.callPackage ../ubi-reader { };
+      yaffshiv = final.callPackage ../yaffshiv { };
       pyperscan = pyperscan.packages.${system}.default.vectorscan;
     };
   };
