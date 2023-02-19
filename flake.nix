@@ -8,11 +8,15 @@
 
   inputs.sasquatch.url = "github:onekey-sec/sasquatch";
   inputs.sasquatch.flake = false;
+  inputs.crane = {
+    url = "github:ipetkov/crane";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
 
-  outputs = { self, nixpkgs, utils, filter, pyperscan, sasquatch }:
+  outputs = { self, nixpkgs, utils, filter, pyperscan, sasquatch, crane }:
     {
       overlays.default = import ./overlay.nix {
-        inherit pyperscan sasquatch;
+        inherit pyperscan sasquatch crane;
       };
     } //
     utils.lib.eachSystem (with utils.lib.system; [ x86_64-linux aarch64-linux ])

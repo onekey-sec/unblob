@@ -56,6 +56,7 @@ let
     pkgs.lz4
   ];
 
+  rust-module = callPackage ./rust-module.nix { inherit pname version; };
   tests = callPackage ./tests.nix { inherit pname version; };
 
   unblob = buildPythonApplication rec {
@@ -100,7 +101,10 @@ let
     nativeBuildInputs = [
       makeWrapper
       pythonRelaxDepsHook
+      rust-module
     ];
+
+    pythonImportsCheck = [ "unblob" "unblob._rust" ];
 
     pythonRelaxDeps = [
       "attrs"
@@ -110,6 +114,10 @@ let
       "structlog"
       "yaffshiv"
     ];
+
+    preBuild = ''
+      cp -r --no-preserve=mode ${rust-module} build
+    '';
 
     makeWrapperArgs = [
       "--prefix PATH : ${lib.makeBinPath runtimeDeps}"
