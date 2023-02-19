@@ -5,11 +5,16 @@ let
 in
 { pkgs ? flakePkgs }:
 
-with pkgs; mkShell {
+with pkgs; let
+  update = writeShellScriptBin "update-python-libraries"
+    ''${update-python-libraries} "$@"'';
+in
+mkShell {
   packages = [
-    (unblob.mkEditableEnv { "unblob" = ./.; })
+    unblob
     unblob.runtimeDeps
     poetry
     lzo
+    update
   ];
 }
