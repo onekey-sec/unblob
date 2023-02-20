@@ -1,3 +1,4 @@
+import sys
 import zipfile
 from pathlib import Path
 from typing import Collection, List, Tuple
@@ -148,8 +149,8 @@ def test_draw_entropy_plot_no_exception(percentages: List[float]):
 @pytest.mark.parametrize(
     "path, draw_plot",
     [
-        pytest.param(Path("/proc/self/exe"), True, id="draw-plot"),
-        pytest.param(Path("/proc/self/exe"), False, id="no-plot"),
+        pytest.param(Path(sys.executable), True, id="draw-plot"),
+        pytest.param(Path(sys.executable), False, id="no-plot"),
     ],
 )
 def test_calculate_entropy_no_exception(path: Path, draw_plot: bool):
