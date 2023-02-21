@@ -1,5 +1,6 @@
 from ..models import Handlers
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
+from .archive.dlink import encrpted_img
 from .archive.netgear import chk, trx
 from .compression import (
     bzip2,
@@ -50,6 +51,7 @@ BUILTIN_HANDLERS: Handlers = (
     chk.NetgearCHKHandler,
     trx.NetgearTRXv1Handler,
     trx.NetgearTRXv2Handler,
+    encrpted_img.EncrptedHandler,
     sparse.SparseHandler,
     ar.ARHandler,
     arc.ARCHandler,
