@@ -1,7 +1,9 @@
 import io
+import shutil
 from pathlib import Path
 from typing import Optional
 
+import attr
 import lief
 from dissect.cstruct import Instance
 from structlog import get_logger
@@ -24,6 +26,27 @@ logger = get_logger()
 
 KERNEL_MODULE_SIGNATURE_INFO_LEN = 12
 KERNEL_MODULE_SIGNATURE_FOOTER = b"~Module signature appended~\n"
+
+
+@attr.define(repr=False)
+class ElfChunk(ValidChunk):
+    def extract(self, inpath: Path, outdir: Path):
+        # ELF file extraction is special in that in the general case no new files are extracted, thus
+        # when we want to clean up all carves to save place, carved ELF files would be deleted as well,
+        # however we want to keep carved out ELF files, as they are the interesting stuff!
+        if self.is_whole_file:
+            # whole file chunks are not carved, so we can do normal extraction
+            super().extract(inpath, outdir)
+        else:
+            # make a copy, and let the carved chunk be deleted
+            outdir.mkdir(parents=True, exist_ok=False)
+            shutil.copy2(inpath, outdir)
+            # more work will be done, when outdir is picked up by processing,
+            # and the ELF file is processed as a whole file.
+            # As a performance side effect, ELF files will be searched for chunks twice.
+            # Even though the second chunk search one is short-circuited,
+            # because the ELF handler will recognize it as a whole file
+            # other handlers might burn some cycles on the file as well.
 
 
 class NullExtract(ExtractError):
@@ -241,7 +264,7 @@ class _ELFBase(StructHandler):
 
         return end_offset
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ElfChunk]:
         endian = self.get_endianness(file, start_offset)
         file.seek(start_offset, io.SEEK_SET)
         header = self.parse_header(file, endian)
@@ -253,7 +276,8 @@ class _ELFBase(StructHandler):
         if header.e_type == lief.ELF.E_TYPE.RELOCATABLE.value:
             end_offset = self.get_signed_kernel_module_end_offset(file, end_offset)
 
-        return ValidChunk(
+        # do a special extraction of ELF files with ElfChunk
+        return ElfChunk(
             start_offset=start_offset,
             end_offset=end_offset,
         )

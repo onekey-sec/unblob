@@ -3,7 +3,7 @@ import shutil
 import statistics
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Sequence
 
 import attr
 import magic
@@ -19,6 +19,7 @@ from .iter_utils import pairwise
 from .logging import noformat
 from .math import shannon_entropy
 from .models import (
+    Chunk,
     ExtractError,
     File,
     ProcessResult,
@@ -326,6 +327,8 @@ class _FileTask:
             )
             outer_chunks = remove_inner_chunks(all_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, self.size)
+            assign_file_to_chunks(outer_chunks, file=file)
+            assign_file_to_chunks(unknown_chunks, file=file)
 
             if outer_chunks or unknown_chunks:
                 self._process_chunks(file, outer_chunks, unknown_chunks)
@@ -356,9 +359,7 @@ class _FileTask:
             calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
     def _extract_chunk(self, file, chunk: ValidChunk):  # noqa: C901
-        is_whole_file_chunk = chunk.start_offset == 0 and chunk.end_offset == self.size
-
-        skip_carving = is_whole_file_chunk
+        skip_carving = chunk.is_whole_file
         if skip_carving:
             inpath = self.task.path
             extract_dir = self.carve_dir
@@ -415,6 +416,12 @@ class _FileTask:
                     depth=self.task.depth + 1,
                 )
             )
+
+
+def assign_file_to_chunks(chunks: Sequence[Chunk], file: File):
+    for chunk in chunks:
+        assert chunk.file is None
+        chunk.file = file
 
 
 def delete_empty_extract_dir(extract_dir: Path):
