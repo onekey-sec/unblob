@@ -6,4 +6,4 @@ build/
 *.egg-info/
 *.so
 .idea
-.coverage
+.coverage*
