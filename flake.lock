@@ -245,15 +245,16 @@
     "sasquatch": {
       "flake": false,
       "locked": {
-        "lastModified": 1670062437,
-        "narHash": "sha256-lza5Ot1+VO0krN1PJpiDwYKaR8vEM7Pdz7ealgB0jXw=",
+        "lastModified": 1677020850,
+        "narHash": "sha256-ygfrHoyVWPFnx3ekqPHRa21nTW+5AQ7I7l3FNPSgvIo=",
         "owner": "onekey-sec",
         "repo": "sasquatch",
-        "rev": "349c088de62604b5ac47ee5fccc94cee69a875f4",
+        "rev": "52f2b907fc6ac30c12191a5934bbb65932912941",
         "type": "github"
       },
       "original": {
         "owner": "onekey-sec",
+        "ref": "52f2b907fc6ac30c12191a5934bbb65932912941",
         "repo": "sasquatch",
         "type": "github"
       }

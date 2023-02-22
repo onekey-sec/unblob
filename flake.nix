@@ -19,7 +19,7 @@
         inherit pyperscan sasquatch crane;
       };
     } //
-    utils.lib.eachSystem (with utils.lib.system; [ x86_64-linux aarch64-linux ])
+    utils.lib.eachSystem (with utils.lib.system; [ x86_64-linux aarch64-linux x86_64-darwin ])
       (system:
         let
           pkgs = import nixpkgs {
@@ -39,7 +39,6 @@
           checks = pkgs.unblob.tests;
 
           devShells.default = import ./shell.nix { inherit pkgs; };
-
           legacyPackages = pkgs;
         }
       );
