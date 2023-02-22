@@ -9,6 +9,7 @@ from typing import Any, Callable, Union
 
 from .logging import multiprocessing_breakpoint
 
+mp.set_start_method("fork")
 
 class PoolBase(abc.ABC):
     @abc.abstractmethod
