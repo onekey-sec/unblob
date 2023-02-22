@@ -1,4 +1,4 @@
-{ pname, version, craneLib, rustPlatform, nix-filter, python, setuptools, setuptools-rust }:
+{ lib, stdenv, pname, version, craneLib, rustPlatform, nix-filter, python, setuptools, setuptools-rust, libiconv ? stdenv.isDarwin }:
 
 let
   unblob-rust-src = nix-filter {
@@ -23,7 +23,9 @@ craneLib.mkCargoDerivation {
   pname = "${pname}-rust";
   src = unblob-rust-src;
 
-  buildInputs = [ python setuptools setuptools-rust ];
+  buildInputs = [ python setuptools setuptools-rust ] ++ lib.optional stdenv.isDarwin [
+    libiconv
+  ];
   nativeBuildInputs = with rustPlatform; [
     rust.cargo
     rust.rustc
