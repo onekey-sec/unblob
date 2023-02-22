@@ -64,7 +64,7 @@ class EXTHandler(StructHandler):
 
     PATTERN_MATCH_OFFSET = -MAGIC_OFFSET
 
-    EXTRACTOR = Command("debugfs", "{inpath}", "-R", "rdump / {outdir}")
+    EXTRACTOR = Command("debugfs", "-R", "rdump / {outdir}", "{inpath}")
 
     def valid_header(self, header) -> bool:
         if header.s_state not in [0x1, 0x2]:
