@@ -11,8 +11,10 @@
     url = "github:ipetkov/crane";
     inputs.nixpkgs.follows = "nixpkgs";
   };
-  inputs.sasquatch.url = "github:onekey-sec/sasquatch";
-  inputs.sasquatch.flake = false;
+  inputs.sasquatch = {
+    url = "github:onekey-sec/sasquatch";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
 
   outputs = { self, nixpkgs, filter, crane, pyperscan, sasquatch }:
     let
@@ -27,16 +29,17 @@
         inherit system;
         overlays = [
           filter.overlays.default
+          sasquatch.overlays.default
           self.overlays.default
         ];
       });
     in
     {
       overlays.default = import ./overlay.nix {
-        inherit pyperscan sasquatch crane;
+        inherit pyperscan crane;
       };
       packages = forAllSystems (system: rec {
-        inherit (nixpkgsFor.${system}) unblob sasquatch;
+        inherit (nixpkgsFor.${system}) unblob;
         default = unblob;
       });
 

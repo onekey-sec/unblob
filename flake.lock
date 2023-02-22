@@ -117,22 +117,6 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1669165918,
-        "narHash": "sha256-hIVruk2+0wmw/Kfzy11rG3q7ev3VTi/IKVODeHcVjFo=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "3b400a525d92e4085e46141ff48cbf89fd89739e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs_3": {
-      "locked": {
         "lastModified": 1665296151,
         "narHash": "sha256-uOB0oxqxN9K7XGF1hcnY+PQnlQJ+3bP2vCn/+Ru/bbc=",
         "owner": "NixOS",
@@ -150,7 +134,9 @@
     "pyperscan": {
       "inputs": {
         "filter": "filter_2",
-        "nixpkgs": ["nixpkgs"],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
         "rust-overlay": "rust-overlay_2",
         "utils": "utils"
       },
@@ -207,7 +193,7 @@
     "rust-overlay_2": {
       "inputs": {
         "flake-utils": "flake-utils_2",
-        "nixpkgs": "nixpkgs_3"
+        "nixpkgs": "nixpkgs_2"
       },
       "locked": {
         "lastModified": 1676860326,
@@ -224,13 +210,17 @@
       }
     },
     "sasquatch": {
-      "flake": false,
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
       "locked": {
-        "lastModified": 1670062437,
-        "narHash": "sha256-lza5Ot1+VO0krN1PJpiDwYKaR8vEM7Pdz7ealgB0jXw=",
+        "lastModified": 1677076944,
+        "narHash": "sha256-Z2Du9aPXcdr7M7WSn5S6OG5liNRU6SBpne6Fhp/yUgY=",
         "owner": "onekey-sec",
         "repo": "sasquatch",
-        "rev": "349c088de62604b5ac47ee5fccc94cee69a875f4",
+        "rev": "70fa35701d7040a7cced653bded70de22de6d90b",
         "type": "github"
       },
       "original": {
