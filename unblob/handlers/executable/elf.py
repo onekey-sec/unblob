@@ -18,7 +18,7 @@ from unblob.file_utils import (
     iterate_patterns,
     round_up,
 )
-from unblob.models import ExtractError, Extractor, HexString, StructHandler, ValidChunk
+from unblob.models import Extractor, HexString, StructHandler, ValidChunk
 
 lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)
 
@@ -26,6 +26,9 @@ logger = get_logger()
 
 KERNEL_MODULE_SIGNATURE_INFO_LEN = 12
 KERNEL_MODULE_SIGNATURE_FOOTER = b"~Module signature appended~\n"
+
+KERNEL_SYMBOLS_SECTION = "__ksymtab"
+KERNEL_INIT_DATA_SECTION = ".init.data"
 
 
 @attr.define(repr=False)
@@ -35,8 +38,15 @@ class ElfChunk(ValidChunk):
         # when we want to clean up all carves to save place, carved ELF files would be deleted as well,
         # however we want to keep carved out ELF files, as they are the interesting stuff!
         if self.is_whole_file:
-            # whole file chunks are not carved, so we can do normal extraction
-            super().extract(inpath, outdir)
+            # whole file chunks are not carved, so we can extract
+            elf = lief.ELF.parse(str(inpath))
+
+            is_kernel = (
+                elf.header.file_type == lief.ELF.E_TYPE.EXECUTABLE
+                and elf.has_section(KERNEL_SYMBOLS_SECTION)
+            )
+            if is_kernel:
+                extract_initramfs(elf, inpath, outdir)
         else:
             # make a copy, and let the carved chunk be deleted
             outdir.mkdir(parents=True, exist_ok=False)
@@ -49,92 +59,70 @@ class ElfChunk(ValidChunk):
             # other handlers might burn some cycles on the file as well.
 
 
-class NullExtract(ExtractError):
-    pass
+def extract_initramfs(elf, inpath, outdir):
+    if not elf.has_section(KERNEL_INIT_DATA_SECTION):
+        return
 
+    init_data = elf.get_section(KERNEL_INIT_DATA_SECTION)
 
-class ELFKernelExtractor(Extractor):
-    KERNEL_SYMBOLS_SECTION = "__ksymtab"
-    KERNEL_INIT_DATA_SECTION = ".init.data"
+    if not init_data.size:
+        return
 
-    def extract(self, inpath: Path, outdir: Path):
-        elf = lief.ELF.parse(str(inpath))
+    is_64bit = elf.header.identity_class == lief.ELF.ELF_CLASS.CLASS64
+    endian = (
+        Endian.LITTLE
+        if elf.header.identity_data == lief.ELF.ELF_DATA.LSB
+        else Endian.BIG
+    )
 
-        if not (
-            elf.header.file_type == lief.ELF.E_TYPE.EXECUTABLE
-            and elf.has_section(self.KERNEL_SYMBOLS_SECTION)
+    with File.from_path(inpath) as file:
+        init_data_end_offset = init_data.file_offset + init_data.size
+
+        # initramfs size is at the end of the section either 64bit or 32bit depending on the platform
+        # see usr/initramfs_data.S in the kernel
+        # The size is padded to 8 bytes, see include/asm-generic/vmlinux.lds.h
+        # The actual initramfs is right before the size
+        if is_64bit:
+            initramfs_size_offset = init_data.file_offset + init_data.size - 8
+            initramfs_size = convert_int64(
+                file[initramfs_size_offset:init_data_end_offset],
+                endian=endian,
+            )
+        else:
+            initramfs_size_offset = init_data.file_offset + init_data.size - 4
+            initramfs_size = convert_int32(
+                file[initramfs_size_offset:init_data_end_offset],
+                endian=endian,
+            )
+
+        max_padding = 0
+        while file[initramfs_size_offset - max_padding - 1] == 0 and max_padding < 8:
+            max_padding += 1
+
+        padding = min(max_padding, round_up(initramfs_size, 8) - initramfs_size + 4)
+
+        initramfs_end = initramfs_size_offset - padding
+        initramfs_start = initramfs_end - initramfs_size
+
+        # initramfs can be turned off (https://www.linux.com/training-tutorials/kernel-newbie-corner-initrd-and-initramfs-whats/)
+        # in which case the above calculations most probably end up with bogus chunk offsets
+        if (
+            init_data.file_offset
+            <= initramfs_start
+            < initramfs_end
+            <= init_data_end_offset
         ):
-            # Non Linux kernel image
-            raise NullExtract()
-
-        self.extract_initramfs(elf, inpath, outdir)
-
-    def extract_initramfs(self, elf, inpath, outdir):
-        if not elf.has_section(self.KERNEL_INIT_DATA_SECTION):
-            raise NullExtract()
-
-        init_data = elf.get_section(self.KERNEL_INIT_DATA_SECTION)
-
-        if not init_data.size:
-            raise NullExtract()
-
-        is_64bit = elf.header.identity_class == lief.ELF.ELF_CLASS.CLASS64
-        endian = (
-            Endian.LITTLE
-            if elf.header.identity_data == lief.ELF.ELF_DATA.LSB
-            else Endian.BIG
-        )
-
-        with File.from_path(inpath) as file:
-            init_data_end_offset = init_data.file_offset + init_data.size
-
-            # initramfs size is at the end of the section either 64bit or 32bit depending on the platform
-            # see usr/initramfs_data.S in the kernel
-            # The size is padded to 8 bytes, see include/asm-generic/vmlinux.lds.h
-            # The actual initramfs is right before the size
-            if is_64bit:
-                initramfs_size_offset = init_data.file_offset + init_data.size - 8
-                initramfs_size = convert_int64(
-                    file[initramfs_size_offset:init_data_end_offset],
-                    endian=endian,
-                )
-            else:
-                initramfs_size_offset = init_data.file_offset + init_data.size - 4
-                initramfs_size = convert_int32(
-                    file[initramfs_size_offset:init_data_end_offset],
-                    endian=endian,
-                )
-
-            max_padding = 0
-            while (
-                file[initramfs_size_offset - max_padding - 1] == 0 and max_padding < 8
-            ):
-                max_padding += 1
-
-            padding = min(max_padding, round_up(initramfs_size, 8) - initramfs_size + 4)
-
-            initramfs_end = initramfs_size_offset - padding
-            initramfs_start = initramfs_end - initramfs_size
-
-            # initramfs can be turned off (https://www.linux.com/training-tutorials/kernel-newbie-corner-initrd-and-initramfs-whats/)
-            # in which case the above calculations most probably end up with bogus chunk offsets
-            if (
-                init_data.file_offset
-                <= initramfs_start
-                < initramfs_end
-                <= init_data_end_offset
-            ):
-                carve_chunk_to_file(
-                    outdir.joinpath("initramfs"),
-                    file,
-                    ValidChunk(start_offset=initramfs_start, end_offset=initramfs_end),
-                )
-            else:
-                raise NullExtract()
+            carve_chunk_to_file(
+                outdir.joinpath("initramfs"),
+                file,
+                ValidChunk(start_offset=initramfs_start, end_offset=initramfs_end),
+            )
+        else:
+            return
 
 
 class _ELFBase(StructHandler):
-    EXTRACTOR = ELFKernelExtractor()
+    EXTRACTOR = None
     SECTION_HEADER_STRUCT = "elf_shdr_t"
     PROGRAM_HEADER_STRUCT = "elf_phdr_t"
 
