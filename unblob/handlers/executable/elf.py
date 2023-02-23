@@ -38,17 +38,15 @@ class ElfChunk(ValidChunk):
         # ELF file extraction is special in that in the general case no new files are extracted, thus
         # when we want to clean up all carves to save place, carved ELF files would be deleted as well,
         # however we want to keep carved out ELF files, as they are the interesting stuff!
-        if self.is_whole_file:
-            # whole file chunks are not carved, so we can extract
-            elf = lief.ELF.parse(str(inpath))
+        elf = lief.ELF.parse(str(inpath))
 
-            is_kernel = (
-                elf.header.file_type == lief.ELF.E_TYPE.EXECUTABLE
-                and elf.has_section(KERNEL_SYMBOLS_SECTION)
-            )
-            if is_kernel:
-                extract_initramfs(elf, self.file, outdir)
-        else:
+        is_kernel = (
+            elf.header.file_type == lief.ELF.E_TYPE.EXECUTABLE
+            and elf.has_section(KERNEL_SYMBOLS_SECTION)
+        )
+        if is_kernel:
+            extract_initramfs(elf, self.file, outdir)
+        elif not self.is_whole_file:
             # make a copy, and let the carved chunk be deleted
             outdir.mkdir(parents=True, exist_ok=False)
             shutil.copy2(inpath, outdir)
