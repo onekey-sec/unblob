@@ -28,16 +28,18 @@
       nixpkgsFor = forAllSystems (system: import nixpkgs {
         inherit system;
         overlays = [
-          filter.overlays.default
-          sasquatch.overlays.default
           self.overlays.default
         ];
       });
     in
     {
-      overlays.default = import ./overlay.nix {
-        inherit pyperscan crane;
-      };
+      overlays.default = nixpkgs.lib.composeManyExtensions [
+        filter.overlays.default
+        sasquatch.overlays.default
+        (import ./overlay.nix {
+          inherit pyperscan crane;
+        })
+      ];
       packages = forAllSystems (system: rec {
         inherit (nixpkgsFor.${system}) unblob;
         default = unblob;
