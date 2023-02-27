@@ -24,7 +24,7 @@
 , rarfile
 , setuptools
 , structlog
-, ubi-reader
+, ubi_reader
 , yaffshiv
   # Runtime dependencies (extractors)
 , pkgs
@@ -95,7 +95,7 @@ let
       python-magic
       structlog
       yaffshiv
-      ubi-reader
+      ubi_reader
       rarfile
     ];
 
