@@ -5,7 +5,6 @@ let
     inherit self;
     packageOverrides = final: prev: {
       plotext = final.callPackage ../plotext { };
-      ubi-reader = final.callPackage ../ubi-reader { };
       yaffshiv = final.callPackage ../yaffshiv { };
       pyperscan = pyperscan.packages.${system}.default.vectorscan;
     };
