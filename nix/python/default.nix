@@ -4,7 +4,6 @@ let
   self = python3.override {
     inherit self;
     packageOverrides = final: prev: {
-      arpy = final.callPackage ../arpy { };
       cstruct = final.callPackage ../cstruct { };
       jefferson = final.callPackage ../jefferson { };
       plotext = final.callPackage ../plotext { };
