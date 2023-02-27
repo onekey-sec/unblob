@@ -27,7 +27,6 @@ logger = get_logger()
 KERNEL_MODULE_SIGNATURE_INFO_LEN = 12
 KERNEL_MODULE_SIGNATURE_FOOTER = b"~Module signature appended~\n"
 
-KERNEL_SYMBOLS_SECTION = "__ksymtab"
 KERNEL_INIT_DATA_SECTION = ".init.data"
 
 
@@ -42,7 +41,7 @@ class ElfChunk(ValidChunk):
 
         is_kernel = (
             elf.header.file_type == lief.ELF.E_TYPE.EXECUTABLE
-            and elf.has_section(KERNEL_SYMBOLS_SECTION)
+            and elf.has_section(KERNEL_INIT_DATA_SECTION)
         )
         if is_kernel:
             extract_initramfs(elf, self.file, outdir)
@@ -59,6 +58,11 @@ class ElfChunk(ValidChunk):
 
 
 def extract_initramfs(elf, file: File, outdir):
+    """Extract the initramfs part, with a potentially 4 extra bytes.
+
+    Due to alignment definition of initramfs the start-end offsets can not be exactly calculated,
+    so the output could have a 4 extra bytes before or after the initramfs.
+    """
     if not elf.has_section(KERNEL_INIT_DATA_SECTION):
         return
 
@@ -93,23 +97,34 @@ def extract_initramfs(elf, file: File, outdir):
             endian=endian,
         )
 
-    max_padding = 0
-    while file[initramfs_size_offset - max_padding - 1] == 0 and max_padding < 8:
-        max_padding += 1
-
-    padding = min(max_padding, round_up(initramfs_size, 8) - initramfs_size + 4)
-
-    initramfs_end = initramfs_size_offset - padding
-    initramfs_start = initramfs_end - initramfs_size
+    # initramfs start is aligned to 4 bytes, initramfs_size_offset is aligned to 8 bytes
+    # this is unfortunate, as we do not know the start, only the padded end
+    # unfortunately we have two valid values for the padding of the initramfs end:
+    #   0 and 4, 1 and 5, 2 and 6, 3 and 7
+    # let's calculate the offsets for the smaller padding values
+    initramfs_start = initramfs_size_offset - round_up(initramfs_size, 4)
+    initramfs_end = initramfs_start + initramfs_size
+    padding = initramfs_size_offset - initramfs_end
 
     # initramfs can be turned off (https://www.linux.com/training-tutorials/kernel-newbie-corner-initrd-and-initramfs-whats/)
     # in which case the above calculations most probably end up with bogus chunk offsets
-    if init_data.file_offset <= initramfs_start < initramfs_end <= init_data_end_offset:
-        carve_chunk_to_file(
-            outdir / "initramfs",
-            file,
-            ValidChunk(start_offset=initramfs_start, end_offset=initramfs_end),
-        )
+    if not (
+        init_data.file_offset <= initramfs_start < initramfs_end <= init_data_end_offset
+        and (bytes(padding) == file[initramfs_end:initramfs_size_offset])
+    ):
+        return
+
+    # when bigger padding is also a possibility, include 4 more bytes from the beginning
+    if (init_data.file_offset <= initramfs_start - 4) and (
+        bytes(padding + 4) == file[initramfs_end - 4 : initramfs_size_offset]
+    ):
+        initramfs_start -= 4
+
+    carve_chunk_to_file(
+        outdir / "initramfs",
+        file,
+        ValidChunk(start_offset=initramfs_start, end_offset=initramfs_end),
+    )
 
 
 class _ELFBase(StructHandler):
