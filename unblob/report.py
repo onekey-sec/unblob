@@ -4,7 +4,7 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, final
 
 import attr
 
@@ -172,6 +172,7 @@ class FileMagicReport(Report):
     mime_type: str
 
 
+@final
 @attr.define(kw_only=True)
 class ChunkReport(Report):
     id: str
@@ -183,6 +184,7 @@ class ChunkReport(Report):
     extraction_reports: List[Report]
 
 
+@final
 @attr.define(kw_only=True)
 class UnknownChunkReport(Report):
     id: str

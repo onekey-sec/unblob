@@ -47,6 +47,8 @@ class Chunk:
 
     id: str = attr.field(factory=new_id)
 
+    file: Optional[File] = None
+
     def __attrs_post_init__(self):
         if self.start_offset < 0 or self.end_offset < 0:
             raise InvalidInputFormat(f"Chunk has negative offset: {self}")
@@ -62,6 +64,11 @@ class Chunk:
     @property
     def range_hex(self) -> str:
         return f"0x{self.start_offset:x}-0x{self.end_offset:x}"
+
+    @property
+    def is_whole_file(self):
+        assert self.file
+        return self.start_offset == 0 and self.end_offset == self.file.size()
 
     def contains(self, other: "Chunk") -> bool:
         return (
