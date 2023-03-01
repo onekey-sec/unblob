@@ -4,7 +4,7 @@ from pytest import approx
 import unblob._py as python_binding
 
 try:
-    import unblob._rust as rust_binding
+    import unblob._rust as rust_binding  # type: ignore
 except ModuleNotFoundError:
     rust_binding = None
 
