@@ -1,6 +1,6 @@
 { lib
 , nix-filter
-, buildPythonApplication
+, buildPythonPackage
 , callPackage
 , makeWrapper
 , pythonRelaxDepsHook
@@ -59,7 +59,7 @@ let
   rust-module = callPackage ./rust-module.nix { inherit pname version; };
   tests = callPackage ./tests.nix { inherit pname version; };
 
-  unblob = buildPythonApplication rec {
+  unblob = buildPythonPackage rec {
     inherit pname version;
     format = "pyproject";
 
