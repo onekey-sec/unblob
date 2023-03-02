@@ -106,9 +106,7 @@ let
     pythonImportsCheck = [ "unblob" "unblob._rust" ];
 
     pythonRelaxDeps = [
-      "attrs"
       "dissect.cstruct"
-      "plotext"
       "structlog"
       "yaffshiv"
     ];
