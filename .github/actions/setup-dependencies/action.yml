@@ -15,7 +15,7 @@ runs:
 
     - name: Install sasquatch
       run: |
-        curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v1.0/sasquatch_1.0_amd64.deb
+        curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-1/sasquatch_1.0_amd64.deb
         sudo dpkg -i sasquatch_1.0_amd64.deb
         rm -f sasquatch_1.0_amd64.deb
       shell: bash
