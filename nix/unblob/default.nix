@@ -8,7 +8,6 @@
 , arpy
 , attrs
 , click
-, cstruct
 , cryptography
 , dissect-cstruct
 , jefferson
@@ -81,7 +80,6 @@ let
       arpy
       attrs
       click
-      cstruct
       cryptography
       dissect-cstruct
       jefferson
@@ -109,7 +107,6 @@ let
 
     pythonRelaxDeps = [
       "attrs"
-      "cstruct"
       "dissect.cstruct"
       "plotext"
       "structlog"

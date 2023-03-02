@@ -20,7 +20,6 @@ arpy = "^2.2.0"
 rarfile = "^4.0"
 ubi-reader = "^0.8.5"
 python-lzo = "^1.14"
-cstruct = "5.2"
 yaffshiv = { git = "https://github.com/onekey-sec/yaffshiv.git", rev = "a8f21283c25057740371fd34e9b6f3c4771375f1" }
 plotext = ">=4.2.0,<6.0"
 pluggy = "^1.0.0"
