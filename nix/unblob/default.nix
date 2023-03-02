@@ -8,7 +8,6 @@
 , arpy
 , attrs
 , click
-, cstruct
 , cryptography
 , dissect-cstruct
 , jefferson
@@ -81,7 +80,6 @@ let
       arpy
       attrs
       click
-      cstruct
       cryptography
       dissect-cstruct
       jefferson
@@ -108,10 +106,7 @@ let
     pythonImportsCheck = [ "unblob" "unblob._rust" ];
 
     pythonRelaxDeps = [
-      "attrs"
-      "cstruct"
       "dissect.cstruct"
-      "plotext"
       "structlog"
       "yaffshiv"
     ];
