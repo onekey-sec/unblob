@@ -3,6 +3,7 @@ from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, 
 from .archive.dlink import encrpted_img, shrs
 from .archive.engeniustech import engenius
 from .archive.netgear import chk, trx
+from .archive.xiaomi import hdr
 from .compression import (
     bzip2,
     compress,
@@ -54,6 +55,8 @@ BUILTIN_HANDLERS: Handlers = (
     trx.NetgearTRXv2Handler,
     encrpted_img.EncrptedHandler,
     shrs.SHRSHandler,
+    hdr.HDR1Handler,
+    hdr.HDR2Handler,
     sparse.SparseHandler,
     ar.ARHandler,
     arc.ARCHandler,
