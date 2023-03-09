@@ -4,7 +4,7 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.filter.url = "github:numtide/nix-filter";
   inputs.pyperscan = {
-    url = "git+https://github.com/vlaci/pyperscan?submodules=1";
+    url = "git+https://github.com/vlaci/pyperscan/?ref=main&submodules=1";
     inputs.nixpkgs.follows = "nixpkgs";
   };
   inputs.crane = {
