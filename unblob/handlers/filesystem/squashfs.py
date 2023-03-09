@@ -45,6 +45,45 @@ class _SquashFSBase(StructHandler):
         )
 
 
+class SquashFSv2Handler(_SquashFSBase):
+    NAME = "squashfs_v2"
+
+    PATTERNS = [
+        HexString(
+            """
+            // 00000000  73 71 73 68 00 00 00 03  00 00 00 00 00 00 00 00  |sqsh............|
+            // 00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 02 00 00  |................|
+            // squashfs_v2_magic_be
+            73 71 73 68 [24] 00 02
+        """
+        ),
+        HexString(
+            """
+            // 00000000  68 73 71 73 03 00 00 00  00 00 00 00 00 00 00 00  |hsqs............|
+            // 00000010  00 00 00 00 00 00 00 00  00 00 00 00 02 00 00 00  |................|
+            // squashfs_v2_magic_le
+            68 73 71 73 [24] 02 00
+        """
+        ),
+    ]
+
+    C_DEFINITIONS = r"""
+        typedef struct squashfs2_super_block
+        {
+            char   s_magic[4];
+            uint32 inodes;
+            uint32 bytes_used;
+            uint32 uid_start;
+            uint32 guid_start;
+            uint32 inode_table_start;
+            uint32 directory_table_start;
+            uint16 s_major;
+            uint16 s_minor;
+        } squashfs2_super_block_t;
+    """
+    HEADER_STRUCT = "squashfs2_super_block_t"
+
+
 class SquashFSv3Handler(_SquashFSBase):
     NAME = "squashfs_v3"
 
