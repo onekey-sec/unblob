@@ -3,6 +3,7 @@ from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, 
 from .archive.dlink import encrpted_img, shrs
 from .archive.engeniustech import engenius
 from .archive.netgear import chk, trx
+from .archive.qnap import qnap_nas
 from .archive.xiaomi import hdr
 from .compression import (
     bzip2,
@@ -57,6 +58,7 @@ BUILTIN_HANDLERS: Handlers = (
     shrs.SHRSHandler,
     hdr.HDR1Handler,
     hdr.HDR2Handler,
+    qnap_nas.QnapHandler,
     sparse.SparseHandler,
     ar.ARHandler,
     arc.ARCHandler,
