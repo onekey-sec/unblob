@@ -33,7 +33,6 @@ KERNEL_INIT_DATA_SECTION = ".init.data"
 @attr.define(repr=False)
 class ElfChunk(ValidChunk):
     def extract(self, inpath: Path, outdir: Path):
-        assert self.file
         # ELF file extraction is special in that in the general case no new files are extracted, thus
         # when we want to clean up all carves to save place, carved ELF files would be deleted as well,
         # however we want to keep carved out ELF files, as they are the interesting stuff!
@@ -44,7 +43,8 @@ class ElfChunk(ValidChunk):
             and elf.has_section(KERNEL_INIT_DATA_SECTION)
         )
         if is_kernel:
-            extract_initramfs(elf, self.file, outdir)
+            with File.from_path(inpath) as file:
+                extract_initramfs(elf, file, outdir)
         elif not self.is_whole_file:
             # make a copy, and let the carved chunk be deleted
             outdir.mkdir(parents=True, exist_ok=False)
