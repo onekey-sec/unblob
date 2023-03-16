@@ -204,12 +204,8 @@ class _ELFBase(StructHandler):
         # can be also intermixed, so we need also to check the end of the last section and
         # also the last program segment.
         # We check which one is the last and use it as a file size.
-        section_headers_end = (
-            start_offset + header.e_shoff + (header.e_shnum * header.e_shentsize)
-        )
-        program_headers_end = (
-            start_offset + header.e_phoff + (header.e_phnum * header.e_phentsize)
-        )
+        section_headers_end = header.e_shoff + (header.e_shnum * header.e_shentsize)
+        program_headers_end = header.e_phoff + (header.e_phnum * header.e_phentsize)
 
         last_section_end = self.get_last_section_end(
             file, start_offset + header.e_shoff, header.e_shnum, endian
@@ -219,7 +215,7 @@ class _ELFBase(StructHandler):
             file, start_offset + header.e_phoff, header.e_phnum, endian
         )
 
-        return max(
+        return start_offset + max(
             section_headers_end, program_headers_end, last_section_end, last_program_end
         )
 
