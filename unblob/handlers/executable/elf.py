@@ -48,7 +48,7 @@ class ElfChunk(ValidChunk):
         elif not self.is_whole_file:
             # make a copy, and let the carved chunk be deleted
             outdir.mkdir(parents=True, exist_ok=False)
-            shutil.copy2(inpath, outdir)
+            shutil.copy2(inpath, outdir / "carved.elf")
             # more work will be done, when outdir is picked up by processing,
             # and the ELF file is processed as a whole file.
             # As a performance side effect, ELF files will be searched for chunks twice.
