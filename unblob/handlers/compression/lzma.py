@@ -44,7 +44,7 @@ class LZMAHandler(Handler):
         )
     ]
 
-    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="lzma.uncompressed")
 
     def is_valid_stream(self, dictionary_size: int, uncompressed_size: int) -> bool:
         # dictionary size is non-zero (section 1.1.2 of format definition)
