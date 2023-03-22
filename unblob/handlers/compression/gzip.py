@@ -13,12 +13,15 @@ library tries to read the next stream header.
 """
 import gzip
 import io
+import struct
 import zlib
-from typing import Optional
+from pathlib import Path
+from typing import List, Optional
 
 from structlog import get_logger
 
 from unblob.extractors import Command
+from unblob.models import Extractor
 
 from ...file_utils import InvalidInputFormat
 from ...models import File, Handler, HexString, ValidChunk
@@ -30,9 +33,51 @@ GZIP2_CRC_LEN = 4
 GZIP2_SIZE_LEN = 4
 GZIP2_FOOTER_LEN = GZIP2_CRC_LEN + GZIP2_SIZE_LEN
 
+FLAG_EXTRA = 4
+FLAG_NAME = 8
+
+
+def get_gzip_embedded_name(path: Path) -> str:
+    name = b""
+    with path.open("rb") as file:
+        # skip magic bytes and method
+        file.read(2)
+        (_method, flag, _last_mtime) = struct.unpack("<BBIxx", file.read(8))
+
+        if flag & FLAG_EXTRA:
+            # Read & discard the extra field, if present
+            [extra_len] = struct.unpack("<H", file.read(2))
+            file.seek(extra_len, io.SEEK_CUR)
+
+        if flag & FLAG_NAME:
+            # Read and discard a null-terminated string containing the filename
+            while True:
+                s = file.read(1)
+                if not s or s == b"\000":
+                    break
+                name += s
+
+    # return a valid, safe name without directories!
+    try:
+        return Path(name.decode("utf-8")).name
+    except UnicodeDecodeError:
+        return ""
+
+
+class GZIPExtractor(Extractor):
+    def get_dependencies(self) -> List[str]:
+        return ["7z"]
+
+    def extract(self, inpath: Path, outdir: Path):
+        name = get_gzip_embedded_name(inpath) or "gzip.uncompressed"
+        extractor = Command("7z", "x", "-y", "{inpath}", "-so", stdout=name)
+        extractor.extract(inpath, outdir)
+
 
 class GZIPHandler(Handler):
     NAME = "gzip"
+
+    EXTRACTOR = GZIPExtractor()
 
     PATTERNS = [
         HexString(
@@ -59,8 +104,6 @@ class GZIPHandler(Handler):
         """
         )
     ]
-
-    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         fp = SingleMemberGzipReader(file)
