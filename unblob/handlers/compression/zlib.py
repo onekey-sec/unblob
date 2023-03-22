@@ -16,11 +16,11 @@ logger = get_logger()
 class ZlibExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
         decompressor = zlib.decompressobj()
-        outpath = outdir.joinpath(inpath.stem)
-        with File.from_path(inpath) as f:
+        outpath = outdir / "zlib.uncompressed"
+        with File.from_path(inpath) as f, outpath.open("wb") as outfile:
             content = f.read(DEFAULT_BUFSIZE)
             while content and not decompressor.eof:
-                outpath.write_bytes(decompressor.decompress(content))
+                outfile.write(decompressor.decompress(content))
                 content = f.read(DEFAULT_BUFSIZE)
 
 
