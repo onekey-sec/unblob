@@ -57,7 +57,7 @@ class UnixCompressHandler(StructHandler):
     """
     HEADER_STRUCT = "compress_header"
 
-    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}/{infile}")
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="lzw.uncompressed")
 
     def unlzw(self, file: File, start_offset: int, max_len: int) -> int:  # noqa: C901
         """
