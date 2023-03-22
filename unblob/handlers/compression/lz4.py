@@ -67,7 +67,7 @@ class _LZ4HandlerBase(Handler):
     def _skip_magic_bytes(self, file: File):
         file.seek(MAGIC_LEN, io.SEEK_CUR)
 
-    EXTRACTOR = Command("lz4", "--decompress", "{inpath}", "{outdir}/{infile}")
+    EXTRACTOR = Command("lz4", "--decompress", "{inpath}", "{outdir}/lz4.uncompressed")
 
 
 class LegacyFrameHandler(_LZ4HandlerBase):
