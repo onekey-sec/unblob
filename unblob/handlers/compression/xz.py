@@ -166,7 +166,7 @@ class XZHandler(Handler):
 
     PATTERNS = [HexString("FD 37 7A 58 5A 00")]
 
-    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="xz.uncompressed")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         file.seek(start_offset + len(STREAM_START_MAGIC), io.SEEK_SET)
