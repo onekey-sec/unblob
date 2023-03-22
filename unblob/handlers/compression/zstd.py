@@ -24,7 +24,7 @@ class ZSTDHandler(Handler):
 
     PATTERNS = [HexString("28 B5 2F FD")]
 
-    EXTRACTOR = Command("zstd", "-d", "{inpath}", "-o", "{outdir}/{infile}")
+    EXTRACTOR = Command("zstd", "-d", "{inpath}", "-o", "{outdir}/zstd.uncompressed")
 
     def get_frame_header_size(self, frame_header_descriptor: int) -> int:
         single_segment = (frame_header_descriptor >> 5 & 1) & 0b1
