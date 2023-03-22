@@ -125,7 +125,7 @@ class BZip2Handler(Handler):
     # magic + version + block_size + block header magic
     PATTERNS = [Regex(r"\x42\x5a\x68[\x31-\x39]\x31\x41\x59\x26\x53\x59")]
 
-    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+    EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="bzip2.uncompressed")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         if not _validate_stream_header(file):

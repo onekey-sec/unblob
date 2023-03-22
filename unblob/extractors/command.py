@@ -1,7 +1,8 @@
+import io
 import shlex
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Union
 
 from structlog import get_logger
 
@@ -12,18 +13,36 @@ logger = get_logger()
 
 
 class Command(Extractor):
-    def __init__(self, executable, *args):
+    def __init__(self, executable, *args, stdout: Optional[str] = None):
+        """
+        Extract using external extractor and template parameters.
+
+        Has extra support for extractors (notably 7z), which can not be directed to output to a file, but can extract to stdout:
+        When the parameter `stdout` is set, the command's stdout will be redirected to `outdir / stdout`.
+        """
         self._executable = executable
         self._command_template = [executable, *args]
+        self._stdout = stdout
 
     def extract(self, inpath: Path, outdir: Path):
         cmd = self._make_extract_command(inpath, outdir)
         command = shlex.join(cmd)
         logger.debug("Running extract command", command=command)
+        stdout_file: Union[int, io.FileIO] = subprocess.PIPE
+
+        def no_op():
+            pass
+
+        cleanup = no_op
+
         try:
+            if self._stdout:
+                stdout_file = (outdir / self._stdout).open(mode="wb", buffering=0)
+                cleanup = stdout_file.close
+
             res = subprocess.run(
                 cmd,
-                stdout=subprocess.PIPE,
+                stdout=stdout_file,
                 stderr=subprocess.PIPE,
             )
             if res.returncode != 0:
@@ -45,6 +64,8 @@ class Command(Extractor):
                 **error_report.asdict(),
             )
             raise ExtractError(error_report)
+        finally:
+            cleanup()
 
     def _make_extract_command(self, inpath: Path, outdir: Path):
         replacements = dict(inpath=inpath, outdir=outdir, infile=inpath.stem)
