@@ -40,5 +40,5 @@ class LZipHandler(Handler):
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
 
     EXTRACTOR = Command(
-        "lziprecover", "-k", "-D0", "-i", "{inpath}", "-o", "{outdir}/{infile}"
+        "lziprecover", "-k", "-D0", "-i", "{inpath}", "-o", "{outdir}/lz.uncompressed"
     )
