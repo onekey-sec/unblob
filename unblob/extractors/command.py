@@ -68,7 +68,7 @@ class Command(Extractor):
             cleanup()
 
     def _make_extract_command(self, inpath: Path, outdir: Path):
-        replacements = dict(inpath=inpath, outdir=outdir, infile=inpath.stem)
+        replacements = dict(inpath=inpath, outdir=outdir)
 
         args = []
         for t in self._command_template:
