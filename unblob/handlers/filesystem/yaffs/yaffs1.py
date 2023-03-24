@@ -20,6 +20,8 @@ from ....models import Extractor, File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
+BIG_ENDIAN_MAGIC = 0x00_00_00_03
+
 
 class YAFFS1Parser(YAFFSParser):
     def build_chunk(self, spare: bytes) -> YAFFSChunk:
@@ -94,14 +96,12 @@ class YAFFS1Parser(YAFFSParser):
 
 
 class YAFFS1Extractor(Extractor):
-    BIG_ENDIAN_MAGIC = 0x00_00_00_03
-
     def extract(self, inpath: Path, outdir: Path):
         infile = File.from_path(inpath)
         config = YAFFSConfig(
             page_size=512,
             spare_size=16,
-            endianness=get_endian(infile, self.BIG_ENDIAN_MAGIC),
+            endianness=get_endian(infile, BIG_ENDIAN_MAGIC),
             ecc=False,
         )
         parser = YAFFS1Parser(infile, config)
@@ -122,8 +122,6 @@ class YAFFS1Handler(StructHandler):
         HexString("00 00 00 03 00 00 00 01 ff ff 00 00 00 00 00 00 // BE"),
     ]
 
-    BIG_ENDIAN_MAGIC = 0x00_00_00_03
-
     C_DEFINITIONS = C_DEFINITIONS
     EXTRACTOR = YAFFS1Extractor()
 
@@ -134,7 +132,7 @@ class YAFFS1Handler(StructHandler):
         config = YAFFSConfig(
             page_size=512,
             spare_size=16,
-            endianness=get_endian(file, self.BIG_ENDIAN_MAGIC),
+            endianness=get_endian(file, BIG_ENDIAN_MAGIC),
             ecc=False,
         )
         parser = YAFFS1Parser(file, config)
