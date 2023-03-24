@@ -38,7 +38,6 @@ The following executables found installed, which are needed by unblob:
     ubireader_extract_files     ✓
     ubireader_extract_images    ✓
     unar                        ✓
-    yaffshiv                    ✓
     zstd                        ✓
 ```
 
@@ -65,7 +64,6 @@ for current versions.
 | sasquatch                   | `sasquatch`, `sasquatch-v4be`                         | 1.0             | ❌            | https://github.com/onekey-sec/sasquatch                          |
 | jefferson                   | `jefferson`                                           | master          | ✅            | https://github.com/onekey-sec/jefferson                          |
 | ubireader                   | `ubireader_extract_files`, `ubireader_extract_images` | master          | ✅            | https://github.com/onekey-sec/ubi_reader                         |
-| yaffshiv                    | `yaffshiv`                                            | master          | ✅            | https://github.com/onekey-sec/yaffshiv                           |
 
 ## Maintained projects and forks
 
@@ -75,4 +73,3 @@ They are also available on GitHub:
 - [Jefferson](https://github.com/onekey-sec/jefferson) for extracting JFFS2 is also a project of ONEKEY
 - [Fork of sasquatch](https://github.com/onekey-sec/sasquatch) based on squashfs-tools
 - [Fork of ubi_reader](https://github.com/onekey-sec/ubi_reader) Python scripts for extracting UBI and UBIFS images
-- [Fork of yaffshiv](https://github.com/onekey-sec/yaffshiv) a YAFFS file system parser and extractor

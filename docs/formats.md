@@ -108,7 +108,7 @@ For compression formats, metadata cannot be preserved, as this information in mo
 | SquashFS v4 Big Endian | ✅                                 | [filesystem/squashfs.py][squashfs-handler]      | [`sasquatch-v4-be`][squashfs-v4-be-extractor]   |
 | UBI                    | ✅                                 | [filesystem/ubi.py][ubi-handler]                | [`ubireader_extract_images`][ubi-extractor]     |
 | UBIFS                  | ✅                                 | [filesystem/ubi.py][ubi-handler]                | [`ubireader_extract_files`][ubifs-extractor]    |
-| YAFFS (1, 2)           | ✅                                 | [filesystem/yaffs.py][yaffs-handler]            | [`yaffshiv`][yaffs-extractor]                   |
+| YAFFS (1, 2)           | ✅                                 | [filesystem/yaffs.py][yaffs-handler]            | [`YAFFSExtractor` custom code][yaffs-extractor]                   |
 
 [android-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/android/sparse.py
 [android-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/android/sparse.py#L61
@@ -133,7 +133,7 @@ For compression formats, metadata cannot be preserved, as this information in mo
 [ubi-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/ubi.py#L105
 [ubifs-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/ubi.py#L82
 [yaffs-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/yaffs.py
-[yaffs-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/yaffs.py#L113
+[yaffs-extractor]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/yaffs.py
 
 ## Didn't find your format supported yet?
 
