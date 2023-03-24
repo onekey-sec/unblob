@@ -7,7 +7,6 @@ from structlog import get_logger
 from unblob.file_utils import File, read_until_past, snull
 from unblob.handlers.filesystem.yaffs.utils import (
     C_DEFINITIONS,
-    DEFAULT_CONFIG,
     YAFFS2Chunk,
     YAFFS2Entry,
     YAFFSChunk,
@@ -159,7 +158,7 @@ class YAFFS2Handler(StructHandler):
 
     BIG_ENDIAN_MAGIC = 0x00_00_00_01
 
-    EXTRACTOR = YAFFS2Extractor(DEFAULT_CONFIG)
+    EXTRACTOR = None
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         parser = YAFFS2Parser(file)
