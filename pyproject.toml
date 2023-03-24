@@ -48,7 +48,7 @@ optional = true
 mkdocs-material = "8.5.10"
 mkdocstrings = "^0.19.1"
 pillow = "^9.4.0"
-cairosvg = "^2.6.0"
+cairosvg = "^2.7.0"
 mkdocstrings-python = "^0.8.3"
 
 [tool.isort]
