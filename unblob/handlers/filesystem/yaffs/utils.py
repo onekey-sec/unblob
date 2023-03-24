@@ -208,10 +208,8 @@ class YAFFSEntry:
     alias: str
     file_size: int
     start_offset: int
-    chunks: List[YAFFSChunk]
 
-    @property
-    def chunks(self):
+    def get_chunks(self):
         raise NotImplementedError
 
     def __lt__(self, other):
@@ -229,8 +227,9 @@ class YAFFSEntry:
 
 @attr.define
 class YAFFS1Entry(YAFFSEntry):
-    @property
-    def chunks(self) -> Iterable[YAFFS1Chunk]:
+    chunks: List[YAFFS1Chunk]
+
+    def get_chunks(self) -> Iterable[YAFFS1Chunk]:
         """Return a filtered and ordered list of chunks"""
 
         # YAFFS1 chunks have a page_status field indicating
@@ -263,7 +262,7 @@ class YAFFSFileVar:
 
 @attr.define(kw_only=True)
 class YAFFS2Entry(YAFFSEntry):
-    _chksum: int
+    chksum: int
     yst_mode: int
     yst_uid: int
     yst_gid: int
@@ -280,9 +279,9 @@ class YAFFS2Entry(YAFFSEntry):
     shadows_obj: int
     is_shrink: int
     filehead: YAFFSFileVar
+    chunks: List[YAFFS2Chunk]
 
-    @property
-    def chunks(self) -> Iterable[YAFFS2Chunk]:
+    def get_chunks(self) -> Iterable[YAFFS2Chunk]:
         """Return a filtered and ordered list of chunks"""
 
         # The Yaffs2 sequence number is not the same as the Yaffs1 serial number!
@@ -303,7 +302,7 @@ class YAFFS2Entry(YAFFSEntry):
             yield max(chunks, key=lambda chunk: chunk.seq_number)
 
 
-ROOT = YAFFSEntry(
+ROOT = YAFFS1Entry(
     type=0,
     object_id=-1,
     parent_obj_id=-1,
@@ -333,7 +332,7 @@ PAGE_START_BIG_ENDIAN = b"\x00\x00\x00\x01\x00\x00\x00\x01\xff\xff"
 
 
 class YAFFSParser:
-    def __init__(self, file: File, config: YAFFSConfig = None):
+    def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
         self.file_entries = Tree()
         self.file_entries.create_node(ROOT, 1)
         self.file = file
@@ -386,6 +385,7 @@ class YAFFSParser:
         """Auto-detect page_size, spare_size, and ECC using known signatures."""
 
         config = None
+        page_size = 0
         for page_size in VALID_PAGE_SIZES:
             if self.file[page_size:].startswith(SPARE_START_LITTLE_ENDIAN_ECC):
                 config = YAFFSConfig(
@@ -482,7 +482,7 @@ class YAFFSParser:
         except DuplicatedNodeIdError:
             pass
 
-    def get_entry(self, object_id: int) -> Optional[YAFFSEntry]:
+    def get_entry(self, object_id: int):
         try:
             entry = self.file_entries.get_node(object_id)
             if entry:
@@ -501,7 +501,7 @@ class YAFFSParser:
             return resolved_path
 
     def get_file_bytes(self, entry: YAFFSEntry) -> Iterable[bytes]:
-        for chunk in entry.chunks:
+        for chunk in entry.get_chunks():
             self.file.seek(
                 entry.start_offset
                 + ((chunk.id - 1) * (self.config.page_size + self.config.spare_size)),
@@ -519,7 +519,7 @@ class YAFFSParser:
                 continue
             self.extract_entry(entry, outdir)
 
-    def extract_entry(self, entry: YAFFSEntry, outdir: Path):  # noqa: C901
+    def extract_entry(self, entry: YAFFS2Entry, outdir: Path):  # noqa: C901
         entry_path = self.resolve_path(entry)
 
         if not is_safe_path(outdir, entry_path):
