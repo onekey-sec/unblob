@@ -143,17 +143,19 @@ class YAFFS2Handler(StructHandler):
 
     HEADER_STRUCT = "yaffs_obj_hdr_t"
 
-    # TODO: YAFFS1 and YAFFS2 signatures are the same, we need a way to differentiate between
-    # each of them.
     PATTERNS = [
         HexString(
-            "03 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name"
+            "03 00 00 00 01 00 00 00 ff ff // YAFFS_OBJECT_TYPE_DIRECTORY in little endian"
         ),
         HexString(
-            "01 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name"
+            "01 00 00 00 01 00 00 00 ff ff // YAFFS_OBJECT_TYPE_FILE in little endian"
         ),
-        HexString("00 00 00 03 00 00 00 01 ff ff // BE"),
-        HexString("00 00 00 01 00 00 00 01 ff ff // BE"),
+        HexString(
+            "00 00 00 03 00 00 00 01 ff ff // YAFFS_OBJECT_TYPE_DIRECTORY in big endian"
+        ),
+        HexString(
+            "00 00 00 01 00 00 00 01 ff ff // YAFFS_OBJECT_TYPE_FILE in big endian"
+        ),
     ]
 
     BIG_ENDIAN_MAGIC = 0x00_00_00_01
