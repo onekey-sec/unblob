@@ -10,12 +10,12 @@ from unblob.report import ExtractCommandFailedReport, ExtractorDependencyNotFoun
 
 
 def test_command_templating():
-    command = Command("{infile}", "{outdir}", "{inpath},{outdir}")
+    command = Command("{outdir}", "{inpath},{outdir}")
     cmdline = command._make_extract_command(
         Path("inputdir") / "input.file", Path("output")
     )
 
-    assert cmdline == ["input", "output", "inputdir/input.file,output"]
+    assert cmdline == ["output", "inputdir/input.file,output"]
 
 
 @pytest.mark.parametrize(
