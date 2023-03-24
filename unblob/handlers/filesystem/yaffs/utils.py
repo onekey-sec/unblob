@@ -557,16 +557,40 @@ class YAFFSParser:
             with out_path.open("wb") as f:
                 for chunk in self.get_file_bytes(entry):
                     f.write(chunk)
-        elif entry.type == YAFFS_OBJECT_TYPE.SPECIAL and (os.geteuid() == 0):
-            logger.debug("creating special file", special_path=out_path, _verbosity=3)
-            os.mknod(out_path.as_posix(), entry.yst_mode, entry.yst_rdev)
+        elif entry.type == YAFFS_OBJECT_TYPE.SPECIAL:
+            if os.geteuid() == 0:
+                logger.debug(
+                    "creating special file", special_path=out_path, _verbosity=3
+                )
+                os.mknod(out_path.as_posix(), entry.yst_mode, entry.yst_rdev)
+            else:
+                logger.warn(
+                    "creating special files requires elevated privileges, skipping.",
+                    path=out_path,
+                    yst_mode=entry.yst_mode,
+                    yst_rdev=entry.yst_rdev,
+                )
         elif entry.type == YAFFS_OBJECT_TYPE.SYMLINK:
+            if not is_safe_path(outdir, out_path / Path(entry.alias)):
+                logger.warning(
+                    "Potential path traversal attempt through symlink",
+                    outdir=outdir,
+                    path=entry.alias,
+                )
+                return
             logger.debug("creating symlink", file_path=out_path, _verbosity=3)
             out_path.symlink_to(Path(entry.alias))
         elif entry.type == YAFFS_OBJECT_TYPE.HARDLINK:
             logger.debug("creating hardlink", file_path=out_path, _verbosity=3)
             src_entry = self.file_entries[entry.equiv_id]
             src_path = self.resolve_path(src_entry)
+            if not is_safe_path(outdir, out_path / src_path):
+                logger.warning(
+                    "Potential path traversal attempt through hardlink",
+                    outdir=outdir,
+                    path=src_path,
+                )
+                return
             src_path.link_to(out_path)
         elif entry.type == YAFFS_OBJECT_TYPE.UNKNOWN:
             logger.debug("unknown type entry", entry=entry, _verbosity=3)
