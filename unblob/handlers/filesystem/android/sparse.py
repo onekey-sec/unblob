@@ -57,7 +57,7 @@ class SparseHandler(StructHandler):
     """
     HEADER_STRUCT = "sparse_header_t"
 
-    EXTRACTOR = Command("simg2img", "{inpath}", "{outdir}/{infile}")
+    EXTRACTOR = Command("simg2img", "{inpath}", "{outdir}/raw.image")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, Endian.LITTLE)
