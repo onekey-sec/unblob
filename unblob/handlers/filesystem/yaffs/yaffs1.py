@@ -9,7 +9,6 @@ from unblob.handlers.filesystem.yaffs.utils import (
     C_DEFINITIONS,
     YAFFS1Chunk,
     YAFFS1Entry,
-    YAFFSChunk,
     YAFFSConfig,
     YAFFSParser,
     is_valid_header,
@@ -24,7 +23,7 @@ BIG_ENDIAN_MAGIC = 0x00_00_00_03
 
 
 class YAFFS1Parser(YAFFSParser):
-    def build_chunk(self, spare: bytes) -> YAFFSChunk:
+    def build_chunk(self, spare: bytes) -> YAFFS1Chunk:
         yaffs_sparse = self._struct_parser.parse(
             "yaffs_spare_t", spare, self.config.endianness
         )
@@ -73,7 +72,7 @@ class YAFFS1Parser(YAFFSParser):
                     break
 
                 if b"\xFF" not in yaffs_obj_hdr.alias:
-                    alias = (snull(yaffs_obj_hdr.alias).decode("utf-8"),)
+                    alias = snull(yaffs_obj_hdr.alias).decode("utf-8")
                 else:
                     alias = ""
 
@@ -90,8 +89,10 @@ class YAFFS1Parser(YAFFSParser):
                 )
                 self.insert_entry(entry)
             else:
-                # this is a data chunk, so we add it to our object
-                self.get_entry(chunk.object_id).chunks.append(chunk)
+                entry = self.get_entry(chunk.object_id)
+                if entry is not None:
+                    # this is a data chunk, so we add it to our object
+                    entry.chunks.append(chunk)
         self.end_offset = self.file.tell()
 
 

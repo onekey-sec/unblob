@@ -9,7 +9,6 @@ from unblob.handlers.filesystem.yaffs.utils import (
     C_DEFINITIONS,
     YAFFS2Chunk,
     YAFFS2Entry,
-    YAFFSChunk,
     YAFFSConfig,
     YAFFSFileVar,
     YAFFSParser,
@@ -23,10 +22,10 @@ logger = get_logger()
 
 
 class YAFFS2Parser(YAFFSParser):
-    def build_chunk(self, spare: bytes, config: YAFFSConfig) -> YAFFSChunk:
+    def build_chunk(self, spare: bytes, config: YAFFSConfig) -> YAFFS2Chunk:
         # images built without ECC have two superfluous bytes before the chunk ID.
         if not config.ecc:
-            # having no ECC and big-endian is a mathematical impossibility, we're aware of it
+            # adding two null bytes at the end only works if it's LE
             spare = spare[2:] + b"\x00\x00"
 
         yaffs2_packed_tags = self._struct_parser.parse(
