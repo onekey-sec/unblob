@@ -344,6 +344,7 @@ class YAFFSParser:
         self.end_offset = -1
         if config is None:
             self.config = self.auto_detect()
+            logger.debug("auto-detected config", config=self.config)
         else:
             self.config = config
 
@@ -413,8 +414,6 @@ class YAFFSParser:
                 )
                 break
 
-        logger.debug("got config before bruteforce", config=config)
-
         if config is None:
             return self.bruteforce()
 
@@ -452,21 +451,6 @@ class YAFFSParser:
         object_id_start = page_size + ecc_offset + object_id_offset
         object_id_end = object_id_start + 4
         spare_signature = self.file[object_id_start:object_id_end] + b"\xFF\xFF"
-
-        idx = self.file[object_id_end : object_id_end + page_size].find(  # noqa: E203
-            spare_signature
-        )
-        logger.debug(
-            "looking for spare signature",
-            ecc_offset=ecc_offset,
-            object_id_start=object_id_start,
-            object_id_end=object_id_end,
-            object_id=spare_signature.hex(),
-            content=self.file[
-                object_id_end : object_id_end + page_size  # noqa: E203
-            ].hex(),
-            idx=idx,
-        )
 
         config.spare_size = (
             self.file[object_id_end : object_id_end + page_size].find(  # noqa: E203
