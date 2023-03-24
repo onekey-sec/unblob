@@ -148,9 +148,6 @@ class YAFFSConfig:
 
 VALID_PAGE_SIZES = [512, 1024, 2048, 4096, 8192, 16384]
 VALID_SPARE_SIZES = [16, 32, 64, 128, 256, 512]
-DEFAULT_CONFIG = YAFFSConfig(
-    page_size=2048, spare_size=16, endianness=Endian.LITTLE, ecc=False
-)
 
 logger = get_logger()
 
