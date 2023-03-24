@@ -24,7 +24,6 @@
 , setuptools
 , structlog
 , ubi_reader
-, yaffshiv
   # Runtime dependencies (extractors)
 , pkgs
 , e2fsprogs
@@ -92,7 +91,6 @@ let
       python-lzo
       python-magic
       structlog
-      yaffshiv
       ubi_reader
       rarfile
     ];
@@ -108,7 +106,6 @@ let
     pythonRelaxDeps = [
       "dissect.cstruct"
       "structlog"
-      "yaffshiv"
     ];
 
     preBuild = ''
