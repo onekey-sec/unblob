@@ -21,18 +21,7 @@ from .compression import (
     zstd,
 )
 from .executable import elf
-from .filesystem import (
-    cramfs,
-    extfs,
-    fat,
-    iso9660,
-    jffs2,
-    ntfs,
-    romfs,
-    squashfs,
-    ubi,
-    yaffs,
-)
+from .filesystem import cramfs, extfs, fat, iso9660, jffs2, ntfs, romfs, squashfs, ubi
 from .filesystem.android import sparse
 from .filesystem.yaffs import yaffs1, yaffs2
 
