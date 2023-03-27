@@ -63,7 +63,7 @@ class Command(Extractor):
                 "Can't run extract command. Is the extractor installed?",
                 **error_report.asdict(),
             )
-            raise ExtractError(error_report)
+            raise ExtractError(error_report) from None
         finally:
             cleanup()
 

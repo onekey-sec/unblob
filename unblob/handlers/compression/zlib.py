@@ -52,7 +52,7 @@ class ZlibHandler(Handler):
                 content = file.read(DEFAULT_BUFSIZE)
 
         except zlib.error:
-            raise InvalidInputFormat("invalid zlib stream")
+            raise InvalidInputFormat("invalid zlib stream") from None
 
         end_offset = file.tell() - len(decompressor.unused_data)
 

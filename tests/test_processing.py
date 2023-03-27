@@ -23,7 +23,7 @@ def assert_same_chunks(expected, actual, explanation=None):
     """An assert, that ignores the chunk.id-s"""
 
     assert len(expected) == len(actual), explanation
-    for i, (e, a) in enumerate(zip(expected, actual)):
+    for (e, a) in zip(expected, actual):
         assert attr.evolve(e, id="") == attr.evolve(a, id=""), explanation
 
 

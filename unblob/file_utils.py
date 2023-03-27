@@ -51,8 +51,8 @@ class File(mmap.mmap):
             self.seek(0, io.SEEK_END)
             size = self.tell()
             self.seek(current_offset, io.SEEK_SET)
-        finally:
-            return size
+
+        return size
 
     def __enter__(self):
         return self

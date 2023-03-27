@@ -74,7 +74,7 @@ def _find_end_of_padding(file, *, find_from: int) -> int:
         # match to end of truncated file
         return file.seek(0, os.SEEK_END)
 
-    for padding_blocks in range(max_padding_blocks):
+    for padding_blocks in range(max_padding_blocks):  # noqa: B007
         if file.read(BLOCK_SIZE) != ZERO_BLOCK:
             break
     else:

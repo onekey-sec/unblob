@@ -94,7 +94,7 @@ class LegacyFrameHandler(_LZ4HandlerBase):
             try:
                 uncompressed_block = decompress(compressed_block, MAX_LEGACY_BLOCK_SIZE)
             except LZ4BlockError:
-                raise InvalidInputFormat("Invalid LZ4 legacy frame.")
+                raise InvalidInputFormat("Invalid LZ4 legacy frame.") from None
 
             # See 'fixed block size' in https://android.googlesource.com/platform/external/lz4/+/HEAD/doc/lz4_Frame_format.md#legacy-frame
             if len(uncompressed_block) < MAX_LEGACY_BLOCK_SIZE:
