@@ -39,6 +39,7 @@ pytest = "^6.2.4"
 pyright = "^0.0.12"
 pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
+ruff = "^0.0.259"
 setuptools-rust = "^1.1.2"
 
 [tool.poetry.group.docs]
@@ -51,11 +52,28 @@ pillow = "^9.4.0"
 cairosvg = "^2.7.0"
 mkdocstrings-python = "^0.8.3"
 
-[tool.isort]
-profile = "black"
-
 [tool.poetry.scripts]
 unblob = "unblob.cli:main"
+
+[tool.ruff]
+target-version = "py38"
+
+select = [
+  "C90",    # mccabe
+  "E",      # pycodestyle (errors)
+  "F",      # pyflakes
+  "I",      # isort
+  "W",      # pycodestyle (warnings)
+]
+
+# Let black handle line length violations
+ignore = ["E501"]
+
+# Do not remove unused imports automatically in __init__.py files
+ignore-init-module-imports = true
+
+[tool.ruff.mccabe]
+max-complexity = 8
 
 [tool.pytest.ini_options]
 addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"

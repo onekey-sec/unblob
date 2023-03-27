@@ -13,23 +13,18 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.0.259"
+    hooks:
+      - id: ruff
+        name: Check python (ruff)
+        args: [--show-source, --fix, --exit-non-zero-on-fix]
+
   - repo: https://github.com/psf/black
     rev: 23.1.0
     hooks:
       - id: black
         name: Check black
-
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        name: Check flake8
-
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        name: Check isort
 
   - repo: https://github.com/jendrikseipp/vulture
     rev: v2.7
@@ -46,7 +41,7 @@ repos:
   - repo: https://github.com/nix-community/nixpkgs-fmt
     rev: v1.3.0
     hooks:
-    -   id: nixpkgs-fmt
+      - id: nixpkgs-fmt
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.21.0

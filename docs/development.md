@@ -432,6 +432,10 @@ We adhere to PEP8 and enforce proper formatting of source files using
 [black](https://github.com/psf/black) so you should not worry about formatting
 source code at all, `pre-commit` will take care of it.
 
+For linting we use [ruff](https://ruff.rs). Lint errors can be shown in your
+editor of choice by one of the [editor
+plugins](https://beta.ruff.rs/docs/editor-integrations/).
+
 ### File Format Correctness
 
 We want to strike the right balance between false positive reduction and a
