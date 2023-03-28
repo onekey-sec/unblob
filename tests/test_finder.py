@@ -90,7 +90,7 @@ def test_invalid_hexstring_pattern_raises():
             pass
 
     with pytest.raises(InvalidHexString):
-        build_hyperscan_database(tuple([TestHandlerA, TestHandlerB, InvalidHandler]))
+        build_hyperscan_database((TestHandlerA, TestHandlerB, InvalidHandler))
 
 
 @pytest.mark.parametrize(
