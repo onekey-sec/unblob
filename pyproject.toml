@@ -66,6 +66,7 @@ select = [
   "E",      # pycodestyle (errors)
   "F",      # pyflakes
   "I",      # isort
+  "ISC",    # flake8-implicit-str-concats
   "W",      # pycodestyle (warnings)
 ]
 
