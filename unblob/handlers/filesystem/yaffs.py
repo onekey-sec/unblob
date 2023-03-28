@@ -47,10 +47,11 @@ def decode_file_size(high: int, low: int) -> int:
     """
     if high != 0xFFFFFFFF:
         return (high << 32) | (low & 0xFFFFFFFF)
-    elif low != 0xFFFFFFFF:
+
+    if low != 0xFFFFFFFF:
         return low
-    else:
-        return 0
+
+    return 0
 
 
 def valid_name(name: bytes) -> bool:

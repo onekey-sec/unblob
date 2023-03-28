@@ -115,8 +115,8 @@ def _hyperscan_match(
     # and try to continue processing that as well
     if _validate_stream_header(context.file) and _validate_block_header(context.file):
         return Scan.Continue
-    else:
-        return Scan.Terminate
+
+    return Scan.Terminate
 
 
 class BZip2Handler(Handler):

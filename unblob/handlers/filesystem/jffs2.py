@@ -126,16 +126,16 @@ class _JFFS2Base(StructHandler):
                     file.seek(-len(header), io.SEEK_CUR)
                     current_offset = read_until_past(file, b"\x00\xFF")
                     continue
-                else:
-                    logger.debug(
-                        "unexpected header magic",
-                        header_magic=header.magic,
-                        _verbosity=2,
-                    )
-                    break
+
+                logger.debug(
+                    "unexpected header magic",
+                    header_magic=header.magic,
+                    _verbosity=2,
+                )
+                break
 
             if not self.valid_header(header, node_start_offset, eof):
-                return
+                return None
 
             node_len = round_up(header.totlen, BLOCK_ALIGNMENT)
             current_offset += node_len

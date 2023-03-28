@@ -46,7 +46,7 @@ class ARHandler(Handler):
             ar.file.seek(-HEADER_LENGTH, os.SEEK_CUR)
             # we check if we failed on the first match
             if start_offset == file.tell():
-                return
+                return None
             # otherwise we seek past the signature (failure on malformed AR archive
             # within the whole file, not at the start)
             ar.file.seek(SIGNATURE_LENGTH, os.SEEK_CUR)

@@ -35,7 +35,7 @@ class RarHandler(Handler):
         try:
             rar_file = rarfile.RarFile(file)
         except (rarfile.Error, ValueError):
-            return
+            return None
 
         # RarFile have the side effect of moving the file pointer
         rar_end_offset = file.tell()

@@ -108,7 +108,7 @@ class GZIPHandler(Handler):
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         fp = SingleMemberGzipReader(file)
         if not fp.read_header():
-            return
+            return None
 
         try:
             fp.read_until_eof()

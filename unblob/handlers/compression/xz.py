@@ -118,11 +118,10 @@ def get_stream_size(footer_offset: int, file: File) -> int:
 
     index_size += CRC32_LEN
 
-    stream_size = round_up(
+    return round_up(
         (STREAM_HEADER_LEN + blocks_size + index_size + STREAM_FOOTER_LEN),
         XZ_PADDING,
     )
-    return stream_size
 
 
 def _hyperscan_match(

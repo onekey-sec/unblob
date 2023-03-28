@@ -613,10 +613,7 @@ def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_ro
 def get_normalized_task_results(process_result: ProcessResult) -> List[TaskResult]:
     """Normalize away per-run and platform differences."""
     # sort the results - they can potentially have different orders due to multiprocessing
-    task_results = sorted(
-        process_result.results, key=lambda tr: (tr.task.depth, tr.task.path)
-    )
-    return task_results
+    return sorted(process_result.results, key=lambda tr: (tr.task.depth, tr.task.path))
 
 
 def get_chunk_ids(task_result) -> List[str]:

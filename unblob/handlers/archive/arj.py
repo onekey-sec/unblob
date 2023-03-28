@@ -166,7 +166,7 @@ class ARJHandler(StructHandler):
                 reason=exc.__doc__,
                 _verbosity=2,
             )
-            return
+            return None
 
         return ValidChunk(
             start_offset=start_offset,

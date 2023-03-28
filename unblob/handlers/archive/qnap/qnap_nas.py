@@ -124,6 +124,7 @@ class QnapHandler(Handler):
             )
         if context.end_offset > 0:
             return ValidChunk(start_offset=start_offset, end_offset=context.end_offset)
+        return None
 
 
 # https://gist.github.com/ulidtko/966277a465f1856109b2d2674dcee741#file-qnap-qts-fw-cryptor-py-L114

@@ -32,7 +32,7 @@ def _format_message(value: Any, extract_root: Path) -> Any:
     if isinstance(value, noformat):
         return value.get()
 
-    elif isinstance(value, Path):
+    if isinstance(value, Path):
         try:
             new_value = value.relative_to(extract_root)
         except ValueError:
@@ -40,10 +40,10 @@ def _format_message(value: Any, extract_root: Path) -> Any:
             new_value = value
         return new_value.as_posix().encode("utf-8", errors="surrogateescape")
 
-    elif isinstance(value, Instance):
+    if isinstance(value, Instance):
         return dumpstruct(value, output="string")
 
-    elif isinstance(value, int):
+    if isinstance(value, int):
         return format_hex(value)
 
     return value

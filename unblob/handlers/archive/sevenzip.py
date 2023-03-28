@@ -65,7 +65,7 @@ class SevenZipHandler(StructHandler):
         calculated_crc = binascii.crc32(header.dumps()[-START_HEADER_SIZE:])
         if header.crc != calculated_crc:
             logger.debug("Invalid header CRC", _verbosity=2)
-            return
+            return None
 
         # We read the signature header here to get the offset to the header database
         first_db_header = start_offset + len(header) + header.next_header_offset

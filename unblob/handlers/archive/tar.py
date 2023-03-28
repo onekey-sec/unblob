@@ -135,5 +135,5 @@ class TarHandler(StructHandler):
 
         end_offset = _get_tar_end_offset(file, start_offset)
         if end_offset == -1:
-            return
+            return None
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)

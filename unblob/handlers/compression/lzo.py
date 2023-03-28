@@ -82,7 +82,7 @@ class LZOHandler(StructHandler):
         # maxmimum compression level is 9
         if header.level > 9:
             logger.debug("Invalid LZO header level", header=header, _verbosity=3)
-            return
+            return None
 
         if header.flags & F_H_FILTER:
             file.seek(start_offset)
@@ -102,7 +102,7 @@ class LZOHandler(StructHandler):
 
         if header.header_checksum != calculated_checksum:
             logger.debug("Header checksum verification failed")
-            return
+            return None
 
         uncompressed_size = convert_int32(file.read(4), endian=Endian.BIG)
         while uncompressed_size:

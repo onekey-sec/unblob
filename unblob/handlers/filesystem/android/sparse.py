@@ -67,7 +67,7 @@ class SparseHandler(StructHandler):
             chunk_header = self.cparser_le.chunk_header_t(file)
             if chunk_header.chunk_type not in VALID_CHUNK_TYPES:
                 logger.warning("Invalid chunk type in Android sparse image. Aborting.")
-                return
+                return None
             file.seek(chunk_header.total_sz - len(chunk_header), io.SEEK_CUR)
             count += 1
 

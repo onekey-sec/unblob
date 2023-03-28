@@ -211,9 +211,7 @@ def cli(
     )
 
     logger.info("Start processing file", file=file)
-    results = process_file(config, file, report_file)
-
-    return results
+    return process_file(config, file, report_file)
 
 
 cli.context_class = UnblobContext

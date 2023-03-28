@@ -53,6 +53,7 @@ class CramFSHandler(StructHandler):
                 start_offset=start_offset,
                 end_offset=start_offset + header.size,
             )
+        return None
 
     def _is_crc_valid(
         self,

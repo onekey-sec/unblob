@@ -298,8 +298,7 @@ def get_endian(file: File, big_endian_magic: int) -> Endian:
     magic_bytes = file.read(4)
     file.seek(-len(magic_bytes), io.SEEK_CUR)
     magic = convert_int32(magic_bytes, Endian.BIG)
-    endian = Endian.BIG if magic == big_endian_magic else Endian.LITTLE
-    return endian
+    return Endian.BIG if magic == big_endian_magic else Endian.LITTLE
 
 
 def read_until_past(file: File, pattern: bytes):

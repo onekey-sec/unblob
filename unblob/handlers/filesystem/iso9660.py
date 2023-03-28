@@ -118,7 +118,7 @@ class ISO9660FSHandler(StructHandler):
         real_start_offset = start_offset - SYSTEM_AREA_SIZE
         if real_start_offset < 0:
             logger.warning("Invalid ISO 9660 file", offset=real_start_offset, size=size)
-            return
+            return None
 
         return ValidChunk(
             start_offset=real_start_offset,

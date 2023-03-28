@@ -211,8 +211,8 @@ class UnixCompressHandler(StructHandler):
 
         if code == nxt - 1:
             return file.tell()
-        else:
-            return file.tell() - 1
+
+        return file.tell() - 1
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         file.seek(0, io.SEEK_END)

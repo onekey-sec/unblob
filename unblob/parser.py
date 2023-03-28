@@ -91,5 +91,4 @@ def hexstring2regex(hexastr):
         parsed = _hex_string_parser.parse(hexastr)
     except UnexpectedCharacters as e:
         raise InvalidHexString(str(e)) from e
-    regex = _HexStringToRegex().transform(parsed)
-    return regex
+    return _HexStringToRegex().transform(parsed)

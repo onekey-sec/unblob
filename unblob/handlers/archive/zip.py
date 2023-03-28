@@ -148,16 +148,16 @@ class ZIPHandler(StructHandler):
             if self.is_zip64_eocd(end_of_central_directory):
                 end_of_central_directory = self._parse_zip64(file, start_offset, offset)
                 break
-            else:
-                # the EOCD offset is equal to the offset of CD + size of CD
-                end_of_central_directory_offset = (
-                    start_offset
-                    + end_of_central_directory.offset_of_cd
-                    + end_of_central_directory.central_directory_size
-                )
 
-                if offset == end_of_central_directory_offset:
-                    break
+            # the EOCD offset is equal to the offset of CD + size of CD
+            end_of_central_directory_offset = (
+                start_offset
+                + end_of_central_directory.offset_of_cd
+                + end_of_central_directory.central_directory_size
+            )
+
+            if offset == end_of_central_directory_offset:
+                break
         else:
             raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
 
