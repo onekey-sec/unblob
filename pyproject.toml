@@ -74,6 +74,7 @@ select = [
   "RET",    # flake8-return
   "S",      # flake8-bandit
   "SIM",    # flake8-simplify
+  "T20",    # flake8-print
   "W",      # pycodestyle (warnings)
 ]
 
@@ -87,6 +88,11 @@ ignore = [
 
 # Do not remove unused imports automatically in __init__.py files
 ignore-init-module-imports = true
+
+[tool.ruff.per-file-ignores]
+"build.py" = [
+  "T201"  # print
+]
 
 [tool.ruff.flake8-comprehensions]
 allow-dict-calls-with-keyword-arguments = true  # code like `dict(a=1, b=2)` is allowed
