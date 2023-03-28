@@ -13,7 +13,7 @@ def format_hex(value: int):
     return f"0x{value:x}"
 
 
-class noformat:
+class noformat:  # noqa: N801
     """Keep the value from formatting,
     even if it would match one of the types in pretty_print_types processor.
     """

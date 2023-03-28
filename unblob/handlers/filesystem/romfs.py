@@ -28,7 +28,7 @@ ROMFS_SIGNATURE = b"-rom1fs-"
 
 
 @unique
-class FS_TYPE(IntEnum):
+class FSType(IntEnum):
     HARD_LINK = 0
     DIRECTORY = 1
     FILE = 2
@@ -68,7 +68,7 @@ class FileHeader:
     addr: int
     next_filehdr: int
     spec_info: int
-    type: FS_TYPE
+    type: FSType
     executable: bool
     size: int
     checksum: int
@@ -83,7 +83,7 @@ class FileHeader:
         self.addr = addr
         type_exec_next = struct.unpack(">L", file.read(4))[0]
         self.next_filehdr = type_exec_next & ~0b1111
-        self.type = FS_TYPE(type_exec_next & 0b0111)
+        self.type = FSType(type_exec_next & 0b0111)
         self.executable = type_exec_next & 0b1000
         self.spec_info = struct.unpack(">I", file.read(4))[0]
         self.size = struct.unpack(">I", file.read(4))[0]
@@ -117,14 +117,14 @@ class FileHeader:
         Handle mode for both block device and character devices too.
         """
         mode = WORLD_RWX if self.executable else WORLD_RW
-        mode |= stat.S_IFBLK if self.type == FS_TYPE.BLOCK_DEV else 0x0
-        mode |= stat.S_IFCHR if self.type == FS_TYPE.CHAR_DEV else 0x0
+        mode |= stat.S_IFBLK if self.type == FSType.BLOCK_DEV else 0x0
+        mode |= stat.S_IFCHR if self.type == FSType.CHAR_DEV else 0x0
         return mode
 
     @property
     def dev(self) -> int:
         """Returns raw device number if block device or character device, zero otherwise."""
-        if self.type in [FS_TYPE.BLOCK_DEV, FS_TYPE.CHAR_DEV]:
+        if self.type in [FSType.BLOCK_DEV, FSType.CHAR_DEV]:
             major = self.spec_info >> 16
             minor = self.spec_info & 0xFFFF
             return os.makedev(major, minor)
@@ -224,7 +224,7 @@ class RomFSHeader:
 
         if file_header.filename not in [b".", b".."]:
             if (
-                file_header.type == FS_TYPE.DIRECTORY
+                file_header.type == FSType.DIRECTORY
                 and file_header.spec_info != 0x0
                 and not self.is_recursive(addr)
             ):
@@ -280,18 +280,18 @@ class RomFSHeader:
             return
         logger.info("dumping inode", inode=inode, output_path=str(output_path))
 
-        if inode.type == FS_TYPE.HARD_LINK:
+        if inode.type == FSType.HARD_LINK:
             self.create_hardlink(extract_root, output_path, inode)
-        elif inode.type == FS_TYPE.SYMLINK:
+        elif inode.type == FSType.SYMLINK:
             self.create_symlink(extract_root, output_path, inode)
-        elif inode.type == FS_TYPE.DIRECTORY:
+        elif inode.type == FSType.DIRECTORY:
             output_path.mkdir(mode=inode.mode, exist_ok=True)
-        elif inode.type == FS_TYPE.FILE:
+        elif inode.type == FSType.FILE:
             with output_path.open("wb") as f:
                 f.write(inode.content)
-        elif inode.type in [FS_TYPE.BLOCK_DEV, FS_TYPE.CHAR_DEV]:
+        elif inode.type in [FSType.BLOCK_DEV, FSType.CHAR_DEV]:
             os.mknod(inode.path, inode.mode, inode.dev)
-        elif inode.type == FS_TYPE.FIFO:
+        elif inode.type == FSType.FIFO:
             os.mkfifo(output_path, inode.mode)
 
     def dump_fs(self):
@@ -299,7 +299,7 @@ class RomFSHeader:
         fd_inodes = {
             k: v
             for k, v in self.inodes.items()
-            if v.type in [FS_TYPE.FILE, FS_TYPE.DIRECTORY, FS_TYPE.FIFO, FS_TYPE.SOCKET]
+            if v.type in [FSType.FILE, FSType.DIRECTORY, FSType.FIFO, FSType.SOCKET]
         }
         for inode in sorted(fd_inodes.values(), key=lambda inode: inode.path):
             self.create_inode(self.extract_root, inode)
@@ -313,7 +313,7 @@ class RomFSHeader:
             dev_inodes = {
                 k: v
                 for k, v in self.inodes.items()
-                if v.type in [FS_TYPE.BLOCK_DEV, FS_TYPE.CHAR_DEV]
+                if v.type in [FSType.BLOCK_DEV, FSType.CHAR_DEV]
             }
             for inode in sorted(dev_inodes.values(), key=lambda inode: inode.path):
                 self.create_inode(self.extract_root, inode)
@@ -322,7 +322,7 @@ class RomFSHeader:
         links_inodes = {
             k: v
             for k, v in self.inodes.items()
-            if v.type in [FS_TYPE.SYMLINK, FS_TYPE.HARD_LINK]
+            if v.type in [FSType.SYMLINK, FSType.HARD_LINK]
         }
         for inode in sorted(links_inodes.values(), key=lambda inode: inode.path):
             self.create_inode(self.extract_root, inode)

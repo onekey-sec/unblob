@@ -24,7 +24,7 @@ VALID_PAGE_SIZES = [512, 1024, 2048, 4096, 8192, 16384]
 VALID_SPARE_SIZES = [512, 256, 128, 64, 32, 16]
 
 
-class YAFFS_OBJECT_TYPE(IntEnum):
+class YAFFSObjectType(IntEnum):
     UNKNOWN = 0
     FILE = 1
     SYMLINK = 2
@@ -137,14 +137,14 @@ class _YAFFSBase(StructHandler):
 
             blocks = 1
             if header.type in [
-                YAFFS_OBJECT_TYPE.UNKNOWN,
-                YAFFS_OBJECT_TYPE.SYMLINK,
-                YAFFS_OBJECT_TYPE.DIRECTORY,
-                YAFFS_OBJECT_TYPE.HARDLINK,
-                YAFFS_OBJECT_TYPE.SPECIAL,
+                YAFFSObjectType.UNKNOWN,
+                YAFFSObjectType.SYMLINK,
+                YAFFSObjectType.DIRECTORY,
+                YAFFSObjectType.HARDLINK,
+                YAFFSObjectType.SPECIAL,
             ]:
                 pass
-            elif header.type == YAFFS_OBJECT_TYPE.FILE:
+            elif header.type == YAFFSObjectType.FILE:
                 filesize = decode_file_size(header.file_size_high, header.file_size_low)
                 files += 1
                 # If the object is a file, the data is stored in the page section of
@@ -190,7 +190,7 @@ class YAFFS2Handler(_YAFFSBase):
 
     PATTERNS = [
         HexString(
-            "01 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name"
+            "01 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFSObjectType_DIRECTORY with a null name"
         ),
         HexString("00 00 00 01 00 00 00 01 ff ff // BE"),
     ]
@@ -203,7 +203,7 @@ class YAFFSHandler(_YAFFSBase):
 
     PATTERNS = [
         HexString(
-            "03 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name"
+            "03 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFSObjectType_DIRECTORY with a null name"
         ),
         HexString("00 00 00 03 00 00 00 01 ff ff // BE"),
     ]

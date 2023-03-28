@@ -39,7 +39,7 @@ def test_format_message_root_path(value: Path, extract_root: Path, expected: str
     assert expected == _format_message(value, extract_root)
 
 
-def test_UnknownError_can_be_logged():
+def test_UnknownError_can_be_logged():  # noqa: N802
     logger = structlog.get_logger()
 
     # this line used to trigger an exception:

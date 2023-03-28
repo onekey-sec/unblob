@@ -7,7 +7,7 @@ from structlog import get_logger
 
 from ...file_utils import OffsetFile, SeekError, decode_int, round_up, snull
 from ...models import Extractor, File, HexString, StructHandler, ValidChunk
-from ._safe_tarfile import SafeTarFile as safe_tarfile
+from ._safe_tarfile import SafeTarFile
 
 logger = get_logger()
 
@@ -85,7 +85,7 @@ def _find_end_of_padding(file, *, find_from: int) -> int:
 
 class TarExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
-        tf = safe_tarfile.open(inpath.as_posix())
+        tf = SafeTarFile.open(inpath.as_posix())
         tf.extractall(outdir.as_posix())
 
 

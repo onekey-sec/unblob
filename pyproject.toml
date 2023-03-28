@@ -67,6 +67,7 @@ select = [
   "F",      # pyflakes
   "I",      # isort
   "ISC",    # flake8-implicit-str-concats
+  "N",      # pep8-naming
   "PIE",    # flake8-pie
   "PL",     # pylint
   "PT",     # flake8-pytest-style
@@ -82,6 +83,7 @@ select = [
 ignore = [
   "B027",    # empty-method-without-abstract-decorator: It is okay to have empty methods in abstract classes
   "E501",    # line-too-long:                           Let black handle line length violations
+  "N818",    # error-suffix-on-exception-name:          Exception names can be meaningful without smurfs
   "PLC0414", # useless-import-alias:                    Enable explicitly re-exporting public symbols
   "PLR09",   # too-many-{arguments,branches,...}:       We do not want to impose hard limits
   "S101",    # assert:                                  Enable usage of asserts

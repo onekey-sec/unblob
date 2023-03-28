@@ -176,7 +176,7 @@ def test_calculate_entropy_no_exception(path: Path, draw_plot: bool):
         ),
     ],
 )
-def test_ExtractionConfig_get_extract_dir_for(
+def test_ExtractionConfig_get_extract_dir_for(  # noqa: N802
     extract_root: str, path: str, result: str
 ):
     cfg = ExtractionConfig(extract_root=Path(extract_root), entropy_depth=0)

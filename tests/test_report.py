@@ -49,7 +49,7 @@ def test_process_file_report_output_is_valid_json(
     assert len(report)
 
 
-class Test_ProcessResult_to_json:
+class Test_ProcessResult_to_json:  # noqa: N801
     def test_simple_conversion(self):
         task = Task(path=Path("/nonexistent"), depth=0, chunk_id="")
         task_result = TaskResult(task)
