@@ -112,7 +112,7 @@ class _MultiprocessingPdb(pdb.Pdb):
     def interaction(self, *args, **kwargs):
         _stdin = sys.stdin
         try:
-            sys.stdin = open("/dev/stdin")
+            sys.stdin = Path("/dev/stdin").open()
             pdb.Pdb.interaction(self, *args, **kwargs)
         finally:
             sys.stdin = _stdin

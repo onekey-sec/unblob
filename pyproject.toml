@@ -70,6 +70,7 @@ select = [
   "PIE",    # flake8-pie
   "PL",     # pylint
   "PT",     # flake8-pytest-style
+  "PTH",    # flake8-use-pathlib
   "W",      # pycodestyle (warnings)
 ]
 
