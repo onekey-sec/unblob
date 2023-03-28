@@ -57,10 +57,7 @@ class _JFFS2Base(StructHandler):
 
     def guess_endian(self, file: File) -> Endian:
         magic = convert_int16(file.read(2), Endian.BIG)
-        if magic == self.BIG_ENDIAN_MAGIC:
-            endian = Endian.BIG
-        else:
-            endian = Endian.LITTLE
+        endian = Endian.BIG if magic == self.BIG_ENDIAN_MAGIC else Endian.LITTLE
         file.seek(-2, io.SEEK_CUR)
         return endian
 

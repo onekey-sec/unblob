@@ -73,6 +73,7 @@ select = [
   "PTH",    # flake8-use-pathlib
   "RET",    # flake8-return
   "S",      # flake8-bandit
+  "SIM",    # flake8-simplify
   "W",      # pycodestyle (warnings)
 ]
 

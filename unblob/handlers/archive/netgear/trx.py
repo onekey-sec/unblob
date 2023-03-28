@@ -1,4 +1,3 @@
-# import binascii
 import binascii
 import io
 from pathlib import Path

@@ -111,11 +111,12 @@ def configure_logger(verbosity_level: int, extract_root: Path):
 class _MultiprocessingPdb(pdb.Pdb):
     def interaction(self, *args, **kwargs):
         _stdin = sys.stdin
-        try:
-            sys.stdin = Path("/dev/stdin").open()
-            pdb.Pdb.interaction(self, *args, **kwargs)
-        finally:
-            sys.stdin = _stdin
+        with Path("/dev/stdin").open() as new_stdin:
+            try:
+                sys.stdin = new_stdin
+                pdb.Pdb.interaction(self, *args, **kwargs)
+            finally:
+                sys.stdin = _stdin
 
 
 def multiprocessing_breakpoint():

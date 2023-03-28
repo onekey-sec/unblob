@@ -206,7 +206,7 @@ class RomFSHeader(object):
         return False
 
     def is_recursive(self, addr) -> bool:
-        return True if addr in self.inodes else False
+        return addr in self.inodes
 
     def recursive_walk(self, addr: int, parent: Optional[FileHeader] = None):
         while self.is_valid_addr(addr) is True:
@@ -223,10 +223,13 @@ class RomFSHeader(object):
         logger.debug("walking dir", addr=addr, file=file_header)
 
         if file_header.filename not in [b".", b".."]:
-            if file_header.type == FS_TYPE.DIRECTORY and file_header.spec_info != 0x0:
-                if not self.is_recursive(addr):
-                    self.inodes[addr] = file_header
-                    self.recursive_walk(file_header.spec_info, file_header)
+            if (
+                file_header.type == FS_TYPE.DIRECTORY
+                and file_header.spec_info != 0x0
+                and not self.is_recursive(addr)
+            ):
+                self.inodes[addr] = file_header
+                self.recursive_walk(file_header.spec_info, file_header)
             self.inodes[addr] = file_header
         return file_header.next_filehdr
 

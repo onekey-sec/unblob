@@ -49,7 +49,7 @@ def test_missing_handlers_integrations_tests(handler: Type[Handler]):
         HANDLERS_PACKAGE_PATH
     ).with_suffix("")
 
-    if handler.NAME == handler_test_path.name:
+    if handler_test_path.name == handler.NAME:
         # when there is 1 handler class in the handler module, with the same NAME as the module
         expected_test_path = handler_test_path
     else:
