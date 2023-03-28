@@ -1,6 +1,6 @@
-import unittest.mock as mock
 from pathlib import Path
 from typing import List
+from unittest import mock
 
 import pytest
 from click.testing import CliRunner

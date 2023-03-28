@@ -68,12 +68,15 @@ select = [
   "I",      # isort
   "ISC",    # flake8-implicit-str-concats
   "PIE",    # flake8-pie
+  "PL",     # pylint
   "W",      # pycodestyle (warnings)
 ]
 
 ignore = [
   "B027",    # empty-method-without-abstract-decorator: It is okay to have empty methods in abstract classes
   "E501",    # line-too-long:                           Let black handle line length violations
+  "PLC0414", # useless-import-alias:                    Enable explicitly re-exporting public symbols
+  "PLR09",   # too-many-{arguments,branches,...}:       We do not want to impose hard limits
 ]
 
 # Do not remove unused imports automatically in __init__.py files
@@ -84,6 +87,13 @@ allow-dict-calls-with-keyword-arguments = true  # code like `dict(a=1, b=2)` is 
 
 [tool.ruff.mccabe]
 max-complexity = 8
+
+[tool.ruff.pylint]
+allow-magic-value-types = [
+  "bytes",
+  "int",   # bunch of ad-hoc bitmask values
+  "str",
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
