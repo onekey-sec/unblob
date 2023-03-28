@@ -67,6 +67,7 @@ select = [
   "F",      # pyflakes
   "I",      # isort
   "ISC",    # flake8-implicit-str-concats
+  "PIE",    # flake8-pie
   "W",      # pycodestyle (warnings)
 ]
 
