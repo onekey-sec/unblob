@@ -33,12 +33,12 @@ DAMAGED_ZIP_BYTES = ZIP_BYTES.replace(_ZIP_CONTENT, _DAMAGED_ZIP_CONTENT)
 assert ZIP_BYTES != DAMAGED_ZIP_BYTES
 
 
-@pytest.fixture()
+@pytest.fixture
 def input_file(tmp_path: Path):
     return tmp_path / "input_file"
 
 
-@pytest.fixture()
+@pytest.fixture
 def output_dir(tmp_path):
     output_dir = tmp_path / "output"
     output_dir.mkdir()

@@ -94,12 +94,12 @@ def test_fix_symlink_chain_traversal(tmpdir: Path, task_result: TaskResult):
 
 @pytest.mark.parametrize(
     "link, target, expected",
-    (
+    [
         ("link_a", "/etc/passwd", "etc/passwd"),
         ("link_b", "etc/passwd", "etc/passwd"),
         ("link_c", "target_c", "target_c"),
         ("link_d", "/tmp/out/test/../../target_d", "tmp/target_d"),
-    ),
+    ],
 )
 def test_fix_symlink(
     link: str, target: str, expected: str, tmpdir: Path, task_result: TaskResult
@@ -117,7 +117,7 @@ def test_fix_symlink(
 
 @pytest.mark.parametrize(
     "link, target, expected",
-    (
+    [
         ("dir_1/link_a", "../target_a", "../target_a"),
         ("dir_1/link_b", "target_b", "target_b"),
         ("dir_1/link_c", "../dir_1/target_c", "target_c"),
@@ -127,7 +127,7 @@ def test_fix_symlink(
         ("dir_1/dir_2/dir_3/link_g", "../../dir_2/target_g", "../../dir_2/target_g"),
         ("dir_1/dir_2/dir_3/link_h", "../dir_1/target_h", "../dir_1/target_h"),
         ("dir_1/link_i", "/etc/passwd", "../etc/passwd"),
-    ),
+    ],
 )
 def test_fix_symlink_subdir(
     link: str, target: str, expected: str, tmpdir: Path, task_result: TaskResult
@@ -146,7 +146,7 @@ def test_fix_symlink_subdir(
 
 @pytest.mark.parametrize(
     "link, target",
-    (
+    [
         ("link_a", "../target_a"),
         ("link_b", "../../target_b"),
         ("link_c", "../../../target_c"),
@@ -154,7 +154,7 @@ def test_fix_symlink_subdir(
         ("link_e", "../../../../../target_e"),
         ("link_f", "/tmp/../../target_f"),
         ("link_g", "/tmp/out/../../../target_g"),
-    ),
+    ],
 )
 def test_fix_symlink_traversal(
     link: str, target: str, tmpdir: Path, task_result: TaskResult
@@ -171,11 +171,11 @@ def test_fix_symlink_traversal(
 
 @pytest.mark.parametrize(
     "link, target",
-    (
+    [
         ("dir_1/link_a", "../../target_a"),
         ("dir_1/dir_2/link_b", "../../../target_b"),
         ("dir_1/dir_2/dir_3/link_f", "../../../../target_f"),
-    ),
+    ],
 )
 def test_fix_symlink_traversal_subdir(
     link: str, target: str, tmpdir: Path, task_result: TaskResult

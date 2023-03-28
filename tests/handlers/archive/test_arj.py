@@ -50,11 +50,11 @@ def test_valid_calculation():
 
 @pytest.mark.parametrize(
     "header_size",
-    (
+    [
         pytest.param(0, id="size-small"),
         pytest.param(2700, id="size-large"),
         pytest.param(31, id="size-smaller-then-first_hdr_size"),
-    ),
+    ],
 )
 def test_invalid_block_size(header_size):
     contents = bytearray(copy.copy(ARJ_CONTENTS))

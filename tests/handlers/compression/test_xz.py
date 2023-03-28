@@ -168,7 +168,7 @@ DATA_PADDING = b"123"
 
 @pytest.mark.parametrize(
     "prefix",
-    (
+    [
         pytest.param(
             b"",
             id="empty",
@@ -177,11 +177,11 @@ DATA_PADDING = b"123"
             DATA_PADDING,
             id="filled",
         ),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     "suffix",
-    (
+    [
         pytest.param(
             b"",
             id="empty",
@@ -190,11 +190,11 @@ DATA_PADDING = b"123"
             DATA_PADDING,
             id="filled",
         ),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     "content, expected_length",
-    (
+    [
         pytest.param(
             XZ_NONE_CONTENT,
             len(XZ_NONE_CONTENT),
@@ -295,7 +295,7 @@ DATA_PADDING = b"123"
             len(XZ_SHA256_CONTENT),
             id="crc_sha256_bad_padding",
         ),
-    ),
+    ],
 )
 def test_xz_calculate_chunk(
     prefix: bytes, content: bytes, expected_length: int, suffix: bytes
@@ -311,7 +311,7 @@ def test_xz_calculate_chunk(
 
 @pytest.mark.parametrize(
     "padding",
-    (
+    [
         pytest.param(
             b"",
             id="empty",
@@ -320,7 +320,7 @@ def test_xz_calculate_chunk(
             NULL_PADDING,
             id="nullpad",
         ),
-    ),
+    ],
 )
 @pytest.mark.parametrize("first_chunk", FORMATS)
 @pytest.mark.parametrize("second_chunk", FORMATS)
@@ -337,7 +337,7 @@ def test_xz_calculate_chunk_unique_stream(
 
 @pytest.mark.parametrize(
     "content",
-    (
+    [
         pytest.param(
             XZ_NONE_CONTENT_BAD_IDX,
             id="crc_none_bad_idx",
@@ -354,7 +354,7 @@ def test_xz_calculate_chunk_unique_stream(
             XZ_SHA256_CONTENT_BAD_IDX,
             id="crc_sha256_bad_idx",
         ),
-    ),
+    ],
 )
 def test_xz_calculate_chunk_error(content: bytes):
     handler = XZHandler()

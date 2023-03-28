@@ -69,6 +69,7 @@ select = [
   "ISC",    # flake8-implicit-str-concats
   "PIE",    # flake8-pie
   "PL",     # pylint
+  "PT",     # flake8-pytest-style
   "W",      # pycodestyle (warnings)
 ]
 
@@ -94,6 +95,11 @@ allow-magic-value-types = [
   "int",   # bunch of ad-hoc bitmask values
   "str",
 ]
+
+[tool.ruff.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+parametrize-names-type = "csv"
 
 [tool.pytest.ini_options]
 addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"

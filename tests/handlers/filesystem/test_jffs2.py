@@ -115,7 +115,7 @@ JFFS2_OLD_BE_HEADER_HIGH_TOTLEN.totlen = len(JFFS2_OLD_BE_HEADER_HIGH_TOTLEN) - 
 
 @pytest.mark.parametrize(
     "header, node_start_offset, eof, expected",
-    (
+    [
         pytest.param(
             VALID_JFFS2_NEW_LE_HEADER,
             0,
@@ -186,7 +186,7 @@ JFFS2_OLD_BE_HEADER_HIGH_TOTLEN.totlen = len(JFFS2_OLD_BE_HEADER_HIGH_TOTLEN) - 
             False,
             id="jffs2-new-be-high-totlen",
         ),
-    ),
+    ],
 )
 def test_valid_header_new(
     header: Instance, node_start_offset: int, eof: int, expected: bool
@@ -197,7 +197,7 @@ def test_valid_header_new(
 
 @pytest.mark.parametrize(
     "header, node_start_offset, eof, expected",
-    (
+    [
         pytest.param(
             VALID_JFFS2_OLD_LE_HEADER,
             0,
@@ -268,7 +268,7 @@ def test_valid_header_new(
             False,
             id="jffs2-old-be-high-totlen",
         ),
-    ),
+    ],
 )
 def test_valid_header_old(
     header: Instance, node_start_offset: int, eof: int, expected: bool

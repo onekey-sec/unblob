@@ -18,10 +18,10 @@ EXPECTED = b"\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10ABCDEFGHI
 
 @pytest.mark.parametrize(
     "hexdump",
-    (
+    [
         pytest.param(EMACS_VIM, id="Vim-Emacs"),
         pytest.param(HEXDUMP_C, id="hexdump-C"),
-    ),
+    ],
 )
 def test_hexdump(hexdump):
     binary = unhex(hexdump)

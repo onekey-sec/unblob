@@ -136,7 +136,7 @@ PADDING_AFTER_END_OF_ARCHIVE = unhex(
 
 @pytest.mark.parametrize(
     "contents, expected_length, message",
-    (
+    [
         pytest.param(
             GNU_TAR_CONTENTS + PADDING_TO_DEFAULT_BLOCKING_FACTOR,
             len(GNU_TAR_CONTENTS + PADDING_TO_DEFAULT_BLOCKING_FACTOR),
@@ -173,7 +173,7 @@ PADDING_AFTER_END_OF_ARCHIVE = unhex(
             "File end shouldn't include partial zero filled blocks",
             id="posix-padded-after-end",
         ),
-    ),
+    ],
 )
 def test_offset(contents: bytes, expected_length: int, message: str):
     f = File.from_bytes(contents)
@@ -184,7 +184,7 @@ def test_offset(contents: bytes, expected_length: int, message: str):
 
 @pytest.mark.parametrize(
     "contents",
-    (
+    [
         pytest.param(
             GNU_TAR_CONTENTS,
             id="gnu-tar",
@@ -193,11 +193,11 @@ def test_offset(contents: bytes, expected_length: int, message: str):
             POSIX_TAR_CONTENTS,
             id="posix-tar",
         ),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     "start_complete, message",
-    (
+    [
         pytest.param(
             False,
             "File is truncated and no content can be recovered",
@@ -208,7 +208,7 @@ def test_offset(contents: bytes, expected_length: int, message: str):
             "File is truncated but valid parts should be recovered",
             id="truncated",
         ),
-    ),
+    ],
 )
 def test_truncated_files(contents: bytes, start_complete: bool, message: str):
     truncated = contents[:0x180]
@@ -298,10 +298,10 @@ def test_different_blocking_factor():
 
 @pytest.mark.parametrize(
     "prefix",
-    (
+    [
         pytest.param(b"", id="zero-prefix"),
         pytest.param(b"some prefix ", id="nonzero-prefix"),
-    ),
+    ],
 )
 def test_calculate_chunk(prefix):
     tar_file = File.from_bytes(prefix + GNU_TAR_CONTENTS)

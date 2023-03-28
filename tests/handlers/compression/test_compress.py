@@ -6,7 +6,7 @@ from unblob.handlers.compression.compress import UnixCompressHandler
 
 @pytest.mark.parametrize(
     "content, start_offset, expected_end_offset",
-    (
+    [
         pytest.param(
             b"\x1f\x9d\x90\x61\xe0\xc0\x61\x53\x26\x86\x02", 0, 0xB, id="valid"
         ),
@@ -25,7 +25,7 @@ from unblob.handlers.compression.compress import UnixCompressHandler
         pytest.param(
             b"\x1f\x9d\x09\x61\xe0\xc0\x61\x53\x26\x86\x02", 0, 0xB, id="valid_max"
         ),
-    ),
+    ],
 )
 def test_unlzw(content: bytes, start_offset: int, expected_end_offset: int):
     handler = UnixCompressHandler()
@@ -36,7 +36,7 @@ def test_unlzw(content: bytes, start_offset: int, expected_end_offset: int):
 
 @pytest.mark.parametrize(
     "content, start_offset",
-    (
+    [
         pytest.param(
             b"\x1f\x9d\x08\x61\xe0\xc0\x61\x53\x26\x86\x02", 0, id="header_too_low_max"
         ),
@@ -55,7 +55,7 @@ def test_unlzw(content: bytes, start_offset: int, expected_end_offset: int):
         pytest.param(
             b"\x1f\x9d\x09\x61\xe0\xc0\x61\x53\x26\x86\xff", 0, id="invalid_code"
         ),
-    ),
+    ],
 )
 def test_unlzw_errors(content: bytes, start_offset: int):
     handler = UnixCompressHandler()

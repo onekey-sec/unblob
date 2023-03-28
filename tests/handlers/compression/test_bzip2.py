@@ -24,7 +24,7 @@ def shift_left(value: bytes, bits: int) -> bytes:
 
 @pytest.mark.parametrize(
     "content, start_offset, expected_length",
-    (
+    [
         pytest.param(
             STREAM_HEADER + BLOCK_HEADER + CONTENT + STREAM_FOOTER,
             0,
@@ -174,7 +174,7 @@ def shift_left(value: bytes, bits: int) -> bytes:
             STREAM_SIZE + 3,
             id="just_stream_header_after_footer",
         ),
-    ),
+    ],
 )
 def test_bzip2_recover(content: bytes, start_offset: int, expected_length: int):
     handler = BZip2Handler()
@@ -187,7 +187,7 @@ def test_bzip2_recover(content: bytes, start_offset: int, expected_length: int):
 
 @pytest.mark.parametrize(
     "content",
-    (
+    [
         pytest.param(STREAM_HEADER, id="just_stream_header"),
         pytest.param(STREAM_HEADER + CONTENT, id="missing_block_header"),
         pytest.param(
@@ -201,7 +201,7 @@ def test_bzip2_recover(content: bytes, start_offset: int, expected_length: int):
             STREAM_HEADER + BLOCK_HEADER + CONTENT + STREAM_END_MAGIC,
             id="incomplete_stream_footer",
         ),
-    ),
+    ],
 )
 def test_bzip2_recover_error(content: bytes):
     handler = BZip2Handler()

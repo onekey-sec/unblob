@@ -13,7 +13,7 @@ from unblob.report import ExtractCommandFailedReport
 
 
 @pytest.fixture(scope="session", autouse=True)
-def configure_logging():
+def configure_logging():  # noqa: PT004
     configure_logger(verbosity_level=3, extract_root=Path(""))
 
     # https://pytest-cov.readthedocs.io/en/latest/subprocess-support.html#if-you-use-multiprocessing-process
