@@ -64,7 +64,7 @@ def get_string(file: File) -> bytes:
     return filename.rstrip(b"\x00")
 
 
-class FileHeader(object):
+class FileHeader:
     addr: int
     next_filehdr: int
     spec_info: int
@@ -150,7 +150,7 @@ class FileHeader(object):
         )
 
 
-class RomFSHeader(object):
+class RomFSHeader:
     signature: bytes
     full_size: int
     checksum: int
