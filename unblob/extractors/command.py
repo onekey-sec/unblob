@@ -14,8 +14,7 @@ logger = get_logger()
 
 class Command(Extractor):
     def __init__(self, executable, *args, stdout: Optional[str] = None):
-        """
-        Extract using external extractor and template parameters.
+        """Extract using external extractor and template parameters.
 
         Has extra support for extractors (notably 7z), which can not be directed to output to a file, but can extract to stdout:
         When the parameter `stdout` is set, the command's stdout will be redirected to `outdir / stdout`.

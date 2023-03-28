@@ -17,7 +17,7 @@ DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
 
 
 class SeekError(ValueError):
-    """Specific ValueError for File.seek"""
+    """Specific ValueError for File.seek."""
 
 
 class File(mmap.mmap):
@@ -90,7 +90,7 @@ class Endian(enum.Enum):
 
 
 def iterbits(file: File) -> Iterator[int]:
-    """bit-wise reading of file in little-endian mode"""
+    """bit-wise reading of file in little-endian mode."""
     while cur_bytes := file.read(DEFAULT_BUFSIZE):
         for b in cur_bytes:
             for i in range(7, -1, -1):
@@ -152,7 +152,7 @@ def decode_int(value, base: int) -> int:
 
 
 def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
-    """Decodes multi-bytes integer into integer size and integer value.
+    """Decode multi-bytes integer into integer size and integer value.
 
     Multibyte integers of static length are stored in little endian byte order.
 
@@ -289,9 +289,10 @@ class StructParser:
 
 
 def get_endian(file: File, big_endian_magic: int) -> Endian:
-    """Reads a four bytes magic and derive endianness from it by
-    comparing it with the big endian magic. It reads four bytes and
-    seeks back after that.
+    """Read a four bytes magic and derive endianness from it.
+
+    It compares the read data with the big endian magic.  It reads
+    four bytes and seeks back after that.
     """
     if big_endian_magic > 0xFF_FF_FF_FF:
         raise ValueError("big_endian_magic is larger than a 32 bit integer.")

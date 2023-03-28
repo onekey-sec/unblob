@@ -1,6 +1,7 @@
-"""
+"""RAR handler.
+
 RAR Version 4.x
-https://codedread.github.io/bitjs/docs/unrar.html
+https://codedread.github.io/bitjs/docs/unrar.html.
 
 RAR Version 5.x
 https://www.rarlab.com/technote.htm#rarsign

@@ -63,6 +63,7 @@ select = [
   "C90",    # mccabe
   "C4",     # flake8-comprehensions
   "COM818", # flake8-commas; trailing-comma-on-bare-tuple
+  "D",      # pydocstyle
   "E",      # pycodestyle (errors)
   "F",      # pyflakes
   "I",      # isort
@@ -82,6 +83,9 @@ select = [
 
 ignore = [
   "B027",    # empty-method-without-abstract-decorator: It is okay to have empty methods in abstract classes
+  "D1",      # undocumented-*:                          We are not documenting every public symbol
+  "D203",    # one-blank-line-before-class:             D211 (no-blank-line-before-class) is used instead
+  "D213",    # multi-line-summary-second-line:          D212 (multi-line-summary-first-line) is used instead
   "E501",    # line-too-long:                           Let black handle line length violations
   "N818",    # error-suffix-on-exception-name:          Exception names can be meaningful without smurfs
   "PLC0414", # useless-import-alias:                    Enable explicitly re-exporting public symbols

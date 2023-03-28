@@ -42,6 +42,7 @@ class YAFFSConfig:
 
 def decode_file_size(high: int, low: int) -> int:
     """File size can be encoded as 64 bits or 32 bits values.
+
     If upper 32 bits are set, it's a 64 bits integer value.
     Otherwise it's a 32 bits value. 0xFFFFFFFF means zero.
     """

@@ -20,8 +20,7 @@ from unblob.report import ExtractDirectoryExistsReport
 
 
 def assert_same_chunks(expected, actual, explanation=None):
-    """An assert, that ignores the chunk.id-s"""
-
+    """Assert ignoring the chunk.id-s."""
     assert len(expected) == len(actual), explanation
     for e, a in zip(expected, actual):
         assert attr.evolve(e, id="") == attr.evolve(a, id=""), explanation
@@ -215,7 +214,7 @@ def fw(tmp_path: Path):
 
 
 def sort_paths(paths: Collection[Path], base: Path) -> Tuple[List[Path], List[Path]]:
-    """The paths are sorted into two bins, the first one will contain subpaths of base, the second are not.
+    """Sorts paths into two bins, the first one will contain subpaths of base, the second are not.
 
     The first bin will also be converted to relative paths.
     """

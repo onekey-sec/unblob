@@ -1,15 +1,18 @@
-"""
-Handler for gzip compression format based on standard documented
-at https://datatracker.ietf.org/doc/html/rfc1952.
+"""Handler for gzip compression format.
 
-The handler will create valid chunks for each gzip compressed stream instead of
-concatenating sequential streams into an overall ValidChunk.
+It is based on standard documented at
+https://datatracker.ietf.org/doc/html/rfc1952.
 
-We monkey patched Python builtin gzip's _GzipReader read() function to stop
-reading as soon as it reach the EOF marker of the current gzip stream. This
-is a requirement for unblob given that streams can be malformed and followed
-by garbage/random content that triggers BadGzipFile errors when gzip
-library tries to read the next stream header.
+The handler will create valid chunks for each gzip compressed stream
+instead of concatenating sequential streams into an overall
+ValidChunk.
+
+We monkey patched Python builtin gzip's _GzipReader read() function to
+stop reading as soon as it reach the EOF marker of the current gzip
+stream.  This is a requirement for unblob given that streams can be
+malformed and followed by garbage/random content that triggers
+BadGzipFile errors when gzip library tries to read the next stream
+header.
 """
 import gzip
 import io

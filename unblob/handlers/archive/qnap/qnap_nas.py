@@ -173,7 +173,7 @@ class Cryptor:
         return 0xFFFF & (0x4E35 * x + 1)
 
     def kdf(self):
-        """self.secret -> 8bit hash (+ state effects)"""
+        """self.secret -> 8bit hash (+ state effects)."""
         tt = self.k[self.acc]
         res = 0
         for i in range(self.n):

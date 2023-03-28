@@ -1,6 +1,4 @@
-"""
-File extraction related functions.
-"""
+"""File extraction related functions."""
 import os
 from pathlib import Path
 
@@ -47,12 +45,13 @@ def is_recursive_link(path: Path) -> bool:
 
 
 def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
-    """Fix symlinks by rewriting absolute symlinks to make them point within
-    the extraction directory (outdir), if it's not a relative symlink it is
-    either removed it it attempts to traverse outside of the extraction directory
-    or rewritten to be fully portable (no mention of the extraction directory
-    in the link value)."""
+    """Rewrites absolute symlinks to point within the extraction directory (outdir).
 
+    If it's not a relative symlink it is either removed it it attempts
+    to traverse outside of the extraction directory or rewritten to be
+    fully portable (no mention of the extraction directory in the link
+    value).
+    """
     if is_recursive_link(path):
         logger.error(f"Symlink loop identified, removing {path}.")
         error_report = MaliciousSymlinkRemoved(

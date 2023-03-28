@@ -243,7 +243,7 @@ class Test_ProcessResult_to_json:  # noqa: N801
 
 @pytest.fixture
 def hello_kitty(tmp_path: Path) -> Path:
-    """An input file with 3 unknown chunks and 2 zip files."""
+    """Generate an input file with 3 unknown chunks and 2 zip files."""
     hello_zip = io.BytesIO()
     with ZipFile(hello_zip, "w") as zf:
         zf.writestr(ZipInfo("hello.kitty"), "Hello")
@@ -269,7 +269,7 @@ def hello_kitty_task_results(
     container_id="",
     start_depth=0,
 ):
-    """Expected task reports processing `hello_kitty` fixture.
+    """Return expected task reports processing `hello_kitty` fixture.
 
     Note, that it has parameters for ids, which would change between runs.
 
@@ -474,7 +474,7 @@ def test_flat_report_structure(hello_kitty: Path, extract_root):
 def container_task_results(
     container: Path, extract_root: Path, chunk_id: str
 ) -> List[TaskResult]:
-    """Expected partial task results for processing the `hello_kitty_container` fixture.
+    """Return expected partial task results for processing the `hello_kitty_container` fixture.
 
     Note, that for some values the `unittest.mock.ANY` is substituted.
     This is done so as to ignore platform related differences.
@@ -569,7 +569,7 @@ def container_task_results(
 
 @pytest.fixture
 def hello_kitty_container(tmp_path: Path, hello_kitty: Path) -> Path:
-    """The `hello_kitty` fixture further embedded in a zip container."""
+    """Further embed `hello_kitty` fixture in a zip container."""
     hello_kitty_container = tmp_path / "container"
     container_zip = io.BytesIO()
     with ZipFile(container_zip, "w") as zf:

@@ -87,7 +87,7 @@ class ExtractionConfig:
     handlers: Handlers = BUILTIN_HANDLERS
 
     def get_extract_dir_for(self, path: Path) -> Path:
-        """Extraction dir under root with the name of path."""
+        """Return extraction dir under root with the name of path."""
         try:
             relative_path = path.relative_to(self.extract_root)
         except ValueError:
@@ -156,7 +156,9 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
 
 
 def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -> bool:
-    """An in advance preparation to prevent report writing failing after an expensive extraction.
+    """Prevent report writing failing after an expensive extraction.
+
+    Should be called before processing tasks.
 
     Returns True if there is no foreseen problem,
             False if report writing is known in advance to fail.

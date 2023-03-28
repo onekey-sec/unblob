@@ -16,14 +16,16 @@ SYSTEM_AREA_SIZE = 0x8000
 
 
 def from_733(u: bytes) -> int:
-    """Convert from ISO 9660 7.3.3 format to uint32_t
-    Return the little-endian part always, to handle non-specs-compliant images
+    """Convert from ISO 9660 7.3.3 format to uint32_t.
+
+    Return the little-endian part always, to handle non-specs-compliant images.
     """
     return u[0] | (u[1] << 8) | (u[2] << 16) | (u[3] << 24)
 
 
 def from_723(u: bytes) -> int:
-    """Convert from ISO 9660 7.2.3 format to uint16_t
+    """Convert from ISO 9660 7.2.3 format to uint16_t.
+
     Return the little-endian part always, to handle non-specs-compliant images.
     """
     return u[0] | (u[1] << 8)

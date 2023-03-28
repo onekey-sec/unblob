@@ -21,11 +21,11 @@ class ARJError(Exception):
 
 
 class InvalidARJSize(ARJError):
-    """Invalid size fields in ARJ header"""
+    """Invalid size fields in ARJ header."""
 
 
 class ARJChecksumError(ARJError):
-    """Main ARJ header checksum missmatch"""
+    """Main ARJ header checksum missmatch."""
 
 
 class ARJExtendedHeader(ARJError):

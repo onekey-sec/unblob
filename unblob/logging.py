@@ -14,8 +14,9 @@ def format_hex(value: int):
 
 
 class noformat:  # noqa: N801
-    """Keep the value from formatting,
-    even if it would match one of the types in pretty_print_types processor.
+    """Keep the value from formatting.
+
+    Even if it would match one of the types in pretty_print_types processor.
     """
 
     def __init__(self, value):

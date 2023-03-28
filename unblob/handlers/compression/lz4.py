@@ -1,5 +1,6 @@
-"""
-LZ4 frame format definition: https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md
+"""LZ4 handler.
+
+Frame format definition: https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md.
 """
 import io
 from typing import Optional
@@ -33,7 +34,7 @@ MAX_LEGACY_BLOCK_SIZE = 8 * 1024 * 1024  # 8 MB
 
 
 class FLG:
-    """Represents the FLG field"""
+    """Represents the FLG field."""
 
     version: int = 0
     block_independence: int = 0
@@ -105,7 +106,7 @@ class LegacyFrameHandler(_LZ4HandlerBase):
 
 
 class SkippableFrameHandler(_LZ4HandlerBase):
-    """This can be anything, basically uncompressed data."""
+    """Can be anything, basically uncompressed data."""
 
     NAME = "lz4_skippable"
     PATTERNS = [HexString("5? 2A 4D 18")]
@@ -119,7 +120,7 @@ class SkippableFrameHandler(_LZ4HandlerBase):
 
 
 class DefaultFrameHandler(_LZ4HandlerBase):
-    """This is the modern version, most frequently used."""
+    """Modern version, most frequently used."""
 
     NAME = "lz4_default"
 

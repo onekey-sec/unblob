@@ -1,5 +1,5 @@
-"""
-Searching Chunk related functions.
+"""Searching Chunk related functions.
+
 The main "entry point" is search_chunks_by_priority.
 """
 from functools import lru_cache
@@ -120,9 +120,11 @@ def search_chunks(  # noqa: C901
     task_result: TaskResult,
 ) -> List[ValidChunk]:
     """Search all ValidChunks within the file.
-    Search for patterns and run Handler.calculate_chunk() on the found matches.
-    We don't deal with offset within already found ValidChunks and invalid chunks are thrown away.
-    If chunk covers the whole file we stop any further search and processing.
+
+    Search for patterns and run Handler.calculate_chunk() on the found
+    matches.  We don't deal with offset within already found
+    ValidChunks and invalid chunks are thrown away.  If chunk covers
+    the whole file we stop any further search and processing.
     """
     all_chunks = []
 

@@ -1,5 +1,5 @@
-"""
-Dynamically generate test cases from files in the tests/integration directory.
+"""Dynamically generate test cases from files in the tests/integration directory.
+
 Directories can be nested arbitrarily.
 Each of the test folders should contain 2 things:
 - The original file we want to test.

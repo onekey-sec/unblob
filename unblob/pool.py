@@ -37,8 +37,10 @@ class PoolBase(abc.ABC):
 
 class Queue(JoinableQueue):
     def is_empty(self) -> bool:
-        """Checks if all ``task_done`` has been called for all items.
-        Based on ``multiprocessing.JoinableQueue.join``."""
+        """Check if all ``task_done`` has been called for all items.
+
+        Based on ``multiprocessing.JoinableQueue.join``.
+        """
         with self._cond:  # type: ignore
             return self._unfinished_tasks._semlock._is_zero()  # type: ignore
 

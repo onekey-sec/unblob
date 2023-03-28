@@ -9,7 +9,7 @@ hookspec = pluggy.HookspecMarker("unblob")
 
 @hookspec
 def unblob_register_handlers() -> List[Type[Handler]]:
-    """Registers handler types to known handlers
+    """Register handler types to known handlers.
 
     :returns: The list of handlers to be registered
     """

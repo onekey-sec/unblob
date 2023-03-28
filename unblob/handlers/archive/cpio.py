@@ -42,7 +42,8 @@ C_STICKY_BITS = (C_NONE, C_ISUID, C_ISGID, C_ISVTX, C_ISUID_ISGID)
 
 
 class _CPIOHandlerBase(StructHandler):
-    """A common base for all CPIO formats
+    """A common base for all CPIO formats.
+
     The format should be parsed the same, there are small differences how to calculate
     file and filename sizes padding and conversion from octal / hex.
     """

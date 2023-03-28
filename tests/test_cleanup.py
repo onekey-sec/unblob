@@ -18,7 +18,7 @@ _DAMAGED_ZIP_CONTENT = b"*BAD*file"
 
 
 def wrapzip(filename: str, content: bytes) -> bytes:
-    """Create an in-memory zip archive with a single file"""
+    """Create an in-memory zip archive with a single file."""
     bio = io.BytesIO()
     z = zipfile.ZipFile(bio, mode="w", compression=zipfile.ZIP_STORED)
     z.writestr(filename, content)

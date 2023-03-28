@@ -113,8 +113,11 @@ class FileHeader:
 
     @property
     def mode(self) -> int:
-        """Permission mode is assumed to be world readable if executable bit is set, and world executable otherwise.
-        Handle mode for both block device and character devices too.
+        """Permission mode.
+
+        It is assumed to be world readable if executable bit is set,
+        and world executable otherwise.  Handle mode for both block
+        device and character devices too.
         """
         mode = WORLD_RWX if self.executable else WORLD_RW
         mode |= stat.S_IFBLK if self.type == FSType.BLOCK_DEV else 0x0
@@ -123,7 +126,7 @@ class FileHeader:
 
     @property
     def dev(self) -> int:
-        """Returns raw device number if block device or character device, zero otherwise."""
+        """Raw device number if block device or character device, zero otherwise."""
         if self.type in [FSType.BLOCK_DEV, FSType.CHAR_DEV]:
             major = self.spec_info >> 16
             minor = self.spec_info & 0xFFFF
@@ -200,7 +203,11 @@ class RomFSHeader:
             raise Exception("Invalid checksum")
 
     def is_valid_addr(self, addr):
-        """Validates that an inode address is valid. inodes addresses must be 16 bytes aligned and placed within the RomFS on file."""
+        """Validate that an inode address is valid.
+
+        Inodes addresses must be 16 bytes aligned and placed within
+        the RomFS on file.
+        """
         if (self.header_end_offset <= addr <= self.eof) and (addr % 16 == 0):
             return True
         return False
