@@ -20,7 +20,7 @@ from unblob.models import (
 logger = get_logger()
 
 FOOTER_LEN = 74
-SECRET = "QNAPNASVERSION"
+SECRET = "QNAPNASVERSION"  # noqa: S105
 
 C_DEFINITIONS = """
     typedef struct qnap_header {

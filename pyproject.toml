@@ -72,6 +72,7 @@ select = [
   "PT",     # flake8-pytest-style
   "PTH",    # flake8-use-pathlib
   "RET",    # flake8-return
+  "S",      # flake8-bandit
   "W",      # pycodestyle (warnings)
 ]
 
@@ -80,6 +81,7 @@ ignore = [
   "E501",    # line-too-long:                           Let black handle line length violations
   "PLC0414", # useless-import-alias:                    Enable explicitly re-exporting public symbols
   "PLR09",   # too-many-{arguments,branches,...}:       We do not want to impose hard limits
+  "S101",    # assert:                                  Enable usage of asserts
 ]
 
 # Do not remove unused imports automatically in __init__.py files

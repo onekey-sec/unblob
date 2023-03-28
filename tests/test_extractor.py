@@ -98,7 +98,7 @@ def test_fix_symlink_chain_traversal(tmpdir: Path, task_result: TaskResult):
         ("link_a", "/etc/passwd", "etc/passwd"),
         ("link_b", "etc/passwd", "etc/passwd"),
         ("link_c", "target_c", "target_c"),
-        ("link_d", "/tmp/out/test/../../target_d", "tmp/target_d"),
+        ("link_d", "/var/out/test/../../target_d", "var/target_d"),
     ],
 )
 def test_fix_symlink(
@@ -152,8 +152,8 @@ def test_fix_symlink_subdir(
         ("link_c", "../../../target_c"),
         ("link_d", "../../../../target_d"),
         ("link_e", "../../../../../target_e"),
-        ("link_f", "/tmp/../../target_f"),
-        ("link_g", "/tmp/out/../../../target_g"),
+        ("link_f", "/var/../../target_f"),
+        ("link_g", "/var/out/../../../target_g"),
     ],
 )
 def test_fix_symlink_traversal(

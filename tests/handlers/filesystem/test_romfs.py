@@ -49,17 +49,17 @@ def test_valid_checksum(content, valid):
 @pytest.mark.parametrize(
     "basedir, path, expected",
     [
-        ("/tmp/out", "/tmp/out/file", True),
-        ("/tmp/out", "file", True),
-        ("/tmp/out", "dir/file", True),
-        ("/tmp/out", "some/dir/file", True),
-        ("/tmp/out", "some/dir/../file", True),
-        ("/tmp/out", "some/dir/../../file", True),
-        ("/tmp/out", "some/dir/../../../file", False),
-        ("/tmp/out", "some/dir/../../../", False),
-        ("/tmp/out", "some/dir/../../..", False),
-        ("/tmp/out", "../file", False),
-        ("/tmp/out", "/tmp/out/../file", False),
+        ("/lib/out", "/lib/out/file", True),
+        ("/lib/out", "file", True),
+        ("/lib/out", "dir/file", True),
+        ("/lib/out", "some/dir/file", True),
+        ("/lib/out", "some/dir/../file", True),
+        ("/lib/out", "some/dir/../../file", True),
+        ("/lib/out", "some/dir/../../../file", False),
+        ("/lib/out", "some/dir/../../../", False),
+        ("/lib/out", "some/dir/../../..", False),
+        ("/lib/out", "../file", False),
+        ("/lib/out", "/lib/out/../file", False),
     ],
 )
 def test_is_safe_path(basedir, path, expected):
