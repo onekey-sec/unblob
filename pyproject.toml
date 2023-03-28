@@ -62,6 +62,7 @@ select = [
   "B",      # flake8-bugbear
   "C90",    # mccabe
   "C4",     # flake8-comprehensions
+  "COM818", # flake8-commas; trailing-comma-on-bare-tuple
   "E",      # pycodestyle (errors)
   "F",      # pyflakes
   "I",      # isort
