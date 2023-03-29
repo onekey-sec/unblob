@@ -243,7 +243,7 @@ class Processor:
             return
 
         if not valid_path(task.path):
-            log.warn("Path contains invalid characters, it won't be processed")
+            log.warning("Path contains invalid characters, it won't be processed")
             return
 
         stat_report = StatReport.from_path(task.path)

@@ -53,7 +53,7 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
     value).
     """
     if is_recursive_link(path):
-        logger.error(f"Symlink loop identified, removing {path}.")
+        logger.error("Symlink loop identified, removing", path=path)
         error_report = MaliciousSymlinkRemoved(
             link=path.as_posix(), target=os.readlink(path)
         )
@@ -71,7 +71,7 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
     safe = is_safe_path(outdir, target)
 
     if not safe:
-        logger.error(f"Path traversal attempt through symlink, removing {target}.")
+        logger.error("Path traversal attempt through symlink, removing", target=target)
         error_report = MaliciousSymlinkRemoved(
             link=path.as_posix(), target=target.as_posix()
         )

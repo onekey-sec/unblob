@@ -19,13 +19,13 @@ class SafeTarFile(TarFile):
         member_name_path = Path(str(member.name))
 
         if not RUNNING_AS_ROOT and (member.ischr() or member.isblk()):
-            logger.warn(
+            logger.warning(
                 "missing elevated permissions, skipping block and character device creation",
                 path=member_name_path,
             )
             return
         if not is_safe_path(path_as_path, member_name_path):
-            logger.warn("traversal attempt", path=member_name_path)
+            logger.warning("traversal attempt", path=member_name_path)
             return
 
         super().extract(member, path, set_attrs, numeric_owner=numeric_owner)

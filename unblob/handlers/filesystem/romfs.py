@@ -251,7 +251,7 @@ class RomFSHeader:
             target_path = extract_root.joinpath(target).resolve()
 
         if not is_safe_path(extract_root, target_path):
-            logger.warn(
+            logger.warning(
                 "Path traversal attempt through symlink.", target_path=target_path
             )
             return
@@ -268,24 +268,26 @@ class RomFSHeader:
             try:
                 os.link(target_path, link_path)
             except FileNotFoundError:
-                logger.warn(
+                logger.warning(
                     "Hard link target does not exist, discarding.",
                     target_path=target_path,
                     link_path=link_path,
                 )
             except PermissionError:
-                logger.warn(
+                logger.warning(
                     "Not enough privileges to create hardlink to block/char device, discarding.",
                     target_path=target_path,
                     link_path=link_path,
                 )
         else:
-            logger.warn("Invalid hard link target", inode_key=inode.spec_info)
+            logger.warning("Invalid hard link target", inode_key=inode.spec_info)
 
     def create_inode(self, extract_root: Path, inode: FileHeader):
         output_path = extract_root.joinpath(inode.path).resolve()
         if not is_safe_path(extract_root, inode.path):
-            logger.warn("Path traversal attempt, discarding.", output_path=output_path)
+            logger.warning(
+                "Path traversal attempt, discarding.", output_path=output_path
+            )
             return
         logger.info("dumping inode", inode=inode, output_path=str(output_path))
 
@@ -314,7 +316,7 @@ class RomFSHeader:
             self.create_inode(self.extract_root, inode)
 
         if os.geteuid() != 0:
-            logger.warn(
+            logger.warning(
                 "root privileges are required to create block and char devices, skipping."
             )
         else:
