@@ -413,7 +413,7 @@ class _FileTask:
         if extract_dir.exists():
             self.result.add_subtask(
                 Task(
-                    chunk_id=chunk.id,
+                    chunk_id=chunk.chunk_id,
                     path=extract_dir,
                     depth=self.task.depth + 1,
                 )

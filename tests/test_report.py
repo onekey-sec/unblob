@@ -80,7 +80,7 @@ class Test_ProcessResult_to_json:  # noqa: N801
         )
         task_result.add_report(
             ChunkReport(
-                id=chunk_id,
+                chunk_id=chunk_id,
                 handler_name="zip",
                 start_offset=0,
                 end_offset=384,
@@ -133,7 +133,7 @@ class Test_ProcessResult_to_json:  # noqa: N801
                         "end_offset": 384,
                         "extraction_reports": [],
                         "handler_name": "zip",
-                        "id": "test_basic_conversion:id",
+                        "chunk_id": "test_basic_conversion:id",
                         "is_encrypted": False,
                         "size": 384,
                         "start_offset": 0,
@@ -168,7 +168,7 @@ class Test_ProcessResult_to_json:  # noqa: N801
 
         task_result.add_report(
             ChunkReport(
-                id="test",
+                chunk_id="test",
                 handler_name="fail",
                 start_offset=0,
                 end_offset=256,
@@ -224,7 +224,7 @@ class Test_ProcessResult_to_json:  # noqa: N801
                             }
                         ],
                         "handler_name": "fail",
-                        "id": "test",
+                        "chunk_id": "test",
                         "is_encrypted": False,
                         "size": 256,
                         "start_offset": 0,
@@ -312,11 +312,15 @@ def hello_kitty_task_results(
                     sha1="febca6ed75dc02e0def065e7b08f1cca87b57c74",
                     sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
                 ),
-                UnknownChunkReport(id=ANY, start_offset=0, end_offset=6, size=6),
-                UnknownChunkReport(id=ANY, start_offset=131, end_offset=138, size=7),
-                UnknownChunkReport(id=ANY, start_offset=263, end_offset=264, size=1),
+                UnknownChunkReport(chunk_id=ANY, start_offset=0, end_offset=6, size=6),
+                UnknownChunkReport(
+                    chunk_id=ANY, start_offset=131, end_offset=138, size=7
+                ),
+                UnknownChunkReport(
+                    chunk_id=ANY, start_offset=263, end_offset=264, size=1
+                ),
                 ChunkReport(
-                    id=hello_id,
+                    chunk_id=hello_id,
                     handler_name="zip",
                     start_offset=6,
                     end_offset=131,
@@ -325,7 +329,7 @@ def hello_kitty_task_results(
                     extraction_reports=[],
                 ),
                 ChunkReport(
-                    id=kitty_id,
+                    chunk_id=kitty_id,
                     handler_name="zip",
                     start_offset=138,
                     end_offset=263,
@@ -523,7 +527,7 @@ def container_task_results(
                     sha256="6bce74badefcddf3020d156f80c99bac7f3d46cd145029d9034a86bfbb5e31aa",
                 ),
                 ChunkReport(
-                    id=chunk_id,
+                    chunk_id=chunk_id,
                     handler_name="zip",
                     start_offset=0,
                     end_offset=384,
@@ -618,7 +622,7 @@ def get_normalized_task_results(process_result: ProcessResult) -> List[TaskResul
 
 def get_chunk_ids(task_result) -> List[str]:
     return [
-        chunk_report.id
+        chunk_report.chunk_id
         for chunk_report in task_result.reports
         if isinstance(chunk_report, ChunkReport)
     ]

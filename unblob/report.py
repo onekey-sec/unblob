@@ -175,7 +175,7 @@ class FileMagicReport(Report):
 @final
 @attr.define(kw_only=True)
 class ChunkReport(Report):
-    id: str
+    chunk_id: str
     handler_name: str
     start_offset: int
     end_offset: int
@@ -187,7 +187,7 @@ class ChunkReport(Report):
 @final
 @attr.define(kw_only=True)
 class UnknownChunkReport(Report):
-    id: str
+    chunk_id: str
     start_offset: int
     end_offset: int
     size: int

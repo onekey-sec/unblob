@@ -44,7 +44,7 @@ class Chunk:
     end_offset: int
     """The index of the first byte after the end of the chunk"""
 
-    id: str = attr.field(factory=new_id)
+    chunk_id: str = attr.field(factory=new_id)
 
     file: Optional[File] = None
 
@@ -102,7 +102,7 @@ class ValidChunk(Chunk):
 
     def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
         return ChunkReport(
-            id=self.id,
+            chunk_id=self.chunk_id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
@@ -125,7 +125,7 @@ class UnknownChunk(Chunk):
 
     def as_report(self) -> UnknownChunkReport:
         return UnknownChunkReport(
-            id=self.id,
+            chunk_id=self.chunk_id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,

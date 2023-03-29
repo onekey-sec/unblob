@@ -59,6 +59,7 @@ unblob = "unblob.cli:main"
 target-version = "py38"
 
 select = [
+  "A",      # flake8-builtins
   "B",      # flake8-bugbear
   "C90",    # mccabe
   "C4",     # flake8-comprehensions

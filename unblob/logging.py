@@ -68,7 +68,7 @@ def add_pid_to_log_message(
 
 
 def filter_debug_logs(verbosity_level: int):
-    def filter(_logger, _method_name: str, event_dict: structlog.types.EventDict):
+    def filter_(_logger, _method_name: str, event_dict: structlog.types.EventDict):
         if event_dict["level"] != "debug":
             return event_dict
 
@@ -78,7 +78,7 @@ def filter_debug_logs(verbosity_level: int):
 
         raise structlog.DropEvent
 
-    return filter
+    return filter_
 
 
 def configure_logger(verbosity_level: int, extract_root: Path):

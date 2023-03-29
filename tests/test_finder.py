@@ -150,4 +150,6 @@ def test_search_chunks(content, expected_chunks, task_result):
 
     assert len(chunks) == len(expected_chunks)
     for expected_chunk, chunk in zip(expected_chunks, chunks):
-        assert attr.evolve(chunk, id="") == attr.evolve(expected_chunk, id="")
+        assert attr.evolve(chunk, chunk_id="") == attr.evolve(
+            expected_chunk, chunk_id=""
+        )
