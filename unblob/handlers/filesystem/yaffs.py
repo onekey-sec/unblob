@@ -59,9 +59,9 @@ def valid_name(name: bytes) -> bool:
     # a valid name is either full of null bytes, or unicode decodable
     try:
         snull(name[:-1]).decode("utf-8")
-        return True
     except UnicodeDecodeError:
         return False
+    return True
 
 
 class _YAFFSBase(StructHandler):

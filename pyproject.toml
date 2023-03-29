@@ -80,6 +80,7 @@ select = [
   "SIM",    # flake8-simplify
   "SLF",    # flake8-self
   "T20",    # flake8-print
+  "TRY",    # tryceratops
   "UP",     # pyupgrade
   "W",      # pycodestyle (warnings)
 ]
@@ -94,6 +95,8 @@ ignore = [
   "PLC0414", # useless-import-alias:                    Enable explicitly re-exporting public symbols
   "PLR09",   # too-many-{arguments,branches,...}:       We do not want to impose hard limits
   "S101",    # assert:                                  Enable usage of asserts
+  "TRY003",  # raise-vanilla-args:                      We are adding contextual information in exception messages
+  "TRY400",  # error-instead-of-exception:              It is okay to log without backtrace in except blocks
 ]
 
 # Do not remove unused imports automatically in __init__.py files

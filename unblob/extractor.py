@@ -39,9 +39,9 @@ def is_safe_path(basedir: Path, path: Path) -> bool:
 def is_recursive_link(path: Path) -> bool:
     try:
         path.resolve()
-        return False
     except RuntimeError:
         return True
+    return False
 
 
 def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:

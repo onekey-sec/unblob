@@ -55,7 +55,7 @@ class TestHandlerExc(Handler):
     PATTERNS = [Regex("EXC")]
 
     def calculate_chunk(self, file, start_offset: int):
-        raise Exception("Error")
+        raise ValueError("Error")
 
 
 def test_build_hyperscan_database():

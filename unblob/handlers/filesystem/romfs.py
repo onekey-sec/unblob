@@ -151,6 +151,10 @@ class FileHeader:
         )
 
 
+class RomFSError(Exception):
+    pass
+
+
 class RomFSHeader:
     signature: bytes
     full_size: int
@@ -173,7 +177,7 @@ class RomFSHeader:
         self.file.seek(0, io.SEEK_SET)
 
         if self.eof < ROMFS_HEADER_SIZE:
-            raise Exception("File too small to hold ROMFS")
+            raise RomFSError("File too small to hold ROMFS")
 
         self.signature = self.file.read(8)
         self.full_size = struct.unpack(">I", self.file.read(4))[0]
@@ -194,11 +198,11 @@ class RomFSHeader:
 
     def validate(self):
         if self.signature != ROMFS_SIGNATURE:
-            raise Exception("Invalid RomFS signature")
+            raise RomFSError("Invalid RomFS signature")
         if self.full_size > self.eof:
-            raise Exception("ROMFS size is greater than file size")
+            raise RomFSError("ROMFS size is greater than file size")
         if not self.valid_checksum():
-            raise Exception("Invalid checksum")
+            raise RomFSError("Invalid checksum")
 
     def is_valid_addr(self, addr):
         """Validate that an inode address is valid.
@@ -223,7 +227,7 @@ class RomFSHeader:
         file_header.parent = parent
 
         if not file_header.valid_checksum():
-            raise Exception(f"Invalid file CRC at addr {addr:0x}.")
+            raise RomFSError(f"Invalid file CRC at addr {addr:0x}.")
 
         logger.debug("walking dir", addr=addr, file=file_header)
 

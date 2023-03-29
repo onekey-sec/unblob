@@ -146,9 +146,9 @@ class _ELFBase(StructHandler):
             self._check_field(lief.ELF.E_TYPE, header.e_type)
             self._check_field(lief.ELF.ARCH, header.e_machine)
             self._check_field(lief.ELF.VERSION, header.e_version)
-            return True
         except ValueError:
             return False
+        return True
 
     @staticmethod
     def get_endianness(file: File, start_offset: int) -> Endian:
