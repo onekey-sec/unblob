@@ -11,7 +11,7 @@ from unblob.report import ExtractCommandFailedReport, ExtractorDependencyNotFoun
 
 def test_command_templating():
     command = Command("{outdir}", "{inpath},{outdir}")
-    cmdline = command._make_extract_command(
+    cmdline = command._make_extract_command(  # noqa: SLF001
         Path("inputdir") / "input.file", Path("output")
     )
 
@@ -29,7 +29,7 @@ def test_command_templating_with_invalid_substitution(template):
     command = Command(template)
 
     with pytest.raises(InvalidCommandTemplate, match=template):
-        command._make_extract_command(Path("input"), Path("output"))
+        command._make_extract_command(Path("input"), Path("output"))  # noqa: SLF001
 
 
 def test_command_execution(tmpdir: Path):

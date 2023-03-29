@@ -42,7 +42,7 @@ class Queue(JoinableQueue):
         Based on ``multiprocessing.JoinableQueue.join``.
         """
         with self._cond:  # type: ignore
-            return self._unfinished_tasks._semlock._is_zero()  # type: ignore
+            return self._unfinished_tasks._semlock._is_zero()  # type: ignore  # noqa: SLF001
 
 
 class _Sentinel:

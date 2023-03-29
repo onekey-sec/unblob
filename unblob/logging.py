@@ -122,4 +122,4 @@ class _MultiprocessingPdb(pdb.Pdb):
 
 def multiprocessing_breakpoint():
     """Call this in Process forks instead of the builtin `breakpoint` function for debugging with PDB."""
-    return _MultiprocessingPdb().set_trace(frame=sys._getframe(1))
+    return _MultiprocessingPdb().set_trace(frame=sys._getframe(1))  # noqa: SLF001

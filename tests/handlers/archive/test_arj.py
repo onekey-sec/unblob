@@ -65,7 +65,7 @@ def test_invalid_block_size(header_size):
 
     handler = ARJHandler()
     with pytest.raises(InvalidARJSize):
-        handler._read_arj_main_header(f, 0)
+        handler._read_arj_main_header(f, 0)  # noqa: SLF001
 
 
 def test_invalid_checksum():
@@ -76,4 +76,4 @@ def test_invalid_checksum():
 
     handler = ARJHandler()
     with pytest.raises(ARJChecksumError):
-        handler._read_arj_main_header(f, 0)
+        handler._read_arj_main_header(f, 0)  # noqa: SLF001
