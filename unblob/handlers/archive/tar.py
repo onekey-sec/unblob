@@ -32,7 +32,7 @@ def _get_tar_end_offset(file: File, offset=0):
     return offset + _find_end_of_padding(file_with_offset, find_from=last_offset)
 
 
-def _get_end_of_last_tar_entry(file) -> int:  # noqa: C901
+def _get_end_of_last_tar_entry(file) -> int:
     try:
         tf = tarfile.TarFile(mode="r", fileobj=file)
     except tarfile.TarError:

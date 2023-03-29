@@ -113,7 +113,7 @@ def _hyperscan_match(
     return Scan.Continue
 
 
-def search_chunks(  # noqa: C901
+def search_chunks(
     file: File,
     file_size: int,
     handlers: Handlers,

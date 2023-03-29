@@ -74,6 +74,7 @@ select = [
   "PT",     # flake8-pytest-style
   "PTH",    # flake8-use-pathlib
   "RET",    # flake8-return
+  "RUF",    # ruff's own lints
   "S",      # flake8-bandit
   "SIM",    # flake8-simplify
   "T20",    # flake8-print

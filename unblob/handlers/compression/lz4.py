@@ -18,7 +18,7 @@ logger = get_logger()
 SKIPPABLE_FRAMES_MAGIC = [0x184D2A50 + i for i in range(0, 16)]
 FRAME_MAGIC = 0x184D2204
 LEGACY_FRAME_MAGIC = 0x184C2102
-FRAME_MAGICS = SKIPPABLE_FRAMES_MAGIC + [FRAME_MAGIC] + [LEGACY_FRAME_MAGIC]
+FRAME_MAGICS = [*SKIPPABLE_FRAMES_MAGIC, FRAME_MAGIC] + [LEGACY_FRAME_MAGIC]
 
 _1BIT = 0x01
 _2BITS = 0x03
@@ -126,9 +126,7 @@ class DefaultFrameHandler(_LZ4HandlerBase):
 
     PATTERNS = [HexString("04 22 4D 18")]
 
-    def calculate_chunk(  # noqa: C901
-        self, file: File, start_offset: int
-    ) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         self._skip_magic_bytes(file)
 
         # 2. we parse the frame descriptor of dynamic size

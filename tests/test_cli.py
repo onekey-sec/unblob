@@ -186,7 +186,7 @@ def test_archive_success(
     )
     process_file_mock = mock.MagicMock()
     logger_config_mock = mock.MagicMock()
-    new_params = params + ["--extract-dir", str(tmp_path), str(in_path)]
+    new_params = [*params, "--extract-dir", str(tmp_path), str(in_path)]
     with mock.patch.object(
         unblob.cli, "process_file", process_file_mock
     ), mock.patch.object(unblob.cli, "configure_logger", logger_config_mock):
@@ -227,7 +227,7 @@ def test_keep_extracted_chunks(
         / "__input__"
         / "apple.zip"
     )
-    params = args + ["--extract-dir", str(tmp_path), str(in_path)]
+    params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
 
     process_file_mock = mock.MagicMock()
     with mock.patch.object(unblob.cli, "process_file", process_file_mock):

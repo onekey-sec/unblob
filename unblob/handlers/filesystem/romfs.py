@@ -48,9 +48,7 @@ def valid_checksum(content: bytes) -> bool:
         return False
 
     for i in range(0, len(content), 4):
-        total = (
-            total + struct.unpack(">L", content[i : i + 4])[0]  # noqa: E203
-        ) % MAX_UINT32
+        total = (total + struct.unpack(">L", content[i : i + 4])[0]) % MAX_UINT32
     return total == 0
 
 

@@ -276,4 +276,4 @@ def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
     )
     assert outsiders == [extracted_fw_zip]
 
-    assert extracted_extracted_fw_paths == [Path(".")] + extracted_fw_paths
+    assert extracted_extracted_fw_paths == [Path("."), *extracted_fw_paths]

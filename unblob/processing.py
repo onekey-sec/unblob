@@ -360,7 +360,7 @@ class _FileTask:
         if self.task.depth < self.config.entropy_depth:
             calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
-    def _extract_chunk(self, file, chunk: ValidChunk):  # noqa: C901
+    def _extract_chunk(self, file, chunk: ValidChunk):
         skip_carving = chunk.is_whole_file
         if skip_carving:
             inpath = self.task.path
