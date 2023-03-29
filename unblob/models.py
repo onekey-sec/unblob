@@ -96,7 +96,7 @@ class ValidChunk(Chunk):
                 path=inpath,
                 chunk=self,
             )
-            raise ExtractError()
+            raise ExtractError
 
         self.handler.extract(inpath, outdir)
 
@@ -305,7 +305,7 @@ class Handler(abc.ABC):
     def extract(self, inpath: Path, outdir: Path):
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", path=inpath)
-            raise ExtractError()
+            raise ExtractError
 
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)

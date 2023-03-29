@@ -77,6 +77,7 @@ select = [
   "PTH",    # flake8-use-pathlib
   "RET",    # flake8-return
   "RUF",    # ruff's own lints
+  "RSE",    # flake8-raise
   "S",      # flake8-bandit
   "SIM",    # flake8-simplify
   "SLF",    # flake8-self

@@ -42,7 +42,7 @@ class TestHandlerEof(Handler):
 
     def calculate_chunk(self, file, start_offset: int):
         del file, start_offset  # unused arguments
-        raise EOFError()
+        raise EOFError
 
 
 class TestHandlerInvalid(Handler):
@@ -51,7 +51,7 @@ class TestHandlerInvalid(Handler):
 
     def calculate_chunk(self, file, start_offset: int):
         del file, start_offset  # unused arguments
-        raise InvalidInputFormat()
+        raise InvalidInputFormat
 
 
 class TestHandlerExc(Handler):
