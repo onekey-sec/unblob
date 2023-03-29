@@ -1,5 +1,5 @@
 import logging
-import pdb
+import pdb  # noqa: T100
 import sys
 from os import getpid
 from pathlib import Path
