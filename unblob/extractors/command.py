@@ -1,13 +1,15 @@
-import io
 import shlex
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from structlog import get_logger
 
 from unblob.models import ExtractError, Extractor
 from unblob.report import ExtractCommandFailedReport, ExtractorDependencyNotFoundReport
+
+if TYPE_CHECKING:
+    import io
 
 logger = get_logger()
 
@@ -27,7 +29,7 @@ class Command(Extractor):
         cmd = self._make_extract_command(inpath, outdir)
         command = shlex.join(cmd)
         logger.debug("Running extract command", command=command)
-        stdout_file: Union[int, io.FileIO] = subprocess.PIPE
+        stdout_file: Union[int, "io.FileIO"] = subprocess.PIPE
 
         def no_op():
             pass
