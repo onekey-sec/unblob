@@ -95,6 +95,7 @@ def _validate_block_header(file: File):
 def _hyperscan_match(
     context: Bzip2SearchContext, pattern_id: int, offset: int, end: int
 ) -> Scan:
+    del end  # unused argument
     # Ignore any match before the start of this chunk
     if offset < context.start_offset:
         return Scan.Continue

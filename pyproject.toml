@@ -60,6 +60,7 @@ target-version = "py38"
 
 select = [
   "A",      # flake8-builtins
+  "ARG",    # flake8-unused-arguments
   "B",      # flake8-bugbear
   "C90",    # mccabe
   "C4",     # flake8-comprehensions

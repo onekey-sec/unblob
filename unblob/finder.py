@@ -68,6 +68,7 @@ def _calculate_chunk(
 def _hyperscan_match(
     context: HyperscanMatchContext, handler: Handler, offset: int, end: int
 ) -> Scan:
+    del end  # unused argument
     real_offset = offset + handler.PATTERN_MATCH_OFFSET
 
     if real_offset < 0:

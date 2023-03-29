@@ -88,6 +88,7 @@ class _HandlerWithNullExtractor(Handler):
     PATTERNS = [Regex(".")]
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk:
+        del file  # unused argument
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
 
 

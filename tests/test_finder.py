@@ -13,6 +13,7 @@ class TestHandlerA(Handler):
     PATTERNS = [Regex("A")]
 
     def calculate_chunk(self, file, start_offset: int):
+        del file  # unused argument
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 5)
 
 
@@ -23,6 +24,7 @@ class TestHandlerB(Handler):
     PATTERN_MATCH_OFFSET = -1
 
     def calculate_chunk(self, file, start_offset: int):
+        del file  # unused argument
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 10)
 
 
@@ -31,7 +33,7 @@ class TestHandlerD(Handler):
     PATTERNS = [Regex("D"), HexString("ff ff ff")]
 
     def calculate_chunk(self, file, start_offset: int):
-        return None
+        del file, start_offset  # unused arguments
 
 
 class TestHandlerEof(Handler):
@@ -39,6 +41,7 @@ class TestHandlerEof(Handler):
     PATTERNS = [Regex("EOF")]
 
     def calculate_chunk(self, file, start_offset: int):
+        del file, start_offset  # unused arguments
         raise EOFError()
 
 
@@ -47,6 +50,7 @@ class TestHandlerInvalid(Handler):
     PATTERNS = [Regex("I")]
 
     def calculate_chunk(self, file, start_offset: int):
+        del file, start_offset  # unused arguments
         raise InvalidInputFormat()
 
 
@@ -55,6 +59,7 @@ class TestHandlerExc(Handler):
     PATTERNS = [Regex("EXC")]
 
     def calculate_chunk(self, file, start_offset: int):
+        del file, start_offset  # unused arguments
         raise ValueError("Error")
 
 

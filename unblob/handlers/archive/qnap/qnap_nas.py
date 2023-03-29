@@ -58,6 +58,7 @@ def is_valid_header(header: Instance) -> bool:
 def _hyperscan_match(
     context: QTSSearchContext, pattern_id: int, offset: int, end: int
 ) -> Scan:
+    del pattern_id, end  # unused arguments
     if offset < context.start_offset:
         return Scan.Continue
     context.file.seek(offset, io.SEEK_SET)

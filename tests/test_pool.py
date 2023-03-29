@@ -28,7 +28,7 @@ def test_singlepool():
 
 @pytest.mark.parametrize("process_num", [-1, 0])
 def test_multipool_dummy_process_num(process_num: int):
-    def _dummy(*args):
+    def _dummy(*_args):
         pass
 
     with pytest.raises(ValueError, match="process_num must be greater than 0"):
