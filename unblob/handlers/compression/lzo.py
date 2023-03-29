@@ -1,4 +1,5 @@
 import io
+from enum import IntEnum
 from typing import Optional
 
 import lzo
@@ -14,21 +15,23 @@ logger = get_logger()
 MAGIC_LENGTH = 9
 CHECKSUM_LENGTH = 4
 
+
 # Header flags defined in lzop (http://www.lzop.org/) source in src/conf.h
-F_ADLER32_D = 0x00000001
-F_ADLER32_C = 0x00000002
-F_STDIN = 0x00000004
-F_STDOUT = 0x00000008
-F_NAME_DEFAULT = 0x00000010
-F_DOSISH = 0x00000020
-F_H_EXTRA_FIELD = 0x00000040
-F_H_GMTDIFF = 0x00000080
-F_CRC32_D = 0x00000100
-F_CRC32_C = 0x00000200
-F_MULTIPART = 0x00000400
-F_H_FILTER = 0x00000800
-F_H_CRC32 = 0x00001000
-F_H_PATH = 0x00002000
+class HeaderFlags(IntEnum):
+    ADLER32_D = 0x00000001
+    ADLER32_C = 0x00000002
+    STDIN = 0x00000004
+    STDOUT = 0x00000008
+    NAME_DEFAULT = 0x00000010
+    DOSISH = 0x00000020
+    H_EXTRA_FIELD = 0x00000040
+    H_GMTDIFF = 0x00000080
+    CRC32_D = 0x00000100
+    CRC32_C = 0x00000200
+    MULTIPART = 0x00000400
+    H_FILTER = 0x00000800
+    H_CRC32 = 0x00001000
+    H_PATH = 0x00002000
 
 
 class LZOHandler(StructHandler):
@@ -84,14 +87,14 @@ class LZOHandler(StructHandler):
             logger.debug("Invalid LZO header level", header=header, _verbosity=3)
             return None
 
-        if header.flags & F_H_FILTER:
+        if header.flags & HeaderFlags.H_FILTER:
             file.seek(start_offset)
             header = self.cparser_be.lzo_header_filter_t(file)
 
         logger.debug("LZO header parsed", header=header, _verbosity=3)
 
         # Checksum excludes the magic and the checksum itself
-        if header.flags & F_H_CRC32:
+        if header.flags & HeaderFlags.H_CRC32:
             calculated_checksum = lzo.crc32(
                 header.dumps()[MAGIC_LENGTH:-CHECKSUM_LENGTH]
             )
@@ -109,10 +112,16 @@ class LZOHandler(StructHandler):
             compressed_size = convert_int32(file.read(4), endian=Endian.BIG)
 
             checksum_size = 0
-            if header.flags & F_ADLER32_D or header.flags & F_CRC32_D:
+            if (
+                header.flags & HeaderFlags.ADLER32_D
+                or header.flags & HeaderFlags.CRC32_D
+            ):
                 checksum_size += CHECKSUM_LENGTH
 
-            if header.flags & F_ADLER32_C or header.flags & F_CRC32_C:
+            if (
+                header.flags & HeaderFlags.ADLER32_C
+                or header.flags & HeaderFlags.CRC32_C
+            ):
                 checksum_size += CHECKSUM_LENGTH
 
             file.seek(checksum_size + compressed_size, io.SEEK_CUR)
