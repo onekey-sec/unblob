@@ -68,6 +68,7 @@ select = [
   "D",      # pydocstyle
   "E",      # pycodestyle (errors)
   "F",      # pyflakes
+  "FBT",    # flake8-boolean-trap
   "I",      # isort
   "ISC",    # flake8-implicit-str-concats
   "N",      # pep8-naming
@@ -107,6 +108,10 @@ ignore-init-module-imports = true
 [tool.ruff.per-file-ignores]
 "build.py" = [
   "T201"  # print
+]
+"tests/*" = [
+  "FBT001",  # boolean-positional-arg-in-function-definition: allowed in `pytest.param()`
+  "FBT003",  # boolean-positional-value-in-function-call:     allowed test parameters
 ]
 
 [tool.ruff.flake8-comprehensions]

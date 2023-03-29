@@ -12,7 +12,9 @@ RUNNING_AS_ROOT = os.getuid() == 0
 
 
 class SafeTarFile(TarFile):
-    def extract(self, member, path="", set_attrs=True, *, numeric_owner=False):
+    def extract(
+        self, member, path="", set_attrs=True, *, numeric_owner=False  # noqa: FBT002
+    ):
         path_as_path = Path(str(path))
         member_name_path = Path(str(member.name))
 

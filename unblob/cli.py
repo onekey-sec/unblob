@@ -26,7 +26,7 @@ logger = get_logger()
 
 
 def show_external_dependencies(
-    ctx: click.Context, _param: click.Option, value: bool
+    ctx: click.Context, _param: click.Option, value: bool  # noqa: FBT001
 ) -> None:
     if not value or ctx.resilient_parsing:
         return
@@ -179,13 +179,13 @@ def cli(
     file: Path,
     extract_root: Path,
     report_file: Optional[Path],
-    force: bool,
+    force: bool,  # noqa: FBT001
     process_num: int,
     depth: int,
     entropy_depth: int,
     skip_magic: Iterable[str],
-    skip_extraction: bool,
-    keep_extracted_chunks: bool,
+    skip_extraction: bool,  # noqa: FBT001
+    keep_extracted_chunks: bool,  # noqa: FBT001
     handlers: Handlers,
     plugins_path: Optional[Path],
     plugin_manager: UnblobPluginManager,
