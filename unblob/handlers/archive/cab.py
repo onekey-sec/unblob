@@ -46,7 +46,7 @@ class CABHandler(StructHandler):
         header = self.parse_header(file)
 
         if header.cbCabinet < len(header):
-            return
+            return None
 
         return ValidChunk(
             start_offset=start_offset,

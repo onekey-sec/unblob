@@ -50,11 +50,11 @@ def test_valid_calculation():
 
 @pytest.mark.parametrize(
     "header_size",
-    (
+    [
         pytest.param(0, id="size-small"),
         pytest.param(2700, id="size-large"),
         pytest.param(31, id="size-smaller-then-first_hdr_size"),
-    ),
+    ],
 )
 def test_invalid_block_size(header_size):
     contents = bytearray(copy.copy(ARJ_CONTENTS))
@@ -65,7 +65,7 @@ def test_invalid_block_size(header_size):
 
     handler = ARJHandler()
     with pytest.raises(InvalidARJSize):
-        handler._read_arj_main_header(f, 0)
+        handler._read_arj_main_header(f, 0)  # noqa: SLF001
 
 
 def test_invalid_checksum():
@@ -76,4 +76,4 @@ def test_invalid_checksum():
 
     handler = ARJHandler()
     with pytest.raises(ARJChecksumError):
-        handler._read_arj_main_header(f, 0)
+        handler._read_arj_main_header(f, 0)  # noqa: SLF001

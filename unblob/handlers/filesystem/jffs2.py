@@ -57,10 +57,7 @@ class _JFFS2Base(StructHandler):
 
     def guess_endian(self, file: File) -> Endian:
         magic = convert_int16(file.read(2), Endian.BIG)
-        if magic == self.BIG_ENDIAN_MAGIC:
-            endian = Endian.BIG
-        else:
-            endian = Endian.LITTLE
+        endian = Endian.BIG if magic == self.BIG_ENDIAN_MAGIC else Endian.LITTLE
         file.seek(-2, io.SEEK_CUR)
         return endian
 
@@ -126,16 +123,16 @@ class _JFFS2Base(StructHandler):
                     file.seek(-len(header), io.SEEK_CUR)
                     current_offset = read_until_past(file, b"\x00\xFF")
                     continue
-                else:
-                    logger.debug(
-                        "unexpected header magic",
-                        header_magic=header.magic,
-                        _verbosity=2,
-                    )
-                    break
+
+                logger.debug(
+                    "unexpected header magic",
+                    header_magic=header.magic,
+                    _verbosity=2,
+                )
+                break
 
             if not self.valid_header(header, node_start_offset, eof):
-                return
+                return None
 
             node_len = round_up(header.totlen, BLOCK_ALIGNMENT)
             current_offset += node_len

@@ -13,6 +13,7 @@ class TestHandlerA(Handler):
     PATTERNS = [Regex("A")]
 
     def calculate_chunk(self, file, start_offset: int):
+        del file  # unused argument
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 5)
 
 
@@ -23,6 +24,7 @@ class TestHandlerB(Handler):
     PATTERN_MATCH_OFFSET = -1
 
     def calculate_chunk(self, file, start_offset: int):
+        del file  # unused argument
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 10)
 
 
@@ -31,7 +33,7 @@ class TestHandlerD(Handler):
     PATTERNS = [Regex("D"), HexString("ff ff ff")]
 
     def calculate_chunk(self, file, start_offset: int):
-        return None
+        del file, start_offset  # unused arguments
 
 
 class TestHandlerEof(Handler):
@@ -39,7 +41,8 @@ class TestHandlerEof(Handler):
     PATTERNS = [Regex("EOF")]
 
     def calculate_chunk(self, file, start_offset: int):
-        raise EOFError()
+        del file, start_offset  # unused arguments
+        raise EOFError
 
 
 class TestHandlerInvalid(Handler):
@@ -47,7 +50,8 @@ class TestHandlerInvalid(Handler):
     PATTERNS = [Regex("I")]
 
     def calculate_chunk(self, file, start_offset: int):
-        raise InvalidInputFormat()
+        del file, start_offset  # unused arguments
+        raise InvalidInputFormat
 
 
 class TestHandlerExc(Handler):
@@ -55,7 +59,8 @@ class TestHandlerExc(Handler):
     PATTERNS = [Regex("EXC")]
 
     def calculate_chunk(self, file, start_offset: int):
-        raise Exception("Error")
+        del file, start_offset  # unused arguments
+        raise ValueError("Error")
 
 
 def test_build_hyperscan_database():
@@ -90,7 +95,7 @@ def test_invalid_hexstring_pattern_raises():
             pass
 
     with pytest.raises(InvalidHexString):
-        build_hyperscan_database(tuple([TestHandlerA, TestHandlerB, InvalidHandler]))
+        build_hyperscan_database((TestHandlerA, TestHandlerB, InvalidHandler))
 
 
 @pytest.mark.parametrize(
@@ -150,4 +155,6 @@ def test_search_chunks(content, expected_chunks, task_result):
 
     assert len(chunks) == len(expected_chunks)
     for expected_chunk, chunk in zip(expected_chunks, chunks):
-        assert attr.evolve(chunk, id="") == attr.evolve(expected_chunk, id="")
+        assert attr.evolve(chunk, chunk_id="") == attr.evolve(
+            expected_chunk, chunk_id=""
+        )

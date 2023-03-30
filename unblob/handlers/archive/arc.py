@@ -76,7 +76,7 @@ class ARCHandler(StructHandler):
             file.seek(offset)
             header = self.parse_header(file)
             if not self.valid_header(header):
-                return
+                return None
 
             offset += len(header) + header.size
 

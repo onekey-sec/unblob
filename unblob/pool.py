@@ -37,10 +37,12 @@ class PoolBase(abc.ABC):
 
 class Queue(JoinableQueue):
     def is_empty(self) -> bool:
-        """Checks if all ``task_done`` has been called for all items.
-        Based on ``multiprocessing.JoinableQueue.join``."""
+        """Check if all ``task_done`` has been called for all items.
+
+        Based on ``multiprocessing.JoinableQueue.join``.
+        """
         with self._cond:  # type: ignore
-            return self._unfinished_tasks._semlock._is_zero()  # type: ignore
+            return self._unfinished_tasks._semlock._is_zero()  # type: ignore  # noqa: SLF001
 
 
 class _Sentinel:
@@ -50,12 +52,12 @@ class _Sentinel:
 _SENTINEL = _Sentinel
 
 
-def _worker_process(handler, input, output):
+def _worker_process(handler, input_, output):
     # Creates a new process group, making sure no signals are propagated from the main process to the worker processes.
     os.setpgrp()
 
     sys.breakpointhook = multiprocessing_breakpoint
-    while (args := input.get()) is not _SENTINEL:
+    while (args := input_.get()) is not _SENTINEL:
         result = handler(args)
         output.put(result)
     output.put(_SENTINEL)

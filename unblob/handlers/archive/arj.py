@@ -21,11 +21,11 @@ class ARJError(Exception):
 
 
 class InvalidARJSize(ARJError):
-    """Invalid size fields in ARJ header"""
+    """Invalid size fields in ARJ header."""
 
 
 class ARJChecksumError(ARJError):
-    """Main ARJ header checksum missmatch"""
+    """Main ARJ header checksum missmatch."""
 
 
 class ARJExtendedHeader(ARJError):
@@ -166,7 +166,7 @@ class ARJHandler(StructHandler):
                 reason=exc.__doc__,
                 _verbosity=2,
             )
-            return
+            return None
 
         return ValidChunk(
             start_offset=start_offset,

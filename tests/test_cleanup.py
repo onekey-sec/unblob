@@ -18,7 +18,7 @@ _DAMAGED_ZIP_CONTENT = b"*BAD*file"
 
 
 def wrapzip(filename: str, content: bytes) -> bytes:
-    """Create an in-memory zip archive with a single file"""
+    """Create an in-memory zip archive with a single file."""
     bio = io.BytesIO()
     z = zipfile.ZipFile(bio, mode="w", compression=zipfile.ZIP_STORED)
     z.writestr(filename, content)
@@ -33,12 +33,12 @@ DAMAGED_ZIP_BYTES = ZIP_BYTES.replace(_ZIP_CONTENT, _DAMAGED_ZIP_CONTENT)
 assert ZIP_BYTES != DAMAGED_ZIP_BYTES
 
 
-@pytest.fixture()
+@pytest.fixture
 def input_file(tmp_path: Path):
     return tmp_path / "input_file"
 
 
-@pytest.fixture()
+@pytest.fixture
 def output_dir(tmp_path):
     output_dir = tmp_path / "output"
     output_dir.mkdir()
@@ -88,6 +88,7 @@ class _HandlerWithNullExtractor(Handler):
     PATTERNS = [Regex(".")]
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk:
+        del file  # unused argument
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
 
 

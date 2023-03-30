@@ -98,7 +98,7 @@ class HDRExtractor(Extractor):
         with File.from_path(inpath) as file:
             for output_path, chunk in self.parse(file):
                 if not is_safe_path(outdir, output_path):
-                    logger.warn(
+                    logger.warning(
                         "Path traversal attempt, discarding.", output_path=output_path
                     )
                     return

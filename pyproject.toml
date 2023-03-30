@@ -39,6 +39,7 @@ pytest = "^6.2.4"
 pyright = "^0.0.12"
 pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
+ruff = "^0.0.259"
 setuptools-rust = "^1.1.2"
 
 [tool.poetry.group.docs]
@@ -51,11 +52,88 @@ pillow = "^9.4.0"
 cairosvg = "^2.7.0"
 mkdocstrings-python = "^0.8.3"
 
-[tool.isort]
-profile = "black"
-
 [tool.poetry.scripts]
 unblob = "unblob.cli:main"
+
+[tool.ruff]
+target-version = "py38"
+
+select = [
+  "A",      # flake8-builtins
+  "ARG",    # flake8-unused-arguments
+  "B",      # flake8-bugbear
+  "C90",    # mccabe
+  "C4",     # flake8-comprehensions
+  "COM818", # flake8-commas; trailing-comma-on-bare-tuple
+  "D",      # pydocstyle
+  "E",      # pycodestyle (errors)
+  "F",      # pyflakes
+  "FBT",    # flake8-boolean-trap
+  "G",      # flake8-logging-format
+  "I",      # isort
+  "ISC",    # flake8-implicit-str-concats
+  "N",      # pep8-naming
+  "PIE",    # flake8-pie
+  "PL",     # pylint
+  "PT",     # flake8-pytest-style
+  "PTH",    # flake8-use-pathlib
+  "RET",    # flake8-return
+  "RUF",    # ruff's own lints
+  "RSE",    # flake8-raise
+  "S",      # flake8-bandit
+  "SIM",    # flake8-simplify
+  "SLF",    # flake8-self
+  "T10",    # flake8-debugger
+  "T20",    # flake8-print
+  "TCH",    # flake8-type-checking
+  "TRY",    # tryceratops
+  "UP",     # pyupgrade
+  "W",      # pycodestyle (warnings)
+]
+
+ignore = [
+  "B027",    # empty-method-without-abstract-decorator: It is okay to have empty methods in abstract classes
+  "D1",      # undocumented-*:                          We are not documenting every public symbol
+  "D203",    # one-blank-line-before-class:             D211 (no-blank-line-before-class) is used instead
+  "D213",    # multi-line-summary-second-line:          D212 (multi-line-summary-first-line) is used instead
+  "E501",    # line-too-long:                           Let black handle line length violations
+  "N818",    # error-suffix-on-exception-name:          Exception names can be meaningful without smurfs
+  "PLC0414", # useless-import-alias:                    Enable explicitly re-exporting public symbols
+  "PLR09",   # too-many-{arguments,branches,...}:       We do not want to impose hard limits
+  "S101",    # assert:                                  Enable usage of asserts
+  "TRY003",  # raise-vanilla-args:                      We are adding contextual information in exception messages
+  "TRY400",  # error-instead-of-exception:              It is okay to log without backtrace in except blocks
+]
+
+# Do not remove unused imports automatically in __init__.py files
+ignore-init-module-imports = true
+
+[tool.ruff.per-file-ignores]
+"build.py" = [
+  "T201"  # print
+]
+"tests/*" = [
+  "FBT001",  # boolean-positional-arg-in-function-definition: allowed in `pytest.param()`
+  "FBT003",  # boolean-positional-value-in-function-call:     allowed test parameters
+]
+
+[tool.ruff.flake8-comprehensions]
+allow-dict-calls-with-keyword-arguments = true  # code like `dict(a=1, b=2)` is allowed
+
+[tool.ruff.mccabe]
+max-complexity = 8
+
+[tool.ruff.pylint]
+allow-magic-value-types = [
+  "bytes",
+  "int",   # bunch of ad-hoc bitmask values
+  "str",
+]
+
+[tool.ruff.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+parametrize-names-type = "csv"
 
 [tool.pytest.ini_options]
 addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"

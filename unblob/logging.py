@@ -1,5 +1,5 @@
 import logging
-import pdb
+import pdb  # noqa: T100
 import sys
 from os import getpid
 from pathlib import Path
@@ -13,9 +13,10 @@ def format_hex(value: int):
     return f"0x{value:x}"
 
 
-class noformat:
-    """Keep the value from formatting,
-    even if it would match one of the types in pretty_print_types processor.
+class noformat:  # noqa: N801
+    """Keep the value from formatting.
+
+    Even if it would match one of the types in pretty_print_types processor.
     """
 
     def __init__(self, value):
@@ -32,7 +33,7 @@ def _format_message(value: Any, extract_root: Path) -> Any:
     if isinstance(value, noformat):
         return value.get()
 
-    elif isinstance(value, Path):
+    if isinstance(value, Path):
         try:
             new_value = value.relative_to(extract_root)
         except ValueError:
@@ -40,10 +41,10 @@ def _format_message(value: Any, extract_root: Path) -> Any:
             new_value = value
         return new_value.as_posix().encode("utf-8", errors="surrogateescape")
 
-    elif isinstance(value, Instance):
+    if isinstance(value, Instance):
         return dumpstruct(value, output="string")
 
-    elif isinstance(value, int):
+    if isinstance(value, int):
         return format_hex(value)
 
     return value
@@ -67,7 +68,7 @@ def add_pid_to_log_message(
 
 
 def filter_debug_logs(verbosity_level: int):
-    def filter(_logger, _method_name: str, event_dict: structlog.types.EventDict):
+    def filter_(_logger, _method_name: str, event_dict: structlog.types.EventDict):
         if event_dict["level"] != "debug":
             return event_dict
 
@@ -77,7 +78,7 @@ def filter_debug_logs(verbosity_level: int):
 
         raise structlog.DropEvent
 
-    return filter
+    return filter_
 
 
 def configure_logger(verbosity_level: int, extract_root: Path):
@@ -111,13 +112,14 @@ def configure_logger(verbosity_level: int, extract_root: Path):
 class _MultiprocessingPdb(pdb.Pdb):
     def interaction(self, *args, **kwargs):
         _stdin = sys.stdin
-        try:
-            sys.stdin = open("/dev/stdin")
-            pdb.Pdb.interaction(self, *args, **kwargs)
-        finally:
-            sys.stdin = _stdin
+        with Path("/dev/stdin").open() as new_stdin:
+            try:
+                sys.stdin = new_stdin
+                pdb.Pdb.interaction(self, *args, **kwargs)
+            finally:
+                sys.stdin = _stdin
 
 
 def multiprocessing_breakpoint():
     """Call this in Process forks instead of the builtin `breakpoint` function for debugging with PDB."""
-    return _MultiprocessingPdb().set_trace(frame=sys._getframe(1))
+    return _MultiprocessingPdb().set_trace(frame=sys._getframe(1))  # noqa: SLF001

@@ -20,11 +20,10 @@ from unblob.report import ExtractDirectoryExistsReport
 
 
 def assert_same_chunks(expected, actual, explanation=None):
-    """An assert, that ignores the chunk.id-s"""
-
+    """Assert ignoring the chunk.id-s."""
     assert len(expected) == len(actual), explanation
-    for i, (e, a) in enumerate(zip(expected, actual)):
-        assert attr.evolve(e, id="") == attr.evolve(a, id=""), explanation
+    for e, a in zip(expected, actual):
+        assert attr.evolve(e, chunk_id="") == attr.evolve(a, chunk_id=""), explanation
 
 
 @pytest.mark.parametrize(
@@ -176,17 +175,17 @@ def test_calculate_entropy_no_exception(path: Path, draw_plot: bool):
         ),
     ],
 )
-def test_ExtractionConfig_get_extract_dir_for(
+def test_ExtractionConfig_get_extract_dir_for(  # noqa: N802
     extract_root: str, path: str, result: str
 ):
     cfg = ExtractionConfig(extract_root=Path(extract_root), entropy_depth=0)
     assert cfg.get_extract_dir_for(Path(path)) == Path(result)
 
 
-def mkzip(dir: Path, output: Path):
+def mkzip(dir_: Path, output: Path):
     with zipfile.ZipFile(output, "x") as zf:
-        for path in dir.glob("**/*"):
-            zf.write(path, path.relative_to(dir))
+        for path in dir_.glob("**/*"):
+            zf.write(path, path.relative_to(dir_))
 
 
 @pytest.fixture
@@ -215,7 +214,7 @@ def fw(tmp_path: Path):
 
 
 def sort_paths(paths: Collection[Path], base: Path) -> Tuple[List[Path], List[Path]]:
-    """The paths are sorted into two bins, the first one will contain subpaths of base, the second are not.
+    """Sorts paths into two bins, the first one will contain subpaths of base, the second are not.
 
     The first bin will also be converted to relative paths.
     """
@@ -277,4 +276,4 @@ def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
     )
     assert outsiders == [extracted_fw_zip]
 
-    assert extracted_extracted_fw_paths == [Path(".")] + extracted_fw_paths
+    assert extracted_extracted_fw_paths == [Path("."), *extracted_fw_paths]

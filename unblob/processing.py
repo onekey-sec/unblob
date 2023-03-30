@@ -87,7 +87,7 @@ class ExtractionConfig:
     handlers: Handlers = BUILTIN_HANDLERS
 
     def get_extract_dir_for(self, path: Path) -> Path:
-        """Extraction dir under root with the name of path."""
+        """Return extraction dir under root with the name of path."""
         try:
             relative_path = path.relative_to(self.extract_root)
         except ValueError:
@@ -156,7 +156,9 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
 
 
 def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -> bool:
-    """An in advance preparation to prevent report writing failing after an expensive extraction.
+    """Prevent report writing failing after an expensive extraction.
+
+    Should be called before processing tasks.
 
     Returns True if there is no foreseen problem,
             False if report writing is known in advance to fail.
@@ -241,7 +243,7 @@ class Processor:
             return
 
         if not valid_path(task.path):
-            log.warn("Path contains invalid characters, it won't be processed")
+            log.warning("Path contains invalid characters, it won't be processed")
             return
 
         stat_report = StatReport.from_path(task.path)
@@ -358,7 +360,7 @@ class _FileTask:
         if self.task.depth < self.config.entropy_depth:
             calculate_entropy(path, draw_plot=self.config.entropy_plot)
 
-    def _extract_chunk(self, file, chunk: ValidChunk):  # noqa: C901
+    def _extract_chunk(self, file, chunk: ValidChunk):
         skip_carving = chunk.is_whole_file
         if skip_carving:
             inpath = self.task.path
@@ -411,7 +413,7 @@ class _FileTask:
         if extract_dir.exists():
             self.result.add_subtask(
                 Task(
-                    chunk_id=chunk.id,
+                    chunk_id=chunk.chunk_id,
                     path=extract_dir,
                     depth=self.task.depth + 1,
                 )

@@ -116,7 +116,7 @@ FAT32_HEADER_INVALID_FS16.common.FATSz16 = 1
 
 @pytest.mark.parametrize(
     "header, expected",
-    (
+    [
         pytest.param(
             VALID_FAT12_HEADER,
             True,
@@ -156,7 +156,7 @@ FAT32_HEADER_INVALID_FS16.common.FATSz16 = 1
         pytest.param(FAT32_HEADER_INVALID_REC, False, id="fat32-invalid-header-rec"),
         pytest.param(FAT32_HEADER_INVALID_TS, False, id="fat32-invalid-header-ts"),
         pytest.param(FAT32_HEADER_INVALID_FS16, False, id="fat32-invalid-header-fs16"),
-    ),
+    ],
 )
 def test_valid_header(header: Instance, expected: bool):
     assert handler.valid_header(header) == expected
@@ -164,7 +164,7 @@ def test_valid_header(header: Instance, expected: bool):
 
 @pytest.mark.parametrize(
     "header, expected",
-    (
+    [
         pytest.param(
             VALID_FAT12_HEADER,
             False,
@@ -180,7 +180,7 @@ def test_valid_header(header: Instance, expected: bool):
             True,
             id="valid-fat32-header",
         ),
-    ),
+    ],
 )
 def test_valid_fat32_header(header: Instance, expected: bool):
     assert handler.valid_fat32_header(header) == expected

@@ -1,6 +1,4 @@
-"""
-File extraction related functions.
-"""
+"""File extraction related functions."""
 import os
 from pathlib import Path
 
@@ -41,20 +39,21 @@ def is_safe_path(basedir: Path, path: Path) -> bool:
 def is_recursive_link(path: Path) -> bool:
     try:
         path.resolve()
-        return False
     except RuntimeError:
         return True
+    return False
 
 
 def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
-    """Fix symlinks by rewriting absolute symlinks to make them point within
-    the extraction directory (outdir), if it's not a relative symlink it is
-    either removed it it attempts to traverse outside of the extraction directory
-    or rewritten to be fully portable (no mention of the extraction directory
-    in the link value)."""
+    """Rewrites absolute symlinks to point within the extraction directory (outdir).
 
+    If it's not a relative symlink it is either removed it it attempts
+    to traverse outside of the extraction directory or rewritten to be
+    fully portable (no mention of the extraction directory in the link
+    value).
+    """
     if is_recursive_link(path):
-        logger.error(f"Symlink loop identified, removing {path}.")
+        logger.error("Symlink loop identified, removing", path=path)
         error_report = MaliciousSymlinkRemoved(
             link=path.as_posix(), target=os.readlink(path)
         )
@@ -72,7 +71,7 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
     safe = is_safe_path(outdir, target)
 
     if not safe:
-        logger.error(f"Path traversal attempt through symlink, removing {target}.")
+        logger.error("Path traversal attempt through symlink, removing", target=target)
         error_report = MaliciousSymlinkRemoved(
             link=path.as_posix(), target=target.as_posix()
         )

@@ -29,6 +29,7 @@ jobs:
       - name: Setup emulation
         if: ${{ matrix.arch == 'aarch64-linux' }}
         run: |
+          sudo apt update
           sudo apt install -q -y qemu-system-aarch64 qemu-efi binfmt-support qemu-user-static
           mkdir -p ~/.config/nix
           echo "system-features = aarch64-linux arm-linux" | sudo tee -a /etc/nix/nix.conf

@@ -146,9 +146,9 @@ class _ELFBase(StructHandler):
             self._check_field(lief.ELF.E_TYPE, header.e_type)
             self._check_field(lief.ELF.ARCH, header.e_machine)
             self._check_field(lief.ELF.VERSION, header.e_version)
-            return True
         except ValueError:
             return False
+        return True
 
     @staticmethod
     def get_endianness(file: File, start_offset: int) -> Endian:
@@ -259,7 +259,7 @@ class _ELFBase(StructHandler):
         file.seek(start_offset, io.SEEK_SET)
         header = self.parse_header(file, endian)
         if not self.is_valid_header(header):
-            return
+            return None
         end_offset = self.get_end_offset(file, start_offset, header, endian)
 
         # kernel modules are always relocatable

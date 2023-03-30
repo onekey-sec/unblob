@@ -7,7 +7,7 @@ from structlog import get_logger
 
 from ...file_utils import OffsetFile, SeekError, decode_int, round_up, snull
 from ...models import Extractor, File, HexString, StructHandler, ValidChunk
-from ._safe_tarfile import SafeTarFile as safe_tarfile
+from ._safe_tarfile import SafeTarFile
 
 logger = get_logger()
 
@@ -32,7 +32,7 @@ def _get_tar_end_offset(file: File, offset=0):
     return offset + _find_end_of_padding(file_with_offset, find_from=last_offset)
 
 
-def _get_end_of_last_tar_entry(file) -> int:  # noqa: C901
+def _get_end_of_last_tar_entry(file) -> int:
     try:
         tf = tarfile.TarFile(mode="r", fileobj=file)
     except tarfile.TarError:
@@ -74,7 +74,7 @@ def _find_end_of_padding(file, *, find_from: int) -> int:
         # match to end of truncated file
         return file.seek(0, os.SEEK_END)
 
-    for padding_blocks in range(max_padding_blocks):
+    for padding_blocks in range(max_padding_blocks):  # noqa: B007
         if file.read(BLOCK_SIZE) != ZERO_BLOCK:
             break
     else:
@@ -85,7 +85,7 @@ def _find_end_of_padding(file, *, find_from: int) -> int:
 
 class TarExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
-        tf = safe_tarfile.open(inpath.as_posix())
+        tf = SafeTarFile.open(inpath.as_posix())
         tf.extractall(outdir.as_posix())
 
 
@@ -135,5 +135,5 @@ class TarHandler(StructHandler):
 
         end_offset = _get_tar_end_offset(file, start_offset)
         if end_offset == -1:
-            return
+            return None
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)

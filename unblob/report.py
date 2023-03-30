@@ -11,14 +11,14 @@ import attr
 
 @attr.define(kw_only=True, frozen=True)
 class Report:
-    """A common base class for different reports"""
+    """A common base class for different reports."""
 
     def asdict(self) -> dict:
         return attr.asdict(self)
 
 
 class Severity(Enum):
-    """Represents possible problems encountered during execution"""
+    """Represents possible problems encountered during execution."""
 
     ERROR = "ERROR"
     WARNING = "WARNING"
@@ -55,7 +55,7 @@ def _convert_exception_to_str(obj: Union[str, Exception]) -> str:
 
 @attr.define(kw_only=True)
 class UnknownError(ErrorReport):
-    """Describes an exception raised during file processing"""
+    """Describes an exception raised during file processing."""
 
     severity: Severity = attr.field(default=Severity.ERROR)
     exception: STR = attr.field(  # pyright: reportGeneralTypeIssues=false
@@ -71,7 +71,7 @@ class UnknownError(ErrorReport):
 
 @attr.define(kw_only=True)
 class CalculateChunkExceptionReport(UnknownError):
-    """Describes an exception raised during calculate_chunk execution"""
+    """Describes an exception raised during calculate_chunk execution."""
 
     start_offset: int
     # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
@@ -80,7 +80,7 @@ class CalculateChunkExceptionReport(UnknownError):
 
 @attr.define(kw_only=True)
 class ExtractCommandFailedReport(ErrorReport):
-    """Describes an error when failed to run the extraction command"""
+    """Describes an error when failed to run the extraction command."""
 
     severity: Severity = Severity.WARNING
     command: str
@@ -97,7 +97,7 @@ class ExtractDirectoryExistsReport(ErrorReport):
 
 @attr.define(kw_only=True)
 class ExtractorDependencyNotFoundReport(ErrorReport):
-    """Describes an error when the dependency of an extractor doesn't exist"""
+    """Describes an error when the dependency of an extractor doesn't exist."""
 
     severity: Severity = Severity.ERROR
     dependencies: List[str]
@@ -149,8 +149,8 @@ class HashReport(Report):
     @classmethod
     def from_path(cls, path: Path):
         chunk_size = 1024 * 64
-        md5 = hashlib.md5()
-        sha1 = hashlib.sha1()
+        md5 = hashlib.md5()  # noqa: S324
+        sha1 = hashlib.sha1()  # noqa: S324
         sha256 = hashlib.sha256()
 
         with path.open("rb") as f:
@@ -175,7 +175,7 @@ class FileMagicReport(Report):
 @final
 @attr.define(kw_only=True)
 class ChunkReport(Report):
-    id: str
+    chunk_id: str
     handler_name: str
     start_offset: int
     end_offset: int
@@ -187,7 +187,7 @@ class ChunkReport(Report):
 @final
 @attr.define(kw_only=True)
 class UnknownChunkReport(Report):
-    id: str
+    chunk_id: str
     start_offset: int
     end_offset: int
     size: int

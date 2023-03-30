@@ -124,31 +124,31 @@ def pad_contents(contents: bytes, alignment: int):
 
 @pytest.mark.parametrize(
     "contents, handler_class",
-    (
+    [
         pytest.param(SQUASHFS_V4_LE_NO_PAD_CONTENTS, SquashFSv4LEHandler, id="v4_le"),
         pytest.param(SQUASHFS_V4_BE_NO_PAD_CONTENTS, SquashFSv4BEHandler, id="v4_be"),
         pytest.param(SQUASHFS_V3_LE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_le"),
         pytest.param(SQUASHFS_V3_BE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_be"),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     "start",
-    (
+    [
         pytest.param(b"", id="zero_start"),
         pytest.param(b"A" * 128, id="non_zero_start"),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     "pad_align",
-    (
+    [
         pytest.param(None, id="no_pad"),
         pytest.param(1024, id="1k_pad"),
         pytest.param(4096, id="4k_pad"),
-    ),
+    ],
 )
 @pytest.mark.parametrize(
     "extra",
-    (
+    [
         pytest.param(
             b"",
             id="no_extra_end",
@@ -169,7 +169,7 @@ def pad_contents(contents: bytes, alignment: int):
             b"\0" * 128 + b"A" + b"\0" * 4096,
             id="extra-non-null-pad",
         ),
-    ),
+    ],
 )
 def test_squashfs_chunk_is_detected(
     contents: bytes, handler_class, start: bytes, pad_align: Optional[int], extra: bytes
@@ -189,12 +189,12 @@ def test_squashfs_chunk_is_detected(
 
 @pytest.mark.parametrize(
     "contents, handler_class",
-    (
+    [
         pytest.param(SQUASHFS_V4_LE_NO_PAD_CONTENTS, SquashFSv4LEHandler, id="v4_le"),
         pytest.param(SQUASHFS_V4_BE_NO_PAD_CONTENTS, SquashFSv4BEHandler, id="v4_be"),
         pytest.param(SQUASHFS_V3_LE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_le"),
         pytest.param(SQUASHFS_V3_BE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_be"),
-    ),
+    ],
 )
 def test_squashfs_incomplete_header(contents: bytes, handler_class):
     with pytest.raises(EOFError):
@@ -203,12 +203,12 @@ def test_squashfs_incomplete_header(contents: bytes, handler_class):
 
 @pytest.mark.parametrize(
     "contents, handler_class",
-    (
+    [
         pytest.param(SQUASHFS_V4_LE_NO_PAD_CONTENTS, SquashFSv4LEHandler, id="v4_le"),
         pytest.param(SQUASHFS_V4_BE_NO_PAD_CONTENTS, SquashFSv4BEHandler, id="v4_be"),
         pytest.param(SQUASHFS_V3_LE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_le"),
         pytest.param(SQUASHFS_V3_BE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_be"),
-    ),
+    ],
 )
 def test_squashfs_incomplete_file(contents: bytes, handler_class):
     chunk = handler_class().calculate_chunk(io.BytesIO(contents[:-10]), 0)

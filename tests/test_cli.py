@@ -1,6 +1,6 @@
-import unittest.mock as mock
 from pathlib import Path
 from typing import List
+from unittest import mock
 
 import pytest
 from click.testing import CliRunner
@@ -58,7 +58,7 @@ def test_show_external_dependencies_not_exists():
 
 @pytest.mark.parametrize(
     "params",
-    (
+    [
         pytest.param(["--help"], id="alone"),
         pytest.param(
             [
@@ -88,7 +88,7 @@ def test_show_external_dependencies_not_exists():
             ],
             id="eager_2",
         ),
-    ),
+    ],
 )
 def test_help(params):
     runner = CliRunner()
@@ -100,7 +100,7 @@ def test_help(params):
 
 @pytest.mark.parametrize(
     "params",
-    (
+    [
         pytest.param(["-v"], id="v"),
         pytest.param(["--verbose"], id="verbose"),
         pytest.param(["-e", "unblob"], id="e"),
@@ -121,7 +121,7 @@ def test_help(params):
             ],
             id="verbose+extract-dir+depth+process-num",
         ),
-    ),
+    ],
 )
 def test_without_file(params: List[str]):
     runner = CliRunner()
@@ -153,7 +153,7 @@ def test_dir_for_file(tmp_path: Path):
 
 @pytest.mark.parametrize(
     "params, expected_depth, expected_entropy_depth, expected_process_num, expected_verbosity",
-    (
+    [
         pytest.param([], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 0, id="empty"),
         pytest.param(
             ["--verbose"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 1, id="verbose-1"
@@ -164,7 +164,7 @@ def test_dir_for_file(tmp_path: Path):
         ),
         pytest.param(["--depth", "2"], 2, 1, DEFAULT_PROCESS_NUM, 0, id="depth"),
         pytest.param(["--process-num", "2"], DEFAULT_DEPTH, 1, 2, 0, id="process-num"),
-    ),
+    ],
 )
 def test_archive_success(
     params,
@@ -186,7 +186,7 @@ def test_archive_success(
     )
     process_file_mock = mock.MagicMock()
     logger_config_mock = mock.MagicMock()
-    new_params = params + ["--extract-dir", str(tmp_path), str(in_path)]
+    new_params = [*params, "--extract-dir", str(tmp_path), str(in_path)]
     with mock.patch.object(
         unblob.cli, "process_file", process_file_mock
     ), mock.patch.object(unblob.cli, "configure_logger", logger_config_mock):
@@ -227,7 +227,7 @@ def test_keep_extracted_chunks(
         / "__input__"
         / "apple.zip"
     )
-    params = args + ["--extract-dir", str(tmp_path), str(in_path)]
+    params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
 
     process_file_mock = mock.MagicMock()
     with mock.patch.object(unblob.cli, "process_file", process_file_mock):

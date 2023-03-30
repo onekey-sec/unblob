@@ -5,7 +5,7 @@ from ...file_utils import DEFAULT_BUFSIZE
 # pyright: reportGeneralTypeIssues=false
 
 
-class SingleMemberGzipReader(gzip._GzipReader):
+class SingleMemberGzipReader(gzip._GzipReader):  # noqa: SLF001
     def read_header(self):
         self._init_read()
         return self._read_gzip_header()

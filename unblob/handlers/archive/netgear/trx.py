@@ -1,4 +1,3 @@
-# import binascii
 import binascii
 import io
 from pathlib import Path
@@ -48,7 +47,7 @@ class TRXExtractor(Extractor):
             eof = file.tell()
             i = 0
             offsets = sorted(
-                [offset for offset in header.offsets + [eof] if offset > 0]
+                [offset for offset in [*header.offsets, eof] if offset > 0]
             )
             for start_offset, end_offset in zip(offsets, offsets[1:]):
                 chunk = Chunk(start_offset=start_offset, end_offset=end_offset)

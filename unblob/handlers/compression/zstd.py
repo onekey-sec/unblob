@@ -45,10 +45,7 @@ class ZSTDHandler(Handler):
         frame_header_size = self.get_frame_header_size(frame_header_descriptor)
 
         content_checksum_flag = frame_header_descriptor >> 2 & 1
-        if content_checksum_flag:
-            content_checksum_size = 4
-        else:
-            content_checksum_size = 0
+        content_checksum_size = 4 if content_checksum_flag else 0
 
         unused_bit = frame_header_descriptor >> 4 & 1
         reserved_bit = frame_header_descriptor >> 3 & 1

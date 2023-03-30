@@ -32,19 +32,23 @@ class UnblobPluginManager(pluggy.PluginManager):
         return super().load_setuptools_entrypoints(group, name=name)
 
     def import_path(self, path: Path):
-        """Loads Python code from a given path.
+        """Load Python code from a given path.
 
         The following scenarios are supported based on the contents of
         ``path``:
 
         Single file
-          Path points to a single Python file
+        -----------
+
+        Path points to a single Python file
 
         Multiple files
-          A directory containing one or more Python files or packages.
-          Files are loaded from the directory root.  Additional
-          sub-directories containing Python packages (directories with
-          ``__init__.py``) are loaded recursively.
+        --------------
+
+        A directory containing one or more Python files or packages.
+        Files are loaded from the directory root.  Additional
+        sub-directories containing Python packages (directories with
+        ``__init__.py``) are loaded recursively.
         """
         logger.debug("Importing plugin modules", path=path)
 

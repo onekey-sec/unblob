@@ -17,7 +17,7 @@ DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
 
 
 class SeekError(ValueError):
-    """Specific ValueError for File.seek"""
+    """Specific ValueError for File.seek."""
 
 
 class File(mmap.mmap):
@@ -51,8 +51,8 @@ class File(mmap.mmap):
             self.seek(0, io.SEEK_END)
             size = self.tell()
             self.seek(current_offset, io.SEEK_SET)
-        finally:
-            return size
+
+        return size
 
     def __enter__(self):
         return self
@@ -90,7 +90,7 @@ class Endian(enum.Enum):
 
 
 def iterbits(file: File) -> Iterator[int]:
-    """bit-wise reading of file in little-endian mode"""
+    """bit-wise reading of file in little-endian mode."""
     while cur_bytes := file.read(DEFAULT_BUFSIZE):
         for b in cur_bytes:
             for i in range(7, -1, -1):
@@ -152,7 +152,7 @@ def decode_int(value, base: int) -> int:
 
 
 def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
-    """Decodes multi-bytes integer into integer size and integer value.
+    """Decode multi-bytes integer into integer size and integer value.
 
     Multibyte integers of static length are stored in little endian byte order.
 
@@ -255,7 +255,7 @@ def iterate_file(
 def stream_scan(scanner, file: File):
     """Scan the whole file by increment of DEFAULT_BUFSIZE using Hyperscan's streaming mode."""
     for i in range(0, file.size(), DEFAULT_BUFSIZE):
-        if scanner.scan(file[i : i + DEFAULT_BUFSIZE]) == Scan.Terminate:  # noqa: E203
+        if scanner.scan(file[i : i + DEFAULT_BUFSIZE]) == Scan.Terminate:
             break
 
 
@@ -289,17 +289,17 @@ class StructParser:
 
 
 def get_endian(file: File, big_endian_magic: int) -> Endian:
-    """Reads a four bytes magic and derive endianness from it by
-    comparing it with the big endian magic. It reads four bytes and
-    seeks back after that.
+    """Read a four bytes magic and derive endianness from it.
+
+    It compares the read data with the big endian magic.  It reads
+    four bytes and seeks back after that.
     """
     if big_endian_magic > 0xFF_FF_FF_FF:
         raise ValueError("big_endian_magic is larger than a 32 bit integer.")
     magic_bytes = file.read(4)
     file.seek(-len(magic_bytes), io.SEEK_CUR)
     magic = convert_int32(magic_bytes, Endian.BIG)
-    endian = Endian.BIG if magic == big_endian_magic else Endian.LITTLE
-    return endian
+    return Endian.BIG if magic == big_endian_magic else Endian.LITTLE
 
 
 def read_until_past(file: File, pattern: bytes):

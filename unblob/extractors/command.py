@@ -1,21 +1,22 @@
-import io
 import shlex
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from structlog import get_logger
 
 from unblob.models import ExtractError, Extractor
 from unblob.report import ExtractCommandFailedReport, ExtractorDependencyNotFoundReport
 
+if TYPE_CHECKING:
+    import io
+
 logger = get_logger()
 
 
 class Command(Extractor):
     def __init__(self, executable, *args, stdout: Optional[str] = None):
-        """
-        Extract using external extractor and template parameters.
+        """Extract using external extractor and template parameters.
 
         Has extra support for extractors (notably 7z), which can not be directed to output to a file, but can extract to stdout:
         When the parameter `stdout` is set, the command's stdout will be redirected to `outdir / stdout`.
@@ -28,7 +29,7 @@ class Command(Extractor):
         cmd = self._make_extract_command(inpath, outdir)
         command = shlex.join(cmd)
         logger.debug("Running extract command", command=command)
-        stdout_file: Union[int, io.FileIO] = subprocess.PIPE
+        stdout_file: Union[int, "io.FileIO"] = subprocess.PIPE
 
         def no_op():
             pass
@@ -54,7 +55,7 @@ class Command(Extractor):
                 )
 
                 logger.error("Extract command failed", **error_report.asdict())
-                raise ExtractError(error_report)
+                raise ExtractError(error_report)  # noqa: TRY301
         except FileNotFoundError:
             error_report = ExtractorDependencyNotFoundReport(
                 dependencies=self.get_dependencies()
@@ -63,7 +64,7 @@ class Command(Extractor):
                 "Can't run extract command. Is the extractor installed?",
                 **error_report.asdict(),
             )
-            raise ExtractError(error_report)
+            raise ExtractError(error_report) from None
         finally:
             cleanup()
 

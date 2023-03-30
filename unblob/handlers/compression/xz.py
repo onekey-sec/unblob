@@ -118,16 +118,16 @@ def get_stream_size(footer_offset: int, file: File) -> int:
 
     index_size += CRC32_LEN
 
-    stream_size = round_up(
+    return round_up(
         (STREAM_HEADER_LEN + blocks_size + index_size + STREAM_FOOTER_LEN),
         XZ_PADDING,
     )
-    return stream_size
 
 
 def _hyperscan_match(
     context: XZSearchContext, pattern_id: int, offset: int, end: int
 ) -> Scan:
+    del pattern_id, end  # unused arguments
     # if we matched before our start offset, continue looking
     end_offset = offset + FLAG_LEN + EOS_MAGIC_LEN
     if end_offset < context.start_offset:

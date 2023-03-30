@@ -20,7 +20,7 @@ from unblob.models import (
 logger = get_logger()
 
 FOOTER_LEN = 74
-SECRET = "QNAPNASVERSION"
+SECRET = "QNAPNASVERSION"  # noqa: S105
 
 C_DEFINITIONS = """
     typedef struct qnap_header {
@@ -58,6 +58,7 @@ def is_valid_header(header: Instance) -> bool:
 def _hyperscan_match(
     context: QTSSearchContext, pattern_id: int, offset: int, end: int
 ) -> Scan:
+    del pattern_id, end  # unused arguments
     if offset < context.start_offset:
         return Scan.Continue
     context.file.seek(offset, io.SEEK_SET)
@@ -124,6 +125,7 @@ class QnapHandler(Handler):
             )
         if context.end_offset > 0:
             return ValidChunk(start_offset=start_offset, end_offset=context.end_offset)
+        return None
 
 
 # https://gist.github.com/ulidtko/966277a465f1856109b2d2674dcee741#file-qnap-qts-fw-cryptor-py-L114
@@ -172,7 +174,7 @@ class Cryptor:
         return 0xFFFF & (0x4E35 * x + 1)
 
     def kdf(self):
-        """self.secret -> 8bit hash (+ state effects)"""
+        """self.secret -> 8bit hash (+ state effects)."""
         tt = self.k[self.acc]
         res = 0
         for i in range(self.n):

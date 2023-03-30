@@ -77,14 +77,16 @@ class LZMAHandler(Handler):
                 data = file.read(DEFAULT_BUFSIZE)
                 if not data:
                     if read_size < (uncompressed_size * MIN_READ_RATIO):
-                        raise InvalidInputFormat("Very early truncated LZMA stream")
-                    else:
-                        logger.debug(
-                            "LZMA stream is truncated.",
-                            read_size=read_size,
-                            uncompressed_size=uncompressed_size,
+                        raise InvalidInputFormat(  # noqa: TRY301
+                            "Very early truncated LZMA stream"
                         )
-                        break
+
+                    logger.debug(
+                        "LZMA stream is truncated.",
+                        read_size=read_size,
+                        uncompressed_size=uncompressed_size,
+                    )
+                    break
                 read_size += len(decompressor.decompress(data))
 
         except lzma.LZMAError as exc:

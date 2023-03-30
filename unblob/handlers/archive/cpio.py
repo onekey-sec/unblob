@@ -42,7 +42,8 @@ C_STICKY_BITS = (C_NONE, C_ISUID, C_ISGID, C_ISVTX, C_ISUID_ISGID)
 
 
 class _CPIOHandlerBase(StructHandler):
-    """A common base for all CPIO formats
+    """A common base for all CPIO formats.
+
     The format should be parsed the same, there are small differences how to calculate
     file and filename sizes padding and conversion from octal / hex.
     """
@@ -69,14 +70,14 @@ class _CPIOHandlerBase(StructHandler):
 
             # heuristics 1: check the filename
             if c_namesize > MAX_LINUX_PATH_LENGTH:
-                return
+                return None
 
             if c_namesize > 0:
                 tmp_filename = file_with_offset.read(c_namesize)
 
                 # heuristics 2: check that filename is null-byte terminated
                 if not tmp_filename.endswith(b"\x00"):
-                    return
+                    return None
 
                 filename = snull(tmp_filename)
                 if filename == CPIO_TRAILER_NAME:
@@ -91,7 +92,7 @@ class _CPIOHandlerBase(StructHandler):
             # heuristics 3: check mode field
             is_valid = file_type in C_FILE_TYPES and sticky_bit in C_STICKY_BITS
             if not is_valid:
-                return
+                return None
 
             file_with_offset.seek(c_filesize, io.SEEK_CUR)
             current_offset += self._pad_content(header, c_filesize, c_namesize)
@@ -100,7 +101,7 @@ class _CPIOHandlerBase(StructHandler):
             file_with_offset, current_offset - start_offset
         )
         if start_offset == end_offset:
-            return
+            return None
         return ValidChunk(
             start_offset=start_offset,
             end_offset=end_offset,

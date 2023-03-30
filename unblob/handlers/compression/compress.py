@@ -1,32 +1,35 @@
-"""
-This module implements Unix compress'ed chunk identification.
+"""Unix compress'ed chunk identification.
 
-We identify the end offset of any identified unix compress'ed chunk by performing
-Lempel-Ziv-Welch decompression on a chunk starting from the identified start offset,
-and ending at the end of the whole file being analyzed.
+We identify the end offset of any identified unix compress'ed chunk by
+performing Lempel-Ziv-Welch decompression on a chunk starting from the
+identified start offset, and ending at the end of the whole file being
+analyzed.
 
-If we reach an invalid code or the stream ends in the middle of a code, we do not
-recursively call the decompression with -1 size, rather just fail on the chunk as
-we have seen too many false-positives picked up by this heuristic.
+If we reach an invalid code or the stream ends in the middle of a
+code, we do not recursively call the decompression with -1 size,
+rather just fail on the chunk as we have seen too many false-positives
+picked up by this heuristic.
 
-Once the decompression procedure works without errors, that means we have a valid
-chunk and can return its current end offset.
+Once the decompression procedure works without errors, that means we
+have a valid chunk and can return its current end offset.
 
-We use a small heuristic to return the right end offset. This heuristic tends
-to work well when arbitrary data appended at the end of the stream is made of
-random bytes (no repeating letters, no large set of ASCII letters).
+We use a small heuristic to return the right end offset.  This
+heuristic tends to work well when arbitrary data appended at the end
+of the stream is made of random bytes (no repeating letters, no large
+set of ASCII letters).
 
-It obviously can be wrong from time to time, leading to a compress'ed chunk
-that we can decompress (obviously), but uncompressed data will contain garbage
-bytes at the end.
+It obviously can be wrong from time to time, leading to a compress'ed
+chunk that we can decompress (obviously), but uncompressed data will
+contain garbage bytes at the end.
 
-Sadly, there is no way we can identify with 100% probability the end offset
-of a compress'ed stream with byte precision if it is followed by other content.
+Sadly, there is no way we can identify with 100% probability the end
+offset of a compress'ed stream with byte precision if it is followed
+by other content.
 
-The good news is that because of this behavior, it's highly unlikely we will
-observe compress'ed chunks followed by other chunks in the wild. The only ones
-I observed were followed by null bytes sentinels, which helps identifying the
-exact end offset.
+The good news is that because of this behavior, it's highly unlikely
+we will observe compress'ed chunks followed by other chunks in the
+wild.  The only ones I observed were followed by null bytes sentinels,
+which helps identifying the exact end offset.
 """
 import io
 from typing import List, Optional
@@ -60,32 +63,39 @@ class UnixCompressHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="lzw.uncompressed")
 
     def unlzw(self, file: File, start_offset: int, max_len: int) -> int:  # noqa: C901
+        """Calculate the end of a unix compress stream.
+
+        It performs decompression on a stream read from <file> from
+        <start_offset> up until <max_len>.
+
+        Adapted from Brandon Owen works
+        (https://github.com/umeat/unlzw).
+
+        Adapted from original work by Mark Adler - orginal copyright
+        notice below
+
+        Copyright (C) 2014, 2015 Mark Adler This software is provided
+        'as-is', without any express or implied warranty.  In no event
+        will the authors be held liable for any damages arising from
+        the use of this software.  Permission is granted to anyone to
+        use this software for any purpose, including commercial
+        applications, and to alter it and redistribute it freely,
+        subject to the following restrictions:
+
+            1. The origin of this software must not be misrepresented;
+               you must not claim that you wrote the original
+               software.  If you use this software in a product, an
+               acknowledgment in the product documentation would be
+               appreciated but is not required.
+
+            2. Altered source versions must be plainly marked as such,
+               and must not be misrepresented as being the original
+               software.
+
+            3. This notice may not be removed or altered from any
+               source distribution.  Mark Adler
+               madler@alumni.caltech.edu
         """
-        Calculate the end of a unix compress stream by performing decompression on
-        a stream read from <file> from <start_offset> up until <max_len>.
-
-        Adapted from Brandon Owen works (https://github.com/umeat/unlzw).
-
-        Adapted from original work by Mark Adler - orginal copyright notice below
-
-        Copyright (C) 2014, 2015 Mark Adler
-        This software is provided 'as-is', without any express or implied
-        warranty.  In no event will the authors be held liable for any damages
-        arising from the use of this software.
-        Permission is granted to anyone to use this software for any purpose,
-        including commercial applications, and to alter it and redistribute it
-        freely, subject to the following restrictions:
-        1. The origin of this software must not be misrepresented; you must not
-        claim that you wrote the original software. If you use this software
-        in a product, an acknowledgment in the product documentation would be
-        appreciated but is not required.
-        2. Altered source versions must be plainly marked as such, and must not be
-        misrepresented as being the original software.
-        3. This notice may not be removed or altered from any source distribution.
-        Mark Adler
-        madler@alumni.caltech.edu
-        """
-
         file.seek(start_offset)
 
         prefix: List[int] = [0] * 65536  # index to LZW prefix string
@@ -211,8 +221,8 @@ class UnixCompressHandler(StructHandler):
 
         if code == nxt - 1:
             return file.tell()
-        else:
-            return file.tell() - 1
+
+        return file.tell() - 1
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         file.seek(0, io.SEEK_END)

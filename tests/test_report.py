@@ -49,7 +49,7 @@ def test_process_file_report_output_is_valid_json(
     assert len(report)
 
 
-class Test_ProcessResult_to_json:
+class Test_ProcessResult_to_json:  # noqa: N801
     def test_simple_conversion(self):
         task = Task(path=Path("/nonexistent"), depth=0, chunk_id="")
         task_result = TaskResult(task)
@@ -80,7 +80,7 @@ class Test_ProcessResult_to_json:
         )
         task_result.add_report(
             ChunkReport(
-                id=chunk_id,
+                chunk_id=chunk_id,
                 handler_name="zip",
                 start_offset=0,
                 end_offset=384,
@@ -133,7 +133,7 @@ class Test_ProcessResult_to_json:
                         "end_offset": 384,
                         "extraction_reports": [],
                         "handler_name": "zip",
-                        "id": "test_basic_conversion:id",
+                        "chunk_id": "test_basic_conversion:id",
                         "is_encrypted": False,
                         "size": 384,
                         "start_offset": 0,
@@ -168,7 +168,7 @@ class Test_ProcessResult_to_json:
 
         task_result.add_report(
             ChunkReport(
-                id="test",
+                chunk_id="test",
                 handler_name="fail",
                 start_offset=0,
                 end_offset=256,
@@ -197,34 +197,34 @@ class Test_ProcessResult_to_json:
                                 "stderr": "stdout is pretty strange ;)",
                                 "stdout": (
                                     "b'\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07"
-                                    + "\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f"
-                                    + "\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17"
-                                    + '\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f !"#'
-                                    + "$%&\\'()*+,-./0123456789:;<=>?@AB"
-                                    + "CDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`a"
-                                    + "bcdefghijklmnopqrstuvwxyz{|}~\\x7f"
-                                    + "\\x80\\x81\\x82\\x83\\x84\\x85\\x86\\x87"
-                                    + "\\x88\\x89\\x8a\\x8b\\x8c\\x8d\\x8e\\x8f"
-                                    + "\\x90\\x91\\x92\\x93\\x94\\x95\\x96\\x97"
-                                    + "\\x98\\x99\\x9a\\x9b\\x9c\\x9d\\x9e\\x9f"
-                                    + "\\xa0\\xa1\\xa2\\xa3\\xa4\\xa5\\xa6\\xa7"
-                                    + "\\xa8\\xa9\\xaa\\xab\\xac\\xad\\xae\\xaf"
-                                    + "\\xb0\\xb1\\xb2\\xb3\\xb4\\xb5\\xb6\\xb7"
-                                    + "\\xb8\\xb9\\xba\\xbb\\xbc\\xbd\\xbe\\xbf"
-                                    + "\\xc0\\xc1\\xc2\\xc3\\xc4\\xc5\\xc6\\xc7"
-                                    + "\\xc8\\xc9\\xca\\xcb\\xcc\\xcd\\xce\\xcf"
-                                    + "\\xd0\\xd1\\xd2\\xd3\\xd4\\xd5\\xd6\\xd7"
-                                    + "\\xd8\\xd9\\xda\\xdb\\xdc\\xdd\\xde\\xdf"
-                                    + "\\xe0\\xe1\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7"
-                                    + "\\xe8\\xe9\\xea\\xeb\\xec\\xed\\xee\\xef"
-                                    + "\\xf0\\xf1\\xf2\\xf3\\xf4\\xf5\\xf6\\xf7"
-                                    + "\\xf8\\xf9\\xfa\\xfb\\xfc\\xfd\\xfe\\xff"
-                                    + "'"
+                                    "\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f"
+                                    "\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17"
+                                    '\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f !"#'
+                                    "$%&\\'()*+,-./0123456789:;<=>?@AB"
+                                    "CDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`a"
+                                    "bcdefghijklmnopqrstuvwxyz{|}~\\x7f"
+                                    "\\x80\\x81\\x82\\x83\\x84\\x85\\x86\\x87"
+                                    "\\x88\\x89\\x8a\\x8b\\x8c\\x8d\\x8e\\x8f"
+                                    "\\x90\\x91\\x92\\x93\\x94\\x95\\x96\\x97"
+                                    "\\x98\\x99\\x9a\\x9b\\x9c\\x9d\\x9e\\x9f"
+                                    "\\xa0\\xa1\\xa2\\xa3\\xa4\\xa5\\xa6\\xa7"
+                                    "\\xa8\\xa9\\xaa\\xab\\xac\\xad\\xae\\xaf"
+                                    "\\xb0\\xb1\\xb2\\xb3\\xb4\\xb5\\xb6\\xb7"
+                                    "\\xb8\\xb9\\xba\\xbb\\xbc\\xbd\\xbe\\xbf"
+                                    "\\xc0\\xc1\\xc2\\xc3\\xc4\\xc5\\xc6\\xc7"
+                                    "\\xc8\\xc9\\xca\\xcb\\xcc\\xcd\\xce\\xcf"
+                                    "\\xd0\\xd1\\xd2\\xd3\\xd4\\xd5\\xd6\\xd7"
+                                    "\\xd8\\xd9\\xda\\xdb\\xdc\\xdd\\xde\\xdf"
+                                    "\\xe0\\xe1\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7"
+                                    "\\xe8\\xe9\\xea\\xeb\\xec\\xed\\xee\\xef"
+                                    "\\xf0\\xf1\\xf2\\xf3\\xf4\\xf5\\xf6\\xf7"
+                                    "\\xf8\\xf9\\xfa\\xfb\\xfc\\xfd\\xfe\\xff"
+                                    "'"
                                 ),
                             }
                         ],
                         "handler_name": "fail",
-                        "id": "test",
+                        "chunk_id": "test",
                         "is_encrypted": False,
                         "size": 256,
                         "start_offset": 0,
@@ -243,7 +243,7 @@ class Test_ProcessResult_to_json:
 
 @pytest.fixture
 def hello_kitty(tmp_path: Path) -> Path:
-    """An input file with 3 unknown chunks and 2 zip files."""
+    """Generate an input file with 3 unknown chunks and 2 zip files."""
     hello_zip = io.BytesIO()
     with ZipFile(hello_zip, "w") as zf:
         zf.writestr(ZipInfo("hello.kitty"), "Hello")
@@ -269,7 +269,7 @@ def hello_kitty_task_results(
     container_id="",
     start_depth=0,
 ):
-    """Expected task reports processing `hello_kitty` fixture.
+    """Return expected task reports processing `hello_kitty` fixture.
 
     Note, that it has parameters for ids, which would change between runs.
 
@@ -312,11 +312,15 @@ def hello_kitty_task_results(
                     sha1="febca6ed75dc02e0def065e7b08f1cca87b57c74",
                     sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
                 ),
-                UnknownChunkReport(id=ANY, start_offset=0, end_offset=6, size=6),
-                UnknownChunkReport(id=ANY, start_offset=131, end_offset=138, size=7),
-                UnknownChunkReport(id=ANY, start_offset=263, end_offset=264, size=1),
+                UnknownChunkReport(chunk_id=ANY, start_offset=0, end_offset=6, size=6),
+                UnknownChunkReport(
+                    chunk_id=ANY, start_offset=131, end_offset=138, size=7
+                ),
+                UnknownChunkReport(
+                    chunk_id=ANY, start_offset=263, end_offset=264, size=1
+                ),
                 ChunkReport(
-                    id=hello_id,
+                    chunk_id=hello_id,
                     handler_name="zip",
                     start_offset=6,
                     end_offset=131,
@@ -325,7 +329,7 @@ def hello_kitty_task_results(
                     extraction_reports=[],
                 ),
                 ChunkReport(
-                    id=kitty_id,
+                    chunk_id=kitty_id,
                     handler_name="zip",
                     start_offset=138,
                     end_offset=263,
@@ -474,7 +478,7 @@ def test_flat_report_structure(hello_kitty: Path, extract_root):
 def container_task_results(
     container: Path, extract_root: Path, chunk_id: str
 ) -> List[TaskResult]:
-    """Expected partial task results for processing the `hello_kitty_container` fixture.
+    """Return expected partial task results for processing the `hello_kitty_container` fixture.
 
     Note, that for some values the `unittest.mock.ANY` is substituted.
     This is done so as to ignore platform related differences.
@@ -523,7 +527,7 @@ def container_task_results(
                     sha256="6bce74badefcddf3020d156f80c99bac7f3d46cd145029d9034a86bfbb5e31aa",
                 ),
                 ChunkReport(
-                    id=chunk_id,
+                    chunk_id=chunk_id,
                     handler_name="zip",
                     start_offset=0,
                     end_offset=384,
@@ -569,7 +573,7 @@ def container_task_results(
 
 @pytest.fixture
 def hello_kitty_container(tmp_path: Path, hello_kitty: Path) -> Path:
-    """The `hello_kitty` fixture further embedded in a zip container."""
+    """Further embed `hello_kitty` fixture in a zip container."""
     hello_kitty_container = tmp_path / "container"
     container_zip = io.BytesIO()
     with ZipFile(container_zip, "w") as zf:
@@ -613,15 +617,12 @@ def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_ro
 def get_normalized_task_results(process_result: ProcessResult) -> List[TaskResult]:
     """Normalize away per-run and platform differences."""
     # sort the results - they can potentially have different orders due to multiprocessing
-    task_results = sorted(
-        process_result.results, key=lambda tr: (tr.task.depth, tr.task.path)
-    )
-    return task_results
+    return sorted(process_result.results, key=lambda tr: (tr.task.depth, tr.task.path))
 
 
 def get_chunk_ids(task_result) -> List[str]:
     return [
-        chunk_report.id
+        chunk_report.chunk_id
         for chunk_report in task_result.reports
         if isinstance(chunk_report, ChunkReport)
     ]

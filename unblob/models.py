@@ -30,8 +30,7 @@ class Task:
 
 @attr.define
 class Chunk:
-    """
-    Chunk of a Blob, have start and end offset, but still can be invalid.
+    """Chunk of a Blob, have start and end offset, but still can be invalid.
 
     For an array ``b``, a chunk ``c`` represents the slice:
     ::
@@ -45,7 +44,7 @@ class Chunk:
     end_offset: int
     """The index of the first byte after the end of the chunk"""
 
-    id: str = attr.field(factory=new_id)
+    chunk_id: str = attr.field(factory=new_id)
 
     file: Optional[File] = None
 
@@ -97,13 +96,13 @@ class ValidChunk(Chunk):
                 path=inpath,
                 chunk=self,
             )
-            raise ExtractError()
+            raise ExtractError
 
         self.handler.extract(inpath, outdir)
 
     def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
         return ChunkReport(
-            id=self.id,
+            chunk_id=self.chunk_id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
@@ -115,7 +114,7 @@ class ValidChunk(Chunk):
 
 @attr.define(repr=False)
 class UnknownChunk(Chunk):
-    """Gaps between valid chunks or otherwise unknown chunks.
+    r"""Gaps between valid chunks or otherwise unknown chunks.
 
     Important for manual analysis, and analytical certanity: for example
     entropy, other chunks inside it, metadata, etc.
@@ -126,7 +125,7 @@ class UnknownChunk(Chunk):
 
     def as_report(self) -> UnknownChunkReport:
         return UnknownChunkReport(
-            id=self.id,
+            chunk_id=self.chunk_id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
@@ -193,7 +192,7 @@ class _JSONEncoder(json.JSONEncoder):
             except UnicodeDecodeError:
                 return str(obj)
 
-        logger.error(f"JSONEncoder met a non-JSON encodable value: {obj}")
+        logger.error("JSONEncoder met a non-JSON encodable value", obj=obj)
         # the usual fail path of custom JSONEncoders is to call the parent and let it fail
         #     return json.JSONEncoder.default(self, obj)
         # instead of failing, just return something usable
@@ -201,7 +200,7 @@ class _JSONEncoder(json.JSONEncoder):
 
 
 class ExtractError(Exception):
-    """There was an error during extraction"""
+    """There was an error during extraction."""
 
     def __init__(self, *reports: Report):
         super().__init__()
@@ -210,7 +209,7 @@ class ExtractError(Exception):
 
 class Extractor(abc.ABC):
     def get_dependencies(self) -> List[str]:
-        """Returns the external command dependencies."""
+        """Return the external command dependencies."""
         return []
 
     @abc.abstractmethod
@@ -227,30 +226,43 @@ class Pattern(str):
 
 
 class HexString(Pattern):
-    """
-    Hex string can be a YARA rule like hexadecimal strings to simplify defining
-    binary strings using hex encoding, wild-cards, jumps and alternatives.
-    Hexstrings are convereted to hyperscan compatible PCRE regex.
+    """Hex string can be a YARA rule like hexadecimal string.
+
+    It is useful to simplify defining binary strings using hex
+    encoding, wild-cards, jumps and alternatives.  Hexstrings are
+    convereted to hyperscan compatible PCRE regex.
 
     See YARA & Hyperscan documentation for more details:
-    - https://yara.readthedocs.io/en/stable/writingrules.html#hexadecimal-strings
-    - https://intel.github.io/hyperscan/dev-reference/compilation.html#pattern-support
+
+        - https://yara.readthedocs.io/en/stable/writingrules.html#hexadecimal-strings
+
+        - https://intel.github.io/hyperscan/dev-reference/compilation.html#pattern-support
 
     You can specify the following:
-    - normal bytes using hexadecimals: 01 de ad co de ff
-    - wild-cards can match single bytes and can be mixed with normal hex: 01 ?? 02
-    - wild-cards can also match first and second nibles: 0? ?0
-    - jumps can be specified for multiple wildcard bytes: [3] [2-5]
-    - alternatives can be specified as well: ( 01 02 | 03 04 )
-    The above can be combined and alternatives nested:
-     01 02 ( 03 04 | (0? | 03 | ?0) | 05 ?? ) 06
+
+        - normal bytes using hexadecimals: 01 de ad co de ff
+
+        - wild-cards can match single bytes and can be mixed with
+          normal hex: 01 ??  02
+
+        - wild-cards can also match first and second nibles: 0?  ?0
+
+        - jumps can be specified for multiple wildcard bytes: [3]
+          [2-5]
+
+        - alternatives can be specified as well: ( 01 02 | 03 04 ) The
+          above can be combined and alternatives nested: 01 02 ( 03 04
+          | (0?  | 03 | ?0) | 05 ??  ) 06
 
     Single line comments can be specified using //
 
     We do NOT support the following YARA syntax:
-    - comments using /* */ notation
-    - infinite jumps: [-]
-    - unbounded jumps: [3-] or [-4] (use [0-4] instead)
+
+        - comments using /* */ notation
+
+        - infinite jumps: [-]
+
+        - unbounded jumps: [3-] or [-4] (use [0-4] instead)
     """
 
     def as_regex(self) -> bytes:
@@ -258,9 +270,10 @@ class HexString(Pattern):
 
 
 class Regex(Pattern):
-    """
-    Byte PCRE regex, see hyperscan documentation for more details:
-    https://intel.github.io/hyperscan/dev-reference/compilation.html#pattern-support
+    """Byte PCRE regex.
+
+    See hyperscan documentation for more details:
+    https://intel.github.io/hyperscan/dev-reference/compilation.html#pattern-support.
     """
 
     def as_regex(self) -> bytes:
@@ -280,7 +293,7 @@ class Handler(abc.ABC):
 
     @classmethod
     def get_dependencies(cls):
-        """Returns external command dependencies needed for this handler to work."""
+        """Return external command dependencies needed for this handler to work."""
         if cls.EXTRACTOR:
             return cls.EXTRACTOR.get_dependencies()
         return []
@@ -292,7 +305,7 @@ class Handler(abc.ABC):
     def extract(self, inpath: Path, outdir: Path):
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", path=inpath)
-            raise ExtractError()
+            raise ExtractError
 
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)

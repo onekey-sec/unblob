@@ -1,16 +1,16 @@
-"""
-7-zip archive file format SHALL consist of three part. 7-zip archive file
-SHALL start with signature header. The data block SHOULD placed after the
-signature header. The data block is shown as Packed Streams.
-A header database SHOULD be placed after the data block. The data block MAY
-be empty when no archived contents exists. So Packed Streams is optional.
-Since Header database CAN be encoded then it SHOULD place after data block,
-that is Packed Streams for Headers. When Header database is encoded, Header
-encode Information SHALL placed instead of Header.
+"""7-zip handlers.
 
-[Signature Header]
-[Data]
-[Header Database]
+7-zip archive file format SHALL consist of three part.  7-zip archive
+file SHALL start with signature header.  The data block SHOULD placed
+after the signature header.  The data block is shown as Packed
+Streams.  A header database SHOULD be placed after the data block.
+The data block MAY be empty when no archived contents exists.  So
+Packed Streams is optional.  Since Header database CAN be encoded then
+it SHOULD place after data block, that is Packed Streams for Headers.
+When Header database is encoded, Header encode Information SHALL
+placed instead of Header.
+
+[Signature Header] [Data] [Header Database]
 
 https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zFormat.txt
 "7z uses little endian encoding."
@@ -65,7 +65,7 @@ class SevenZipHandler(StructHandler):
         calculated_crc = binascii.crc32(header.dumps()[-START_HEADER_SIZE:])
         if header.crc != calculated_crc:
             logger.debug("Invalid header CRC", _verbosity=2)
-            return
+            return None
 
         # We read the signature header here to get the offset to the header database
         first_db_header = start_offset + len(header) + header.next_header_offset

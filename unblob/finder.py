@@ -1,5 +1,5 @@
-"""
-Searching Chunk related functions.
+"""Searching Chunk related functions.
+
 The main "entry point" is search_chunks_by_priority.
 """
 from functools import lru_cache
@@ -68,6 +68,7 @@ def _calculate_chunk(
 def _hyperscan_match(
     context: HyperscanMatchContext, handler: Handler, offset: int, end: int
 ) -> Scan:
+    del end  # unused argument
     real_offset = offset + handler.PATTERN_MATCH_OFFSET
 
     if real_offset < 0:
@@ -113,16 +114,18 @@ def _hyperscan_match(
     return Scan.Continue
 
 
-def search_chunks(  # noqa: C901
+def search_chunks(
     file: File,
     file_size: int,
     handlers: Handlers,
     task_result: TaskResult,
 ) -> List[ValidChunk]:
     """Search all ValidChunks within the file.
-    Search for patterns and run Handler.calculate_chunk() on the found matches.
-    We don't deal with offset within already found ValidChunks and invalid chunks are thrown away.
-    If chunk covers the whole file we stop any further search and processing.
+
+    Search for patterns and run Handler.calculate_chunk() on the found
+    matches.  We don't deal with offset within already found
+    ValidChunks and invalid chunks are thrown away.  If chunk covers
+    the whole file we stop any further search and processing.
     """
     all_chunks = []
 

@@ -24,7 +24,7 @@ VALID_PAGE_SIZES = [512, 1024, 2048, 4096, 8192, 16384]
 VALID_SPARE_SIZES = [512, 256, 128, 64, 32, 16]
 
 
-class YAFFS_OBJECT_TYPE(IntEnum):
+class YAFFSObjectType(IntEnum):
     UNKNOWN = 0
     FILE = 1
     SYMLINK = 2
@@ -42,24 +42,26 @@ class YAFFSConfig:
 
 def decode_file_size(high: int, low: int) -> int:
     """File size can be encoded as 64 bits or 32 bits values.
+
     If upper 32 bits are set, it's a 64 bits integer value.
     Otherwise it's a 32 bits value. 0xFFFFFFFF means zero.
     """
     if high != 0xFFFFFFFF:
         return (high << 32) | (low & 0xFFFFFFFF)
-    elif low != 0xFFFFFFFF:
+
+    if low != 0xFFFFFFFF:
         return low
-    else:
-        return 0
+
+    return 0
 
 
 def valid_name(name: bytes) -> bool:
     # a valid name is either full of null bytes, or unicode decodable
     try:
         snull(name[:-1]).decode("utf-8")
-        return True
     except UnicodeDecodeError:
         return False
+    return True
 
 
 class _YAFFSBase(StructHandler):
@@ -136,14 +138,14 @@ class _YAFFSBase(StructHandler):
 
             blocks = 1
             if header.type in [
-                YAFFS_OBJECT_TYPE.UNKNOWN,
-                YAFFS_OBJECT_TYPE.SYMLINK,
-                YAFFS_OBJECT_TYPE.DIRECTORY,
-                YAFFS_OBJECT_TYPE.HARDLINK,
-                YAFFS_OBJECT_TYPE.SPECIAL,
+                YAFFSObjectType.UNKNOWN,
+                YAFFSObjectType.SYMLINK,
+                YAFFSObjectType.DIRECTORY,
+                YAFFSObjectType.HARDLINK,
+                YAFFSObjectType.SPECIAL,
             ]:
                 pass
-            elif header.type == YAFFS_OBJECT_TYPE.FILE:
+            elif header.type == YAFFSObjectType.FILE:
                 filesize = decode_file_size(header.file_size_high, header.file_size_low)
                 files += 1
                 # If the object is a file, the data is stored in the page section of
@@ -189,7 +191,7 @@ class YAFFS2Handler(_YAFFSBase):
 
     PATTERNS = [
         HexString(
-            "01 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name"
+            "01 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFSObjectType_DIRECTORY with a null name"
         ),
         HexString("00 00 00 01 00 00 00 01 ff ff // BE"),
     ]
@@ -202,7 +204,7 @@ class YAFFSHandler(_YAFFSBase):
 
     PATTERNS = [
         HexString(
-            "03 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFS_OBJECT_TYPE_DIRECTORY with a null name"
+            "03 00 00 00 01 00 00 00 ff ff // LE, Look for YAFFSObjectType_DIRECTORY with a null name"
         ),
         HexString("00 00 00 03 00 00 00 01 ff ff // BE"),
     ]

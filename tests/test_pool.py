@@ -28,10 +28,10 @@ def test_singlepool():
 
 @pytest.mark.parametrize("process_num", [-1, 0])
 def test_multipool_dummy_process_num(process_num: int):
-    def _dummy(*args):
+    def _dummy(*_args):
         pass
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="process_num must be greater than 0"):
         MultiPool(process_num=process_num, handler=_dummy, result_callback=_dummy)
 
 
@@ -74,6 +74,7 @@ def test_input_cannot_be_submitted_from_worker():
 
     pool = MultiPool(process_num=1, handler=submit_task, result_callback=raise_result)
 
-    with pool, pytest.raises(RuntimeError, match="can only be called"):
+    with pool:
         pool.submit(1)
-        pool.process_until_done()
+        with pytest.raises(RuntimeError, match="can only be called"):
+            pool.process_until_done()
