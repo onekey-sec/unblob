@@ -46,7 +46,7 @@ class YAFFS1Parser(YAFFSParser):
         )
 
         return YAFFS1Chunk(
-            id=yaffs_packed_tags.chunk_id,
+            chunk_id=yaffs_packed_tags.chunk_id,
             serial=yaffs_packed_tags.serial,
             byte_count=yaffs_packed_tags.byte_count,
             object_id=yaffs_packed_tags.object_id,
@@ -60,7 +60,7 @@ class YAFFS1Parser(YAFFSParser):
             chunk = self.build_chunk(spare)
 
             # A chunkId of zero indicates that this chunk holds a yaffs_ObjectHeader.
-            if chunk.id == 0:
+            if chunk.chunk_id == 0:
                 yaffs_obj_hdr = self._struct_parser.parse(
                     "yaffs1_obj_hdr_t", page, self.config.endianness
                 )
@@ -77,7 +77,7 @@ class YAFFS1Parser(YAFFSParser):
                     alias = ""
 
                 entry = YAFFS1Entry(
-                    type=yaffs_obj_hdr.type,
+                    object_type=yaffs_obj_hdr.type,
                     object_id=chunk.object_id,
                     parent_obj_id=yaffs_obj_hdr.parent_obj_id,
                     sum_no_longer_used=yaffs_obj_hdr.sum_no_longer_used,

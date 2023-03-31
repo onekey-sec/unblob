@@ -39,13 +39,13 @@ class YAFFS2Parser(YAFFSParser):
         )
 
         return YAFFS2Chunk(
-            id=yaffs2_packed_tags.chunk_id,
+            chunk_id=yaffs2_packed_tags.chunk_id,
             seq_number=yaffs2_packed_tags.seq_number,
             byte_count=yaffs2_packed_tags.byte_count,
             object_id=yaffs2_packed_tags.object_id,
         )
 
-    def parse(self):  # noqa: C901
+    def parse(self):
         count = 0
         for offset, page, spare in iterate_over_file(self.file, self.config):
             try:
@@ -58,7 +58,7 @@ class YAFFS2Parser(YAFFSParser):
             )
             logger.debug("yaffs2_obj_hdr_t", yaffs_obj_hdr=yaffs_obj_hdr, _verbosity=3)
 
-            if chunk.id == 0:
+            if chunk.chunk_id == 0:
                 try:
                     yaffs_obj_hdr = self._struct_parser.parse(
                         "yaffs2_obj_hdr_t", page, self.config.endianness
@@ -75,7 +75,7 @@ class YAFFS2Parser(YAFFSParser):
                 entry = YAFFS2Entry(
                     object_id=chunk.object_id,
                     chunks=[],
-                    type=yaffs_obj_hdr.type,
+                    object_type=yaffs_obj_hdr.type,
                     parent_obj_id=yaffs_obj_hdr.parent_obj_id,
                     sum_no_longer_used=yaffs_obj_hdr.sum_no_longer_used,
                     name=snull(yaffs_obj_hdr.name[:-1]).decode("utf-8"),
