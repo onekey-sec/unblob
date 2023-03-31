@@ -109,7 +109,7 @@ C_DEFINITIONS = """
 """
 
 
-class YAFFS_OBJECT_TYPE(IntEnum):
+class YaffsObjectType(IntEnum):
     UNKNOWN = 0
     FILE = 1
     SYMLINK = 2
@@ -120,7 +120,7 @@ class YAFFS_OBJECT_TYPE(IntEnum):
 
 @attr.define
 class YAFFSChunk:
-    id: int
+    chunk_id: int
     byte_count: int
     object_id: int
 
@@ -168,24 +168,25 @@ def iterate_over_file(
 
 def decode_file_size(high: int, low: int) -> int:
     """File size can be encoded as 64 bits or 32 bits values.
+
     If upper 32 bits are set, it's a 64 bits integer value.
     Otherwise it's a 32 bits value. 0xFFFFFFFF means zero.
     """
     if high != 0xFFFFFFFF:
         return (high << 32) | (low & 0xFFFFFFFF)
-    elif low != 0xFFFFFFFF:
+    if low != 0xFFFFFFFF:
         return low
-    else:
-        return 0
+    return 0
 
 
 def valid_name(name: bytes) -> bool:
     # a valid name is either full of null bytes, or unicode decodable
     try:
         snull(name[:-1]).decode("utf-8")
-        return True
     except UnicodeDecodeError:
         return False
+    else:
+        return True
 
 
 def is_valid_header(header: Instance) -> bool:
@@ -200,7 +201,7 @@ def is_valid_header(header: Instance) -> bool:
 
 @attr.define
 class YAFFSEntry:
-    type: int
+    object_type: int
     object_id: int
     parent_obj_id: int
     sum_no_longer_used: int
@@ -230,8 +231,7 @@ class YAFFS1Entry(YAFFSEntry):
     chunks: List[YAFFS1Chunk]
 
     def get_chunks(self) -> Iterable[YAFFS1Chunk]:
-        """Return a filtered and ordered list of chunks"""
-
+        """Return a filtered and ordered list of chunks."""
         # YAFFS1 chunks have a page_status field indicating
         # whether or not the chunk is still active. We therefore
         # filter out chunks that are inactive.
@@ -246,7 +246,7 @@ class YAFFS1Entry(YAFFSEntry):
             sorted(
                 # filter out deleted chunks (page_status=0)
                 [chunk for chunk in self.chunks if chunk.page_status != 0x0],
-                key=lambda chunk: chunk.id,
+                key=lambda chunk: chunk.chunk_id,
             )
         ):
             yield max(chunks, key=lambda chunk: chunk.serial)
@@ -282,8 +282,7 @@ class YAFFS2Entry(YAFFSEntry):
     chunks: List[YAFFS2Chunk]
 
     def get_chunks(self) -> Iterable[YAFFS2Chunk]:
-        """Return a filtered and ordered list of chunks"""
-
+        """Return a filtered and ordered list of chunks."""
         # The Yaffs2 sequence number is not the same as the Yaffs1 serial number!
 
         # As each block is allocated, the file system's
@@ -291,19 +290,19 @@ class YAFFS2Entry(YAFFSEntry):
         # sequence number. The sequence number thus provides a way of organising the log in
         # chronological order.
 
-        # Since we're scanning backwards, the most recently written – and thus current – chunk
+        # Since we're scanning backwards, the most recently written - and thus current - chunk
         # matching an obj_id:chunk_id pair will be encountered first and all subsequent matching chunks must be obsolete and treated as deleted.
 
         # note: there is no deletion marker in YAFFS2
 
         for _, chunks in itertools.groupby(
-            sorted(self.chunks, key=lambda chunk: chunk.id)
+            sorted(self.chunks, key=lambda chunk: chunk.chunk_id)
         ):
             yield max(chunks, key=lambda chunk: chunk.seq_number)
 
 
 ROOT = YAFFS1Entry(
-    type=0,
+    object_type=0,
     object_id=-1,
     parent_obj_id=-1,
     sum_no_longer_used=0,
@@ -359,7 +358,7 @@ class YAFFSParser:
                 entries = []
                 for i in range(0, self.eof // (page_size + spare_size)):
                     start = (page_size + spare_size) * i
-                    entries.append(self.file[start : start + 10])  # noqa: E203
+                    entries.append(self.file[start : start + 10])
 
                 le_count = sum(
                     [entry.startswith(PAGE_START_LITTLE_ENDIAN) for entry in entries]
@@ -383,7 +382,6 @@ class YAFFSParser:
 
     def auto_detect(self) -> YAFFSConfig:
         """Auto-detect page_size, spare_size, and ECC using known signatures."""
-
         config = None
         page_size = 0
         for page_size in VALID_PAGE_SIZES:
@@ -395,7 +393,7 @@ class YAFFSParser:
                     spare_size=-1,
                 )
                 break
-            elif self.file[page_size:].startswith(SPARE_START_LITTLE_ENDIAN_NO_ECC):
+            if self.file[page_size:].startswith(SPARE_START_LITTLE_ENDIAN_NO_ECC):
                 config = YAFFSConfig(
                     endianness=Endian.LITTLE,
                     page_size=page_size,
@@ -403,12 +401,12 @@ class YAFFSParser:
                     spare_size=-1,
                 )
                 break
-            elif self.file[page_size:].startswith(SPARE_START_BIG_ENDIAN_ECC):
+            if self.file[page_size:].startswith(SPARE_START_BIG_ENDIAN_ECC):
                 config = YAFFSConfig(
                     endianness=Endian.BIG, page_size=page_size, ecc=True, spare_size=-1
                 )
                 break
-            elif self.file[page_size:].startswith(SPARE_START_BIG_ENDIAN_NO_ECC):
+            if self.file[page_size:].startswith(SPARE_START_BIG_ENDIAN_NO_ECC):
                 config = YAFFSConfig(
                     endianness=Endian.BIG, page_size=page_size, ecc=False, spare_size=-1
                 )
@@ -453,9 +451,7 @@ class YAFFSParser:
         spare_signature = self.file[object_id_start:object_id_end] + b"\xFF\xFF"
 
         config.spare_size = (
-            self.file[object_id_end : object_id_end + page_size].find(  # noqa: E203
-                spare_signature
-            )
+            self.file[object_id_end : object_id_end + page_size].find(spare_signature)
             + object_id_offset
             + ecc_offset
         )
@@ -487,24 +483,25 @@ class YAFFSParser:
             entry = self.file_entries.get_node(object_id)
             if entry:
                 return entry.data
-            else:
-                return None
         except NodeIDAbsentError:
             pass
+        return None
 
     def resolve_path(self, entry: YAFFSEntry) -> Path:
         resolved_path = Path(entry.name)
         parent = self.file_entries[entry.parent_obj_id].data
         if parent is not None:
             return self.resolve_path(parent).joinpath(resolved_path)
-        else:
-            return resolved_path
+        return resolved_path
 
     def get_file_bytes(self, entry: YAFFSEntry) -> Iterable[bytes]:
         for chunk in entry.get_chunks():
             self.file.seek(
                 entry.start_offset
-                + ((chunk.id - 1) * (self.config.page_size + self.config.spare_size)),
+                + (
+                    (chunk.chunk_id - 1)
+                    * (self.config.page_size + self.config.spare_size)
+                ),
                 io.SEEK_SET,
             )
             yield self.file.read(chunk.byte_count)
@@ -530,28 +527,28 @@ class YAFFSParser:
 
         out_path = outdir.joinpath(entry_path)
 
-        if entry.type == YAFFS_OBJECT_TYPE.DIRECTORY:
+        if entry.object_type == YaffsObjectType.DIRECTORY:
             logger.debug("creating directory", dir_path=out_path, _verbosity=3)
             out_path.mkdir(exist_ok=True)
-        elif entry.type == YAFFS_OBJECT_TYPE.FILE:
+        elif entry.object_type == YaffsObjectType.FILE:
             logger.debug("creating file", file_path=out_path, _verbosity=3)
             with out_path.open("wb") as f:
                 for chunk in self.get_file_bytes(entry):
                     f.write(chunk)
-        elif entry.type == YAFFS_OBJECT_TYPE.SPECIAL:
+        elif entry.object_type == YaffsObjectType.SPECIAL:
             if os.geteuid() == 0:
                 logger.debug(
                     "creating special file", special_path=out_path, _verbosity=3
                 )
                 os.mknod(out_path.as_posix(), entry.yst_mode, entry.yst_rdev)
             else:
-                logger.warn(
+                logger.warning(
                     "creating special files requires elevated privileges, skipping.",
                     path=out_path,
                     yst_mode=entry.yst_mode,
                     yst_rdev=entry.yst_rdev,
                 )
-        elif entry.type == YAFFS_OBJECT_TYPE.SYMLINK:
+        elif entry.object_type == YaffsObjectType.SYMLINK:
             if not is_safe_path(outdir, out_path / Path(entry.alias)):
                 logger.warning(
                     "Potential path traversal attempt through symlink",
@@ -561,7 +558,7 @@ class YAFFSParser:
                 return
             logger.debug("creating symlink", file_path=out_path, _verbosity=3)
             out_path.symlink_to(Path(entry.alias))
-        elif entry.type == YAFFS_OBJECT_TYPE.HARDLINK:
+        elif entry.object_type == YaffsObjectType.HARDLINK:
             logger.debug("creating hardlink", file_path=out_path, _verbosity=3)
             src_entry = self.file_entries[entry.equiv_id]
             src_path = self.resolve_path(src_entry)
@@ -573,5 +570,5 @@ class YAFFSParser:
                 )
                 return
             src_path.link_to(out_path)
-        elif entry.type == YAFFS_OBJECT_TYPE.UNKNOWN:
+        elif entry.object_type == YaffsObjectType.UNKNOWN:
             logger.debug("unknown type entry", entry=entry, _verbosity=3)
