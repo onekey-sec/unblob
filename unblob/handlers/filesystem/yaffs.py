@@ -9,12 +9,30 @@ import attr
 from dissect.cstruct import Instance
 from structlog import get_logger
 from treelib import Tree
-from treelib.exceptions import DuplicatedNodeIdError, NodeIDAbsentError
+from treelib.exceptions import NodeIDAbsentError
 
 from unblob.extractor import is_safe_path
-from unblob.file_utils import Endian, InvalidInputFormat, StructParser, snull
+from unblob.file_utils import (
+    Endian,
+    File,
+    InvalidInputFormat,
+    StructParser,
+    get_endian_multi,
+    read_until_past,
+    snull,
+)
+from unblob.models import Extractor, HexString, StructHandler, ValidChunk
 
-from ....models import File
+logger = get_logger()
+
+# YAFFS1 images always have a first entry as a directory entry with an empty name
+# this is how it's done in mkyaffsimage:
+# write_object_header(1, YAFFS_OBJECT_TYPE_DIRECTORY, &stats, 1,"", -1, NULL);
+YAFFS1_FIRST_ENTRY = b"\xff\xff\x00\x00\x00\x00\x00\x00"
+
+# YAFFS_OBJECT_TYPE_DIRECTORY, YAFFS_OBJECT_TYPE_FILE
+BIG_ENDIAN_MAGICS = [0x00_00_00_01, 0x00_00_00_03]
+
 
 C_DEFINITIONS = """
     struct yaffs1_obj_hdr {
@@ -201,7 +219,7 @@ def is_valid_header(header: Instance) -> bool:
 
 @attr.define
 class YAFFSEntry:
-    object_type: int
+    object_type: YaffsObjectType
     object_id: int
     parent_obj_id: int
     sum_no_longer_used: int
@@ -303,8 +321,8 @@ class YAFFS2Entry(YAFFSEntry):
 
 ROOT = YAFFS1Entry(
     object_type=0,
-    object_id=-1,
-    parent_obj_id=-1,
+    object_id=1,
+    parent_obj_id=1,
     sum_no_longer_used=0,
     name=".",
     alias="",
@@ -313,27 +331,15 @@ ROOT = YAFFS1Entry(
     chunks=[],
 )
 
-
 SPARE_START_BIG_ENDIAN_ECC = b"\x00\x00\x10\x00"
 SPARE_START_BIG_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x00\x10\x00"
 SPARE_START_LITTLE_ENDIAN_ECC = b"\x00\x10\x00\x00"
 SPARE_START_LITTLE_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x10\x00\x00"
-PAGE_START_LITTLE_ENDIAN = b"\x01\x00\x00\x00\x01\x00\x00\x00\xff\xff"
-PAGE_START_BIG_ENDIAN = b"\x00\x00\x00\x01\x00\x00\x00\x01\xff\xff"
-
-# 00 00 c0 ff ff ff 01 00  9a aa a7 a4 c1 59 aa ab
-# 00 00 c0 ff ff ff 01 01  03 ff 0f 00 c1 59 aa ab
-# 00 00 c0 ff ff ff 02 01  0f ff f3 0c c1 fc ff 03
-
-# 00 00 03 ff ff ff 00 00  95 aa a7 40 3f 56 aa ab
-# 00 00 03 ff ff ff 00 40  0c ff 0f 40 83 56 aa ab
-# 00 00 03 ff ff ff 00 40  00 ff f3 80 bf fc ff 03
 
 
 class YAFFSParser:
     def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
         self.file_entries = Tree()
-        self.file_entries.create_node(ROOT, 1)
         self.file = file
         self._struct_parser = StructParser(C_DEFINITIONS)
         self.file.seek(0, io.SEEK_END)
@@ -346,46 +352,13 @@ class YAFFSParser:
         else:
             self.config = config
 
-    def bruteforce(self) -> YAFFSConfig:
-        # let's do a trick here
-        entries = []
-        count = 0
-        config = YAFFSConfig(
-            endianness=Endian.LITTLE, page_size=-1, spare_size=-1, ecc=False
-        )
-        for page_size in VALID_PAGE_SIZES:
-            for spare_size in VALID_SPARE_SIZES:
-                entries = []
-                for i in range(0, self.eof // (page_size + spare_size)):
-                    start = (page_size + spare_size) * i
-                    entries.append(self.file[start : start + 10])
-
-                le_count = sum(
-                    [entry.startswith(PAGE_START_LITTLE_ENDIAN) for entry in entries]
-                )
-                be_count = sum(
-                    [entry.startswith(PAGE_START_BIG_ENDIAN) for entry in entries]
-                )
-
-                if le_count > count or be_count > count:
-                    config.endianness = (
-                        Endian.LITTLE if le_count > be_count else Endian.BIG
-                    )
-                    config.page_size = page_size
-                    config.spare_size = spare_size
-                    count = max([le_count, be_count])
-
-        if config.page_size == -1:
-            raise InvalidInputFormat("Can't find YAFFS config through bruteforce.")
-
-        return config
-
     def auto_detect(self) -> YAFFSConfig:
         """Auto-detect page_size, spare_size, and ECC using known signatures."""
         config = None
         page_size = 0
         for page_size in VALID_PAGE_SIZES:
-            if self.file[page_size:].startswith(SPARE_START_LITTLE_ENDIAN_ECC):
+            spare_start = self.file[page_size : page_size + 6]
+            if spare_start.startswith(SPARE_START_LITTLE_ENDIAN_ECC):
                 config = YAFFSConfig(
                     endianness=Endian.LITTLE,
                     page_size=page_size,
@@ -393,7 +366,7 @@ class YAFFSParser:
                     spare_size=-1,
                 )
                 break
-            if self.file[page_size:].startswith(SPARE_START_LITTLE_ENDIAN_NO_ECC):
+            if spare_start.startswith(SPARE_START_LITTLE_ENDIAN_NO_ECC):
                 config = YAFFSConfig(
                     endianness=Endian.LITTLE,
                     page_size=page_size,
@@ -401,19 +374,16 @@ class YAFFSParser:
                     spare_size=-1,
                 )
                 break
-            if self.file[page_size:].startswith(SPARE_START_BIG_ENDIAN_ECC):
+            if spare_start.startswith(SPARE_START_BIG_ENDIAN_ECC):
                 config = YAFFSConfig(
                     endianness=Endian.BIG, page_size=page_size, ecc=True, spare_size=-1
                 )
                 break
-            if self.file[page_size:].startswith(SPARE_START_BIG_ENDIAN_NO_ECC):
+            if spare_start.startswith(SPARE_START_BIG_ENDIAN_NO_ECC):
                 config = YAFFSConfig(
                     endianness=Endian.BIG, page_size=page_size, ecc=False, spare_size=-1
                 )
                 break
-
-        if config is None:
-            return self.bruteforce()
 
         # Now to try to identify the spare data size...
         # If not using the ECC layout, there are 2 extra bytes at the beginning of the
@@ -466,17 +436,19 @@ class YAFFSParser:
         return config
 
     def insert_entry(self, entry: YAFFSEntry):
-        try:
+        if entry.object_id == entry.parent_obj_id:
+            self.file_entries.create_node(
+                entry.object_id,
+                entry.object_id,
+                data=entry,
+            )
+        else:
             self.file_entries.create_node(
                 entry.object_id,
                 entry.object_id,
                 data=entry,
                 parent=entry.parent_obj_id,
             )
-        except NodeIDAbsentError:
-            pass
-        except DuplicatedNodeIdError:
-            pass
 
     def get_entry(self, object_id: int):
         try:
@@ -484,30 +456,29 @@ class YAFFSParser:
             if entry:
                 return entry.data
         except NodeIDAbsentError:
+            logger.warning(
+                "Can't find entry within the YAFFS tree, something's wrong.",
+                object_id=object_id,
+            )
             pass
         return None
 
     def resolve_path(self, entry: YAFFSEntry) -> Path:
         resolved_path = Path(entry.name)
-        parent = self.file_entries[entry.parent_obj_id].data
-        if parent is not None:
-            return self.resolve_path(parent).joinpath(resolved_path)
+        if self.file_entries.parent(entry.object_id) is not None:
+            parent_entry = self.file_entries[entry.parent_obj_id].data
+            return self.resolve_path(parent_entry).joinpath(resolved_path)
         return resolved_path
 
     def get_file_bytes(self, entry: YAFFSEntry) -> Iterable[bytes]:
         for chunk in entry.get_chunks():
-            self.file.seek(
-                entry.start_offset
-                + (
-                    (chunk.chunk_id - 1)
-                    * (self.config.page_size + self.config.spare_size)
-                ),
-                io.SEEK_SET,
+            start_offset = entry.start_offset + (
+                (chunk.chunk_id - 1) * (self.config.page_size + self.config.spare_size)
             )
-            yield self.file.read(chunk.byte_count)
+            end_offset = start_offset + chunk.byte_count
+            yield self.file[start_offset:end_offset]
 
     def extract(self, outdir: Path):
-        self.file_entries.show()
         for entry in [
             self.file_entries.get_node(node).data
             for node in self.file_entries.expand_tree(mode=Tree.DEPTH)
@@ -572,3 +543,249 @@ class YAFFSParser:
             src_path.link_to(out_path)
         elif entry.object_type == YaffsObjectType.UNKNOWN:
             logger.debug("unknown type entry", entry=entry, _verbosity=3)
+
+
+class YAFFS2Parser(YAFFSParser):
+    def build_chunk(self, spare: bytes, config: YAFFSConfig) -> YAFFS2Chunk:
+        # images built without ECC have two superfluous bytes before the chunk ID.
+        if not config.ecc:
+            # adding two null bytes at the end only works if it's LE
+            spare = spare[2:] + b"\x00\x00"
+
+        yaffs2_packed_tags = self._struct_parser.parse(
+            "yaffs2_packed_tags_t", spare, self.config.endianness
+        )
+        logger.debug(
+            "yaffs2_packed_tags_t",
+            yaffs2_packed_tags=yaffs2_packed_tags,
+            config=config,
+            _verbosity=3,
+        )
+
+        return YAFFS2Chunk(
+            chunk_id=yaffs2_packed_tags.chunk_id,
+            seq_number=yaffs2_packed_tags.seq_number,
+            byte_count=yaffs2_packed_tags.byte_count,
+            object_id=yaffs2_packed_tags.object_id,
+        )
+
+    def parse(self):
+        # YAFFS2 do not store the root in file.
+        self.insert_entry(ROOT)
+
+        count = 0
+        for offset, page, spare in iterate_over_file(self.file, self.config):
+            try:
+                chunk = self.build_chunk(spare, self.config)
+            except EOFError:
+                break
+
+            yaffs_obj_hdr = self._struct_parser.parse(
+                "yaffs2_obj_hdr_t", page, self.config.endianness
+            )
+            logger.debug("yaffs2_obj_hdr_t", yaffs_obj_hdr=yaffs_obj_hdr, _verbosity=3)
+
+            if chunk.chunk_id == 0:
+                try:
+                    yaffs_obj_hdr = self._struct_parser.parse(
+                        "yaffs2_obj_hdr_t", page, self.config.endianness
+                    )
+                    logger.debug(
+                        "yaffs2_obj_hdr_t", yaffs_obj_hdr=yaffs_obj_hdr, _verbosity=3
+                    )
+                except EOFError:
+                    break
+
+                if not is_valid_header(yaffs_obj_hdr):
+                    break
+
+                entry = YAFFS2Entry(
+                    object_id=chunk.object_id,
+                    chunks=[],
+                    object_type=yaffs_obj_hdr.type,
+                    parent_obj_id=yaffs_obj_hdr.parent_obj_id,
+                    sum_no_longer_used=yaffs_obj_hdr.sum_no_longer_used,
+                    name=snull(yaffs_obj_hdr.name[:-1]).decode("utf-8"),
+                    chksum=yaffs_obj_hdr.chksum,
+                    yst_mode=yaffs_obj_hdr.yst_mode,
+                    yst_uid=yaffs_obj_hdr.yst_uid,
+                    yst_gid=yaffs_obj_hdr.yst_gid,
+                    yst_atime=yaffs_obj_hdr.yst_atime,
+                    yst_mtime=yaffs_obj_hdr.yst_mtime,
+                    yst_ctime=yaffs_obj_hdr.yst_ctime,
+                    equiv_id=yaffs_obj_hdr.equiv_id,
+                    alias=snull(yaffs_obj_hdr.alias.replace(b"\xFF", b"")).decode(
+                        "utf-8"
+                    ),
+                    yst_rdev=yaffs_obj_hdr.yst_rdev,
+                    win_ctime=yaffs_obj_hdr.win_ctime,
+                    win_mtime=yaffs_obj_hdr.win_mtime,
+                    inband_shadowed_obj_id=yaffs_obj_hdr.inband_shadowed_obj_id,
+                    inband_is_shrink=yaffs_obj_hdr.inband_is_shrink,
+                    reserved=yaffs_obj_hdr.reserved,
+                    shadows_obj=yaffs_obj_hdr.shadows_obj,
+                    is_shrink=yaffs_obj_hdr.is_shrink,
+                    filehead=YAFFSFileVar(
+                        file_size=yaffs_obj_hdr.filehead.file_size,
+                        stored_size=yaffs_obj_hdr.filehead.stored_size,
+                        shrink_size=yaffs_obj_hdr.filehead.shrink_size,
+                        top_level=yaffs_obj_hdr.filehead.top_level,
+                    ),
+                    file_size=decode_file_size(
+                        yaffs_obj_hdr.file_size_high, yaffs_obj_hdr.file_size_low
+                    ),
+                    start_offset=offset,
+                )
+                self.insert_entry(entry)
+                count += 1
+            else:
+                # this is a data chunk, so we add it to our object
+                entry = self.get_entry(chunk.object_id)
+                # can happen during bruteforcing
+                if entry is not None:
+                    entry.chunks.append(chunk)
+                else:
+                    break
+
+        self.end_offset = self.file.tell()
+        return count
+
+
+class YAFFS1Parser(YAFFSParser):
+    def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
+        config = YAFFSConfig(
+            page_size=512,
+            spare_size=16,
+            endianness=get_endian_multi(file, BIG_ENDIAN_MAGICS),
+            ecc=False,
+        )
+        super().__init__(file, config)
+
+    def build_chunk(self, spare: bytes) -> YAFFS1Chunk:
+        yaffs_sparse = self._struct_parser.parse(
+            "yaffs_spare_t", spare, self.config.endianness
+        )
+
+        yaffs_packed_tags = self._struct_parser.parse(
+            "yaffs1_packed_tags_t",
+            bytes(
+                [
+                    yaffs_sparse.tag_b0,
+                    yaffs_sparse.tag_b1,
+                    yaffs_sparse.tag_b2,
+                    yaffs_sparse.tag_b3,
+                    yaffs_sparse.tag_b4,
+                    yaffs_sparse.tag_b5,
+                    yaffs_sparse.tag_b6,
+                    yaffs_sparse.tag_b7,
+                ]
+            ),
+            self.config.endianness,
+        )
+
+        return YAFFS1Chunk(
+            chunk_id=yaffs_packed_tags.chunk_id,
+            serial=yaffs_packed_tags.serial,
+            byte_count=yaffs_packed_tags.byte_count,
+            object_id=yaffs_packed_tags.object_id,
+            ecc=yaffs_packed_tags.ecc,
+            page_status=yaffs_sparse.page_status,
+            block_status=yaffs_sparse.block_status,
+        )
+
+    def parse(self):
+        for offset, page, spare in iterate_over_file(self.file, self.config):
+            chunk = self.build_chunk(spare)
+
+            # A chunkId of zero indicates that this chunk holds a yaffs_ObjectHeader.
+            if chunk.chunk_id == 0:
+                yaffs_obj_hdr = self._struct_parser.parse(
+                    "yaffs1_obj_hdr_t", page, self.config.endianness
+                )
+                logger.debug(
+                    "yaffs1_obj_hdr_t", yaffs_obj_hdr=yaffs_obj_hdr, _verbosity=3
+                )
+
+                if not is_valid_header(yaffs_obj_hdr):
+                    break
+
+                if b"\xFF" not in yaffs_obj_hdr.alias:
+                    alias = snull(yaffs_obj_hdr.alias).decode("utf-8")
+                else:
+                    alias = ""
+
+                entry = YAFFS1Entry(
+                    object_type=yaffs_obj_hdr.type,
+                    object_id=chunk.object_id,
+                    parent_obj_id=yaffs_obj_hdr.parent_obj_id,
+                    sum_no_longer_used=yaffs_obj_hdr.sum_no_longer_used,
+                    name=snull(yaffs_obj_hdr.name[0:128]).decode("utf-8"),
+                    alias=alias,
+                    file_size=yaffs_obj_hdr.file_size,
+                    start_offset=offset,
+                    chunks=[],
+                )
+                self.insert_entry(entry)
+            else:
+                entry = self.get_entry(chunk.object_id)
+                if entry is not None:
+                    # this is a data chunk, so we add it to our object
+                    entry.chunks.append(chunk)
+        self.end_offset = self.file.tell()
+
+
+class YAFFSExtractor(Extractor):
+    def extract(self, inpath: Path, outdir: Path):
+        infile = File.from_path(inpath)
+        if infile[8:16] == YAFFS1_FIRST_ENTRY:
+            # from https://yaffs.net/archives/yaffs-development-notes: currently each chunk
+            # is the same size as a NAND flash page (ie. 512 bytes + 16 byte spare).
+            # In the future we might decide to allow for different chunk sizes.
+            config = YAFFSConfig(
+                page_size=512,
+                spare_size=16,
+                endianness=get_endian_multi(infile, BIG_ENDIAN_MAGICS),
+                ecc=False,
+            )
+            parser = YAFFS1Parser(infile, config)
+        else:
+            parser = YAFFS2Parser(infile)
+        parser.parse()
+        parser.extract(outdir)
+
+
+class YAFFSHandler(StructHandler):
+    NAME = "yaffs"
+
+    C_DEFINITIONS = C_DEFINITIONS
+
+    HEADER_STRUCT = "yaffs_obj_hdr_t"
+
+    PATTERNS = [
+        HexString(
+            "03 00 00 00 01 00 00 00 ff ff // YAFFS_OBJECT_TYPE_DIRECTORY in little endian"
+        ),
+        HexString(
+            "01 00 00 00 01 00 00 00 ff ff // YAFFS_OBJECT_TYPE_FILE in little endian"
+        ),
+        HexString(
+            "00 00 00 03 00 00 00 01 ff ff // YAFFS_OBJECT_TYPE_DIRECTORY in big endian"
+        ),
+        HexString(
+            "00 00 00 01 00 00 00 01 ff ff // YAFFS_OBJECT_TYPE_FILE in big endian"
+        ),
+    ]
+
+    EXTRACTOR = YAFFSExtractor()
+
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+        parser_cls = YAFFS2Parser
+        if file[start_offset + 8 : start_offset + 16] == YAFFS1_FIRST_ENTRY:
+            parser_cls = YAFFS1Parser
+
+        parser = parser_cls(file)
+        parser.parse()
+        # skip 0xFF padding
+        file.seek(parser.end_offset, io.SEEK_SET)
+        read_until_past(file, b"\xff")
+        return ValidChunk(start_offset=start_offset, end_offset=file.tell())
