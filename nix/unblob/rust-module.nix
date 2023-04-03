@@ -52,6 +52,6 @@ craneLib.mkCargoDerivation {
   '';
   installPhaseCommand = ''
     mkdir -p $out
-    cp -a build/* $out
+    cp -a build/lib.*/* $out
   '';
 }

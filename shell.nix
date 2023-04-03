@@ -13,6 +13,10 @@ mkShell {
   packages = [
     unblob
     unblob.runtimeDeps
+    ruff
+    pyright
+    python3Packages.pytest
+    python3Packages.pytest-cov
     poetry
     lzo
     update

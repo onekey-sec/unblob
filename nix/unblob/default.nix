@@ -112,7 +112,7 @@ let
     ];
 
     preBuild = ''
-      cp -r --no-preserve=mode ${rust-module} build
+      cp -r --no-preserve=mode ${rust-module}/unblob .
     '';
 
     makeWrapperArgs = [
