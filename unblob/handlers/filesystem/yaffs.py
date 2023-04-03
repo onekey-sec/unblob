@@ -320,19 +320,6 @@ def is_valid_header(header: Instance) -> bool:
     return True
 
 
-ROOT = YAFFS1Entry(
-    object_type=0,
-    object_id=1,
-    parent_obj_id=1,
-    sum_no_longer_used=0,
-    name=".",
-    alias="",
-    file_size=0,
-    start_offset=0,
-    chunks=[],
-)
-
-
 class YAFFSParser:
     def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
         self.file_entries = Tree()
@@ -564,7 +551,18 @@ class YAFFS2Parser(YAFFSParser):
 
     def parse(self):
         # YAFFS2 do not store the root in file.
-        self.insert_entry(ROOT)
+        root = YAFFS1Entry(
+            object_type=0,
+            object_id=1,
+            parent_obj_id=1,
+            sum_no_longer_used=0,
+            name=".",
+            alias="",
+            file_size=0,
+            start_offset=0,
+            chunks=[],
+        )
+        self.insert_entry(root)
 
         count = 0
         for offset, page, spare in iterate_over_file(self.file, self.config):
