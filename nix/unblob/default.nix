@@ -24,6 +24,7 @@
 , setuptools
 , structlog
 , ubi_reader
+, treelib
   # Runtime dependencies (extractors)
 , pkgs
 , e2fsprogs
@@ -93,6 +94,7 @@ let
       structlog
       ubi_reader
       rarfile
+      treelib
     ];
 
     nativeBuildInputs = [
