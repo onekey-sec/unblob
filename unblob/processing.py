@@ -235,6 +235,8 @@ class Processor:
         logger.exception("Unknown error happened", exc_info=exc)
 
     def _process_task(self, result: TaskResult, task: Task):
+        stat_report = StatReport.from_path(task.path)
+        result.add_report(stat_report)
         log = logger.bind(path=task.path)
 
         if task.depth >= self._config.max_depth:
@@ -245,9 +247,6 @@ class Processor:
         if not valid_path(task.path):
             log.warning("Path contains invalid characters, it won't be processed")
             return
-
-        stat_report = StatReport.from_path(task.path)
-        result.add_report(stat_report)
 
         if stat_report.is_dir:
             log.debug("Found directory")
