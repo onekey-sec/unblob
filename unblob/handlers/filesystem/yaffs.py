@@ -21,7 +21,7 @@ from unblob.file_utils import (
     read_until_past,
     snull,
 )
-from unblob.models import Extractor, HexString, StructHandler, ValidChunk
+from unblob.models import Extractor, Handler, HexString, ValidChunk
 
 logger = get_logger()
 
@@ -30,9 +30,16 @@ logger = get_logger()
 # write_object_header(1, YAFFS_OBJECT_TYPE_DIRECTORY, &stats, 1,"", -1, NULL);
 YAFFS1_FIRST_ENTRY = b"\xff\xff\x00\x00\x00\x00\x00\x00"
 
+SPARE_START_BIG_ENDIAN_ECC = b"\x00\x00\x10\x00"
+SPARE_START_BIG_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x00\x10\x00"
+SPARE_START_LITTLE_ENDIAN_ECC = b"\x00\x10\x00\x00"
+SPARE_START_LITTLE_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x10\x00\x00"
+
 # YAFFS_OBJECT_TYPE_DIRECTORY, YAFFS_OBJECT_TYPE_FILE
 BIG_ENDIAN_MAGICS = [0x00_00_00_01, 0x00_00_00_03]
 
+VALID_PAGE_SIZES = [512, 1024, 2048, 4096, 8192, 16384]
+VALID_SPARE_SIZES = [16, 32, 64, 128, 256, 512]
 
 C_DEFINITIONS = """
     struct yaffs1_obj_hdr {
@@ -157,64 +164,19 @@ class YAFFS2Chunk(YAFFSChunk):
 
 
 @attr.define
+class YAFFSFileVar:
+    file_size: int
+    stored_size: int
+    shrink_size: int
+    top_level: int
+
+
+@attr.define
 class YAFFSConfig:
     endianness: Endian
     page_size: int
     spare_size: int
     ecc: bool
-
-
-VALID_PAGE_SIZES = [512, 1024, 2048, 4096, 8192, 16384]
-VALID_SPARE_SIZES = [16, 32, 64, 128, 256, 512]
-
-logger = get_logger()
-
-
-def iterate_over_file(
-    file: File, config: YAFFSConfig
-) -> Iterable[Tuple[int, bytes, bytes]]:
-    start_offset = file.tell()
-    page = file.read(config.page_size)
-    spare = file.read(config.spare_size)
-
-    while len(page) == config.page_size and len(spare) == config.spare_size:
-        yield (start_offset, page, spare)
-        page = file.read(config.page_size)
-        spare = file.read(config.spare_size)
-        start_offset = file.tell()
-
-
-def decode_file_size(high: int, low: int) -> int:
-    """File size can be encoded as 64 bits or 32 bits values.
-
-    If upper 32 bits are set, it's a 64 bits integer value.
-    Otherwise it's a 32 bits value. 0xFFFFFFFF means zero.
-    """
-    if high != 0xFFFFFFFF:
-        return (high << 32) | (low & 0xFFFFFFFF)
-    if low != 0xFFFFFFFF:
-        return low
-    return 0
-
-
-def valid_name(name: bytes) -> bool:
-    # a valid name is either full of null bytes, or unicode decodable
-    try:
-        snull(name[:-1]).decode("utf-8")
-    except UnicodeDecodeError:
-        return False
-    else:
-        return True
-
-
-def is_valid_header(header: Instance) -> bool:
-    if not valid_name(header.name[:-3]):
-        return False
-    if header.type > 5:
-        return False
-    if header.sum_no_longer_used != 0xFFFF:
-        return False
-    return True
 
 
 @attr.define
@@ -270,14 +232,6 @@ class YAFFS1Entry(YAFFSEntry):
             yield max(chunks, key=lambda chunk: chunk.serial)
 
 
-@attr.define
-class YAFFSFileVar:
-    file_size: int
-    stored_size: int
-    shrink_size: int
-    top_level: int
-
-
 @attr.define(kw_only=True)
 class YAFFS2Entry(YAFFSEntry):
     chksum: int
@@ -319,6 +273,53 @@ class YAFFS2Entry(YAFFSEntry):
             yield max(chunks, key=lambda chunk: chunk.seq_number)
 
 
+def iterate_over_file(
+    file: File, config: YAFFSConfig
+) -> Iterable[Tuple[int, bytes, bytes]]:
+    start_offset = file.tell()
+    page = file.read(config.page_size)
+    spare = file.read(config.spare_size)
+
+    while len(page) == config.page_size and len(spare) == config.spare_size:
+        yield (start_offset, page, spare)
+        page = file.read(config.page_size)
+        spare = file.read(config.spare_size)
+        start_offset = file.tell()
+
+
+def decode_file_size(high: int, low: int) -> int:
+    """File size can be encoded as 64 bits or 32 bits values.
+
+    If upper 32 bits are set, it's a 64 bits integer value.
+    Otherwise it's a 32 bits value. 0xFFFFFFFF means zero.
+    """
+    if high != 0xFFFFFFFF:
+        return (high << 32) | (low & 0xFFFFFFFF)
+    if low != 0xFFFFFFFF:
+        return low
+    return 0
+
+
+def valid_name(name: bytes) -> bool:
+    # a valid name is either full of null bytes, or unicode decodable
+    try:
+        snull(name[:-1]).decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    else:
+        return True
+
+
+def is_valid_header(header: Instance) -> bool:
+    if not valid_name(header.name[:-3]):
+        return False
+    if header.type > 5:
+        return False
+    if header.sum_no_longer_used != 0xFFFF:
+        return False
+    return True
+
+
 ROOT = YAFFS1Entry(
     object_type=0,
     object_id=1,
@@ -330,11 +331,6 @@ ROOT = YAFFS1Entry(
     start_offset=0,
     chunks=[],
 )
-
-SPARE_START_BIG_ENDIAN_ECC = b"\x00\x00\x10\x00"
-SPARE_START_BIG_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x00\x10\x00"
-SPARE_START_LITTLE_ENDIAN_ECC = b"\x00\x10\x00\x00"
-SPARE_START_LITTLE_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x10\x00\x00"
 
 
 class YAFFSParser:
@@ -385,13 +381,10 @@ class YAFFSParser:
                 )
                 break
 
-        # Now to try to identify the spare data size...
         # If not using the ECC layout, there are 2 extra bytes at the beginning of the
         # spare data block. Ignore them.
 
         ecc_offset = 0 if config.ecc else 2
-
-        # TODO: it works except for 512/16
 
         # The spare data signature is built dynamically, as there are repeating data patterns
         # that we can match on to find where the spare data ends. Take this hexdump for example:
@@ -653,6 +646,9 @@ class YAFFS2Parser(YAFFSParser):
 
 class YAFFS1Parser(YAFFSParser):
     def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
+        # from https://yaffs.net/archives/yaffs-development-notes: currently each chunk
+        # is the same size as a NAND flash page (ie. 512 bytes + 16 byte spare).
+        # In the future we might decide to allow for different chunk sizes.
         config = YAFFSConfig(
             page_size=512,
             spare_size=16,
@@ -738,28 +734,15 @@ class YAFFSExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
         infile = File.from_path(inpath)
         if infile[8:16] == YAFFS1_FIRST_ENTRY:
-            # from https://yaffs.net/archives/yaffs-development-notes: currently each chunk
-            # is the same size as a NAND flash page (ie. 512 bytes + 16 byte spare).
-            # In the future we might decide to allow for different chunk sizes.
-            config = YAFFSConfig(
-                page_size=512,
-                spare_size=16,
-                endianness=get_endian_multi(infile, BIG_ENDIAN_MAGICS),
-                ecc=False,
-            )
-            parser = YAFFS1Parser(infile, config)
+            parser = YAFFS1Parser(infile)
         else:
             parser = YAFFS2Parser(infile)
         parser.parse()
         parser.extract(outdir)
 
 
-class YAFFSHandler(StructHandler):
+class YAFFSHandler(Handler):
     NAME = "yaffs"
-
-    C_DEFINITIONS = C_DEFINITIONS
-
-    HEADER_STRUCT = "yaffs_obj_hdr_t"
 
     PATTERNS = [
         HexString(
