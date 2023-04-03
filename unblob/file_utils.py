@@ -6,7 +6,7 @@ import os
 import shutil
 import struct
 from pathlib import Path
-from typing import Iterator, Tuple, Union
+from typing import Iterator, List, Tuple, Union
 
 from dissect.cstruct import cstruct
 from pyperscan import Scan
@@ -300,6 +300,24 @@ def get_endian(file: File, big_endian_magic: int) -> Endian:
     file.seek(-len(magic_bytes), io.SEEK_CUR)
     magic = convert_int32(magic_bytes, Endian.BIG)
     return Endian.BIG if magic == big_endian_magic else Endian.LITTLE
+
+
+def get_endian_multi(file: File, big_endian_magics: List[int]) -> Endian:
+    """Read a four bytes magic and derive endianness from it.
+
+    It compares the read data with the big endian magic.  It reads
+    four bytes and seeks back after that.
+    """
+    if any(big_endian_magic > 0xFF_FF_FF_FF for big_endian_magic in big_endian_magics):
+        raise ValueError("big_endian_magic is larger than a 32 bit integer.")
+    magic_bytes = file.read(4)
+    file.seek(-len(magic_bytes), io.SEEK_CUR)
+    magic = convert_int32(magic_bytes, Endian.BIG)
+    return (
+        Endian.BIG
+        if any((magic == big_endian_magic) for big_endian_magic in big_endian_magics)
+        else Endian.LITTLE
+    )
 
 
 def read_until_past(file: File, pattern: bytes):
