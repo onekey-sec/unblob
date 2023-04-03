@@ -2,6 +2,7 @@ from ..models import Handlers
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
 from .archive.dlink import encrpted_img, shrs
 from .archive.engeniustech import engenius
+from .archive.hp import bdl
 from .archive.instar import bneg
 from .archive.netgear import chk, trx
 from .archive.qnap import qnap_nas
@@ -62,6 +63,7 @@ BUILTIN_HANDLERS: Handlers = (
     hdr.HDR2Handler,
     qnap_nas.QnapHandler,
     bneg.BNEGHandler,
+    bdl.HPBDLHandler,
     sparse.SparseHandler,
     ar.ARHandler,
     arc.ARCHandler,
