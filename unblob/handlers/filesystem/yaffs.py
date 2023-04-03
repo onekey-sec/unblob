@@ -337,8 +337,8 @@ class YAFFSParser:
 
     def auto_detect(self) -> YAFFSConfig:
         """Auto-detect page_size, spare_size, and ECC using known signatures."""
-        config = None
         page_size = 0
+        config = None
         for page_size in VALID_PAGE_SIZES:
             spare_start = self.file[page_size : page_size + 6]
             if spare_start.startswith(SPARE_START_LITTLE_ENDIAN_ECC):
@@ -367,6 +367,9 @@ class YAFFSParser:
                     endianness=Endian.BIG, page_size=page_size, ecc=False, spare_size=-1
                 )
                 break
+
+        if config is None:
+            raise InvalidInputFormat("Cannot detect YAFFS configuration.")
 
         # If not using the ECC layout, there are 2 extra bytes at the beginning of the
         # spare data block. Ignore them.
@@ -552,7 +555,7 @@ class YAFFS2Parser(YAFFSParser):
     def parse(self):
         # YAFFS2 do not store the root in file.
         root = YAFFS1Entry(
-            object_type=0,
+            object_type=YaffsObjectType.DIRECTORY,
             object_id=1,
             parent_obj_id=1,
             sum_no_longer_used=0,
