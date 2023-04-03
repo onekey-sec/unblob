@@ -5,6 +5,7 @@ let
     inherit self;
     packageOverrides = final: prev: {
       pyperscan = pyperscan.packages.${system}.default.vectorscan;
+      treelib = final.callPackage ../treelib { };
     };
   };
 in
