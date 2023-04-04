@@ -13,7 +13,7 @@ from structlog import get_logger
 from unblob.handlers import BUILTIN_HANDLERS, Handlers
 
 from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
-from .file_utils import iterate_file, valid_path
+from .file_utils import iterate_file
 from .finder import search_chunks
 from .iter_utils import pairwise
 from .logging import noformat
@@ -242,10 +242,6 @@ class Processor:
         if task.depth >= self._config.max_depth:
             # TODO: Use the reporting feature to warn the user (ONLY ONCE) at the end of execution, that this limit was reached.
             log.debug("Reached maximum depth, stop further processing")
-            return
-
-        if not valid_path(task.path):
-            log.warning("Path contains invalid characters, it won't be processed")
             return
 
         if stat_report.is_dir:

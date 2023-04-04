@@ -1,3 +1,4 @@
+import platform
 import sys
 import zipfile
 from pathlib import Path
@@ -16,7 +17,7 @@ from unblob.processing import (
     process_file,
     remove_inner_chunks,
 )
-from unblob.report import ExtractDirectoryExistsReport
+from unblob.report import ExtractDirectoryExistsReport, StatReport
 
 
 def assert_same_chunks(expected, actual, explanation=None):
@@ -277,3 +278,36 @@ def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
     assert outsiders == [extracted_fw_zip]
 
     assert extracted_extracted_fw_paths == [Path("."), *extracted_fw_paths]
+
+
+@pytest.mark.skipif(
+    platform.system() == "Darwin", reason="non-POSIX path not supported"
+)
+def test_processing_with_non_posix_paths(tmp_path: Path):
+    non_unicode_file = tmp_path / "file-\udce4\udc94"
+    non_unicode_file.write_bytes(b"content")
+
+    directory = tmp_path / "dir-\udce4\udc94"
+    directory.mkdir(exist_ok=True)
+    file_with_non_unicode_dir = directory / "test.txt"
+    file_with_non_unicode_dir.write_bytes(b"content")
+
+    extract_root = tmp_path / "extract_root"
+    config = ExtractionConfig(extract_root=extract_root, entropy_depth=0)
+
+    for path in (non_unicode_file, file_with_non_unicode_dir):
+        process_result = process_file(config, path)
+        assert process_result.errors == []
+        assert len(process_result.results) == 1
+        assert len(process_result.results[0].reports) == 3
+
+        report = process_result.results[0].reports[0]
+        assert isinstance(report, StatReport)
+        assert report == StatReport(
+            path=path,
+            size=7,
+            is_dir=False,
+            is_file=True,
+            is_link=False,
+            link_target=None,
+        )
