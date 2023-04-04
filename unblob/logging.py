@@ -47,6 +47,12 @@ def _format_message(value: Any, extract_root: Path) -> Any:
     if isinstance(value, int):
         return format_hex(value)
 
+    if isinstance(value, str):
+        try:
+            value.encode()
+        except UnicodeEncodeError:
+            return value.encode("utf-8", errors="surrogateescape")
+
     return value
 
 

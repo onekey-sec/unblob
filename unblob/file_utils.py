@@ -311,11 +311,3 @@ def read_until_past(file: File, pattern: bytes):
             return file.tell()
         if next_byte not in pattern:
             return file.tell() - 1
-
-
-def valid_path(path: Path) -> bool:
-    try:
-        path.as_posix().encode("utf-8")
-    except UnicodeEncodeError:
-        return False
-    return True
