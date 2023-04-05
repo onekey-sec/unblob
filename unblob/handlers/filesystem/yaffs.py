@@ -287,7 +287,13 @@ class YAFFSParser:
         else:
             self.config = config
 
+    def build_entry(self, header: Instance, chunk: YAFFSChunk) -> YAFFSEntry:
+        raise NotImplementedError
+
     def build_chunk(self, spare: bytes, offset: int) -> YAFFSChunk:
+        raise NotImplementedError
+
+    def get_chunks(self, object_id: int) -> Iterable[YAFFSChunk]:
         raise NotImplementedError
 
     def init_tree(self):
