@@ -210,11 +210,6 @@ class YAFFSEntry:
         return f"{self.object_id}: {self.name}"
 
 
-@attr.define
-class YAFFS1Entry(YAFFSEntry):
-    ...
-
-
 @attr.define(kw_only=True)
 class YAFFS2Entry(YAFFSEntry):
     chksum: int = attr.ib(default=0)
@@ -693,7 +688,7 @@ class YAFFS1Parser(YAFFSParser):
         )
 
     def build_entry(self, header: Instance, chunk: YAFFSChunk) -> YAFFSEntry:
-        return YAFFS1Entry(
+        return YAFFSEntry(
             object_type=header.type,
             object_id=chunk.object_id,
             parent_obj_id=header.parent_obj_id,
