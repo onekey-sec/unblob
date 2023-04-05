@@ -551,9 +551,7 @@ class YAFFSParser:
                 )
                 return
             src_path.link_to(out_path)
-        # out_path.chmod(entry.st_mode)
-        # os.utime(out_path.as_posix(),(entry.st_atime,entry.st_mtime))
-        # os.chown(out_path.as_posix(), entry.st_uid, entry.st_gid)
+        os.utime(out_path.as_posix(), (entry.st_atime, entry.st_mtime))
 
 
 class YAFFS2Parser(YAFFSParser):
