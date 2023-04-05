@@ -299,9 +299,8 @@ class YAFFSParser:
     def init_tree(self):
         return
 
-    def parse(self):
+    def parse(self, store: bool = False):  # noqa: C901,FBT001,FBT002
         self.init_tree()
-
         for offset, page, spare in iterate_over_file(self.file, self.config):
             try:
                 data_chunk = self.build_chunk(
@@ -326,9 +325,12 @@ class YAFFSParser:
                 if not is_valid_header(header):
                     break
 
-                entry = self.build_entry(header, data_chunk)
-                self.insert_entry(entry)
+                if not store:
+                    continue
+                self.insert_entry(self.build_entry(header, data_chunk))
             else:
+                if not store:
+                    continue
                 if data_chunk.object_id not in self.data_chunks:
                     self.data_chunks[data_chunk.object_id] = []
                 self.data_chunks[data_chunk.object_id].append(data_chunk)
@@ -732,7 +734,7 @@ class YAFFSExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
         infile = File.from_path(inpath)
         parser = instantiate_parser(infile)
-        parser.parse()
+        parser.parse(store=True)
         parser.extract(outdir)
 
 
