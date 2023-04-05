@@ -25,11 +25,6 @@ from unblob.models import Extractor, Handler, HexString, ValidChunk
 
 logger = get_logger()
 
-# YAFFS1 images always have a first entry as a directory entry with an empty name
-# this is how it's done in mkyaffsimage:
-# write_object_header(1, YAFFS_OBJECT_TYPE_DIRECTORY, &stats, 1,"", -1, NULL);
-YAFFS1_FIRST_ENTRY = b"\xff\xff\x00\x00\x00\x00\x00\x00"
-
 SPARE_START_BIG_ENDIAN_ECC = b"\x00\x00\x10\x00"
 SPARE_START_BIG_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x00\x10\x00"
 SPARE_START_LITTLE_ENDIAN_ECC = b"\x00\x10\x00\x00"
@@ -41,6 +36,8 @@ BIG_ENDIAN_MAGICS = [0x00_00_00_01, 0x00_00_00_03]
 
 VALID_PAGE_SIZES = [512, 1024, 2048, 4096, 8192, 16384]
 VALID_SPARE_SIZES = [16, 32, 64, 128, 256, 512]
+YAFFS1_PAGE_SIZE = 512
+YAFFS1_SPARE_SIZE = 16
 
 C_DEFINITIONS = """
     struct yaffs1_obj_hdr {
@@ -653,8 +650,8 @@ class YAFFS1Parser(YAFFSParser):
         # is the same size as a NAND flash page (ie. 512 bytes + 16 byte spare).
         # In the future we might decide to allow for different chunk sizes.
         config = YAFFSConfig(
-            page_size=512,
-            spare_size=16,
+            page_size=YAFFS1_PAGE_SIZE,
+            spare_size=YAFFS1_SPARE_SIZE,
             endianness=get_endian_multi(file, BIG_ENDIAN_MAGICS),
             ecc=False,
         )
@@ -723,8 +720,44 @@ class YAFFS1Parser(YAFFSParser):
             yield max(chunks, key=lambda chunk: ((chunk.serial + 1) & 3))
 
 
+def is_yaffs_v1(file: File, start_offset: int) -> bool:
+    struct_parser = StructParser(C_DEFINITIONS)
+    file.seek(start_offset, io.SEEK_SET)
+    if file[0:4] == b"\x03\x00\x00\x00" or file[0:4] == b"\x01\x00\x00\x00":
+        endian = Endian.LITTLE
+    else:
+        endian = Endian.BIG
+    file.seek(start_offset + YAFFS1_PAGE_SIZE, io.SEEK_SET)
+    spare = file.read(YAFFS1_SPARE_SIZE)
+
+    yaffs_sparse = struct_parser.parse("yaffs_spare_t", spare, endian)
+
+    yaffs_packed_tags = struct_parser.parse(
+        "yaffs1_packed_tags_t",
+        bytes(
+            [
+                yaffs_sparse.tag_b0,
+                yaffs_sparse.tag_b1,
+                yaffs_sparse.tag_b2,
+                yaffs_sparse.tag_b3,
+                yaffs_sparse.tag_b4,
+                yaffs_sparse.tag_b5,
+                yaffs_sparse.tag_b6,
+                yaffs_sparse.tag_b7,
+            ]
+        ),
+        endian,
+    )
+    file.seek(start_offset, io.SEEK_SET)
+    return (
+        yaffs_packed_tags.chunk_id == 0
+        and yaffs_packed_tags.serial == 0
+        and yaffs_packed_tags.object_id == 1
+    )
+
+
 def instantiate_parser(file: File, start_offset: int = 0) -> YAFFSParser:
-    if file[start_offset + 8 : start_offset + 16] == YAFFS1_FIRST_ENTRY:
+    if is_yaffs_v1(file, start_offset):
         return YAFFS1Parser(file)
     return YAFFS2Parser(file)
 
