@@ -425,7 +425,8 @@ class YAFFSParser:
             # or the file got truncated / rewritten.
             # Given that YAFFS is a log filesystem, whichever chunk comes
             # last takes precendence.
-            self.file_entries.remove_node(entry.object_id)
+            self.file_entries.update_node(entry.object_id, data=entry)
+            return
 
         if entry.object_id == entry.parent_obj_id:
             self.file_entries.create_node(
