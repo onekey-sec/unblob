@@ -147,6 +147,7 @@ class YaffsObjectType(IntEnum):
 @attr.define
 class YAFFSChunk:
     chunk_id: int
+    offset: int
     byte_count: int
     object_id: int
 
@@ -189,16 +190,12 @@ class YAFFSEntry:
     name: str = attr.ib(default="")
     alias: str = attr.ib(default="")
     file_size: int = attr.ib(default=0)
-    start_offset: int = attr.ib(default=0)
     st_mode: int = attr.ib(default=0)
     st_uid: int = attr.ib(default=0)
     st_gid: int = attr.ib(default=0)
     st_atime: int = attr.ib(default=0)
     st_mtime: int = attr.ib(default=0)
     st_ctime: int = attr.ib(default=0)
-
-    def get_chunks(self):
-        raise NotImplementedError
 
     def __lt__(self, other):
         return self.object_id < other.object_id
@@ -215,25 +212,7 @@ class YAFFSEntry:
 
 @attr.define
 class YAFFS1Entry(YAFFSEntry):
-    chunks: List[YAFFS1Chunk] = attr.ib(default=[])
-
-    def get_chunks(self) -> Iterable[YAFFS1Chunk]:
-        """Return a filtered and ordered list of chunks."""
-        # YAFFS1 chunks have a serial number that is used to track
-        # which chunk takes precedence if two chunks have the same
-        # identifier. This is used in scenarios like power loss
-        # during a copy operation. Whenever we have two chunks with
-        # the same id, we only return the one with the highest serial.
-
-        for _, chunks in itertools.groupby(
-            sorted(
-                self.chunks,
-                key=lambda chunk: chunk.chunk_id,
-            )
-        ):
-            # serial is a 2 bit, this function works since there's always at most
-            # two chunks with the same chunk_id at any given time
-            yield max(chunks, key=lambda chunk: ((chunk.serial + 1) & 3))
+    ...
 
 
 @attr.define(kw_only=True)
@@ -249,26 +228,6 @@ class YAFFS2Entry(YAFFSEntry):
     shadows_obj: int = attr.ib(default=0)
     is_shrink: int = attr.ib(default=0)
     filehead: YAFFSFileVar = attr.ib(default=None)
-    chunks: List[YAFFS2Chunk] = attr.ib(default=[])
-
-    def get_chunks(self) -> Iterable[YAFFS2Chunk]:
-        """Return a filtered and ordered list of chunks."""
-        # The Yaffs2 sequence number is not the same as the Yaffs1 serial number!
-
-        # As each block is allocated, the file system's
-        # sequence number is incremented and each chunk in the block is marked with that
-        # sequence number. The sequence number thus provides a way of organising the log in
-        # chronological order.
-
-        # Since we're scanning backwards, the most recently written - and thus current - chunk
-        # matching an obj_id:chunk_id pair will be encountered first and all subsequent matching chunks must be obsolete and treated as deleted.
-
-        # note: there is no deletion marker in YAFFS2
-
-        for _, chunks in itertools.groupby(
-            sorted(self.chunks, key=lambda chunk: chunk.chunk_id)
-        ):
-            yield max(chunks, key=lambda chunk: chunk.seq_number)
 
 
 def iterate_over_file(
@@ -323,11 +282,9 @@ class YAFFSParser:
 
     def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
         self.file_entries = Tree()
+        self.data_chunks = {}
         self.file = file
         self._struct_parser = StructParser(C_DEFINITIONS)
-        self.file.seek(0, io.SEEK_END)
-        self.eof = self.file.tell()
-        self.file.seek(0, io.SEEK_SET)
         self.end_offset = -1
         if config is None:
             self.config = self.auto_detect()
@@ -335,7 +292,7 @@ class YAFFSParser:
         else:
             self.config = config
 
-    def build_chunk(self, spare: bytes) -> YAFFSChunk:
+    def build_chunk(self, spare: bytes, offset: int) -> YAFFSChunk:
         raise NotImplementedError
 
     def init_tree(self):
@@ -346,7 +303,9 @@ class YAFFSParser:
 
         for offset, page, spare in iterate_over_file(self.file, self.config):
             try:
-                data_chunk = self.build_chunk(spare)
+                data_chunk = self.build_chunk(
+                    spare, offset - self.config.page_size - self.config.spare_size
+                )
             except EOFError:
                 break
 
@@ -366,17 +325,12 @@ class YAFFSParser:
                 if not is_valid_header(header):
                     break
 
-                entry = self.build_entry(header, data_chunk, offset)
+                entry = self.build_entry(header, data_chunk)
                 self.insert_entry(entry)
             else:
-                # this is a data chunk, so we add it to our object
-                entry = self.get_entry(data_chunk.object_id)
-                # can happen during bruteforcing
-                if entry is not None:
-                    entry.chunks.append(data_chunk)
-                else:
-                    break
-
+                if data_chunk.object_id not in self.data_chunks:
+                    self.data_chunks[data_chunk.object_id] = []
+                self.data_chunks[data_chunk.object_id].append(data_chunk)
         self.end_offset = self.file.tell()
 
     def auto_detect(self) -> YAFFSConfig:
@@ -470,8 +424,6 @@ class YAFFSParser:
             # or the file got truncated / rewritten.
             # Given that YAFFS is a log filesystem, whichever chunk comes
             # last takes precendence.
-            entry.chunks = duplicate_node.chunks
-            entry.start_offset = duplicate_node.start_offset
             self.file_entries.remove_node(entry.object_id)
 
         if entry.object_id == entry.parent_obj_id:
@@ -518,12 +470,8 @@ class YAFFSParser:
         return resolved_path
 
     def get_file_bytes(self, entry: YAFFSEntry) -> Iterable[bytes]:
-        for chunk in entry.get_chunks():
-            start_offset = entry.start_offset + (
-                (chunk.chunk_id - 1) * (self.config.page_size + self.config.spare_size)
-            )
-            end_offset = start_offset + chunk.byte_count
-            yield self.file[start_offset:end_offset]
+        for chunk in self.get_chunks(entry.object_id):
+            yield self.file[chunk.offset : chunk.offset + chunk.byte_count]
 
     def extract(self, outdir: Path):
         for entry in [
@@ -610,7 +558,7 @@ class YAFFSParser:
 class YAFFS2Parser(YAFFSParser):
     HEADER_STRUCT = "yaffs2_obj_hdr_t"
 
-    def build_chunk(self, spare: bytes) -> YAFFS2Chunk:
+    def build_chunk(self, spare: bytes, offset: int) -> YAFFS2Chunk:
         # images built without ECC have two superfluous bytes before the chunk ID.
         if not self.config.ecc:
             # adding two null bytes at the end only works if it's LE
@@ -627,18 +575,16 @@ class YAFFS2Parser(YAFFSParser):
         )
 
         return YAFFS2Chunk(
+            offset=offset,
             chunk_id=yaffs2_packed_tags.chunk_id,
             seq_number=yaffs2_packed_tags.seq_number,
             byte_count=yaffs2_packed_tags.byte_count,
             object_id=yaffs2_packed_tags.object_id,
         )
 
-    def build_entry(
-        self, header: Instance, chunk: YAFFSChunk, offset: int
-    ) -> YAFFSEntry:
+    def build_entry(self, header: Instance, chunk: YAFFSChunk) -> YAFFSEntry:
         return YAFFS2Entry(
             object_id=chunk.object_id,
-            chunks=[],
             object_type=header.type,
             parent_obj_id=header.parent_obj_id,
             sum_no_longer_used=header.sum_no_longer_used,
@@ -667,8 +613,26 @@ class YAFFS2Parser(YAFFSParser):
                 top_level=header.filehead.top_level,
             ),
             file_size=decode_file_size(header.file_size_high, header.file_size_low),
-            start_offset=offset,
         )
+
+    def get_chunks(self, object_id: int) -> Iterable[YAFFS2Chunk]:
+        """Return a filtered and ordered list of chunks."""
+        # The Yaffs2 sequence number is not the same as the Yaffs1 serial number!
+
+        # As each block is allocated, the file system's
+        # sequence number is incremented and each chunk in the block is marked with that
+        # sequence number. The sequence number thus provides a way of organising the log in
+        # chronological order.
+
+        # Since we're scanning backwards, the most recently written - and thus current - chunk
+        # matching an obj_id:chunk_id pair will be encountered first and all subsequent matching chunks must be obsolete and treated as deleted.
+
+        # note: there is no deletion marker in YAFFS2
+
+        for _, chunks in itertools.groupby(
+            sorted(self.data_chunks[object_id], key=lambda chunk: chunk.chunk_id)
+        ):
+            yield max(chunks, key=lambda chunk: chunk.seq_number)
 
     def init_tree(self):
         # YAFFS2 do not store the root in file.
@@ -695,7 +659,7 @@ class YAFFS1Parser(YAFFSParser):
         )
         super().__init__(file, config)
 
-    def build_chunk(self, spare: bytes) -> YAFFS1Chunk:
+    def build_chunk(self, spare: bytes, offset: int) -> YAFFS1Chunk:
         yaffs_sparse = self._struct_parser.parse(
             "yaffs_spare_t", spare, self.config.endianness
         )
@@ -718,6 +682,7 @@ class YAFFS1Parser(YAFFSParser):
         )
 
         return YAFFS1Chunk(
+            offset=offset,
             chunk_id=yaffs_packed_tags.chunk_id,
             serial=yaffs_packed_tags.serial,
             byte_count=yaffs_packed_tags.byte_count,
@@ -727,9 +692,7 @@ class YAFFS1Parser(YAFFSParser):
             block_status=yaffs_sparse.block_status,
         )
 
-    def build_entry(
-        self, header: Instance, chunk: YAFFSChunk, offset: int
-    ) -> YAFFSEntry:
+    def build_entry(self, header: Instance, chunk: YAFFSChunk) -> YAFFSEntry:
         return YAFFS1Entry(
             object_type=header.type,
             object_id=chunk.object_id,
@@ -738,9 +701,25 @@ class YAFFS1Parser(YAFFSParser):
             name=snull(header.name[0:128]).decode("utf-8"),
             alias=snull(header.alias.replace(b"\xFF", b"")).decode("utf-8"),
             file_size=header.file_size,
-            start_offset=offset,
-            chunks=[],
         )
+
+    def get_chunks(self, object_id: int) -> Iterable[YAFFS1Chunk]:
+        """Return a filtered and ordered list of chunks."""
+        # YAFFS1 chunks have a serial number that is used to track
+        # which chunk takes precedence if two chunks have the same
+        # identifier. This is used in scenarios like power loss
+        # during a copy operation. Whenever we have two chunks with
+        # the same id, we only return the one with the highest serial.
+
+        for _, chunks in itertools.groupby(
+            sorted(
+                self.data_chunks[object_id],
+                key=lambda chunk: chunk.chunk_id,
+            )
+        ):
+            # serial is a 2 bit, this function works since there's always at most
+            # two chunks with the same chunk_id at any given time
+            yield max(chunks, key=lambda chunk: ((chunk.serial + 1) & 3))
 
 
 def instantiate_parser(file: File, start_offset: int = 0) -> YAFFSParser:
