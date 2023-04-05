@@ -554,7 +554,6 @@ class YAFFSParser:
                 )
                 return
             src_path.link_to(out_path)
-        os.utime(out_path.as_posix(), (entry.st_atime, entry.st_mtime))
 
 
 class YAFFS2Parser(YAFFSParser):
