@@ -18,7 +18,7 @@ class _SquashFSBase(StructHandler):
     BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
     EXTRACTOR = Command(
-        "sasquatch", "-no-exit-code", "-f", "-d", "{outdir}", "{inpath}"
+        "sasquatch", "-no-exit-code", "-ig", "-f", "-d", "{outdir}", "{inpath}"
     )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
