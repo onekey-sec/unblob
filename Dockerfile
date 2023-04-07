@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     zlib1g-dev \
     libmagic1 \
     zstd
-RUN curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-2/sasquatch_1.0_amd64.deb \
+RUN curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-3/sasquatch_1.0_amd64.deb \
     && dpkg -i sasquatch_1.0_amd64.deb \
     && rm -f sasquatch_1.0_amd64.deb
 
