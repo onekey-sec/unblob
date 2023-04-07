@@ -73,6 +73,7 @@ def hello_kitty_task_results(
     extract_root: Path,
     hello_id: str,
     kitty_id: str,
+    padding_id: str,
     container_id="",
     start_depth=0,
 ):
@@ -133,12 +134,14 @@ def hello_kitty_task_results(
                     size=7,
                     entropy=None,
                 ),
-                UnknownChunkReport(
-                    id=ANY,
+                ChunkReport(
+                    id=padding_id,
                     start_offset=263,
                     end_offset=264,
                     size=1,
-                    entropy=None,
+                    handler_name="padding",
+                    is_encrypted=False,
+                    extraction_reports=[],
                 ),
                 ChunkReport(
                     id=hello_id,
@@ -286,13 +289,14 @@ def test_flat_report_structure(hello_kitty: Path, extract_root):
     task_results = get_normalized_task_results(process_result)
 
     # extract the ids from the chunks
-    hello_id, kitty_id = get_chunk_ids(task_results[0])
+    padding_id, hello_id, kitty_id = get_chunk_ids(task_results[0])
 
     assert task_results == hello_kitty_task_results(
         hello_kitty=hello_kitty,
         extract_root=extract_root,
         hello_id=hello_id,
         kitty_id=kitty_id,
+        padding_id=padding_id,
     )
 
 
@@ -416,7 +420,7 @@ def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_ro
     # and they should be the only differences
     [main_id] = get_chunk_ids(task_results[0])
 
-    hello_id, kitty_id = get_chunk_ids(task_results[2])
+    padding_id, hello_id, kitty_id = get_chunk_ids(task_results[2])
 
     # We test, that the container is referenced from the internal file
     # through the chunk id `main_id`
@@ -428,6 +432,7 @@ def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_ro
         extract_root=extract_root / "container_extract",
         hello_id=hello_id,
         kitty_id=kitty_id,
+        padding_id=padding_id,
         container_id=main_id,
         start_depth=1,
     )

@@ -2,7 +2,7 @@ import multiprocessing
 import shutil
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type
+from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type, Union
 
 import attr
 import magic
@@ -24,6 +24,7 @@ from .models import (
     ExtractError,
     File,
     MultiFile,
+    PaddingChunk,
     ProcessResult,
     Task,
     TaskResult,
@@ -458,6 +459,29 @@ class _DirectoryTask:
             )
 
 
+def is_padding(file: File, chunk: UnknownChunk):
+    return len(set(file[chunk.start_offset : chunk.end_offset])) == 1
+
+
+def process_patterns(
+    unknown_chunks: List[UnknownChunk], file: File
+) -> List[Union[UnknownChunk, PaddingChunk]]:
+    processed_chunks = []
+    for unknown_chunk in unknown_chunks:
+        if is_padding(file, unknown_chunk):
+            processed_chunks.append(
+                PaddingChunk(
+                    start_offset=unknown_chunk.start_offset,
+                    end_offset=unknown_chunk.end_offset,
+                    id=unknown_chunk.id,
+                    file=unknown_chunk.file,
+                )
+            )
+        else:
+            processed_chunks.append(unknown_chunk)
+    return processed_chunks
+
+
 class _FileTask:
     def __init__(
         self,
@@ -495,6 +519,7 @@ class _FileTask:
             )
             outer_chunks = remove_inner_chunks(all_chunks)
             unknown_chunks = calculate_unknown_chunks(outer_chunks, self.size)
+            unknown_chunks = process_patterns(unknown_chunks, file)
             assign_file_to_chunks(outer_chunks, file=file)
             assign_file_to_chunks(unknown_chunks, file=file)
 
@@ -511,7 +536,7 @@ class _FileTask:
         self,
         file: File,
         outer_chunks: List[ValidChunk],
-        unknown_chunks: List[UnknownChunk],
+        unknown_chunks: List[Union[UnknownChunk, PaddingChunk]],
     ):
         if unknown_chunks:
             logger.warning("Found unknown Chunks", chunks=unknown_chunks)

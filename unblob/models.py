@@ -147,6 +147,28 @@ class UnknownChunk(Chunk):
         )
 
 
+@attr.define(repr=False)
+class PaddingChunk(Chunk):
+    r"""Gaps between valid chunks or otherwise unknown chunks.
+
+    Important for manual analysis, and analytical certanity: for example
+    entropy, other chunks inside it, metadata, etc.
+    """
+
+    def as_report(
+        self, entropy: Optional[EntropyReport]  #   noqa: ARG002
+    ) -> ChunkReport:
+        return ChunkReport(
+            id=self.id,
+            start_offset=self.start_offset,
+            end_offset=self.end_offset,
+            size=self.size,
+            is_encrypted=False,
+            handler_name="padding",
+            extraction_reports=[],
+        )
+
+
 @attrs.define
 class MultiFile(Blob):
     name: str = attr.field(kw_only=True)
