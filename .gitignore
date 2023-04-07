@@ -8,3 +8,4 @@ build/
 .idea
 .coverage*
 /.venv/
+unblob.log

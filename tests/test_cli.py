@@ -216,6 +216,7 @@ def test_archive_success(
     assert result.exit_code == 0
     assert "error" not in result.output
     assert "warning" not in result.output
+    log_path = Path("unblob.log")
     config = ExtractionConfig(
         extract_root=tmp_path,
         max_depth=expected_depth,
@@ -223,9 +224,10 @@ def test_archive_success(
         entropy_plot=bool(expected_verbosity >= 3),
         process_num=expected_process_num,
         handlers=BUILTIN_HANDLERS,
+        verbose=expected_verbosity,
     )
     process_file_mock.assert_called_once_with(config, in_path, None)
-    logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path)
+    logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path, log_path)
 
 
 @pytest.mark.parametrize(

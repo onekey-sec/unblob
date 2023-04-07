@@ -7,6 +7,8 @@ from typing import Iterable, List, Optional, Sequence, Set, Tuple
 import attr
 import magic
 import plotext as plt
+from rich import progress
+from rich.style import Style
 from structlog import get_logger
 from unblob_native import math_tools as mt
 
@@ -91,6 +93,7 @@ class ExtractionConfig:
     extract_suffix: str = "_extract"
     handlers: Handlers = BUILTIN_HANDLERS
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
+    verbose: int = 1
 
     def get_extract_dir_for(self, path: Path) -> Path:
         """Return extraction dir under root with the name of path."""
@@ -143,7 +146,26 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
     processor = Processor(config)
     aggregated_result = ProcessResult()
 
+    if not config.verbose:
+        progress_display = progress.Progress(
+            progress.TextColumn(
+                "Extraction progress: {task.percentage:>3.0f}%",
+                style=Style(color="#00FFC8"),
+            ),
+            progress.BarColumn(
+                complete_style=Style(color="#00FFC8"), style=Style(color="#002060")
+            ),
+        )
+        progress_display.start()
+        overall_progress_task = progress_display.add_task("Extraction progress:")
+
     def process_result(pool, result):
+        if config.verbose == 0 and progress_display.tasks[0].total is not None:
+            progress_display.update(
+                overall_progress_task,
+                advance=1,
+                total=progress_display.tasks[0].total + len(result.subtasks),
+            )
         for new_task in result.subtasks:
             pool.submit(new_task)
         aggregated_result.register(result)
@@ -157,6 +179,10 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
     with pool:
         pool.submit(task)
         pool.process_until_done()
+
+    if not config.verbose:
+        progress_display.remove_task(overall_progress_task)
+        progress_display.stop()
 
     return aggregated_result
 
