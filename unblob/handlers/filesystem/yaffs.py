@@ -1,6 +1,7 @@
 import io
 import itertools
 import os
+from collections import defaultdict
 from enum import IntEnum
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
@@ -274,7 +275,7 @@ class YAFFSParser:
 
     def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
         self.file_entries = Tree()
-        self.data_chunks = {}
+        self.data_chunks = defaultdict(list)
         self.file = file
         self._struct_parser = StructParser(C_DEFINITIONS)
         self.end_offset = -1
@@ -322,14 +323,9 @@ class YAFFSParser:
                 if not is_valid_header(header):
                     break
 
-                if not store:
-                    continue
-                self.insert_entry(self.build_entry(header, data_chunk))
-            else:
-                if not store:
-                    continue
-                if data_chunk.object_id not in self.data_chunks:
-                    self.data_chunks[data_chunk.object_id] = []
+                if store:
+                    self.insert_entry(self.build_entry(header, data_chunk))
+            elif store:
                 self.data_chunks[data_chunk.object_id].append(data_chunk)
         self.end_offset = self.file.tell()
 
