@@ -186,6 +186,7 @@ class YAFFSEntry:
     sum_no_longer_used: int = attr.ib(default=0)
     name: str = attr.ib(default="")
     alias: str = attr.ib(default="")
+    equiv_id: int = attr.ib(default=0)
     file_size: int = attr.ib(default=0)
     st_mode: int = attr.ib(default=0)
     st_uid: int = attr.ib(default=0)
@@ -210,7 +211,6 @@ class YAFFSEntry:
 @attr.define(kw_only=True)
 class YAFFS2Entry(YAFFSEntry):
     chksum: int = attr.ib(default=0)
-    equiv_id: int = attr.ib(default=0)
     st_rdev: int = attr.ib(default=0)
     win_ctime: List[int] = attr.ib(default=[])
     win_mtime: List[int] = attr.ib(default=[])
@@ -526,7 +526,7 @@ class YAFFSParser:
                 for chunk in self.get_file_bytes(entry):
                     f.write(chunk)
         elif entry.object_type == YaffsObjectType.SYMLINK:
-            if not is_safe_path(outdir, out_path / Path(entry.alias)):
+            if not is_safe_path(outdir, out_path.parent / Path(entry.alias)):
                 logger.warning(
                     "Potential path traversal attempt through symlink",
                     outdir=outdir,
@@ -536,21 +536,18 @@ class YAFFSParser:
             logger.debug("creating symlink", file_path=out_path, _verbosity=3)
             out_path.symlink_to(Path(entry.alias))
         elif entry.object_type == YaffsObjectType.HARDLINK:
-            if not isinstance(entry, YAFFS2Entry):
-                logger.warning("non YAFFS2 hardlink object", entry=entry)
-                return
-
             logger.debug("creating hardlink", file_path=out_path, _verbosity=3)
-            src_entry = self.file_entries[entry.equiv_id]
-            src_path = self.resolve_path(src_entry)
-            if not is_safe_path(outdir, out_path / src_path):
+            dst_entry = self.file_entries[entry.equiv_id].data
+            dst_path = self.resolve_path(dst_entry)
+            if not is_safe_path(outdir, dst_path):
                 logger.warning(
                     "Potential path traversal attempt through hardlink",
                     outdir=outdir,
-                    path=src_path,
+                    path=dst_path,
                 )
                 return
-            src_path.link_to(out_path)
+            dst_full_path = outdir / dst_path
+            dst_full_path.link_to(out_path)
 
 
 class YAFFS2Parser(YAFFSParser):
@@ -699,6 +696,7 @@ class YAFFS1Parser(YAFFSParser):
             name=snull(header.name[0:128]).decode("utf-8"),
             alias=snull(header.alias.replace(b"\xFF", b"")).decode("utf-8"),
             file_size=header.file_size,
+            equiv_id=header.equivalent_object_id,
         )
 
     def get_chunks(self, object_id: int) -> Iterable[YAFFS1Chunk]:
