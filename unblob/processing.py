@@ -1,6 +1,5 @@
 import multiprocessing
 import shutil
-import statistics
 from operator import attrgetter
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence
@@ -30,6 +29,7 @@ from .models import (
 )
 from .pool import make_pool
 from .report import (
+    EntropyReport,
     ExtractDirectoryExistsReport,
     FileMagicReport,
     HashReport,
@@ -332,7 +332,9 @@ class _FileTask:
             else:
                 # we don't consider whole files as unknown chunks, but we still want to
                 # calculate entropy for whole files which produced no valid chunks
-                self._calculate_entropy(self.task.path)
+                entropy = self._calculate_entropy(self.task.path)
+                if entropy:
+                    self.result.add_report(entropy)
 
     def _process_chunks(
         self,
@@ -345,15 +347,26 @@ class _FileTask:
 
         for chunk in unknown_chunks:
             carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
-            self._calculate_entropy(carved_unknown_path)
-            self.result.add_report(chunk.as_report())
+            entropy = self._calculate_entropy(carved_unknown_path)
+            self.result.add_report(chunk.as_report(entropy=entropy))
 
         for chunk in outer_chunks:
             self._extract_chunk(file, chunk)
 
-    def _calculate_entropy(self, path: Path):
+    def _calculate_entropy(self, path: Path) -> Optional[EntropyReport]:
         if self.task.depth < self.config.entropy_depth:
-            calculate_entropy(path, draw_plot=self.config.entropy_plot)
+            report = calculate_entropy(path)
+            if self.config.entropy_plot:
+                logger.debug(
+                    "Entropy chart",
+                    # New line so that chart title will be aligned correctly in the next line
+                    chart="\n"
+                    + format_entropy_plot(report.percentages, report.buffer_size),
+                    path=path,
+                    _verbosity=3,
+                )
+            return report
+        return None
 
     def _extract_chunk(self, file, chunk: ValidChunk):
         skip_carving = chunk.is_whole_file
@@ -484,8 +497,8 @@ def calculate_unknown_chunks(
     return unknown_chunks
 
 
-def calculate_entropy(path: Path, *, draw_plot: bool):
-    """Calculate and log shannon entropy divided by 8 for the file in 1mB chunks.
+def calculate_entropy(path: Path) -> EntropyReport:
+    """Calculate and log shannon entropy divided by 8 for the file in chunks.
 
     Shannon entropy returns the amount of information (in bits) of some numeric
     sequence. We calculate the average entropy of byte chunks, which in theory
@@ -499,7 +512,7 @@ def calculate_entropy(path: Path, *, draw_plot: bool):
     file_size = path.stat().st_size
     logger.debug("Calculating entropy for file", path=path, size=file_size)
 
-    # Smaller chuk size would be very slow to calculate.
+    # Smaller chunk size would be very slow to calculate.
     # 1Mb chunk size takes ~ 3sec for a 4,5 GB file.
     buffer_size = calculate_buffer_size(
         file_size, chunk_count=80, min_limit=1024, max_limit=1024 * 1024
@@ -511,15 +524,19 @@ def calculate_entropy(path: Path, *, draw_plot: bool):
             entropy_percentage = round(entropy / 8 * 100, 2)
             percentages.append(entropy_percentage)
 
+    report = EntropyReport(percentages=percentages, buffer_size=buffer_size)
+
     logger.debug(
         "Entropy calculated",
-        mean=round(statistics.mean(percentages), 2),
-        highest=max(percentages),
-        lowest=min(percentages),
+        path=path,
+        size=file_size,
+        buffer_size=report.buffer_size,
+        mean=round(report.mean, 2),
+        highest=round(report.highest, 2),
+        lowest=round(report.lowest, 2),
     )
 
-    if draw_plot:
-        draw_entropy_plot(percentages)
+    return report
 
 
 def calculate_buffer_size(
@@ -533,11 +550,14 @@ def calculate_buffer_size(
     return buffer_size
 
 
-def draw_entropy_plot(percentages: List[float]):
-    plt.clear_data()
+def format_entropy_plot(percentages: List[float], buffer_size: int):
+    # start from scratch
+    plt.clear_figure()
+    # go colorless
     plt.clear_color()
     plt.title("Entropy distribution")
-    plt.xlabel("mB")
+    # plt.xlabel(humanize.naturalsize(buffer_size))
+    plt.xlabel(f"{buffer_size} bytes")
     plt.ylabel("entropy %")
 
     plt.scatter(percentages, marker="dot")
@@ -549,5 +569,4 @@ def draw_entropy_plot(percentages: List[float]):
     # Always show 0% and 100%
     plt.yticks(range(0, 101, 10))
 
-    # New line so that chart title will be aligned correctly in the next line
-    logger.debug("Entropy chart", chart="\n" + plt.build(), _verbosity=3)
+    return plt.build()

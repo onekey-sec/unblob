@@ -312,12 +312,26 @@ def hello_kitty_task_results(
                     sha1="febca6ed75dc02e0def065e7b08f1cca87b57c74",
                     sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
                 ),
-                UnknownChunkReport(chunk_id=ANY, start_offset=0, end_offset=6, size=6),
                 UnknownChunkReport(
-                    chunk_id=ANY, start_offset=131, end_offset=138, size=7
+                    chunk_id=ANY,
+                    start_offset=0,
+                    end_offset=6,
+                    size=6,
+                    entropy=None,
                 ),
                 UnknownChunkReport(
-                    chunk_id=ANY, start_offset=263, end_offset=264, size=1
+                    chunk_id=ANY,
+                    start_offset=131,
+                    end_offset=138,
+                    size=7,
+                    entropy=None,
+                ),
+                UnknownChunkReport(
+                    chunk_id=ANY,
+                    start_offset=263,
+                    end_offset=264,
+                    size=1,
+                    entropy=None,
                 ),
                 ChunkReport(
                     chunk_id=hello_id,
