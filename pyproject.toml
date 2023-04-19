@@ -8,7 +8,10 @@ packages = [
     { include = "unblob" },
 ]
 include = ["rust/*", "rust/src/*"]
-build = "build.py"
+
+[tool.poetry.build]
+script = "build.py"
+generate-setup-file = true
 
 [tool.poetry.dependencies]
 python = "^3.8"
