@@ -1,6 +1,7 @@
 import hashlib
 import os
 import stat
+import statistics
 import traceback
 from enum import Enum
 from pathlib import Path
@@ -172,6 +173,24 @@ class FileMagicReport(Report):
     mime_type: str
 
 
+@attr.define(kw_only=True)
+class EntropyReport(Report):
+    percentages: List[float]
+    buffer_size: int
+
+    @property
+    def mean(self):
+        return statistics.mean(self.percentages)
+
+    @property
+    def highest(self):
+        return max(self.percentages)
+
+    @property
+    def lowest(self):
+        return min(self.percentages)
+
+
 @final
 @attr.define(kw_only=True)
 class ChunkReport(Report):
@@ -191,3 +210,4 @@ class UnknownChunkReport(Report):
     start_offset: int
     end_offset: int
     size: int
+    entropy: Optional[EntropyReport]

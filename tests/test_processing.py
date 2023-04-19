@@ -2,22 +2,30 @@ import platform
 import sys
 import zipfile
 from pathlib import Path
-from typing import Collection, List, Tuple
+from typing import Collection, List, Tuple, Type, TypeVar
 
 import attr
 import pytest
 
+from unblob import handlers
 from unblob.models import UnknownChunk, ValidChunk
 from unblob.processing import (
     ExtractionConfig,
     calculate_buffer_size,
     calculate_entropy,
     calculate_unknown_chunks,
-    draw_entropy_plot,
+    format_entropy_plot,
     process_file,
     remove_inner_chunks,
 )
-from unblob.report import ExtractDirectoryExistsReport, StatReport
+from unblob.report import (
+    EntropyReport,
+    ExtractDirectoryExistsReport,
+    StatReport,
+    UnknownChunkReport,
+)
+
+T = TypeVar("T")
 
 
 def assert_same_chunks(expected, actual, explanation=None):
@@ -129,32 +137,34 @@ def test_calculate_buffer_size(
     )
 
 
-def test_draw_entropy_plot_error():
+def test_format_entropy_plot_error():
     with pytest.raises(TypeError):
-        draw_entropy_plot([])
+        format_entropy_plot(percentages=[], buffer_size=1024)
 
 
 @pytest.mark.parametrize(
-    "percentages",
+    "percentages, buffer_size",
     [
-        pytest.param([0.0] * 100, id="zero-array"),
-        pytest.param([99.99] * 100, id="99-array"),
-        pytest.param([100.0] * 100, id="100-array"),
+        pytest.param([0.0] * 100, 1024, id="zero-array"),
+        pytest.param([99.99] * 100, 1024, id="99-array"),
+        pytest.param([100.0] * 100, 1024, id="100-array"),
+        pytest.param([100.0] * 100, -1, id="buffer_size-can-be-anything1"),
+        pytest.param([100.0] * 100, None, id="buffer_size-can-be-anything2"),
+        pytest.param([100.0] * 100, "None", id="buffer_size-can-be-anything3"),
     ],
 )
-def test_draw_entropy_plot_no_exception(percentages: List[float]):
-    assert draw_entropy_plot(percentages) is None
+def test_format_entropy_plot_no_exception(percentages: List[float], buffer_size: int):
+    assert str(buffer_size) in format_entropy_plot(
+        percentages=percentages, buffer_size=buffer_size
+    )
 
 
-@pytest.mark.parametrize(
-    "path, draw_plot",
-    [
-        pytest.param(Path(sys.executable), True, id="draw-plot"),
-        pytest.param(Path(sys.executable), False, id="no-plot"),
-    ],
-)
-def test_calculate_entropy_no_exception(path: Path, draw_plot: bool):
-    assert calculate_entropy(path, draw_plot=draw_plot) is None
+def test_calculate_entropy_no_exception():
+    report = calculate_entropy(Path(sys.executable))
+    format_entropy_plot(
+        percentages=report.percentages,
+        buffer_size=report.buffer_size,
+    )
 
 
 @pytest.mark.parametrize(
@@ -311,3 +321,71 @@ def test_processing_with_non_posix_paths(tmp_path: Path):
             is_link=False,
             link_target=None,
         )
+
+
+def test_entropy_calculation(tmp_path: Path):
+    """Process a file with unknown chunk and a zip file with entropy calculation enabled.
+
+    The input file structure is
+    - zip-chunk
+        - empty.txt
+        - 0-255.bin
+    - unknown_chunk
+    """
+    #
+    # ** input
+
+    input_file = tmp_path / "input-file"
+    with zipfile.ZipFile(input_file, "w") as zf:
+        zf.writestr("empty.txt", data=b"")
+        zf.writestr("0-255.bin", data=bytes(range(256)))
+
+    # entropy is calculated in 1Kb blocks for files smaller than 80Kb
+    # so let's have 1 block with 0 entropy, 1 with 6 bit entropy, the rest with 8 bit entropy
+    unknown_chunk_content = (
+        bytes(1024) + bytes(range(64)) * 4 * 4 + bytes(range(256)) * 4 * 62
+    )
+    with input_file.open("ab") as f:
+        f.write(unknown_chunk_content)
+
+    config = ExtractionConfig(
+        extract_root=tmp_path / "extract_root",
+        entropy_depth=100,
+        entropy_plot=True,
+        handlers=(handlers.archive.zip.ZIPHandler,),
+    )
+
+    # ** action
+
+    process_result = process_file(config, input_file)
+
+    task_result_by_name = {r.task.path.name: r for r in process_result.results}
+
+    def get_all(file_name, report_type: Type[T]) -> List[T]:
+        return [
+            r
+            for r in task_result_by_name[file_name].reports
+            if isinstance(r, report_type)
+        ]
+
+    # ** verification
+
+    # the unknown chunk report for the second chunk for the input file should have an entropy report
+    # with a percentages (scaled up bits) of 64 items, for 0, 6, 8, 8, ... bits of entropies
+    [unknown_chunk_report] = get_all("input-file", UnknownChunkReport)
+    unknown_entropy = unknown_chunk_report.entropy
+    assert unknown_entropy == EntropyReport(
+        percentages=[0.0, 75.0] + [100.0] * 62, buffer_size=1024
+    )
+    assert (
+        unknown_entropy is not None
+    )  # removes pyright complaints for the below 3 lines :(
+    assert round(unknown_entropy.mean, 2) == 98.05  # noqa: PLR2004
+    assert unknown_entropy.highest == 100.0  # noqa: PLR2004
+    assert unknown_entropy.lowest == 0.0  # noqa: PLR2004
+
+    # we should have entropy calculated for files without extractions, except for empty files
+    assert [] == get_all("empty.txt", EntropyReport)
+    assert [EntropyReport(percentages=[100.0], buffer_size=1024)] == get_all(
+        "0-255.bin", EntropyReport
+    )

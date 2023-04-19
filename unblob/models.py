@@ -11,7 +11,7 @@ from structlog import get_logger
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .identifiers import new_id
 from .parser import hexstring2regex
-from .report import ChunkReport, ErrorReport, Report, UnknownChunkReport
+from .report import ChunkReport, EntropyReport, ErrorReport, Report, UnknownChunkReport
 
 logger = get_logger()
 
@@ -123,12 +123,13 @@ class UnknownChunk(Chunk):
     like most common bytes (like \x00 and \xFF), ASCII strings, high entropy, etc.
     """
 
-    def as_report(self) -> UnknownChunkReport:
+    def as_report(self, entropy: Optional[EntropyReport]) -> UnknownChunkReport:
         return UnknownChunkReport(
             chunk_id=self.chunk_id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
+            entropy=entropy,
         )
 
 
