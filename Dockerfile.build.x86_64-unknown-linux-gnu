@@ -1,0 +1,20 @@
+FROM quay.io/pypa/manylinux2014_x86_64:latest
+
+ENV PATH="${PATH}:/opt/python/cp38-cp38/bin:/root/.cargo/bin"
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+ENV UNBLOB_BUILD_RUST_EXTENSION=1
+
+RUN pip install --upgrade auditwheel auditwheel pip poetry && \
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain 1.60.0
+RUN yum install -y lzo-devel
+RUN mkdir -p /usr/src/unblob
+WORKDIR /usr/src/unblob
+
+RUN echo '#!/usr/bin/env bash'              >> /build.sh && \
+    echo 'rm dist/*.whl'                    >> /build.sh && \
+    echo 'poetry build --format=wheel -vvv' >> /build.sh && \
+    echo 'WHLS=$(echo dist/*.whl)'          >> /build.sh && \
+    echo 'auditwheel repair $WHLS -w dist'  >> /build.sh && \
+    echo 'rm $WHLS'                         >> /build.sh && \
+    chmod +x /build.sh
+CMD [ "/build.sh" ]
