@@ -11,11 +11,6 @@ from ...models import File, HexString, StructHandler, ValidChunk
 
 logger = get_logger()
 
-ENCRYPTED_FLAG = 0b0001
-EOCD_RECORD_HEADER = 0x6054B50
-ZIP64_EOCD_SIGNATURE = 0x06064B50
-ZIP64_EOCD_LOCATOR_HEADER = 0x07064B50
-
 
 class ZIPHandler(StructHandler):
     NAME = "zip"
@@ -86,6 +81,11 @@ class ZIPHandler(StructHandler):
     # empty password with -p will make sure the command will not hang
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
+    ENCRYPTED_FLAG = 0b0001
+    EOCD_RECORD_HEADER = 0x6054B50
+    ZIP64_EOCD_SIGNATURE = 0x06064B50
+    ZIP64_EOCD_LOCATOR_HEADER = 0x07064B50
+
     def has_encrypted_files(
         self,
         file: File,
@@ -95,7 +95,7 @@ class ZIPHandler(StructHandler):
         file.seek(start_offset + end_of_central_directory.offset_of_cd, io.SEEK_SET)
         for _ in range(0, end_of_central_directory.total_entries):
             cd_header = self.cparser_le.cd_file_header_t(file)
-            if cd_header.flags & ENCRYPTED_FLAG:
+            if cd_header.flags & self.ENCRYPTED_FLAG:
                 return True
         return False
 
@@ -114,7 +114,7 @@ class ZIPHandler(StructHandler):
     def _parse_zip64(self, file: File, start_offset: int, offset: int) -> int:
         file.seek(start_offset, io.SEEK_SET)
         for eocd_locator_offset in iterate_patterns(
-            file, struct.pack("<I", ZIP64_EOCD_LOCATOR_HEADER)
+            file, struct.pack("<I", self.ZIP64_EOCD_LOCATOR_HEADER)
         ):
             file.seek(eocd_locator_offset, io.SEEK_SET)
             eocd_locator = self.cparser_le.zip64_end_of_central_directory_locator_t(
@@ -128,7 +128,7 @@ class ZIPHandler(StructHandler):
                 zip64_eocd = self.cparser_le.zip64_end_of_central_directory_t(file)
                 logger.debug("zip64_eocd", zip64_eocd=zip64_eocd, _verbosity=3)
 
-                if zip64_eocd.signature != ZIP64_EOCD_SIGNATURE:
+                if zip64_eocd.signature != self.ZIP64_EOCD_SIGNATURE:
                     raise InvalidInputFormat(
                         "Missing ZIP64 EOCD header record header in ZIP chunk."
                     )
@@ -141,7 +141,9 @@ class ZIPHandler(StructHandler):
         has_encrypted_files = False
         file.seek(start_offset, io.SEEK_SET)
 
-        for offset in iterate_patterns(file, struct.pack("<I", EOCD_RECORD_HEADER)):
+        for offset in iterate_patterns(
+            file, struct.pack("<I", self.EOCD_RECORD_HEADER)
+        ):
             file.seek(offset, io.SEEK_SET)
             end_of_central_directory = self.parse_header(file)
 
