@@ -29,9 +29,10 @@ class File(mmap.mmap):
         return m
 
     @classmethod
-    def from_path(cls, path: Path):
-        with path.open("rb") as base_file:
-            return cls(base_file.fileno(), 0, access=mmap.ACCESS_READ)
+    def from_path(cls, path: Path, access=mmap.ACCESS_READ):
+        mode = "r+b" if access == mmap.ACCESS_WRITE else "rb"
+        with path.open(mode) as base_file:
+            return cls(base_file.fileno(), 0, access=access)
 
     def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:
         try:
