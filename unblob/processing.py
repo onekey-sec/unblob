@@ -2,7 +2,7 @@ import multiprocessing
 import shutil
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence
+from typing import Iterable, List, Optional, Sequence, Set, Tuple
 
 import attr
 import magic
@@ -10,7 +10,7 @@ import plotext as plt
 from structlog import get_logger
 from unblob_native import math_tools as mt
 
-from unblob.handlers import BUILTIN_HANDLERS, Handlers
+from unblob.handlers import BUILTIN_DIR_HANDLERS, BUILTIN_HANDLERS, Handlers
 
 from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
 from .file_utils import iterate_file
@@ -19,8 +19,10 @@ from .iter_utils import pairwise
 from .logging import noformat
 from .models import (
     Chunk,
+    DirectoryHandlers,
     ExtractError,
     File,
+    MultiFile,
     ProcessResult,
     Task,
     TaskResult,
@@ -33,6 +35,8 @@ from .report import (
     ExtractDirectoryExistsReport,
     FileMagicReport,
     HashReport,
+    MultiFileCollisionReport,
+    Report,
     StatReport,
     UnknownError,
 )
@@ -85,6 +89,7 @@ class ExtractionConfig:
     keep_extracted_chunks: bool = False
     extract_suffix: str = "_extract"
     handlers: Handlers = BUILTIN_HANDLERS
+    dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
 
     def get_extract_dir_for(self, path: Path) -> Path:
         """Return extraction dir under root with the name of path."""
@@ -103,7 +108,7 @@ def process_file(
     config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
 ) -> ProcessResult:
     task = Task(
-        chunk_id="",
+        blob_id="",
         path=input_path,
         depth=0,
     )
@@ -247,15 +252,8 @@ class Processor:
             return
 
         if stat_report.is_dir:
-            log.debug("Found directory")
-            for path in task.path.iterdir():
-                result.add_subtask(
-                    Task(
-                        chunk_id=task.chunk_id,
-                        path=path,
-                        depth=task.depth,
-                    )
-                )
+            if not task.is_multi_file:
+                _DirectoryTask(self._config, task, result).process()
             return
 
         if not stat_report.is_file:
@@ -274,6 +272,10 @@ class Processor:
         hash_report = HashReport.from_path(task.path)
         result.add_report(hash_report)
 
+        if task.is_multi_file:
+            # The file has been processed as part of a MultiFile, we just run the task to gather reports
+            return
+
         if stat_report.size == 0:
             log.debug("Ignoring empty file")
             return
@@ -287,6 +289,129 @@ class Processor:
             return
 
         _FileTask(self._config, task, stat_report.size, result).process()
+
+
+class DirectoryProcessingError(Exception):
+    def __init__(self, message: str, report: Report):
+        super().__init__()
+        self.message = message
+        self.report: Report = report
+
+
+class _DirectoryTask:
+    def __init__(self, config: ExtractionConfig, dir_task: Task, result: TaskResult):
+        self.config = config
+        self.dir_task = dir_task
+        self.result = result
+
+    def process(self):
+        logger.debug("Processing directory", path=self.dir_task.path)
+
+        try:
+            processed_paths, extract_dirs = self._process_directory()
+        except DirectoryProcessingError as e:
+            logger.error(e.message, report=e.report)
+            self.result.add_report(e.report)
+            return
+
+        self._iterate_directory(extract_dirs, processed_paths)
+
+        self._iterate_processed_files(processed_paths)
+
+    def _process_directory(self) -> Tuple[Set[Path], Set[Path]]:
+        processed_paths: Set[Path] = set()
+        extract_dirs: Set[Path] = set()
+        for dir_handler_class in self.config.dir_handlers:
+            dir_handler = dir_handler_class()
+
+            for path in dir_handler.PATTERN.get_files(self.dir_task.path):
+                multi_file = dir_handler.calculate_multifile(path)
+
+                if multi_file is None:
+                    continue
+
+                multi_file.handler = dir_handler
+
+                self._check_conflicting_files(multi_file, processed_paths)
+
+                extract_dir = self._extract_multi_file(multi_file)
+
+                # Process files in extracted directory
+                if extract_dir.exists():
+                    self.result.add_subtask(
+                        Task(
+                            blob_id=multi_file.id,
+                            path=extract_dir,
+                            depth=self.dir_task.depth + 1,
+                        )
+                    )
+                    extract_dirs.add(extract_dir)
+
+                processed_paths.update(multi_file.paths)
+        return processed_paths, extract_dirs
+
+    def _check_conflicting_files(
+        self, multi_file: MultiFile, processed_paths: Set[Path]
+    ):
+        conflicting_paths = processed_paths.intersection(set(multi_file.paths))
+        if conflicting_paths:
+            raise DirectoryProcessingError(
+                "Conflicting match on files",
+                report=MultiFileCollisionReport(
+                    paths=conflicting_paths, handler=multi_file.handler.NAME
+                ),
+            )
+
+    def _extract_multi_file(self, multi_file: MultiFile) -> Path:
+        extract_dir = self.config.get_extract_dir_for(
+            self.dir_task.path / multi_file.name
+        )
+        if extract_dir.exists():
+            raise DirectoryProcessingError(
+                "Skipped: extraction directory exists",
+                report=multi_file.as_report(
+                    [ExtractDirectoryExistsReport(path=extract_dir)]
+                ),
+            )
+
+        extraction_reports = []
+        try:
+            multi_file.extract(extract_dir)
+        except ExtractError as e:
+            extraction_reports.extend(e.reports)
+        except Exception as exc:
+            logger.exception("Unknown error happened while extracting MultiFile")
+            extraction_reports.append(UnknownError(exception=exc))
+
+        self.result.add_report(multi_file.as_report(extraction_reports))
+
+        fix_extracted_directory(extract_dir, self.result)
+
+        return extract_dir
+
+    def _iterate_processed_files(self, processed_paths):
+        for path in processed_paths:
+            self.result.add_subtask(
+                Task(
+                    blob_id=self.dir_task.blob_id,
+                    path=path,
+                    depth=self.dir_task.depth,
+                    is_multi_file=True,
+                )
+            )
+
+    def _iterate_directory(self, extract_dirs, processed_paths):
+        for path in self.dir_task.path.iterdir():
+            if path in extract_dirs or path in processed_paths:
+                continue
+
+            self.result.add_subtask(
+                Task(
+                    blob_id=self.dir_task.blob_id,
+                    path=path,
+                    depth=self.dir_task.depth,
+                )
+            )
 
 
 class _FileTask:
@@ -423,7 +548,7 @@ class _FileTask:
         if extract_dir.exists():
             self.result.add_subtask(
                 Task(
-                    chunk_id=chunk.chunk_id,
+                    blob_id=chunk.id,
                     path=extract_dir,
                     depth=self.task.depth + 1,
                 )
@@ -476,7 +601,7 @@ def calculate_unknown_chunks(
 
     first = sorted_by_offset[0]
     if first.start_offset != 0:
-        unknown_chunk = UnknownChunk(0, first.start_offset)
+        unknown_chunk = UnknownChunk(start_offset=0, end_offset=first.start_offset)
         unknown_chunks.append(unknown_chunk)
 
     for chunk, next_chunk in pairwise(sorted_by_offset):

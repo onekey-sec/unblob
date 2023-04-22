@@ -2,13 +2,26 @@ import platform
 import sys
 import zipfile
 from pathlib import Path
-from typing import Collection, List, Tuple, Type, TypeVar
+from typing import Collection, List, Optional, Tuple, Type, TypeVar
 
 import attr
 import pytest
 
 from unblob import handlers
-from unblob.models import ReportType, UnknownChunk, ValidChunk
+from unblob.extractors.command import Command
+from unblob.file_utils import File
+from unblob.models import (
+    DirectoryExtractor,
+    DirectoryHandler,
+    Glob,
+    Handler,
+    MultiFile,
+    Regex,
+    ReportType,
+    SingleFile,
+    UnknownChunk,
+    ValidChunk,
+)
 from unblob.processing import (
     ExtractionConfig,
     calculate_block_size,
@@ -19,10 +32,16 @@ from unblob.processing import (
     remove_inner_chunks,
 )
 from unblob.report import (
+    ChunkReport,
     EntropyReport,
     ExtractDirectoryExistsReport,
+    FileMagicReport,
+    HashReport,
+    MultiFileCollisionReport,
+    MultiFileReport,
     StatReport,
     UnknownChunkReport,
+    UnknownError,
 )
 
 T = TypeVar("T")
@@ -32,7 +51,7 @@ def assert_same_chunks(expected, actual, explanation=None):
     """Assert ignoring the chunk.id-s."""
     assert len(expected) == len(actual), explanation
     for e, a in zip(expected, actual):
-        assert attr.evolve(e, chunk_id="") == attr.evolve(a, chunk_id=""), explanation
+        assert attr.evolve(e, id="") == attr.evolve(a, id=""), explanation
 
 
 @pytest.mark.parametrize(
@@ -41,53 +60,59 @@ def assert_same_chunks(expected, actual, explanation=None):
         ([], [], "Empty list as chunks (No chunk found)"),
         (
             [
-                ValidChunk(1, 2),
+                ValidChunk(start_offset=1, end_offset=2),
             ],
-            [ValidChunk(1, 2)],
+            [ValidChunk(start_offset=1, end_offset=2)],
             "Only one chunk",
         ),
         (
             [
-                ValidChunk(0, 5),
-                ValidChunk(1, 2),
+                ValidChunk(start_offset=0, end_offset=5),
+                ValidChunk(start_offset=1, end_offset=2),
             ],
-            [ValidChunk(0, 5)],
+            [ValidChunk(start_offset=0, end_offset=5)],
             "One chunk within another",
         ),
         (
             [
-                ValidChunk(10, 20),
-                ValidChunk(11, 13),
-                ValidChunk(14, 19),
+                ValidChunk(start_offset=10, end_offset=20),
+                ValidChunk(start_offset=11, end_offset=13),
+                ValidChunk(start_offset=14, end_offset=19),
             ],
-            [ValidChunk(10, 20)],
+            [ValidChunk(start_offset=10, end_offset=20)],
             "Multiple chunks within 1 outer chunk",
         ),
         (
             [
-                ValidChunk(11, 13),
-                ValidChunk(10, 20),
-                ValidChunk(14, 19),
+                ValidChunk(start_offset=11, end_offset=13),
+                ValidChunk(start_offset=10, end_offset=20),
+                ValidChunk(start_offset=14, end_offset=19),
             ],
-            [ValidChunk(10, 20)],
+            [ValidChunk(start_offset=10, end_offset=20)],
             "Multiple chunks within 1 outer chunk, in different order",
         ),
         (
             [
-                ValidChunk(1, 5),
-                ValidChunk(6, 10),
+                ValidChunk(start_offset=1, end_offset=5),
+                ValidChunk(start_offset=6, end_offset=10),
             ],
-            [ValidChunk(1, 5), ValidChunk(6, 10)],
+            [
+                ValidChunk(start_offset=1, end_offset=5),
+                ValidChunk(start_offset=6, end_offset=10),
+            ],
             "Multiple outer chunks",
         ),
         (
             [
-                ValidChunk(1, 5),
-                ValidChunk(2, 3),
-                ValidChunk(6, 10),
-                ValidChunk(7, 8),
+                ValidChunk(start_offset=1, end_offset=5),
+                ValidChunk(start_offset=2, end_offset=3),
+                ValidChunk(start_offset=6, end_offset=10),
+                ValidChunk(start_offset=7, end_offset=8),
             ],
-            [ValidChunk(1, 5), ValidChunk(6, 10)],
+            [
+                ValidChunk(start_offset=1, end_offset=5),
+                ValidChunk(start_offset=6, end_offset=10),
+            ],
             "Multiple outer chunks, with chunks inside",
         ),
     ],
@@ -103,15 +128,47 @@ def test_remove_inner_chunks(
     [
         ([], 0, []),
         ([], 10, []),
-        ([ValidChunk(0x0, 0x5)], 5, []),
-        ([ValidChunk(0x0, 0x5), ValidChunk(0x5, 0xA)], 10, []),
-        ([ValidChunk(0x0, 0x5), ValidChunk(0x5, 0xA)], 12, [UnknownChunk(0xA, 0xC)]),
-        ([ValidChunk(0x3, 0x5)], 5, [UnknownChunk(0x0, 0x3)]),
-        ([ValidChunk(0x0, 0x5), ValidChunk(0x7, 0xA)], 10, [UnknownChunk(0x5, 0x7)]),
+        ([ValidChunk(start_offset=0x0, end_offset=0x5)], 5, []),
         (
-            [ValidChunk(0x8, 0xA), ValidChunk(0x0, 0x5), ValidChunk(0xF, 0x14)],
+            [
+                ValidChunk(start_offset=0x0, end_offset=0x5),
+                ValidChunk(start_offset=0x5, end_offset=0xA),
+            ],
+            10,
+            [],
+        ),
+        (
+            [
+                ValidChunk(start_offset=0x0, end_offset=0x5),
+                ValidChunk(start_offset=0x5, end_offset=0xA),
+            ],
+            12,
+            [UnknownChunk(start_offset=0xA, end_offset=0xC)],
+        ),
+        (
+            [ValidChunk(start_offset=0x3, end_offset=0x5)],
+            5,
+            [UnknownChunk(start_offset=0x0, end_offset=0x3)],
+        ),
+        (
+            [
+                ValidChunk(start_offset=0x0, end_offset=0x5),
+                ValidChunk(start_offset=0x7, end_offset=0xA),
+            ],
+            10,
+            [UnknownChunk(start_offset=0x5, end_offset=0x7)],
+        ),
+        (
+            [
+                ValidChunk(start_offset=0x8, end_offset=0xA),
+                ValidChunk(start_offset=0x0, end_offset=0x5),
+                ValidChunk(start_offset=0xF, end_offset=0x14),
+            ],
             20,
-            [UnknownChunk(0x5, 0x8), UnknownChunk(0xA, 0xF)],
+            [
+                UnknownChunk(start_offset=0x5, end_offset=0x8),
+                UnknownChunk(start_offset=0xA, end_offset=0xF),
+            ],
         ),
     ],
 )
@@ -387,4 +444,334 @@ def test_entropy_calculation(tmp_path: Path):
     assert [] == get_all("empty.txt", EntropyReport)
     assert [EntropyReport(percentages=[100.0], block_size=1024, mean=100.0)] == get_all(
         "0-255.bin", EntropyReport
+    )
+
+
+class ConcatenateExtractor(DirectoryExtractor):
+    def extract(self, paths: List[Path], outdir: Path):
+        outfile = outdir / "data"
+        with outfile.open("wb") as f:
+            for path in paths:
+                if path.is_file():
+                    f.write(path.read_bytes())
+
+
+class FailDirExtractor(DirectoryExtractor):
+    def extract(self, paths: List[Path], outdir: Path):
+        del paths
+        del outdir
+        raise ValueError
+
+
+class SplitDirHandler(DirectoryHandler):
+    NAME = "split"
+    PATTERN = Glob("*.part0")
+    EXTRACTOR = ConcatenateExtractor()
+
+    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        return MultiFile(
+            name=file.name[:-6], paths=sorted(file.parent.glob(f"{file.name[:-1]}*"))
+        )
+
+
+class NoExtractionSplitDirHandler(SplitDirHandler):
+    NAME = "no-extract-split"
+
+    EXTRACTOR = None
+
+
+class ExtractionFailSplitDirHandler(SplitDirHandler):
+    NAME = "split-fail"
+
+    EXTRACTOR = FailDirExtractor()
+
+
+class SpecialDirHandler(DirectoryHandler):
+    NAME = "special"
+    PATTERN = SingleFile("special")
+    EXTRACTOR = ConcatenateExtractor()
+
+    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        return MultiFile(name="special", paths=sorted(file.parent.glob("special*")))
+
+
+class MultiLevelSplitDirHandler(DirectoryHandler):
+    NAME = "multi-level-split"
+    PATTERN = Glob("*.parts")
+    EXTRACTOR = ConcatenateExtractor()
+
+    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        return MultiFile(
+            name=file.name[:-6],
+            paths=[file, *sorted(file.parent.glob(f"{file.name}/*"))],
+        )
+
+
+class DummyTestHandler(Handler):
+    NAME = "dummy"
+    PATTERNS = [Regex("AA")]
+    EXTRACTOR = Command("cp", "{inpath}", "{outdir}/AA")
+
+    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+        del file
+        return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
+
+
+@pytest.fixture
+def multi_volume_zip(tmp_path: Path):
+    input_file = tmp_path / "input"
+    with zipfile.ZipFile(input_file, "w") as zf:
+        zf.writestr("test.part0", data=b"AA")
+        zf.writestr("test.part1", data=b"BB")
+        zf.writestr("test.part2", data=b"CC")
+        zf.writestr("test2.part0", data=b"DD")
+        zf.writestr("test2.part1", data=b"EE")
+        zf.writestr("other", data=b"AA")
+    return input_file
+
+
+@pytest.fixture
+def extraction_root(tmp_path: Path):
+    return tmp_path / "extract_root"
+
+
+@pytest.fixture
+def multi_file_extraction_config(extraction_root: Path):
+    return ExtractionConfig(
+        extract_root=extraction_root,
+        entropy_depth=0,
+        handlers=(handlers.archive.zip.ZIPHandler, DummyTestHandler),
+        dir_handlers=(SplitDirHandler,),
+    )
+
+
+def test_multi_file_processing(
+    multi_volume_zip: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    process_result = process_file(multi_file_extraction_config, multi_volume_zip)
+
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    directory = extraction_root / "input_extract"
+    files1 = [
+        directory / "test.part0",
+        directory / "test.part1",
+        directory / "test.part2",
+    ]
+    files2 = [directory / "test2.part0", directory / "test2.part1"]
+
+    out1 = directory / "test_extract" / "data"
+    out2 = directory / "test2_extract" / "data"
+    other_out = directory / "other_extract" / "0-1.dummy_extract" / "AA"
+
+    assert out1.read_bytes() == b"AABBCC"
+    assert out2.read_bytes() == b"DDEE"
+
+    assert other_out.read_bytes() == b"A"
+
+    multi_file_reports = task_result_by_path[directory].filter_reports(MultiFileReport)
+    assert len(multi_file_reports) == 2
+    assert {report.id for report in multi_file_reports} == {
+        task_result_by_path[out1].task.blob_id,
+        task_result_by_path[out2].task.blob_id,
+    }
+    assert {path for report in multi_file_reports for path in report.paths} == set(
+        files1
+    ) | set(files2)
+
+
+def test_multi_file_extracted_files_processing(
+    multi_volume_zip: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    process_result = process_file(multi_file_extraction_config, multi_volume_zip)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    data = extraction_root / "input_extract" / "test_extract" / "data"
+
+    out = (
+        extraction_root
+        / "input_extract"
+        / "test_extract"
+        / "data_extract"
+        / "0-1.dummy_extract"
+        / "AA"
+    )
+
+    assert out.read_bytes() == b"A"
+
+    assert len(task_result_by_path[data].subtasks) == 1
+    assert task_result_by_path[data].subtasks[0] == task_result_by_path[out.parent].task
+    chunk_reports = task_result_by_path[data].filter_reports(ChunkReport)
+    assert len(chunk_reports) == 1
+    assert task_result_by_path[out.parent].task.blob_id == chunk_reports[0].id
+
+
+def test_multi_file_content_not_processed(
+    multi_volume_zip: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    process_result = process_file(multi_file_extraction_config, multi_volume_zip)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    out = extraction_root / "input_extract" / "test.part0"
+    extract_dir = extraction_root / "input_extract" / "test.part0_extract"
+
+    assert not extract_dir.exists()
+    assert not task_result_by_path[out].subtasks
+
+
+def test_multi_file_paths_kept_and_have_reports(
+    multi_volume_zip: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    process_result = process_file(multi_file_extraction_config, multi_volume_zip)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    parts = [
+        extraction_root / "input_extract" / "test.part0",
+        extraction_root / "input_extract" / "test.part1",
+        extraction_root / "input_extract" / "test.part2",
+    ]
+
+    for part in parts:
+        assert part.exists()
+        assert task_result_by_path[part].reports
+        assert task_result_by_path[part].filter_reports(HashReport)
+        assert task_result_by_path[part].filter_reports(StatReport)
+        assert task_result_by_path[part].filter_reports(FileMagicReport)
+
+
+def test_multi_file_no_extraction(
+    multi_volume_zip: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    multi_file_extraction_config.dir_handlers = (NoExtractionSplitDirHandler,)
+    process_result = process_file(multi_file_extraction_config, multi_volume_zip)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    directory = extraction_root / "input_extract"
+    extract_dir = extraction_root / "input_extract" / "test_extract"
+
+    assert not extract_dir.exists()
+    assert task_result_by_path[directory].filter_reports(MultiFileReport)
+
+
+def test_multi_file_multi_level_content(
+    tmp_path: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    input_file = tmp_path / "input"
+    with zipfile.ZipFile(input_file, "w") as zf:
+        zf.writestr("test.parts/0", data=b"AA")
+        zf.writestr("test.parts/1", data=b"BB")
+
+    multi_file_extraction_config.dir_handlers = (MultiLevelSplitDirHandler,)
+    process_result = process_file(multi_file_extraction_config, input_file)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    directory = extraction_root / "input_extract"
+    parts = [
+        directory / "test.parts",
+        directory / "test.parts" / "0",
+        directory / "test.parts" / "1",
+    ]
+
+    extract_dir = extraction_root / "input_extract" / "test_extract"
+    data = extract_dir / "data"
+
+    assert extract_dir.exists()
+    assert data.exists()
+    assert data.read_bytes() == b"AABB"
+
+    multi_file_reports = task_result_by_path[directory].filter_reports(MultiFileReport)
+    assert multi_file_reports
+    assert multi_file_reports[0].id == task_result_by_path[data].task.blob_id
+    assert set(multi_file_reports[0].paths) == set(parts)
+
+    for part in parts:
+        assert task_result_by_path[part].reports
+        assert task_result_by_path[part].filter_reports(StatReport)
+
+        if not part.is_dir():
+            assert task_result_by_path[part].filter_reports(HashReport)
+            assert task_result_by_path[part].filter_reports(FileMagicReport)
+            assert not task_result_by_path[part].subtasks
+            part_extract = part.parent / f"{part.name}_extract"
+            assert not part_extract.exists()
+
+
+def test_multi_file_collide(
+    tmp_path: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    input_file = tmp_path / "input"
+    with zipfile.ZipFile(input_file, "w") as zf:
+        zf.writestr("special", data=b"AA")
+        zf.writestr("special.part0", data=b"BB")
+        zf.writestr("special.part1", data=b"C")
+
+    multi_file_extraction_config.dir_handlers = (SpecialDirHandler, SplitDirHandler)
+    process_result = process_file(multi_file_extraction_config, input_file)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    directory = extraction_root / "input_extract"
+    files = {directory / "special.part0", directory / "special.part1"}
+
+    collision_reports = task_result_by_path[directory].filter_reports(
+        MultiFileCollisionReport
+    )
+    assert collision_reports
+    assert collision_reports[0].paths == files
+
+
+def test_multi_file_extract_dir(
+    tmp_path: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    input_file = tmp_path / "input"
+    with zipfile.ZipFile(input_file, "w") as zf:
+        zf.writestr("test_extract", data=b"XXXX")
+        zf.writestr("test.part0", data=b"BB")
+        zf.writestr("test.part1", data=b"C")
+
+    process_result = process_file(multi_file_extraction_config, input_file)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    directory = extraction_root / "input_extract"
+
+    multi_file_reports = task_result_by_path[directory].filter_reports(MultiFileReport)
+    assert multi_file_reports
+    assert any(
+        isinstance(report, ExtractDirectoryExistsReport)
+        for report in multi_file_reports[0].extraction_reports
+    )
+
+
+def test_multi_file_extraction_failed(
+    multi_volume_zip: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    multi_file_extraction_config.dir_handlers = (ExtractionFailSplitDirHandler,)
+    process_result = process_file(multi_file_extraction_config, multi_volume_zip)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    directory = extraction_root / "input_extract"
+
+    multi_file_reports = task_result_by_path[directory].filter_reports(MultiFileReport)
+    assert multi_file_reports
+    assert all(
+        isinstance(extraction_report, UnknownError)
+        for report in multi_file_reports
+        for extraction_report in report.extraction_reports
     )

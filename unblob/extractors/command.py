@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 
 from structlog import get_logger
 
-from unblob.models import ExtractError, Extractor
+from unblob.models import DirectoryExtractor, ExtractError, Extractor
 from unblob.report import ExtractCommandFailedReport, ExtractorDependencyNotFoundReport
 
 if TYPE_CHECKING:
@@ -84,6 +84,11 @@ class Command(Extractor):
 
     def get_dependencies(self) -> List[str]:
         return [self._executable]
+
+
+class MultiFileCommand(Command, DirectoryExtractor):
+    def extract(self, paths: List[Path], outdir: Path):
+        return super().extract(paths[0], outdir)
 
 
 class InvalidCommandTemplate(ValueError):

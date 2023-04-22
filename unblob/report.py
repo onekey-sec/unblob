@@ -4,7 +4,7 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union, final
+from typing import List, Optional, Set, Union, final
 
 import attr
 
@@ -113,6 +113,15 @@ class MaliciousSymlinkRemoved(ErrorReport):
 
 
 @attr.define(kw_only=True, frozen=True)
+class MultiFileCollisionReport(ErrorReport):
+    """Describes an error when MultiFiles collide on the same file."""
+
+    severity: Severity = Severity.ERROR
+    paths: Set[Path]
+    handler: str
+
+
+@attr.define(kw_only=True, frozen=True)
 class StatReport(Report):
     path: Path
     size: int
@@ -190,7 +199,7 @@ class EntropyReport(Report):
 @final
 @attr.define(kw_only=True, frozen=True)
 class ChunkReport(Report):
-    chunk_id: str
+    id: str  # noqa: A003
     handler_name: str
     start_offset: int
     end_offset: int
@@ -202,8 +211,18 @@ class ChunkReport(Report):
 @final
 @attr.define(kw_only=True, frozen=True)
 class UnknownChunkReport(Report):
-    chunk_id: str
+    id: str  # noqa: A003
     start_offset: int
     end_offset: int
     size: int
     entropy: Optional[EntropyReport]
+
+
+@final
+@attr.define(kw_only=True, frozen=True)
+class MultiFileReport(Report):
+    id: str  # noqa: A003
+    handler_name: str
+    name: str
+    paths: List[Path]
+    extraction_reports: List[Report]
