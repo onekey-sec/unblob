@@ -49,6 +49,6 @@ runs:
         path: ~/.cache/pypoetry/virtualenvs
         key: venv-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}
 
-    - name: Poetry install
-      run: UNBLOB_BUILD_RUST_EXTENSION=1 poetry install --with dev
+    - name: Install test dependencies
+      run: poetry install --no-root --only=dev
       shell: bash
