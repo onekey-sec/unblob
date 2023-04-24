@@ -14,9 +14,9 @@
 , lark
 , lief
 , lz4
+, pdm-backend
 , plotext
 , pluggy
-, poetry-core
 , pyperscan
 , python-magic
 , rarfile
@@ -37,8 +37,8 @@
 
 let
   pyproject_toml = (builtins.fromTOML (builtins.readFile ../../pyproject.toml));
-  pname = pyproject_toml.tool.poetry.name;
-  version = pyproject_toml.tool.poetry.version;
+  pname = pyproject_toml.project.name;
+  version = pyproject_toml.project.version;
 
   # These dependencies are only added to PATH
   runtimeDeps = [
@@ -63,6 +63,7 @@ let
     src = nix-filter {
       root = ../../.;
       include = [
+        "README.md"
         "pyproject.toml"
         "unblob"
       ];
@@ -71,7 +72,7 @@ let
     strictDeps = true;
     doCheck = false;
 
-    buildInputs = [ poetry-core ];
+    buildInputs = [ pdm-backend ];
 
     propagatedBuildInputs = [
       arpy

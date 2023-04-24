@@ -29,27 +29,26 @@ jobs:
           path: ~/.cache/pip
           key: pip-3.8
 
-      - name: Upgrade pip and install poetry
-        run: python -m pip install --upgrade pip poetry
+      - name: Upgrade pip and install pdm
+        run: python -m pip install --upgrade pip pdm
         shell: bash
 
-      - name: Restore poetry cache
+      - name: Restore PDM cache
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cache/pypoetry/cache
-            ~/.cache/pypoetry/artifacts
-          key: poetry-cache-and-artifacts-3.8
+            ~/.cache/pdm
+          key: pdm-cache-doc
 
       - name: Restore virtualenvs
         uses: actions/cache@v3
         with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: venv-${{ hashFiles('poetry.lock') }}-3.8
+          path: .venv
+          key: venv-${{ hashFiles('pdm.lock') }}-doc
 
       - name: Poetry install
-        run: poetry install --only docs
+        run: pdm install --no-default --group docs
         shell: bash
 
       - name: Generate documentation
-        run: poetry run mkdocs gh-deploy --force
+        run: pdm run mkdocs gh-deploy --force

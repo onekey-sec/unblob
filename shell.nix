@@ -17,7 +17,15 @@ mkShell {
     pyright
     python3Packages.pytest
     python3Packages.pytest-cov
-    poetry
+    (pdm.overridePythonAttrs (super: rec {
+      version = "2.6.1";
+      src = fetchPypi {
+        inherit (super) pname;
+        inherit version;
+        hash = "sha256-EFlYhJovjZqp7yGDosUOrp60rEf8gScs1QT92ckO3qI=";
+      };
+      nativeCheckInputs = super.nativeCheckInputs ++ [ python3Packages.pytest-httpserver ];
+    }))
     lzo
     update
   ];

@@ -29,7 +29,7 @@ RUN curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/r
 USER unblob
 ENV PATH="/home/unblob/.local/bin:${PATH}"
 
-# You MUST do a poetry build before to have the wheel to copy & install here (CI action will do this when building)
+# You MUST do a pdm build before to have the wheel to copy & install here (CI action will do this when building)
 COPY dist/*.whl /tmp/
 RUN pip --disable-pip-version-check install --upgrade pip
 RUN pip install /tmp/unblob*.whl

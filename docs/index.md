@@ -59,7 +59,7 @@ unblob has been developed with the following objectives in mind:
   tested](https://github.com/onekey-sec/unblob/issues?q=label%3Afuzzing+)
   against a large corpus of files and firmware images. We rely on up-to-date
   third party dependencies that are
-  [locked](https://github.com/onekey-sec/unblob/blob/main/poetry.lock) to limit
+  [locked](https://github.com/onekey-sec/unblob/blob/main/pdm.lock) to limit
   potential supply chain issues. We use safe extractors that we audited and
   fixed where required (see [path traversal in
   ubi_reader](https://github.com/onekey-sec/ubi_reader/commit/4a81f3f0a714bb83d6ee71db09b7748619fa9fb7),

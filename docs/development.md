@@ -32,8 +32,8 @@ where the exciting stuff is.
 - **git**: You need it for cloning the repository.
   Install it [from the git-scm website](https://git-scm.com/download).
 
-- **Poetry**: it is a package manager for Python dependencies. Follow the instructions on the
-  [Poetry website](https://python-poetry.org/docs/master/#installation) to install the latest version.
+- **PDM**: it is a package manager for Python dependencies. Follow the instructions on the
+  [PDM website](https://pdm.fming.dev/latest/#installation) to install the latest version.
 
 - **pre-commit**: We are using [pre-commit](https://pre-commit.com/) to run
   checks like linters, type checks and formatting issues.
@@ -72,16 +72,16 @@ You need to setup Git LFS once, before you will be able to run the whole test su
 
 The recommended way to develop Python projects in a semi-isolated way is to use `virtualenv`.
 
-If you don't want to manage it separately, you can rely on `Poetry` to automatically
+If you don't want to manage it separately, you can rely on `PDM` to automatically
 create a virtualenv for you on install.
 
-If you don't want Poetry to automatically create a virtualenv, you can turn it off with this command:
+If you don't want PDM to automatically create a virtualenv, you can turn it off with this command:
 
 ```shell
-poetry config virtualenvs.create false
+pdm config python.use_venv False
 ```
 
-Or instead of Poetry you can use `pyenv`. You can set the Python interpreter
+Or instead of PDM you can use `pyenv`. You can set the Python interpreter
 version for the local folder only with:
 
 ```
@@ -90,8 +90,8 @@ pyenv local 3.8.12
 
 ### Installing Python dependencies
 
-We are using [poetry](https://python-poetry.org/) to manage our Python dependencies. `poetry
-install` will install all required dependencies for development.
+We are using [PDM](https://pdm.fming.dev/) to manage our Python dependencies. `pdm sync --dev` will install all required
+dependencies for development.
 
 ### Running pre-commit
 

@@ -32,23 +32,22 @@ runs:
         key: pip-${{ inputs.python-version }}
 
     - name: Pip install
-      run: python -m pip install --upgrade pip poetry
+      run: python -m pip install --upgrade pip pdm
       shell: bash
 
     - name: Restore poetry cache
       uses: actions/cache@v3
       with:
         path: |
-          ~/.cache/pypoetry/cache
-          ~/.cache/pypoetry/artifacts
-        key: poetry-cache-and-artifacts-${{ inputs.python-version }}
+          ~/.cache/pdm
+        key: pdm-cache-${{ inputs.python-version }}
 
     - name: Restore virtualenvs
       uses: actions/cache@v3
       with:
-        path: ~/.cache/pypoetry/virtualenvs
-        key: venv-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}
+        path: .venv
+        key: venv-${{ hashFiles('pdm.lock') }}-${{ inputs.python-version }}
 
-    - name: Poetry install
-      run: poetry install --with dev
+    - name: Install test dependencies
+      run: pdm install --no-self --no-default --group test
       shell: bash

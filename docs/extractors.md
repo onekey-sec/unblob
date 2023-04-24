@@ -49,7 +49,7 @@ The following executables found installed, which are needed by unblob:
 
 ✅: These extractors come with unblob, check
 [pyproject.toml](https://github.com/onekey-sec/unblob/blob/main/pyproject.toml)
-and [poetry.lock](https://github.com/onekey-sec/unblob/blob/main/poetry.lock)
+and [pdm.lock](https://github.com/onekey-sec/unblob/blob/main/pdm.lock)
 for current versions.
 
 | Extractor                   | Provided commands                                     | Minimum version | Pre-Installed | More information                                                 |
