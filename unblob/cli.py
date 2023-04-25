@@ -66,7 +66,7 @@ class UnblobContext(click.Context):
         *args,
         handlers: Optional[Handlers] = None,
         plugin_manager: Optional[UnblobPluginManager] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         handlers = handlers or BUILTIN_HANDLERS
