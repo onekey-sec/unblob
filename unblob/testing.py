@@ -1,3 +1,4 @@
+import glob
 import shlex
 import subprocess
 from pathlib import Path
@@ -21,7 +22,9 @@ def configure_logging():  # noqa: PT004
 
 
 def gather_integration_tests(test_data_path: Path):
-    test_input_dirs = list(test_data_path.glob("**/__input__"))
+    test_input_dirs = [
+        Path(p) for p in glob.iglob(f"{test_data_path}/**/__input__", recursive=True)
+    ]
     test_case_dirs = [p.parent for p in test_input_dirs]
     test_output_dirs = [p / "__output__" for p in test_case_dirs]
     test_ids = [
