@@ -241,7 +241,9 @@ class Processor:
 
         if task.depth >= self._config.max_depth:
             # TODO: Use the reporting feature to warn the user (ONLY ONCE) at the end of execution, that this limit was reached.
-            log.debug("Reached maximum depth, stop further processing")
+            log.debug(
+                "Reached maximum depth, stop further processing", depth=task.depth
+            )
             return
 
         if stat_report.is_dir:
