@@ -9,6 +9,7 @@ from unblob.extractor import is_safe_path
 logger = get_logger()
 
 RUNNING_AS_ROOT = os.getuid() == 0
+MAX_PATH_LEN = 255
 
 
 class SafeTarFile(TarFile):
@@ -17,6 +18,14 @@ class SafeTarFile(TarFile):
     ):
         path_as_path = Path(str(path))
         member_name_path = Path(str(member.name))
+
+        if not member.name:
+            logger.warning("File with empty filename in tar archive. Skipping")
+            return
+
+        if len(member.name) > MAX_PATH_LEN:
+            logger.warning("File with filename too long in tar archive. Skipping")
+            return
 
         if not RUNNING_AS_ROOT and (member.ischr() or member.isblk()):
             logger.warning(
