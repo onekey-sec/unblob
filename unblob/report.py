@@ -176,7 +176,7 @@ class FileMagicReport(Report):
 @attr.define(kw_only=True)
 class EntropyReport(Report):
     percentages: List[float]
-    buffer_size: int
+    block_size: int
 
     @property
     def mean(self):
