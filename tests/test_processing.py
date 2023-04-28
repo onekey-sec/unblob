@@ -378,19 +378,17 @@ def test_entropy_calculation(tmp_path: Path):
     # with a percentages (scaled up bits) of 64 items, for 0, 6, 8, 8, ... bits of entropies
     [unknown_chunk_report] = get_all("input-file", UnknownChunkReport)
     unknown_entropy = unknown_chunk_report.entropy
-    assert unknown_entropy == EntropyReport(
-        percentages=[0.0, 75.0] + [100.0] * 62,
-        block_size=1024,
-    )
     assert (
         unknown_entropy is not None
-    )  # removes pyright complaints for the below 3 lines :(
+    )  # removes pyright complaints for the below lines :(
+    assert unknown_entropy.percentages == [0.0, 75.0] + [100.0] * 62
+    assert unknown_entropy.block_size == 1024
     assert round(unknown_entropy.mean, 2) == 98.05  # noqa: PLR2004
     assert unknown_entropy.highest == 100.0  # noqa: PLR2004
     assert unknown_entropy.lowest == 0.0  # noqa: PLR2004
 
     # we should have entropy calculated for files without extractions, except for empty files
     assert [] == get_all("empty.txt", EntropyReport)
-    assert [EntropyReport(percentages=[100.0], block_size=1024)] == get_all(
+    assert [EntropyReport(percentages=[100.0], block_size=1024, mean=100.0)] == get_all(
         "0-255.bin", EntropyReport
     )

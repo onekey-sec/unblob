@@ -521,13 +521,19 @@ def calculate_entropy(path: Path) -> EntropyReport:
         max_limit=1024 * 1024,
     )
 
+    entropy_sum = 0.0
     with File.from_path(path) as file:
         for chunk in iterate_file(file, 0, file_size, buffer_size=block_size):
             entropy = shannon_entropy(chunk)
             entropy_percentage = round(entropy / 8 * 100, 2)
             percentages.append(entropy_percentage)
+            entropy_sum += entropy * len(chunk)
 
-    report = EntropyReport(percentages=percentages, block_size=block_size)
+    report = EntropyReport(
+        percentages=percentages,
+        block_size=block_size,
+        mean=entropy_sum / file_size / 8 * 100,
+    )
 
     logger.debug(
         "Entropy calculated",
