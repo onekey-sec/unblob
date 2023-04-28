@@ -61,7 +61,13 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
         path.unlink()
         return path
 
-    target = Path(os.readlink(path))
+    raw_target = os.readlink(path)
+    if not raw_target:
+        logger.error("Symlink with empty target, removing.")
+        path.unlink()
+        return path
+
+    target = Path(raw_target)
 
     if target.is_absolute():
         target = Path(target.as_posix().lstrip("/"))
