@@ -1,4 +1,5 @@
 """File extraction related functions."""
+import errno
 import os
 from pathlib import Path
 
@@ -91,12 +92,24 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
 
 
 def fix_extracted_directory(outdir: Path, task_result: TaskResult):
+    def _fix_extracted_directory(directory: Path):
+        if not directory.exists():
+            return
+        for path in (directory / p for p in os.listdir(directory)):
+            try:
+                fix_permission(path)
+                if path.is_symlink():
+                    fix_symlink(path, outdir, task_result)
+                    continue
+                if path.is_dir():
+                    _fix_extracted_directory(path)
+            except OSError as e:
+                if e.errno == errno.ENAMETOOLONG:
+                    continue
+                raise e from None
+
     fix_permission(outdir)
-    for path in outdir.rglob("*"):
-        if path.is_symlink():
-            fix_symlink(path, outdir, task_result)
-        else:
-            fix_permission(path)
+    _fix_extracted_directory(outdir)
 
 
 def carve_unknown_chunk(extract_dir: Path, file: File, chunk: UnknownChunk) -> Path:
