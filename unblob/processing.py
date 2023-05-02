@@ -361,7 +361,7 @@ class _FileTask:
                     "Entropy chart",
                     # New line so that chart title will be aligned correctly in the next line
                     chart="\n"
-                    + format_entropy_plot(report.percentages, report.buffer_size),
+                    + format_entropy_plot(report.percentages, report.block_size),
                     path=path,
                     _verbosity=3,
                 )
@@ -514,23 +514,32 @@ def calculate_entropy(path: Path) -> EntropyReport:
 
     # Smaller chunk size would be very slow to calculate.
     # 1Mb chunk size takes ~ 3sec for a 4,5 GB file.
-    buffer_size = calculate_buffer_size(
-        file_size, chunk_count=80, min_limit=1024, max_limit=1024 * 1024
+    block_size = calculate_block_size(
+        file_size,
+        chunk_count=80,
+        min_limit=1024,
+        max_limit=1024 * 1024,
     )
 
+    entropy_sum = 0.0
     with File.from_path(path) as file:
-        for chunk in iterate_file(file, 0, file_size, buffer_size=buffer_size):
+        for chunk in iterate_file(file, 0, file_size, buffer_size=block_size):
             entropy = shannon_entropy(chunk)
             entropy_percentage = round(entropy / 8 * 100, 2)
             percentages.append(entropy_percentage)
+            entropy_sum += entropy * len(chunk)
 
-    report = EntropyReport(percentages=percentages, buffer_size=buffer_size)
+    report = EntropyReport(
+        percentages=percentages,
+        block_size=block_size,
+        mean=entropy_sum / file_size / 8 * 100,
+    )
 
     logger.debug(
         "Entropy calculated",
         path=path,
         size=file_size,
-        buffer_size=report.buffer_size,
+        block_size=report.block_size,
         mean=round(report.mean, 2),
         highest=round(report.highest, 2),
         lowest=round(report.lowest, 2),
@@ -539,25 +548,25 @@ def calculate_entropy(path: Path) -> EntropyReport:
     return report
 
 
-def calculate_buffer_size(
+def calculate_block_size(
     file_size, *, chunk_count: int, min_limit: int, max_limit: int
 ) -> int:
     """Split the file into even sized chunks, limited by lower and upper values."""
     # We don't care about floating point precision here
-    buffer_size = file_size // chunk_count
-    buffer_size = max(min_limit, buffer_size)
-    buffer_size = min(buffer_size, max_limit)
-    return buffer_size
+    block_size = file_size // chunk_count
+    block_size = max(min_limit, block_size)
+    block_size = min(block_size, max_limit)
+    return block_size
 
 
-def format_entropy_plot(percentages: List[float], buffer_size: int):
+def format_entropy_plot(percentages: List[float], block_size: int):
     # start from scratch
     plt.clear_figure()
     # go colorless
     plt.clear_color()
     plt.title("Entropy distribution")
-    # plt.xlabel(humanize.naturalsize(buffer_size))
-    plt.xlabel(f"{buffer_size} bytes")
+    # plt.xlabel(humanize.naturalsize(block_size))
+    plt.xlabel(f"{block_size} bytes")
     plt.ylabel("entropy %")
 
     plt.scatter(percentages, marker="dot")

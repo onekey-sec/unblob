@@ -1,7 +1,6 @@
 import hashlib
 import os
 import stat
-import statistics
 import traceback
 from enum import Enum
 from pathlib import Path
@@ -176,11 +175,8 @@ class FileMagicReport(Report):
 @attr.define(kw_only=True)
 class EntropyReport(Report):
     percentages: List[float]
-    buffer_size: int
-
-    @property
-    def mean(self):
-        return statistics.mean(self.percentages)
+    block_size: int
+    mean: float
 
     @property
     def highest(self):
