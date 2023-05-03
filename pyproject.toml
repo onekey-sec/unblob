@@ -1,0 +1,126 @@
+[project]
+name = "unblob-native"
+authors = [
+  {name = "ONEKEY", email = "support@onekey.com"},
+]
+description = "Performance-critical functionality for Unblob"
+license = {file = "LICENSE"}
+readme = "README.md"
+
+requires-python = "~=3.8"
+
+[project.urls]
+homepage = "https://unblob.org"
+repository = "https://github.com/onekey-sec/unblob-native"
+
+[tool.pdm.scripts]
+venv = "pdm sync -d"
+pre-commit = "pre-commit run --all"
+pyright = "pyright"
+pytest = "python -m pytest tests"
+clippy = "cargo clippy --all-targets -- --deny warnings"
+test = "cargo test"
+all = { composite = ["clippy", "test", "venv", "pre-commit", "pyright", "pytest"] }
+
+[tool.pdm.dev-dependencies]
+dev = [
+  "black      ~= 23.3.0",
+  "pre-commit ~= 2.20",
+  "pyright    == 1.1.306",
+  "pytest     ~= 7.0.0",
+  "ruff       ~= 0.0.264",
+]
+
+[build-system]
+requires = ["maturin>=0.14,<0.15"]
+build-backend = "maturin"
+
+[tool.maturin]
+module-name = "unblob_native._native"
+
+features = [
+  "pyo3/extension-module",  # This is an extension module
+  "pyo3/abi3-py38"          # https://docs.python.org/3/c-api/stable.html
+]
+
+[tool.ruff]
+target-version = "py38"
+
+select = [
+  "A",      # flake8-builtins
+  "ARG",    # flake8-unused-arguments
+  "B",      # flake8-bugbear
+  "C90",    # mccabe
+  "C4",     # flake8-comprehensions
+  "COM818", # flake8-commas; trailing-comma-on-bare-tuple
+  "D",      # pydocstyle
+  "E",      # pycodestyle (errors)
+  "F",      # pyflakes
+  "FBT",    # flake8-boolean-trap
+  "G",      # flake8-logging-format
+  "I",      # isort
+  "ISC",    # flake8-implicit-str-concats
+  "N",      # pep8-naming
+  "PIE",    # flake8-pie
+  "PYI",    # flake8-pyi
+  "PL",     # pylint
+  "PT",     # flake8-pytest-style
+  "PTH",    # flake8-use-pathlib
+  "RET",    # flake8-return
+  "RUF",    # ruff's own lints
+  "RSE",    # flake8-raise
+  "S",      # flake8-bandit
+  "SIM",    # flake8-simplify
+  "SLF",    # flake8-self
+  "T10",    # flake8-debugger
+  "T20",    # flake8-print
+  "TCH",    # flake8-type-checking
+  "TRY",    # tryceratops
+  "UP",     # pyupgrade
+  "W",      # pycodestyle (warnings)
+]
+
+ignore = [
+  "D1",      # undocumented-*:                 Native extension docstrings are not picked up
+  "D203",    # one-blank-line-before-class:    D211 (no-blank-line-before-class) is used instead
+  "D213",    # multi-line-summary-second-line: D212 (multi-line-summary-first-line) is used instead
+  "E501",    # line-too-long:                  Let black handle line length violations
+]
+
+[tool.ruff.per-file-ignores]
+"unblob_native/__init__.py" = [
+  "F403",
+  "A001",
+  "F405",
+  "PLE0605",
+]
+
+"tests/*" = [
+  "S101",    # assert:                         Enable usage of asserts
+]
+
+[tool.ruff.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+parametrize-names-type = "csv"
+
+[tool.pyright]
+include = ["unblob_native", "tests"]
+stubPath = "."
+pythonVersion = "3.8"
+# Strict mode enables additional checks:
+# https://github.com/microsoft/pyright/blob/main/docs/configuration.md#diagnostic-rule-defaults
+typeCheckingMode = "strict"
+
+# The following are not enabled even in strict mode
+reportImportCycles = "warning"
+reportMissingSuperCall = "warning"
+reportPropertyTypeMismatch = "warning"
+reportShadowedImports = "warning"
+reportUninitializedInstanceVariable = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnusedCallResult = "warning"
+
+reportUnknownArgumentType = "none"
+reportUnknownVariableType = "none"
+reportUnknownMemberType = "none"
