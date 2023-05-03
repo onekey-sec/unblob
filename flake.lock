@@ -141,11 +141,11 @@
         "utils": "utils"
       },
       "locked": {
-        "lastModified": 1677081717,
-        "narHash": "sha256-jkHeH+vm93nI0NQ5ygQ/csa4/hCuBGJ9ZxJTa5ewRp8=",
+        "lastModified": 1683115896,
+        "narHash": "sha256-qidCJSxUrvMcF5CEveG+C3relveUbwqyo6ROMH2vBN4=",
         "ref": "main",
-        "rev": "4bc92387dd2996cb67fdfbe185ebc172b36f4cbd",
-        "revCount": 27,
+        "rev": "22224c2426d7f5d95d86db95216a90a4b6eb81d3",
+        "revCount": 42,
         "submodules": true,
         "type": "git",
         "url": "https://github.com/vlaci/pyperscan/"
