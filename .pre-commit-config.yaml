@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ".*\\.md"
+      - id: end-of-file-fixer
+      - id: check-toml
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.0.264"
+    hooks:
+      - id: ruff
+        name: Check python (ruff)
+        args: [--show-source, --fix, --exit-non-zero-on-fix]
+
+  - repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+      - id: black
+        name: Check black
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.21.0
+    hooks:
+      - id: check-github-actions
+        name: Check Github actions
+      - id: check-github-workflows
+        name: Check Github workflows

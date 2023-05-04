@@ -1,0 +1,5 @@
+*.so
+.pdm-python
+/target
+__pycache__
+result*
