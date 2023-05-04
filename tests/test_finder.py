@@ -2,7 +2,7 @@ import attr
 import pytest
 from pyperscan import Scan
 
-from unblob.file_utils import InvalidInputFormat
+from unblob.file_utils import DEFAULT_BUFSIZE, InvalidInputFormat
 from unblob.finder import build_hyperscan_database, search_chunks
 from unblob.models import File, Handler, HexString, Regex, ValidChunk
 from unblob.parser import InvalidHexString
@@ -61,6 +61,17 @@ class TestHandlerExc(Handler):
     def calculate_chunk(self, file, start_offset: int):
         del file, start_offset  # unused arguments
         raise ValueError("Error")
+
+
+class TestHandlerL(Handler):
+    NAME = "handlerL"
+    PATTERNS = [Regex("L")]
+
+    def calculate_chunk(self, file, start_offset: int):
+        del file  # unused argument
+        return ValidChunk(
+            start_offset=start_offset, end_offset=start_offset + DEFAULT_BUFSIZE * 2
+        )
 
 
 def test_build_hyperscan_database():
@@ -137,6 +148,31 @@ def test_invalid_hexstring_pattern_raises():
         pytest.param(
             b"EXCA2345", [ValidChunk(3, 8)], id="exception-ignored-scan-continues"
         ),
+        pytest.param(b"0", [], id="1-byte"),
+        pytest.param(b"1234567890", [], id="no-chunk"),
+        pytest.param(
+            b"A2345L1" + b"1" * DEFAULT_BUFSIZE * 2,
+            [ValidChunk(0, 5), ValidChunk(5, 5 + DEFAULT_BUFSIZE * 2)],
+            id="multi-large-chunk",
+        ),
+        pytest.param(
+            b"L" + b"1" * DEFAULT_BUFSIZE + b"A2345" + b"1" * DEFAULT_BUFSIZE,
+            [ValidChunk(0, DEFAULT_BUFSIZE * 2)],
+            id="large-small-inside-ignored",
+        ),
+        pytest.param(
+            b"0123456789L" + b"1" * DEFAULT_BUFSIZE + b"A2345" + b"1" * DEFAULT_BUFSIZE,
+            [ValidChunk(10, 10 + DEFAULT_BUFSIZE * 2)],
+            id="padding-large-small-inside-ignored",
+        ),
+        pytest.param(
+            b"L" + b"1" * (DEFAULT_BUFSIZE * 2 - 1) + b"A2345" + b"1" * DEFAULT_BUFSIZE,
+            [
+                ValidChunk(0, DEFAULT_BUFSIZE * 2),
+                ValidChunk(DEFAULT_BUFSIZE * 2, DEFAULT_BUFSIZE * 2 + 5),
+            ],
+            id="large-small",
+        ),
     ],
 )
 def test_search_chunks(content, expected_chunks, task_result):
@@ -149,6 +185,7 @@ def test_search_chunks(content, expected_chunks, task_result):
         TestHandlerEof,
         TestHandlerInvalid,
         TestHandlerExc,
+        TestHandlerL,
     )
 
     chunks = search_chunks(file, len(content), handlers, task_result)
