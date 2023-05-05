@@ -26,7 +26,7 @@ lark = "^1.1.2"
 lz4 = "^4.0.0"
 lief = "^0.12.3"
 jefferson = "^0.4.2"
-cryptography = ">=37.0.1,<40.0"
+cryptography = ">=39.0,<41.0"
 treelib = "^1.6.1"
 unblob-native = "^0.1.0"
 
