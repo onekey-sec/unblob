@@ -41,10 +41,9 @@ where the exciting stuff is.
 - **Git LFS**: We have big integration test files, and we are using Git LFS to track them.
   [Install `git-lfs`](https://git-lfs.github.com/) from the website.
 
-- **Rust** (_Optional_): unblob has an optional Rust extension for performance
-  intensive processing. Building it is entirely optional and requires
-  [`rustup`](https://rustup.rs/) to be installed on the host system. Follow the
-  instructions on the [rustup website](https://rustup.rs/) to install it.
+- **Rust** (_for unblob-native_): unblob has a [Rust extension](https://github.com/onekey-sec/unblob-native) for
+  performance intensive processing. Building it is entirely optional and requires [`rustup`](https://rustup.rs/) to be
+  installed on the host system. Follow the instructions on the [rustup website](https://rustup.rs/) to install it.
 
 - **pyenv** (_Recommended_): When you are working with multiple versions of Python,
   pyenv makes it very easy to install and use different versions and make virtualenvs.
@@ -91,12 +90,8 @@ pyenv local 3.8.12
 
 ### Installing Python dependencies
 
-We are using [poetry](https://python-poetry.org/) to manage our Python dependencies.
-
-- If you installed Rust: run `UNBLOB_BUILD_RUST_EXTENSION=1 poetry install`
-  to build and install the extension. Set `RUST_DEBUG=1` to build it in debug mode.
-
-- `poetry install` will install all required dependencies for development.
+We are using [poetry](https://python-poetry.org/) to manage our Python dependencies. `poetry
+install` will install all required dependencies for development.
 
 ### Running pre-commit
 

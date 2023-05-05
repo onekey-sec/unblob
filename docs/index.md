@@ -75,7 +75,7 @@ unblob has been developed with the following objectives in mind:
   multi-processing by default, make sure to write efficient code, use
   memory-mapped files, and use [Hyperscan](https://github.com/intel/hyperscan)
   as a high-performance matching library. Computation-intensive functions are
-  written in [Rust](https://github.com/onekey-sec/unblob/tree/main/rust) and
+  written in [Rust](https://github.com/onekey-sec/unblob-native) and
   called from Python using specific bindings.
 
 ## How does it work?

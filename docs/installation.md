@@ -7,7 +7,7 @@ hide:
 
 Unblob consists of two main parts:
 
-- unblob, the Python package (with optional Rust modules).
+- unblob, the Python package.
 - extractor command line tools like `7zip`, `unar`, etc. (See [Extractors](./extractors.md) for explanation.)
 
 All of these need to be installed to make unblob fully functional.  
@@ -98,20 +98,14 @@ The Nix derivation installs all 3rd party dependencies.
 
 4.  Install **Python dependencies** with Poetry:
 
-    1.  _Optional_: With Rust optimizations
-        (you need a [Rust compiler](https://www.rust-lang.org/tools/install)):
-
-            cd unblob
-            UNBLOB_BUILD_RUST_EXTENSION=1 poetry install --no-dev
-
-    2.  Python packages only:
+    1.  Python packages:
 
             cd unblob
             poetry install --no-dev
 
-    3.  Make sure you [installed all extractors](#install-extractors).
+    2.  Make sure you [installed all extractors](#install-extractors).
 
-    4.  Check that everything works correctly:
+    3.  Check that everything works correctly:
 
             poetry run unblob --show-external-dependencies
 
