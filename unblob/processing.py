@@ -8,6 +8,7 @@ import attr
 import magic
 import plotext as plt
 from structlog import get_logger
+from unblob_native import math_tools as mt
 
 from unblob.handlers import BUILTIN_HANDLERS, Handlers
 
@@ -16,7 +17,6 @@ from .file_utils import iterate_file
 from .finder import search_chunks
 from .iter_utils import pairwise
 from .logging import noformat
-from .math import shannon_entropy
 from .models import (
     Chunk,
     ExtractError,
@@ -524,7 +524,7 @@ def calculate_entropy(path: Path) -> EntropyReport:
     entropy_sum = 0.0
     with File.from_path(path) as file:
         for chunk in iterate_file(file, 0, file_size, buffer_size=block_size):
-            entropy = shannon_entropy(chunk)
+            entropy = mt.shannon_entropy(chunk)
             entropy_percentage = round(entropy / 8 * 100, 2)
             percentages.append(entropy_percentage)
             entropy_sum += entropy * len(chunk)

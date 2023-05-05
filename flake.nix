@@ -3,6 +3,10 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.filter.url = "github:numtide/nix-filter";
+  inputs.unblob-native = {
+    url = "github:onekey-sec/unblob-native";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
   inputs.pyperscan = {
     url = "git+https://github.com/vlaci/pyperscan/?ref=main&submodules=1";
     inputs.nixpkgs.follows = "nixpkgs";
@@ -12,7 +16,7 @@
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, filter, pyperscan, sasquatch }:
+  outputs = { self, nixpkgs, filter, unblob-native, pyperscan, sasquatch }:
     let
       # System types to support.
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
@@ -33,7 +37,7 @@
         filter.overlays.default
         sasquatch.overlays.default
         (import ./overlay.nix {
-          inherit pyperscan;
+          inherit pyperscan unblob-native;
         })
       ];
       packages = forAllSystems (system: rec {
