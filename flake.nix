@@ -100,7 +100,7 @@
               ];
             };
 
-            buildInputs = [ pkgs.maturin ];
+            buildInputs = commonArgs.buildInputs ++ [ pkgs.maturin ];
 
             strictDeps = true;
             doCheck = false;
