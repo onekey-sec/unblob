@@ -23,6 +23,7 @@
 , rarfile
 , structlog
 , ubi_reader
+, unblob-native
 , treelib
   # Runtime dependencies (extractors)
 , pkgs
@@ -90,6 +91,7 @@ let
       python-magic
       structlog
       ubi_reader
+      unblob-native
       rarfile
       treelib
     ];
