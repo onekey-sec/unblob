@@ -21,7 +21,6 @@
 , python-lzo
 , python-magic
 , rarfile
-, setuptools
 , structlog
 , ubi_reader
 , treelib
@@ -55,7 +54,6 @@ let
     pkgs.lz4
   ];
 
-  rust-module = callPackage ./rust-module.nix { inherit pname version; };
   tests = callPackage ./tests.nix { inherit pname version; };
 
   unblob = buildPythonPackage rec {
@@ -65,7 +63,6 @@ let
     src = nix-filter {
       root = ../../.;
       include = [
-        "build.py"
         "pyproject.toml"
         "unblob"
       ];
@@ -74,7 +71,7 @@ let
     strictDeps = true;
     doCheck = false;
 
-    buildInputs = [ poetry-core setuptools ];
+    buildInputs = [ poetry-core ];
 
     propagatedBuildInputs = [
       arpy
@@ -100,19 +97,14 @@ let
     nativeBuildInputs = [
       makeWrapper
       pythonRelaxDepsHook
-      rust-module
     ];
 
-    pythonImportsCheck = [ "unblob" "unblob._rust" ];
+    pythonImportsCheck = [ "unblob" ];
 
     pythonRelaxDeps = [
       "dissect.cstruct"
       "structlog"
     ];
-
-    preBuild = ''
-      cp -r --no-preserve=mode ${rust-module}/unblob .
-    '';
 
     makeWrapperArgs = [
       "--prefix PATH : ${lib.makeBinPath runtimeDeps}"

@@ -7,8 +7,6 @@ license = "MIT"
 packages = [
     { include = "unblob" },
 ]
-include = ["rust/*", "rust/src/*"]
-build = "build.py"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -40,7 +38,6 @@ pyright = "^0.0.12"
 pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
 ruff = "^0.0.259"
-setuptools-rust = "^1.1.2"
 
 [tool.poetry.group.docs]
 optional = true
@@ -149,11 +146,11 @@ norecursedirs = """
 
 [tool.vulture]
 paths = ["unblob/", "vulture_whitelist.py" ]
-exclude = ["unblob/_py/", "unblob/testing.py"]
+exclude = ["unblob/testing.py"]
 
 [tool.pyright]
 exclude = ["build"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "setuptools>=60.9.3", "setuptools-rust==1.5.1"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

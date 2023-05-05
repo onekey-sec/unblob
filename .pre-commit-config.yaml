@@ -32,12 +32,6 @@ repos:
       - id: vulture
         name: Check vulture
 
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
-      - id: clippy
-
   - repo: https://github.com/nix-community/nixpkgs-fmt
     rev: v1.3.0
     hooks:
