@@ -1,8 +1,8 @@
 import io
+import zlib
 from enum import IntEnum
 from typing import Optional
 
-import lzo
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -95,11 +95,11 @@ class LZOHandler(StructHandler):
 
         # Checksum excludes the magic and the checksum itself
         if header.flags & HeaderFlags.H_CRC32:
-            calculated_checksum = lzo.crc32(
+            calculated_checksum = zlib.crc32(
                 header.dumps()[MAGIC_LENGTH:-CHECKSUM_LENGTH]
             )
         else:
-            calculated_checksum = lzo.adler32(
+            calculated_checksum = zlib.adler32(
                 header.dumps()[MAGIC_LENGTH:-CHECKSUM_LENGTH]
             )
 
