@@ -50,5 +50,5 @@ runs:
         key: venv-${{ hashFiles('poetry.lock') }}-${{ inputs.python-version }}
 
     - name: Poetry install
-      run: UNBLOB_BUILD_RUST_EXTENSION=1 poetry install --with dev
+      run: poetry install --with dev
       shell: bash
