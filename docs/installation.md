@@ -91,7 +91,7 @@ The Nix derivation installs all 3rd party dependencies.
 ## From source
 
 1.  Install [Git](https://git-scm.com/download/) if you don't have it yet.
-2.  Install the [Poetry](https://python-poetry.org/docs/#installation) Python package manager.
+2.  Install the [PDM](https://python-poetry.org/docs/#installation) Python package manager.
 3.  **Clone** the unblob **repository from GitHub**:
 
         git clone https://github.com/onekey-sec/unblob.git
@@ -101,13 +101,13 @@ The Nix derivation installs all 3rd party dependencies.
     1.  Python packages:
 
             cd unblob
-            poetry install --no-dev
+            pdm sync
 
     2.  Make sure you [installed all extractors](#install-extractors).
 
     3.  Check that everything works correctly:
 
-            poetry run unblob --show-external-dependencies
+            pdm run unblob --show-external-dependencies
 
 ## Install extractors
 

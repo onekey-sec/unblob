@@ -91,7 +91,7 @@ pyenv local 3.8.12
 ### Installing Python dependencies
 
 We are using [PDM](https://pdm.fming.dev/) to manage our Python dependencies. `pdm sync --dev` will install all required
-dependencies for development.
+dependencies for development. There are convenience commands for the most frequent operation. For example `pdm all` will setup the virtualenv, then runs all checks and tests. Run `pdm run --list` to see the available commands.
 
 ### Running pre-commit
 
