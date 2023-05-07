@@ -19,7 +19,7 @@ fn shannon_entropy(c: &mut Criterion) {
             BenchmarkId::from_parameter(sample_size),
             &sample_size,
             |b, &size| {
-                b.iter(|| unblob_native::shannon_entropy(&sample[0..size]));
+                b.iter(|| unblob_native::math::shannon_entropy(&sample[0..size]));
             },
         );
     }
