@@ -120,16 +120,25 @@ jobs:
     needs: [checks, pytest, pyright]
     strategy:
       matrix:
-        target: [x86_64, aarch64]
+        include:
+          - target: x86_64
+          - target: aarch64
+            cross: true
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+      - name: setup emulation
+        if: ${{ matrix.cross }}
+        run: |
+          sudo apt update
+          sudo apt install -q -y qemu-system-${{ matrix.target }} qemu-efi binfmt-support qemu-user-static
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
+          container: quay.io/pypa/manylinux2014_${{ matrix.target }}:latest
           args: --release --out dist
           sccache: "true"
           manylinux: auto
