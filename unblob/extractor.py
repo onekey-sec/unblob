@@ -23,6 +23,9 @@ def carve_chunk_to_file(carve_path: Path, file: File, chunk: Chunk):
 
 
 def fix_permission(path: Path):
+    if path.is_symlink():
+        return
+
     if path.is_file():
         path.chmod(0o644)
     elif path.is_dir():
