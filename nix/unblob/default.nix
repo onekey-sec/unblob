@@ -18,7 +18,6 @@
 , pluggy
 , poetry-core
 , pyperscan
-, python-lzo
 , python-magic
 , rarfile
 , structlog
@@ -87,7 +86,6 @@ let
       plotext
       pluggy
       pyperscan
-      python-lzo
       python-magic
       structlog
       ubi_reader
