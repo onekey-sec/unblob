@@ -8,6 +8,7 @@ license = {file = "LICENSE"}
 readme = "README.md"
 
 requires-python = ">=3.8"
+dynamic = ["version"] # Calculated from the rust module version
 
 [project.urls]
 homepage = "https://unblob.org"
