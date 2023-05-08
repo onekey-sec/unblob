@@ -1,11 +1,11 @@
-pub(crate) mod math;
+pub mod math;
 
 use pyo3::prelude::*;
 
 /// Calculates Shannon entropy of data
 #[pyfunction(text_signature = "(data)")]
-pub fn shannon_entropy(data: &[u8]) -> PyResult<f64> {
-    Ok(math::shannon_entropy(data))
+pub fn shannon_entropy(py: Python, data: &[u8]) -> PyResult<f64> {
+    py.allow_threads(|| Ok(math::shannon_entropy(data)))
 }
 
 /// Performance-critical functionality

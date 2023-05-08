@@ -7,7 +7,7 @@ description = "Performance-critical functionality for Unblob"
 license = {file = "LICENSE"}
 readme = "README.md"
 
-requires-python = "~=3.8"
+requires-python = ">=3.8"
 
 [project.urls]
 homepage = "https://unblob.org"
