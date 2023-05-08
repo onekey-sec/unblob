@@ -11,10 +11,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    fenix = {
-      url = "github:nix-community/fenix";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.rust-analyzer-src.follows = "";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
@@ -25,23 +24,20 @@
     };
   };
 
-  outputs = { self, nixpkgs, nix-filter, crane, fenix, flake-utils, advisory-db, ... }:
+  outputs = { self, nixpkgs, nix-filter, crane, rust-overlay, flake-utils, advisory-db, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
+          overlays = [ (import rust-overlay) ];
         };
 
         filter = nix-filter.lib;
 
         inherit (pkgs) lib makeRustPlatform python3Packages;
 
-        channel = (builtins.fromTOML (builtins.readFile ./rust-toolchain.toml)).toolchain.channel;
-        rust-toolchain = fenix.packages.${system}.toolchainOf {
-          inherit channel;
-          sha256 = "sha256-otgm+7nEl94JG/B+TYhWseZsHV1voGcBsW/lOD2/68g=";
-        };
-        craneLib = crane.lib.${system}.overrideToolchain rust-toolchain.toolchain;
+        rust-toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        craneLib = crane.lib.${system}.overrideToolchain rust-toolchain;
         src = craneLib.cleanCargoSource (craneLib.path ./.);
 
         # Common arguments can be set here to avoid repeating them later
@@ -61,11 +57,13 @@
         };
 
         craneLibLLvmTools = craneLib.overrideToolchain
-          (fenix.packages.${system}.complete.withComponents [
-            "cargo"
-            "llvm-tools"
-            "rustc"
-          ]);
+          (rust-toolchain.override {
+            extensions = [
+              "cargo"
+              "llvm-tools-preview"
+              "rustc"
+            ];
+          });
 
         # Build *just* the cargo dependencies, so we can reuse
         # all of that work (e.g. via cachix) when running in CI
@@ -78,7 +76,8 @@
         });
 
         rustPlatform = makeRustPlatform {
-          inherit (rust-toolchain) cargo rustc;
+          rustc = rust-toolchain;
+          cargo = rust-toolchain;
         };
 
         unblob-native = python3Packages.buildPythonPackage
