@@ -299,6 +299,7 @@ class YAFFSParser:
 
     def parse(self, store: bool = False):  # noqa: C901,FBT001,FBT002
         self.init_tree()
+        entries = 0
         for offset, page, spare in iterate_over_file(self.file, self.config):
             try:
                 data_chunk = self.build_chunk(
@@ -325,8 +326,11 @@ class YAFFSParser:
 
                 if store:
                     self.insert_entry(self.build_entry(header, data_chunk))
+                entries += 1
             elif store:
                 self.data_chunks[data_chunk.object_id].append(data_chunk)
+        if not entries:
+            raise InvalidInputFormat("YAFFS filesystem with no entries.")
         self.end_offset = self.file.tell()
 
     def auto_detect(self) -> YAFFSConfig:
