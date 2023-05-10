@@ -3,7 +3,8 @@ import itertools
 import json
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, TypeVar
+
 
 import attr
 from structlog import get_logger
@@ -133,6 +134,9 @@ class UnknownChunk(Chunk):
         )
 
 
+ReportType = TypeVar("ReportType", bound=Report)
+
+
 @attr.define
 class TaskResult:
     task: Task
@@ -144,6 +148,9 @@ class TaskResult:
 
     def add_subtask(self, task: Task):
         self.subtasks.append(task)
+
+    def filter_reports(self, report_class: Type[ReportType]) -> List[ReportType]:
+        return [report for report in self.reports if isinstance(report, report_class)]
 
 
 @attr.define

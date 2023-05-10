@@ -442,8 +442,4 @@ def get_normalized_task_results(process_result: ProcessResult) -> List[TaskResul
 
 
 def get_chunk_ids(task_result) -> List[str]:
-    return [
-        chunk_report.chunk_id
-        for chunk_report in task_result.reports
-        if isinstance(chunk_report, ChunkReport)
-    ]
+    return [chunk_report.id for chunk_report in task_result.filter_reports(ChunkReport)]

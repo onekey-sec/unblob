@@ -19,6 +19,7 @@ _HexStringToRegex.alternative
 
 _JSONEncoder.default
 
+TaskResult.filter_reports
 ChunkReport.handler_name
 FileMagicReport.magic
 FileMagicReport.mime_type

@@ -8,7 +8,7 @@ import attr
 import pytest
 
 from unblob import handlers
-from unblob.models import UnknownChunk, ValidChunk
+from unblob.models import ReportType, UnknownChunk, ValidChunk
 from unblob.processing import (
     ExtractionConfig,
     calculate_block_size,
@@ -365,12 +365,8 @@ def test_entropy_calculation(tmp_path: Path):
 
     task_result_by_name = {r.task.path.name: r for r in process_result.results}
 
-    def get_all(file_name, report_type: Type[T]) -> List[T]:
-        return [
-            r
-            for r in task_result_by_name[file_name].reports
-            if isinstance(r, report_type)
-        ]
+    def get_all(file_name, report_type: Type[ReportType]) -> List[ReportType]:
+        return task_result_by_name[file_name].filter_reports(report_type)
 
     # ** verification
 
