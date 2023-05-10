@@ -111,7 +111,7 @@ class ZIPHandler(StructHandler):
             or end_of_central_directory.offset_of_cd == 0xFFFFFFFF
         )
 
-    def _parse_zip64(self, file: File, start_offset: int, offset: int) -> int:
+    def _parse_zip64(self, file: File, start_offset: int, offset: int) -> Instance:
         file.seek(start_offset, io.SEEK_SET)
         for eocd_locator_offset in iterate_patterns(
             file, struct.pack("<I", self.ZIP64_EOCD_LOCATOR_HEADER)

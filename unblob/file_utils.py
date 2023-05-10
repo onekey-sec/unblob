@@ -8,7 +8,7 @@ import struct
 from pathlib import Path
 from typing import Iterator, List, Tuple, Union
 
-from dissect.cstruct import cstruct
+from dissect.cstruct import Instance, cstruct
 
 from .logging import format_hex
 
@@ -280,7 +280,12 @@ class StructParser:
             self.__cparser_be.load(self._definitions)
         return self.__cparser_be
 
-    def parse(self, struct_name: str, file: Union[File, bytes], endian: Endian):
+    def parse(
+        self,
+        struct_name: str,
+        file: Union[File, bytes],
+        endian: Endian,
+    ) -> Instance:
         cparser = self.cparser_le if endian is Endian.LITTLE else self.cparser_be
         struct_parser = getattr(cparser, struct_name)
         return struct_parser(file)
