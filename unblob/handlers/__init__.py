@@ -100,4 +100,4 @@ BUILTIN_HANDLERS: Handlers = (
     engenius.EngeniusHandler,
 )
 
-BUILTIN_DIR_HANDLERS: DirectoryHandlers = ()
+BUILTIN_DIR_HANDLERS: DirectoryHandlers = (sevenzip.MultiVolumeSevenZipHandler,)
