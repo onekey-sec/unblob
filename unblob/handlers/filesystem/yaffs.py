@@ -476,12 +476,12 @@ class YAFFSParser:
 
     def extract(self, outdir: Path):
         for entry in [
-            self.file_entries.get_node(node).data
+            self.file_entries.get_node(node)
             for node in self.file_entries.expand_tree(mode=Tree.DEPTH)
         ]:
-            if entry is None:
+            if entry is None or entry.data is None:
                 continue
-            self.extract_entry(entry, outdir)
+            self.extract_entry(entry.data, outdir)
 
     def extract_entry(self, entry: YAFFSEntry, outdir: Path):  # noqa: C901
         if entry.object_type == YaffsObjectType.UNKNOWN:
