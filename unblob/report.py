@@ -24,7 +24,7 @@ class Severity(Enum):
     WARNING = "WARNING"
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class ErrorReport(Report):
     severity: Severity
 
@@ -53,12 +53,12 @@ def _convert_exception_to_str(obj: Union[str, Exception]) -> str:
     raise ValueError("Invalid exception object", obj)
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class UnknownError(ErrorReport):
     """Describes an exception raised during file processing."""
 
     severity: Severity = attr.field(default=Severity.ERROR)
-    exception: STR = attr.field(  # pyright: reportGeneralTypeIssues=false
+    exception: STR = attr.field(  # pyright: ignore[reportGeneralTypeIssues]
         converter=_convert_exception_to_str
     )
     """Exceptions are also formatted at construct time.
@@ -69,7 +69,7 @@ class UnknownError(ErrorReport):
     """
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class CalculateChunkExceptionReport(UnknownError):
     """Describes an exception raised during calculate_chunk execution."""
 
@@ -78,7 +78,7 @@ class CalculateChunkExceptionReport(UnknownError):
     handler: str
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class ExtractCommandFailedReport(ErrorReport):
     """Describes an error when failed to run the extraction command."""
 
@@ -89,13 +89,13 @@ class ExtractCommandFailedReport(ErrorReport):
     exit_code: int
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class ExtractDirectoryExistsReport(ErrorReport):
     severity: Severity = Severity.ERROR
     path: Path
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class ExtractorDependencyNotFoundReport(ErrorReport):
     """Describes an error when the dependency of an extractor doesn't exist."""
 
@@ -103,7 +103,7 @@ class ExtractorDependencyNotFoundReport(ErrorReport):
     dependencies: List[str]
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class MaliciousSymlinkRemoved(ErrorReport):
     """Describes an error when malicious symlinks have been removed from disk."""
 
@@ -112,7 +112,7 @@ class MaliciousSymlinkRemoved(ErrorReport):
     target: str
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class StatReport(Report):
     path: Path
     size: int
@@ -140,7 +140,7 @@ class StatReport(Report):
         )
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class HashReport(Report):
     md5: str
     sha1: str
@@ -166,13 +166,13 @@ class HashReport(Report):
         )
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class FileMagicReport(Report):
     magic: str
     mime_type: str
 
 
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class EntropyReport(Report):
     percentages: List[float]
     block_size: int
@@ -188,7 +188,7 @@ class EntropyReport(Report):
 
 
 @final
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class ChunkReport(Report):
     chunk_id: str
     handler_name: str
@@ -200,7 +200,7 @@ class ChunkReport(Report):
 
 
 @final
-@attr.define(kw_only=True)
+@attr.define(kw_only=True, frozen=True)
 class UnknownChunkReport(Report):
     chunk_id: str
     start_offset: int
