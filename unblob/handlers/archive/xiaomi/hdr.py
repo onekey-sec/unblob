@@ -1,7 +1,7 @@
 import binascii
 import io
 from pathlib import Path
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, cast
 
 from dissect.cstruct import Instance
 from structlog import get_logger
@@ -106,7 +106,7 @@ class HDRExtractor(Extractor):
 
     def parse(self, file: File) -> Iterable[Tuple[Path, Chunk]]:
         header = self._struct_parser.parse(self.header_struct, file, Endian.LITTLE)
-        for offset in header.blob_offsets:
+        for offset in cast(Iterable, header.blob_offsets):
             if not offset:
                 break
 

@@ -1,3 +1,6 @@
+# pyright: reportUnusedExpression=false
+# ruff: noqa: B018
+
 import sys
 
 import unblob.plugins

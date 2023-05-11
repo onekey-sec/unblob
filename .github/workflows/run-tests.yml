@@ -44,7 +44,7 @@ jobs:
         uses: ./.github/actions/setup-dependencies
 
       - name: Check - pyright
-        run: PYRIGHT_PYTHON_FORCE_VERSION=1.1.188 poetry run pyright .
+        run: poetry run pyright .
 
 
   run_tests:
