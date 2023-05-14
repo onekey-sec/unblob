@@ -78,6 +78,12 @@ jobs:
             ./pdm.lock
             ./Cargo.lock
       - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache: false
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: pytest-${{ matrix.os }}
       - name: Install dependencies
         run: |
           pdm sync -d
@@ -136,6 +142,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: wheel-linux-${{ matrix.target }}-${{ matrix.platform }}
       - name: setup emulation
         if: ${{ matrix.cross }}
         run: |
@@ -178,6 +188,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: wheel-macos-${{ matrix.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
