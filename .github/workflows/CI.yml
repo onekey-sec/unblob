@@ -69,7 +69,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up PDM
-        uses: pdm-project/setup-pdm@v2
+        uses: pdm-project/setup-pdm@v3
         with:
           python-version: ${{ matrix.python-version }}
           enable-pep582: false
@@ -77,8 +77,6 @@ jobs:
           cache-dependency-path: |
             ./pdm.lock
             ./Cargo.lock
-      - name: Work around requests bug https://github.com/psf/requests/issues/6437
-        run: pip install --force requests==2.29.0
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install dependencies
         run: |
@@ -92,7 +90,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up PDM
-        uses: pdm-project/setup-pdm@v2
+        uses: pdm-project/setup-pdm@v3
         with:
           python-version: "3.8"
           enable-pep582: false
