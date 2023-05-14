@@ -28,8 +28,11 @@ dev = [
   "black      ~= 23.3.0",
   "pre-commit ~= 2.20",
   "pyright    == 1.1.306",
-  "pytest     ~= 7.0.0",
   "ruff       ~= 0.0.264",
+]
+
+test = [
+  "pytest     ~= 7.0.0",
 ]
 
 [build-system]
