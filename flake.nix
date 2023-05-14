@@ -91,7 +91,7 @@
                 "Cargo.toml"
                 "Cargo.lock"
                 "pyproject.toml"
-                "unblob_native"
+                "python"
                 "benches"
                 "src"
                 "README.md"
