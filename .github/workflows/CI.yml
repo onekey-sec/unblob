@@ -120,8 +120,17 @@ jobs:
       matrix:
         include:
           - target: x86_64
+            platform: manylinux2014
           - target: aarch64
+            platform: manylinux2014
             cross: true
+          - target: x86_64
+            platform: musllinux_1_1
+          - target: aarch64
+            platform: musllinux_1_1
+            cross: true
+    env:
+      CONTAINER: quay.io/pypa/${{ matrix.platform }}_${{ matrix.target }}:latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -136,9 +145,9 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          container: quay.io/pypa/manylinux2014_${{ matrix.target }}:latest
+          container: ${{ env.CONTAINER }}
           args: --release --out dist
-          sccache: "true"
+          sccache: ${{ matrix.target == 'musllinux_1_1' }}
           manylinux: auto
           docker-options: -e CARGO_NET_GIT_FETCH_WITH_CLI=true
       - name: Upload wheels
@@ -148,7 +157,7 @@ jobs:
           path: dist
       - name: Test wheels
         run: |
-          cat << EOF | docker run -v $PWD:/usr/src -i ${{ matrix.container }} sh -ex -
+          cat << EOF | docker run -v $PWD:/usr/src -i $CONTAINER sh -ex -
             cd /usr/src
             curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3.10 -
             export PATH=/root/.local/bin:$PATH
