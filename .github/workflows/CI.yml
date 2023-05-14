@@ -142,6 +142,7 @@ jobs:
           args: --release --out dist
           sccache: "true"
           manylinux: auto
+          docker-options: -e CARGO_NET_GIT_FETCH_WITH_CLI=true
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
