@@ -28,8 +28,11 @@ dev = [
   "black      ~= 23.3.0",
   "pre-commit ~= 2.20",
   "pyright    == 1.1.306",
-  "pytest     ~= 7.0.0",
   "ruff       ~= 0.0.264",
+]
+
+test = [
+  "pytest     ~= 7.0.0",
 ]
 
 [build-system]
@@ -38,6 +41,7 @@ build-backend = "maturin"
 
 [tool.maturin]
 module-name = "unblob_native._native"
+python-source = "python"
 
 features = [
   "pyo3/extension-module",  # This is an extension module
@@ -89,7 +93,7 @@ ignore = [
 ]
 
 [tool.ruff.per-file-ignores]
-"unblob_native/__init__.py" = [
+"python/unblob_native/__init__.py" = [
   "F403",
   "A001",
   "F405",
@@ -99,6 +103,9 @@ ignore = [
 "tests/*" = [
   "S101",    # assert:                         Enable usage of asserts
 ]
+
+[tool.ruff.isort]
+known-first-party = ["unblob_native"]
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false

@@ -198,8 +198,8 @@ dependencies = [
 
 [metadata]
 lock_version = "4.2"
-groups = ["default", "dev"]
-content_hash = "sha256:148e3bd0b8d600ad040b57e5c17907da1d0c35c1962213a73bd0bd01246e9550"
+groups = ["default", "dev", "test"]
+content_hash = "sha256:89f0d91473a6f96a2f787599046c913a9b1f7a9b0b57800d59610c80d211ddbe"
 
 [metadata.files]
 "atomicwrites 1.4.1" = [
