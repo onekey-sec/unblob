@@ -170,7 +170,7 @@ class ProcessResult:
         self.results.append(result)
 
     def to_json(self, indent="  "):
-        return json.dumps(self.results, cls=_JSONEncoder, indent=indent)
+        return to_json(self.results, indent=indent)
 
 
 class _JSONEncoder(json.JSONEncoder):
@@ -198,6 +198,11 @@ class _JSONEncoder(json.JSONEncoder):
         #     return json.JSONEncoder.default(self, obj)
         # instead of failing, just return something usable
         return f"Non-JSON encodable value: {obj}"
+
+
+def to_json(obj, indent="  ") -> str:
+    """Encode any UnBlob object as a serialized JSON."""
+    return json.dumps(obj, cls=_JSONEncoder, indent=indent)
 
 
 class ExtractError(Exception):
