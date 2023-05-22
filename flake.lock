@@ -315,11 +315,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1683295504,
-        "narHash": "sha256-Azy0rQXcT9V/UmmngHt+aSMmUWgCZSnLCiRFo3B2h48=",
+        "lastModified": 1684752981,
+        "narHash": "sha256-1/n7PTFQ8olbSoujr/pXrKAMv4fzTGLsy3zUVljDDAw=",
         "owner": "onekey-sec",
         "repo": "sasquatch",
-        "rev": "27cd623424c7da76330140f8349fc0c53e61b3b2",
+        "rev": "5549710465e2d5ef8ed9e2c88c1140110f244326",
         "type": "github"
       },
       "original": {
