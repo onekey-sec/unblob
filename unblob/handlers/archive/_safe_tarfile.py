@@ -40,4 +40,13 @@ class SafeTarFile(TarFile):
             logger.warning("traversal attempt", path=member_name_path)
             return
 
-        super().extract(member, path, set_attrs, numeric_owner=numeric_owner)
+        try:
+            super().extract(member, path, set_attrs, numeric_owner=numeric_owner)
+        except PermissionError as e:
+            logger.warning(
+                "A permission error occured when extracting tar file. This can happen when the same file is present in the archive more than once.",
+                exc=e,
+                member=member,
+                path=path,
+                set_attrs=set_attrs,
+            )
