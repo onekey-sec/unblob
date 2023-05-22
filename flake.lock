@@ -27,11 +27,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1683134812,
-        "narHash": "sha256-yUiArtneEBCTYt7rOg/tLr1iv4AmjFu5tdGa0OVpjbo=",
+        "lastModified": 1683505101,
+        "narHash": "sha256-VBU64Jfu2V4sUR5+tuQS9erBRAe/QEYUxdVMcJGMZZs=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "8708b19627b2dfc2d1ac332b74383b8abdd429f0",
+        "rev": "7b5bd9e5acb2bb0cfba2d65f34d8568a894cdb6c",
         "type": "github"
       },
       "original": {
@@ -175,11 +175,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1683777345,
-        "narHash": "sha256-V2p/A4RpEGqEZussOnHYMU6XglxBJGCODdzoyvcwig8=",
+        "lastModified": 1684585791,
+        "narHash": "sha256-lYPboblKrchmbkGMoAcAivomiOscZCjtGxxTSCY51SM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "635a306fc8ede2e34cb3dd0d6d0a5d49362150ed",
+        "rev": "eea79d584eff53bf7a76aeb63f8845da6d386129",
         "type": "github"
       },
       "original": {
@@ -215,11 +215,11 @@
         "utils": "utils"
       },
       "locked": {
-        "lastModified": 1683575392,
-        "narHash": "sha256-G/u1snKMVoiye0ldgPvVS439u4ojqCsKyLUMpViB2MI=",
+        "lastModified": 1684184950,
+        "narHash": "sha256-bKaRCPFdtCHae9/bWrgtdko9+k8y6ysFt8VlVFUMRh0=",
         "ref": "main",
-        "rev": "1359aee0f05b0d047fec442c262e038fbbddc7ae",
-        "revCount": 48,
+        "rev": "e8073597ef9532878d9209acf68c97f5a7433985",
+        "revCount": 60,
         "submodules": true,
         "type": "git",
         "url": "https://github.com/vlaci/pyperscan/"
@@ -295,11 +295,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1683512408,
-        "narHash": "sha256-QMJGp/37En+d5YocJuSU89GL14bBYkIJQ6mqhRfqkkc=",
+        "lastModified": 1683944292,
+        "narHash": "sha256-ks2N8FtrUvePO5X2fN9WoelgMVwDa1jUA7XEyC9S+7g=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "75b07756c3feb22cf230e75fb064c1b4c725b9bc",
+        "rev": "7ec9793168e4c328f08d10ab7ef4a1ada2dbf93e",
         "type": "github"
       },
       "original": {
@@ -315,11 +315,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1683295504,
-        "narHash": "sha256-Azy0rQXcT9V/UmmngHt+aSMmUWgCZSnLCiRFo3B2h48=",
+        "lastModified": 1684752981,
+        "narHash": "sha256-1/n7PTFQ8olbSoujr/pXrKAMv4fzTGLsy3zUVljDDAw=",
         "owner": "onekey-sec",
         "repo": "sasquatch",
-        "rev": "27cd623424c7da76330140f8349fc0c53e61b3b2",
+        "rev": "5549710465e2d5ef8ed9e2c88c1140110f244326",
         "type": "github"
       },
       "original": {
@@ -415,11 +415,11 @@
         "rust-overlay": "rust-overlay_3"
       },
       "locked": {
-        "lastModified": 1683581419,
-        "narHash": "sha256-M8ZpXH/Q4+tb6UVJLKd8FD2ZtDQHCeUeGcH1BMtq0W0=",
+        "lastModified": 1684173077,
+        "narHash": "sha256-6E60K0MMw6gJQUfHwAcGHrD06HlHv1SmKB/5NMvvUNE=",
         "owner": "onekey-sec",
         "repo": "unblob-native",
-        "rev": "d820cef39ac81645009310e74ad5053bd45d86cb",
+        "rev": "65f854d9a92e5c0f6f30a5565bfa39cf478e1bd4",
         "type": "github"
       },
       "original": {
