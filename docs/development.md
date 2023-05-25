@@ -196,6 +196,58 @@ If you need to parse structure using different endianness, the class exposes two
     If your format allows it, we strongly recommend you to inherit from the
     StructHandler given that it will be strongly typed and less prone to errors.
 
+### DirectoryHandler class
+
+`DirectoryHandler` is a specialized handler responsible for identifying multi-file formats
+located in a directory or in a subtree. The abstract class is located in
+[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/unblob/models.py):
+
+```python
+class DirectoryHandler(abc.ABC):
+    """A directory type handler is responsible for searching, validating and "unblobbing" files from multiple files in a directory."""
+
+    NAME: str
+
+    EXTRACTOR: DirectoryExtractor
+
+    PATTERN: DirectoryPattern
+
+    @classmethod
+    def get_dependencies(cls):
+        """Return external command dependencies needed for this handler to work."""
+        if cls.EXTRACTOR:
+            return cls.EXTRACTOR.get_dependencies()
+        return []
+
+    @abc.abstractmethod
+    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        """Calculate the MultiFile in a directory, using a file matched by the pattern as a starting point."""
+
+    def extract(self, paths: List[Path], outdir: Path):
+        if self.EXTRACTOR is None:
+            logger.debug("Skipping file: no extractor.", paths=paths)
+            raise ExtractError
+
+        # We only extract every blob once, it's a mistake to extract the same blob again
+        outdir.mkdir(parents=True, exist_ok=False)
+
+        self.EXTRACTOR.extract(paths, outdir)
+```
+
+- `NAME`: a unique name for this handler
+- `PATTERN`: A `DirectoryPattern` used to identify a starting/main file of the given format.
+- `EXTRACTOR`: a [DirectoryExtractor](extractors.md).
+- `get_dependencies()`: returns the extractor dependencies. This helps unblob keep
+  track of [third party dependencies](extractors.md).
+- `calculate_multifile()`: this is the method that needs to be overridden in your
+  handler. It receives a `file` Path object identified by the `PATTERN` in the directory.
+  This is where you implement the logic to compute and return the `MultiFile` file set.
+
+Any files that are being processed as part of a `MultiFile` set would be skipped from `Chunk`
+detection.
+
+Any file that is part of multiple `MultiFile` is a collision and results in a processing error.
+
 ### Example Handler implementation
 
 Let's imagine that we have a custom file format that always starts with the
@@ -367,6 +419,44 @@ PATTERNS = [
 ]
 ```
 
+### DirectoryPatterns
+
+The `DirectoryHandler` uses these patterns to identify the starting/main file of a given
+multi-file format. There are currently two main types: `Glob` and `SingleFile`
+
+#### Glob
+
+The `Glob` object can use traditional globbing to detect files in a directory. This could be used when
+the file could have a varying part. There are cases where multiple multi-file set could be in a single
+directory. The job of the `DirectoryPattern` is to recognize the main file for each set.
+
+Here is an example on `Glob`:
+
+```python
+PATTERN = Glob("*.7z.001")
+```
+
+This example identify the first volume of a multi-volume sevenzip archive. Notice that this could pick
+up all first volumes in a given directory. (NB: Detecting the other volumes of a given set is the
+responsibility of the `DirectoryHandler.calculate_multifile` function. Do not write a `Glob` which picks
+up all the files of a multi-file set as that would result in errors.)
+
+
+#### SingleFile
+
+The `SingleFile` object can be used to identify a single file with a known name. (Obviously only use this if the
+main file name is well-known and does not have a varying part. It also means that only a single multi-file set
+can be detected in a given directory.)
+
+Here is an example on `SingleFile`:
+
+```python
+PATTERN = SingleFile("meta-data.json")
+```
+
+This would pick up the file `meta-data.json` and pass it to the `DirectoryHandler`. The handler still has to
+verify the file and has to find the additional files.
+
 ## Writing extractors
 
 !!! Recommendation
@@ -412,6 +502,32 @@ Two methods are exposed by this class:
 - `extract()`: you must override this function. This is where you'll perform the
   extraction of `inpath` content into `outdir` extraction directory
 
+### DirectoryExtractor class
+
+The `DirectoryExtractor` interface is defined in
+[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/unblob/models.py):
+
+```python
+class DirectoryExtractor(abc.ABC):
+    def get_dependencies(self) -> List[str]:
+        """Return the external command dependencies."""
+        return []
+
+    @abc.abstractmethod
+    def extract(self, paths: List[Path], outdir: Path):
+        """Extract from a multi file path list.
+
+        Raises ExtractError on failure.
+        """
+```
+
+Two methods are exposed by this class:
+
+- `get_dependencies()`: you should override it if your custom extractor relies on
+  external dependencies such as command line tools
+- `extract()`: you must override this function. This is where you'll perform the
+  extraction of `paths` files into `outdir` extraction directory
+
 ### Example Extractor
 
 Extractors are quite complex beasts, so rather than trying to come up with a
@@ -451,3 +567,9 @@ Learn from us so you can avoid them in the future 🙂
   back.
 - Watch out for [negative seeking](https://github.com/onekey-sec/unblob/pull/280)
 - Make sure you get your types right! signedness can [get in the way](https://github.com/onekey-sec/unblob/pull/130).
+- Try to use as specific as possible patterns to identify data in Handlers to avoid false-positive matches
+  and extra processing in the Handler.
+- Try to avoid using overlapping patterns, as patterns that match on the same data could easily collide. Hyperscan
+  does not guarantee priority between patterns matching on the same data. (Hyperscan reports matches ordered by the
+  pattern match end offset. In case multiple pattern match on the same end offset the matching order depends on the
+  pattern registration order which is undefined in unblob.)

@@ -38,3 +38,8 @@ the recursion depth is reached. Beyond that level, no further extraction will
 happen.  
 For example, if a `tar.gz` contains a `zip` and a text file, the
 recursion depth will be **3**: 1. gzip layer, 2. tar, 3. zip and text file.
+
+#### MultiFile
+
+A set of files that were identified by a `DirectoryHandler` representing a format
+which consists of multiple files. `MultiFile` is extracted using a `DirectoryExtractor`
