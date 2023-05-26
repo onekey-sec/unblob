@@ -33,7 +33,8 @@ extraction of arbitrary firmware.
 Specialized tools that can extract information from those firmware images already
 exist, but we were carving for something smarter that could identify both
 **start-offset** and **end-offset** of a specific chunk
-(e.g. filesystem, compression stream, archive, ...).
+(e.g. filesystem, compression stream, archive, ...) as well as handle formats
+split across multiple files.
 
 We **stick to the format standard** as much as possible when deriving these
 offsets, and we clearly define what we want out of identified chunks (e.g., not
@@ -97,6 +98,15 @@ unblob identifies known and unknown chunks of data within a file:
   extracted content if available (ownership, permissions, timestamps, ...).
 
 ![unblob_architecture.webp](unblob_architecture.webp)
+
+unblob also supports special formats where data is split across multiple files
+like multi-volume archives or data & meta-data formats:
+
+- Special **DirectoryHandler** is responsible to identify the files that make up
+a multi files set.
+
+- Identified MultiFile sets are not carved, but rather directly extracted using
+special **DirectoryExtractor**.
 
 ## Used technologies
 

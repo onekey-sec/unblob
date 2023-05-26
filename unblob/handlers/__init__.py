@@ -1,4 +1,4 @@
-from ..models import Handlers
+from ..models import DirectoryHandlers, Handlers
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
 from .archive.dlink import encrpted_img, shrs
 from .archive.engeniustech import engenius
@@ -99,3 +99,5 @@ BUILTIN_HANDLERS: Handlers = (
     zlib.ZlibHandler,
     engenius.EngeniusHandler,
 )
+
+BUILTIN_DIR_HANDLERS: DirectoryHandlers = (sevenzip.MultiVolumeSevenZipHandler,)

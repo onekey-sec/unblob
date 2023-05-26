@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from unittest import mock
 
 import pytest
@@ -7,8 +7,9 @@ from click.testing import CliRunner
 
 import unblob.cli
 from unblob.extractors import Command
+from unblob.extractors.command import MultiFileCommand
 from unblob.handlers import BUILTIN_HANDLERS
-from unblob.models import Handler, HexString
+from unblob.models import DirectoryHandler, Glob, Handler, HexString, MultiFile
 from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
 
 
@@ -25,33 +26,54 @@ class ExistingCommandHandler(TestHandler):
     EXTRACTOR = Command("sh", "something")
 
 
-def test_show_external_dependencies_exists():
+class TestDirHandler(DirectoryHandler):
+    NAME = "test_dir_handler"
+    PATTERN = Glob("*.test")
+    EXTRACTOR = MultiFileCommand("test-multi", "for", "test", "handler")
+
+    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        pass
+
+
+class ExistingCommandDirHandler(TestDirHandler):
+    EXTRACTOR = MultiFileCommand("true")
+
+
+def test_show_external_dependencies_missing():
     handlers = (ExistingCommandHandler, TestHandler)
     runner = CliRunner()
     result = runner.invoke(
-        unblob.cli.cli, ["--show-external-dependencies"], handlers=handlers
+        unblob.cli.cli,
+        ["--show-external-dependencies"],
+        handlers=handlers,
+        dir_handlers=(TestDirHandler,),
     )
     assert result.exit_code == 1
     assert (
         result.output
         == """The following executables found installed, which are needed by unblob:
     sh             ✓
+    test-multi     ✗
     testcommand    ✗
 """
     )
 
 
-def test_show_external_dependencies_not_exists():
+def test_show_external_dependencies_exists():
     handlers = (ExistingCommandHandler, ExistingCommandHandler)
     runner = CliRunner()
     result = runner.invoke(
-        unblob.cli.cli, ["--show-external-dependencies"], handlers=handlers
+        unblob.cli.cli,
+        ["--show-external-dependencies"],
+        handlers=handlers,
+        dir_handlers=(ExistingCommandDirHandler,),
     )
     assert result.exit_code == 0
     assert (
         result.output
         == """The following executables found installed, which are needed by unblob:
-    sh    ✓
+    sh      ✓
+    true    ✓
 """
     )
 

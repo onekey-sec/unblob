@@ -14,7 +14,7 @@ from unblob.models import File, TaskResult, UnknownChunk
 def test_carve_unknown_chunk(tmp_path: Path):
     content = b"test file"
     test_file = File.from_bytes(content)
-    chunk = UnknownChunk(1, 8)
+    chunk = UnknownChunk(start_offset=1, end_offset=8)
     carve_unknown_chunk(tmp_path, test_file, chunk)
     written_path = tmp_path / "1-8.unknown"
     assert list(tmp_path.iterdir()) == [written_path]

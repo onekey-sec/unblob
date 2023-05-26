@@ -6,13 +6,13 @@ from typing import Iterable, Optional
 import click
 from structlog import get_logger
 
-from unblob.models import ProcessResult
+from unblob.models import DirectoryHandlers, Handlers, ProcessResult
 from unblob.plugins import UnblobPluginManager
 from unblob.report import Severity
 
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
-from .handlers import BUILTIN_HANDLERS, Handlers
+from .handlers import BUILTIN_DIR_HANDLERS, BUILTIN_HANDLERS
 from .logging import configure_logger
 from .processing import (
     DEFAULT_DEPTH,
@@ -39,7 +39,10 @@ def show_external_dependencies(
     extra_handlers = plugin_manager.load_handlers_from_plugins()
     handlers = ctx.params["handlers"] + tuple(extra_handlers)
 
-    dependencies = get_dependencies(handlers)
+    extra_dir_handlers = plugin_manager.load_dir_handlers_from_plugins()
+    dir_handlers = ctx.params["dir_handlers"] + tuple(extra_dir_handlers)
+
+    dependencies = get_dependencies(handlers, dir_handlers)
     text = pretty_format_dependencies(dependencies)
     exit_code = 0 if all(dep.is_installed for dep in dependencies) else 1
 
@@ -48,7 +51,7 @@ def show_external_dependencies(
 
 
 def get_help_text():
-    dependencies = get_dependencies(BUILTIN_HANDLERS)
+    dependencies = get_dependencies(BUILTIN_HANDLERS, BUILTIN_DIR_HANDLERS)
     lines = [
         "A tool for getting information out of any kind of binary blob.",
         "",
@@ -65,14 +68,17 @@ class UnblobContext(click.Context):
         self,
         *args,
         handlers: Optional[Handlers] = None,
+        dir_handlers: Optional[DirectoryHandlers] = None,
         plugin_manager: Optional[UnblobPluginManager] = None,
         **kwargs
     ):
         super().__init__(*args, **kwargs)
         handlers = handlers or BUILTIN_HANDLERS
+        dir_handlers = dir_handlers or BUILTIN_DIR_HANDLERS
         plugin_manager = plugin_manager or UnblobPluginManager()
 
         self.params["handlers"] = handlers
+        self.params["dir_handlers"] = dir_handlers
         self.params["plugin_manager"] = plugin_manager
 
 
@@ -187,6 +193,7 @@ def cli(
     skip_extraction: bool,  # noqa: FBT001
     keep_extracted_chunks: bool,  # noqa: FBT001
     handlers: Handlers,
+    dir_handlers: DirectoryHandlers,
     plugins_path: Optional[Path],
     plugin_manager: UnblobPluginManager,
     verbose: int,
@@ -196,6 +203,9 @@ def cli(
     plugin_manager.import_plugins(plugins_path)
     extra_handlers = plugin_manager.load_handlers_from_plugins()
     handlers += tuple(extra_handlers)
+
+    extra_dir_handlers = plugin_manager.load_dir_handlers_from_plugins()
+    dir_handlers += tuple(extra_dir_handlers)
 
     config = ExtractionConfig(
         extract_root=extract_root,
@@ -207,6 +217,7 @@ def cli(
         skip_magic=skip_magic,
         process_num=process_num,
         handlers=handlers,
+        dir_handlers=dir_handlers,
         keep_extracted_chunks=keep_extracted_chunks,
     )
 

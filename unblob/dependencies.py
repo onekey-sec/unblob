@@ -3,7 +3,7 @@ from typing import List
 
 import attr
 
-from .models import Handlers
+from .models import DirectoryHandlers, Handlers
 
 
 @attr.define
@@ -16,9 +16,14 @@ INSTALLED = "✓"
 NOT_INSTALLED = "✗"
 
 
-def get_dependencies(handlers: Handlers) -> List[Dependency]:
+def get_dependencies(
+    handlers: Handlers, dir_handlers: DirectoryHandlers
+) -> List[Dependency]:
     all_commands = set()
     for handler in handlers:
+        commands = handler.get_dependencies()
+        all_commands.update(commands)
+    for handler in dir_handlers:
         commands = handler.get_dependencies()
         all_commands.update(commands)
     rv = []

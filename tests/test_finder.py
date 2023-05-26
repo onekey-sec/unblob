@@ -112,64 +112,105 @@ def test_invalid_hexstring_pattern_raises():
 @pytest.mark.parametrize(
     "content, expected_chunks",
     [
-        pytest.param(b"00A23450", [ValidChunk(2, 7)], id="single-chunk"),
         pytest.param(
-            b"0BB34A678900", [ValidChunk(0, 10)], id="chunk-with-relative-match-offset"
+            b"00A23450", [ValidChunk(start_offset=2, end_offset=7)], id="single-chunk"
+        ),
+        pytest.param(
+            b"0BB34A678900",
+            [ValidChunk(start_offset=0, end_offset=10)],
+            id="chunk-with-relative-match-offset",
         ),
         pytest.param(
             b"A23450BB3456789",
-            [ValidChunk(0, 5), ValidChunk(5, 15)],
+            [
+                ValidChunk(start_offset=0, end_offset=5),
+                ValidChunk(start_offset=5, end_offset=15),
+            ],
             id="multiple-chunk",
         ),
-        pytest.param(b"0BC34A67890", [ValidChunk(0, 10)], id="inner-chunk-ignored"),
+        pytest.param(
+            b"0BC34A67890",
+            [ValidChunk(start_offset=0, end_offset=10)],
+            id="inner-chunk-ignored",
+        ),
         pytest.param(
             b"0BC34A67890A2345",
-            [ValidChunk(0, 10), ValidChunk(11, 16)],
+            [
+                ValidChunk(start_offset=0, end_offset=10),
+                ValidChunk(start_offset=11, end_offset=16),
+            ],
             id="inner-chunk-ignored-scan-continues",
         ),
-        pytest.param(b"A23450BB34", [ValidChunk(0, 5)], id="overflowing-chunk-ignored"),
+        pytest.param(
+            b"A23450BB34",
+            [ValidChunk(start_offset=0, end_offset=5)],
+            id="overflowing-chunk-ignored",
+        ),
         pytest.param(
             b"0BBA2345",
-            [ValidChunk(3, 8)],
+            [ValidChunk(start_offset=3, end_offset=8)],
             id="overflowing-chunk-ignored-scan-continues",
         ),
-        pytest.param(b"A2345", [ValidChunk(0, 5)], id="whole-file-chunk"),
-        pytest.param(b"00000A2345", [ValidChunk(5, 10)], id="chunk-till-end-of-file"),
+        pytest.param(
+            b"A2345", [ValidChunk(start_offset=0, end_offset=5)], id="whole-file-chunk"
+        ),
+        pytest.param(
+            b"00000A2345",
+            [ValidChunk(start_offset=5, end_offset=10)],
+            id="chunk-till-end-of-file",
+        ),
         pytest.param(
             b"BB34A678900",
-            [ValidChunk(4, 9)],
+            [ValidChunk(start_offset=4, end_offset=9)],
             id="chunk-with-invalid-relative-match-offset-ignored",
         ),
-        pytest.param(b"00D00A2345", [ValidChunk(5, 10)], id="invalid-chunk-ignored"),
-        pytest.param(b"EOFA2345", [ValidChunk(3, 8)], id="eof-ignored-scan-continues"),
         pytest.param(
-            b"IA2345", [ValidChunk(1, 6)], id="invalid-chunk-ignored-scan-continues"
+            b"00D00A2345",
+            [ValidChunk(start_offset=5, end_offset=10)],
+            id="invalid-chunk-ignored",
         ),
         pytest.param(
-            b"EXCA2345", [ValidChunk(3, 8)], id="exception-ignored-scan-continues"
+            b"EOFA2345",
+            [ValidChunk(start_offset=3, end_offset=8)],
+            id="eof-ignored-scan-continues",
+        ),
+        pytest.param(
+            b"IA2345",
+            [ValidChunk(start_offset=1, end_offset=6)],
+            id="invalid-chunk-ignored-scan-continues",
+        ),
+        pytest.param(
+            b"EXCA2345",
+            [ValidChunk(start_offset=3, end_offset=8)],
+            id="exception-ignored-scan-continues",
         ),
         pytest.param(b"0", [], id="1-byte"),
         pytest.param(b"1234567890", [], id="no-chunk"),
         pytest.param(
             b"A2345L1" + b"1" * DEFAULT_BUFSIZE * 2,
-            [ValidChunk(0, 5), ValidChunk(5, 5 + DEFAULT_BUFSIZE * 2)],
+            [
+                ValidChunk(start_offset=0, end_offset=5),
+                ValidChunk(start_offset=5, end_offset=5 + DEFAULT_BUFSIZE * 2),
+            ],
             id="multi-large-chunk",
         ),
         pytest.param(
             b"L" + b"1" * DEFAULT_BUFSIZE + b"A2345" + b"1" * DEFAULT_BUFSIZE,
-            [ValidChunk(0, DEFAULT_BUFSIZE * 2)],
+            [ValidChunk(start_offset=0, end_offset=DEFAULT_BUFSIZE * 2)],
             id="large-small-inside-ignored",
         ),
         pytest.param(
             b"0123456789L" + b"1" * DEFAULT_BUFSIZE + b"A2345" + b"1" * DEFAULT_BUFSIZE,
-            [ValidChunk(10, 10 + DEFAULT_BUFSIZE * 2)],
+            [ValidChunk(start_offset=10, end_offset=10 + DEFAULT_BUFSIZE * 2)],
             id="padding-large-small-inside-ignored",
         ),
         pytest.param(
             b"L" + b"1" * (DEFAULT_BUFSIZE * 2 - 1) + b"A2345" + b"1" * DEFAULT_BUFSIZE,
             [
-                ValidChunk(0, DEFAULT_BUFSIZE * 2),
-                ValidChunk(DEFAULT_BUFSIZE * 2, DEFAULT_BUFSIZE * 2 + 5),
+                ValidChunk(start_offset=0, end_offset=DEFAULT_BUFSIZE * 2),
+                ValidChunk(
+                    start_offset=DEFAULT_BUFSIZE * 2, end_offset=DEFAULT_BUFSIZE * 2 + 5
+                ),
             ],
             id="large-small",
         ),
@@ -192,6 +233,4 @@ def test_search_chunks(content, expected_chunks, task_result):
 
     assert len(chunks) == len(expected_chunks)
     for expected_chunk, chunk in zip(expected_chunks, chunks):
-        assert attr.evolve(chunk, chunk_id="") == attr.evolve(
-            expected_chunk, chunk_id=""
-        )
+        assert attr.evolve(chunk, id="") == attr.evolve(expected_chunk, id="")

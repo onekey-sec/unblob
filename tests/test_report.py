@@ -103,7 +103,7 @@ def hello_kitty_task_results(
     """
     return [
         TaskResult(
-            task=Task(path=hello_kitty, depth=start_depth, chunk_id=container_id),
+            task=Task(path=hello_kitty, depth=start_depth, blob_id=container_id),
             reports=[
                 StatReport(
                     path=hello_kitty,
@@ -120,28 +120,28 @@ def hello_kitty_task_results(
                     sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
                 ),
                 UnknownChunkReport(
-                    chunk_id=ANY,
+                    id=ANY,
                     start_offset=0,
                     end_offset=6,
                     size=6,
                     entropy=None,
                 ),
                 UnknownChunkReport(
-                    chunk_id=ANY,
+                    id=ANY,
                     start_offset=131,
                     end_offset=138,
                     size=7,
                     entropy=None,
                 ),
                 UnknownChunkReport(
-                    chunk_id=ANY,
+                    id=ANY,
                     start_offset=263,
                     end_offset=264,
                     size=1,
                     entropy=None,
                 ),
                 ChunkReport(
-                    chunk_id=hello_id,
+                    id=hello_id,
                     handler_name="zip",
                     start_offset=6,
                     end_offset=131,
@@ -150,7 +150,7 @@ def hello_kitty_task_results(
                     extraction_reports=[],
                 ),
                 ChunkReport(
-                    chunk_id=kitty_id,
+                    id=kitty_id,
                     handler_name="zip",
                     start_offset=138,
                     end_offset=263,
@@ -163,12 +163,12 @@ def hello_kitty_task_results(
                 Task(
                     path=extract_root / "hello_kitty_extract/6-131.zip_extract",
                     depth=start_depth + 1,
-                    chunk_id=hello_id,
+                    blob_id=hello_id,
                 ),
                 Task(
                     path=extract_root / "hello_kitty_extract/138-263.zip_extract",
                     depth=start_depth + 1,
-                    chunk_id=kitty_id,
+                    blob_id=kitty_id,
                 ),
             ],
         ),
@@ -176,7 +176,7 @@ def hello_kitty_task_results(
             task=Task(
                 path=extract_root / "hello_kitty_extract/138-263.zip_extract",
                 depth=start_depth + 1,
-                chunk_id=kitty_id,
+                blob_id=kitty_id,
             ),
             reports=[
                 StatReport(
@@ -193,7 +193,7 @@ def hello_kitty_task_results(
                     path=extract_root
                     / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
                     depth=start_depth + 1,
-                    chunk_id=kitty_id,
+                    blob_id=kitty_id,
                 )
             ],
         ),
@@ -202,7 +202,7 @@ def hello_kitty_task_results(
                 path=extract_root
                 / "hello_kitty_extract/138-263.zip_extract/hello.kitty",
                 depth=start_depth + 1,
-                chunk_id=kitty_id,
+                blob_id=kitty_id,
             ),
             reports=[
                 StatReport(
@@ -229,7 +229,7 @@ def hello_kitty_task_results(
             task=Task(
                 path=extract_root / "hello_kitty_extract/6-131.zip_extract",
                 depth=start_depth + 1,
-                chunk_id=hello_id,
+                blob_id=hello_id,
             ),
             reports=[
                 StatReport(
@@ -246,7 +246,7 @@ def hello_kitty_task_results(
                     path=extract_root
                     / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
                     depth=start_depth + 1,
-                    chunk_id=hello_id,
+                    blob_id=hello_id,
                 )
             ],
         ),
@@ -254,7 +254,7 @@ def hello_kitty_task_results(
             task=Task(
                 path=extract_root / "hello_kitty_extract/6-131.zip_extract/hello.kitty",
                 depth=start_depth + 1,
-                chunk_id=hello_id,
+                blob_id=hello_id,
             ),
             reports=[
                 StatReport(
@@ -327,7 +327,7 @@ def container_task_results(
             task=Task(
                 path=container,
                 depth=0,
-                chunk_id="",
+                blob_id="",
             ),
             reports=[
                 StatReport(
@@ -348,7 +348,7 @@ def container_task_results(
                     sha256="6bce74badefcddf3020d156f80c99bac7f3d46cd145029d9034a86bfbb5e31aa",
                 ),
                 ChunkReport(
-                    chunk_id=chunk_id,
+                    id=chunk_id,
                     handler_name="zip",
                     start_offset=0,
                     end_offset=384,
@@ -361,7 +361,7 @@ def container_task_results(
                 Task(
                     path=extract_root / "container_extract",
                     depth=1,
-                    chunk_id=chunk_id,
+                    blob_id=chunk_id,
                 )
             ],
         ),
@@ -369,7 +369,7 @@ def container_task_results(
             task=Task(
                 path=extract_root / "container_extract",
                 depth=1,
-                chunk_id=chunk_id,
+                blob_id=chunk_id,
             ),
             reports=[
                 StatReport(
@@ -385,7 +385,7 @@ def container_task_results(
                 Task(
                     path=extract_root / "container_extract/hello_kitty",
                     depth=1,
-                    chunk_id=chunk_id,
+                    blob_id=chunk_id,
                 )
             ],
         ),
@@ -442,8 +442,4 @@ def get_normalized_task_results(process_result: ProcessResult) -> List[TaskResul
 
 
 def get_chunk_ids(task_result) -> List[str]:
-    return [
-        chunk_report.chunk_id
-        for chunk_report in task_result.reports
-        if isinstance(chunk_report, ChunkReport)
-    ]
+    return [chunk_report.id for chunk_report in task_result.filter_reports(ChunkReport)]

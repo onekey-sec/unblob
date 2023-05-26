@@ -3,15 +3,23 @@ import itertools
 import json
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple, Type
+from typing import Iterable, List, Optional, Tuple, Type, TypeVar
 
 import attr
+import attrs
 from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .identifiers import new_id
 from .parser import hexstring2regex
-from .report import ChunkReport, EntropyReport, ErrorReport, Report, UnknownChunkReport
+from .report import (
+    ChunkReport,
+    EntropyReport,
+    ErrorReport,
+    MultiFileReport,
+    Report,
+    UnknownChunkReport,
+)
 
 logger = get_logger()
 
@@ -25,12 +33,20 @@ logger = get_logger()
 class Task:
     path: Path
     depth: int
-    chunk_id: str
+    blob_id: str
+    is_multi_file: bool = attr.field(default=False)
 
 
 @attr.define
-class Chunk:
-    """Chunk of a Blob, have start and end offset, but still can be invalid.
+class Blob:
+    id: str = attr.field(  # noqa: A003
+        factory=new_id,
+    )
+
+
+@attr.define
+class Chunk(Blob):
+    """File chunk, have start and end offset, but still can be invalid.
 
     For an array ``b``, a chunk ``c`` represents the slice:
     ::
@@ -38,13 +54,11 @@ class Chunk:
         b[c.start_offset:c.end_offset]
     """
 
-    start_offset: int
+    start_offset: int = attr.field(kw_only=True)
     """The index of the first byte of the chunk"""
 
-    end_offset: int
+    end_offset: int = attr.field(kw_only=True)
     """The index of the first byte after the end of the chunk"""
-
-    chunk_id: str = attr.field(factory=new_id)
 
     file: Optional[File] = None
 
@@ -84,7 +98,7 @@ class Chunk:
 
 @attr.define(repr=False)
 class ValidChunk(Chunk):
-    """Known to be valid chunk of a Blob, can be extracted with an external program."""
+    """Known to be valid chunk of a File, can be extracted with an external program."""
 
     handler: "Handler" = attr.ib(init=False, eq=False)
     is_encrypted: bool = attr.ib(default=False)
@@ -102,7 +116,7 @@ class ValidChunk(Chunk):
 
     def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
         return ChunkReport(
-            chunk_id=self.chunk_id,
+            id=self.id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
@@ -125,12 +139,35 @@ class UnknownChunk(Chunk):
 
     def as_report(self, entropy: Optional[EntropyReport]) -> UnknownChunkReport:
         return UnknownChunkReport(
-            chunk_id=self.chunk_id,
+            id=self.id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
             entropy=entropy,
         )
+
+
+@attrs.define
+class MultiFile(Blob):
+    name: str = attr.field(kw_only=True)
+    paths: List[Path] = attr.field(kw_only=True)
+
+    handler: "DirectoryHandler" = attr.ib(init=False, eq=False)
+
+    def extract(self, outdir: Path):
+        self.handler.extract(self.paths, outdir)
+
+    def as_report(self, extraction_reports: List[Report]) -> MultiFileReport:
+        return MultiFileReport(
+            id=self.id,
+            name=self.name,
+            paths=self.paths,
+            handler_name=self.handler.NAME,
+            extraction_reports=extraction_reports,
+        )
+
+
+ReportType = TypeVar("ReportType", bound=Report)
 
 
 @attr.define
@@ -144,6 +181,9 @@ class TaskResult:
 
     def add_subtask(self, task: Task):
         self.subtasks.append(task)
+
+    def filter_reports(self, report_class: Type[ReportType]) -> List[ReportType]:
+        return [report for report in self.reports if isinstance(report, report_class)]
 
 
 @attr.define
@@ -226,6 +266,19 @@ class Extractor(abc.ABC):
         """
 
 
+class DirectoryExtractor(abc.ABC):
+    def get_dependencies(self) -> List[str]:
+        """Return the external command dependencies."""
+        return []
+
+    @abc.abstractmethod
+    def extract(self, paths: List[Path], outdir: Path):
+        """Extract from a multi file path list.
+
+        Raises ExtractError on failure.
+        """
+
+
 class Pattern(str):
     def as_regex(self) -> bytes:
         raise NotImplementedError
@@ -286,6 +339,59 @@ class Regex(Pattern):
         return self.encode()
 
 
+class DirectoryPattern:
+    def get_files(self, directory: Path) -> Iterable[Path]:
+        raise NotImplementedError
+
+
+class Glob(DirectoryPattern):
+    def __init__(self, pattern):
+        self._pattern = pattern
+
+    def get_files(self, directory: Path) -> Iterable[Path]:
+        return directory.glob(self._pattern)
+
+
+class SingleFile(DirectoryPattern):
+    def __init__(self, filename):
+        self._filename = filename
+
+    def get_files(self, directory: Path) -> Iterable[Path]:
+        path = directory / self._filename
+        return [path] if path.exists() else []
+
+
+class DirectoryHandler(abc.ABC):
+    """A directory type handler is responsible for searching, validating and "unblobbing" files from multiple files in a directory."""
+
+    NAME: str
+
+    EXTRACTOR: DirectoryExtractor
+
+    PATTERN: DirectoryPattern
+
+    @classmethod
+    def get_dependencies(cls):
+        """Return external command dependencies needed for this handler to work."""
+        if cls.EXTRACTOR:
+            return cls.EXTRACTOR.get_dependencies()
+        return []
+
+    @abc.abstractmethod
+    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        """Calculate the MultiFile in a directory, using a file matched by the pattern as a starting point."""
+
+    def extract(self, paths: List[Path], outdir: Path):
+        if self.EXTRACTOR is None:
+            logger.debug("Skipping file: no extractor.", paths=paths)
+            raise ExtractError
+
+        # We only extract every blob once, it's a mistake to extract the same blob again
+        outdir.mkdir(parents=True, exist_ok=False)
+
+        self.EXTRACTOR.extract(paths, outdir)
+
+
 class Handler(abc.ABC):
     """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
 
@@ -306,7 +412,7 @@ class Handler(abc.ABC):
 
     @abc.abstractmethod
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
-        """Calculate the Chunk offsets from the Blob and the file type headers."""
+        """Calculate the Chunk offsets from the File and the file type headers."""
 
     def extract(self, inpath: Path, outdir: Path):
         if self.EXTRACTOR is None:
@@ -342,3 +448,4 @@ class StructHandler(Handler):
 
 
 Handlers = Tuple[Type[Handler], ...]
+DirectoryHandlers = Tuple[Type[DirectoryHandler], ...]

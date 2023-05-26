@@ -18,11 +18,31 @@ class TestChunk:
     @pytest.mark.parametrize(
         "chunk1, chunk2, result",
         [
-            (Chunk(0, 10), Chunk(1, 2), True),
-            (Chunk(0, 10), Chunk(11, 12), False),
-            (Chunk(0, 10), Chunk(15, 20), False),
-            (Chunk(1, 2), Chunk(3, 5), False),
-            (Chunk(0, 10), Chunk(1, 10), True),
+            (
+                Chunk(start_offset=0, end_offset=10),
+                Chunk(start_offset=1, end_offset=2),
+                True,
+            ),
+            (
+                Chunk(start_offset=0, end_offset=10),
+                Chunk(start_offset=11, end_offset=12),
+                False,
+            ),
+            (
+                Chunk(start_offset=0, end_offset=10),
+                Chunk(start_offset=15, end_offset=20),
+                False,
+            ),
+            (
+                Chunk(start_offset=1, end_offset=2),
+                Chunk(start_offset=3, end_offset=5),
+                False,
+            ),
+            (
+                Chunk(start_offset=0, end_offset=10),
+                Chunk(start_offset=1, end_offset=10),
+                True,
+            ),
         ],
     )
     def test_contains(self, chunk1, chunk2, result):
@@ -35,10 +55,27 @@ class TestChunk:
     @pytest.mark.parametrize(
         "chunk, offset, expected",
         [
-            pytest.param(Chunk(0x1, 0x2), 0x0, False, id="offset_before_chunk"),
-            pytest.param(Chunk(0x0, 0x2), 0x0, True, id="offset_start_of_chunk"),
-            pytest.param(Chunk(0x0, 0x2), 0x1, True, id="offset_inside_chunk"),
-            pytest.param(Chunk(0x0, 0x2), 0x2, False, id="offset_after"),
+            pytest.param(
+                Chunk(start_offset=0x1, end_offset=0x2),
+                0x0,
+                False,
+                id="offset_before_chunk",
+            ),
+            pytest.param(
+                Chunk(start_offset=0x0, end_offset=0x2),
+                0x0,
+                True,
+                id="offset_start_of_chunk",
+            ),
+            pytest.param(
+                Chunk(start_offset=0x0, end_offset=0x2),
+                0x1,
+                True,
+                id="offset_inside_chunk",
+            ),
+            pytest.param(
+                Chunk(start_offset=0x0, end_offset=0x2), 0x2, False, id="offset_after"
+            ),
         ],
     )
     def test_contains_offset(self, chunk, offset, expected):
@@ -56,12 +93,12 @@ class TestChunk:
     )
     def test_validation(self, start_offset, end_offset):
         with pytest.raises(InvalidInputFormat):
-            Chunk(start_offset, end_offset)
+            Chunk(start_offset=start_offset, end_offset=end_offset)
 
 
 class Test_to_json:  # noqa: N801
     def test_process_result_conversion(self):
-        task = Task(path=Path("/nonexistent"), depth=0, chunk_id="")
+        task = Task(path=Path("/nonexistent"), depth=0, blob_id="")
         task_result = TaskResult(task)
         chunk_id = "test_basic_conversion:id"
 
@@ -90,7 +127,7 @@ class Test_to_json:  # noqa: N801
         )
         task_result.add_report(
             ChunkReport(
-                chunk_id=chunk_id,
+                id=chunk_id,
                 handler_name="zip",
                 start_offset=0,
                 end_offset=384,
@@ -103,7 +140,7 @@ class Test_to_json:  # noqa: N801
             Task(
                 path=Path("/extractions/nonexistent_extract"),
                 depth=314,
-                chunk_id=chunk_id,
+                blob_id=chunk_id,
             )
         )
 
@@ -143,7 +180,7 @@ class Test_to_json:  # noqa: N801
                         "end_offset": 384,
                         "extraction_reports": [],
                         "handler_name": "zip",
-                        "chunk_id": "test_basic_conversion:id",
+                        "id": "test_basic_conversion:id",
                         "is_encrypted": False,
                         "size": 384,
                         "start_offset": 0,
@@ -152,15 +189,17 @@ class Test_to_json:  # noqa: N801
                 "subtasks": [
                     {
                         "__typename__": "Task",
-                        "chunk_id": "test_basic_conversion:id",
+                        "blob_id": "test_basic_conversion:id",
                         "depth": 314,
+                        "is_multi_file": False,
                         "path": "/extractions/nonexistent_extract",
                     }
                 ],
                 "task": {
                     "__typename__": "Task",
-                    "chunk_id": "",
+                    "blob_id": "",
                     "depth": 0,
+                    "is_multi_file": False,
                     "path": "/nonexistent",
                 },
             },

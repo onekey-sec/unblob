@@ -9,7 +9,7 @@ import pluggy
 from structlog import get_logger
 
 from unblob import hookspecs
-from unblob.models import Handler
+from unblob.models import DirectoryHandler, Handler
 
 # The entrypoints are defined by the to-be-loaded plugins. The version
 # should be incremented whenever a backward-incompatible change is
@@ -103,5 +103,16 @@ class UnblobPluginManager(pluggy.PluginManager):
         extra_handlers = list(itertools.chain(*self.hook.unblob_register_handlers()))  # type: ignore
         if extra_handlers:
             logger.debug("Loaded handlers from plugins", handlers=extra_handlers)
+
+        return extra_handlers
+
+    def load_dir_handlers_from_plugins(
+        self,
+    ) -> List[Type[DirectoryHandler]]:
+        extra_handlers = list(itertools.chain(*self.hook.unblob_register_dir_handlers()))  # type: ignore
+        if extra_handlers:
+            logger.debug(
+                "Loaded directory handlers from plugins", handlers=extra_handlers
+            )
 
         return extra_handlers
