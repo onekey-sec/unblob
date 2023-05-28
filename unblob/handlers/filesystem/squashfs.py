@@ -14,12 +14,43 @@ logger = get_logger()
 PAD_SIZES = [4_096, 1_024]
 
 
+class SquashFSExtractor(Extractor):
+    EXECUTABLE = "sasquatch"
+
+    def __init__(self, big_endian_magic: int):
+        self.big_endian_magic = big_endian_magic
+
+    def extract(self, inpath: Path, outdir: Path):
+        with File.from_path(inpath) as file:
+            endian = get_endian(file, self.big_endian_magic)
+
+        commands_args = []
+
+        if endian == Endian.BIG:
+            commands_args.append("-be")
+        else:
+            commands_args.append("-le")
+
+        commands_args.extend(
+            [
+                "-no-exit-code",
+                "-f",
+                "-d",
+                "{outdir}",
+                "{inpath}",
+            ]
+        )
+        extractor = Command(self.EXECUTABLE, *commands_args)
+        extractor.extract(inpath, outdir)
+
+    def get_dependencies(self) -> List[str]:
+        return [self.EXECUTABLE]
+
+
 class _SquashFSBase(StructHandler):
     BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
-    EXTRACTOR = Command(
-        "sasquatch", "-no-exit-code", "-f", "-d", "{outdir}", "{inpath}"
-    )
+    EXTRACTOR = SquashFSExtractor(0x73_71_73_68)
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         file.seek(start_offset)
@@ -145,6 +176,8 @@ class SquashFSv3DDWRTHandler(SquashFSv3Handler):
 
     BIG_ENDIAN_MAGIC = 0x74_71_73_68
 
+    EXTRACTOR = SquashFSExtractor(0x74_71_73_68)
+
     PATTERNS = [
         HexString(
             """
@@ -169,6 +202,8 @@ class SquashFSv3BroadcomHandler(SquashFSv3Handler):
     NAME = "squashfs_v3_broadcom"
 
     BIG_ENDIAN_MAGIC = 0x71_73_68_73
+
+    EXTRACTOR = SquashFSExtractor(0x71_73_68_73)
 
     PATTERNS = [
         HexString(
@@ -195,6 +230,8 @@ class SquashFSv3NSHandler(SquashFSv3Handler):
     NAME = "squashfs_v3_nonstandard"
 
     BIG_ENDIAN_MAGIC = 0x73_71_6C_7A
+
+    EXTRACTOR = SquashFSExtractor(0x73_71_6C_7A)
 
     PATTERNS = [
         HexString(
