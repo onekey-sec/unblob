@@ -7,6 +7,9 @@ let
       pyperscan = pyperscan.packages.${system}.default.vectorscan;
       unblob-native = unblob-native.packages.${system}.default;
       treelib = final.callPackage ../treelib { };
+      lzallright = final.callPackage ../lzallright { };
+      ubi_reader = final.callPackage ../ubi_reader { };
+      jefferson = final.callPackage ../jefferson { };
     };
   };
 in
