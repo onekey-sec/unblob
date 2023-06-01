@@ -80,6 +80,14 @@ class SafeTarFile:
             target_path.mkdir(parents=True, exist_ok=True)
             return
 
+        if target_path.exists():
+            self.record_problem(
+                tarinfo,
+                "Duplicate tar entry.",
+                "Removed older version.",
+            )
+            target_path.unlink()
+
         self.tarfile.extract(tarinfo, extract_root)
 
     def fix_directories(self, extract_root):
