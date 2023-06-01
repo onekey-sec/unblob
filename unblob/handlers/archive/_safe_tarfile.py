@@ -38,7 +38,7 @@ class SafeTarFile:
                 self.record_problem(member, str(e), "Ignored.")
         self.fix_directories(extract_root)
 
-    def extract(self, tarinfo: tarfile.TarInfo, extract_root: Path):
+    def extract(self, tarinfo: tarfile.TarInfo, extract_root: Path):  # noqa: C901
         if not tarinfo.name:
             self.record_problem(
                 tarinfo,
