@@ -86,7 +86,7 @@ jobs:
           key: pytest-${{ matrix.os }}
       - name: Install dependencies
         run: |
-          pdm sync -d
+          pdm sync -v -d
       - name: Run Tests
         run: |
           pdm pytest
@@ -109,7 +109,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install dependencies
         run: |
-          pdm sync -d
+          pdm sync -v -d
       - name: Type-Check
         run: |
           pdm pyright
@@ -156,7 +156,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           container: ${{ env.CONTAINER }}
-          args: --release --out dist
+          args: --verbose --release --out dist
           sccache: ${{ matrix.target == 'musllinux_1_1' }}
           manylinux: auto
           docker-options: -e CARGO_NET_GIT_FETCH_WITH_CLI=true
@@ -171,7 +171,7 @@ jobs:
             cd /usr/src
             curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3.10 -
             export PATH=/root/.local/bin:$PATH
-            pdm sync -d --no-self -G test
+            pdm sync -v -d --no-self -G test
             pdm run python -m ensurepip
             pdm run python -m pip install dist/*.whl
             pdm pytest
@@ -196,7 +196,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist
+          args: --verbose --release --out dist
           sccache: "true"
       - name: Upload wheels
         uses: actions/upload-artifact@v3
@@ -208,7 +208,7 @@ jobs:
       - name: Test wheels
         if: ${{ matrix.target == 'x86_64' }}
         run: |
-          pdm sync -d --no-self -G test
+          pdm sync -v -d --no-self -G test
           pdm run python -m ensurepip
           pdm run python -m pip install dist/*.whl
           pdm pytest
