@@ -1,4 +1,5 @@
 pub mod math_tools;
+pub mod sandbox;
 
 use pyo3::prelude::*;
 
@@ -6,6 +7,9 @@ use pyo3::prelude::*;
 #[pymodule]
 fn _native(py: Python, m: &PyModule) -> PyResult<()> {
     math_tools::init_module(py, m)?;
+    sandbox::init_module(py, m)?;
+
+    pyo3_log::init();
 
     Ok(())
 }
