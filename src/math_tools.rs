@@ -20,7 +20,7 @@ pub fn shannon_entropy(data: &[u8]) -> f64 {
     entropy
 }
 /// Calculates Shannon entropy of data
-#[pyfunction(text_signature = "(data)", name = "shannon_entropy")]
+#[pyfunction(name = "shannon_entropy")]
 pub fn py_shannon_entropy(py: Python, data: &[u8]) -> PyResult<f64> {
     py.allow_threads(|| Ok(shannon_entropy(data)))
 }
