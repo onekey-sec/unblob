@@ -31,6 +31,10 @@ pub fn init_module(py: Python, root_module: &PyModule) -> PyResult<()> {
 
     root_module.add_submodule(module)?;
 
+    py.import("sys")?
+        .getattr("modules")?
+        .set_item("unblob_native.math", module)?;
+
     Ok(())
 }
 
