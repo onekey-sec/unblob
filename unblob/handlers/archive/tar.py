@@ -1,3 +1,4 @@
+import contextlib
 import os
 import tarfile
 from pathlib import Path
@@ -85,13 +86,8 @@ def _find_end_of_padding(file, *, find_from: int) -> int:
 
 class TarExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
-        tf = SafeTarFile.open(inpath.as_posix())
-        try:
-            tf.extractall(outdir.as_posix())
-        except FileExistsError as file_exists_error:
-            logger.warning(
-                "FileExistsError during tar archive extraction", error=file_exists_error
-            )
+        with contextlib.closing(SafeTarFile(inpath)) as tarfile:
+            tarfile.extractall(outdir)
 
 
 class TarHandler(StructHandler):
