@@ -203,10 +203,9 @@ orig_signal_handlers = {}
 
 
 def _on_terminate(signum, frame):
-    with contextlib.suppress(StopIteration):
-        while True:
-            pool = next(iter(pools))
-            pool.close(immediate=True)
+    pools_snapshot = list(pools)
+    for pool in pools_snapshot:
+        pool.close(immediate=True)
 
     if callable(orig_signal_handlers[signum]):
         orig_signal_handlers[signum](signum, frame)
