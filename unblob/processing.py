@@ -110,7 +110,6 @@ class ExtractionConfig:
         return extract_dir.expanduser().resolve()
 
 
-@terminate_gracefully
 def process_file(
     config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
 ) -> ProcessResult:

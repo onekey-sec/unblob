@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple, Type
 from unittest import mock
@@ -425,3 +426,27 @@ def test_clear_skip_magics(
     assert sorted(process_file_mock.call_args.args[0].skip_magic) == sorted(
         skip_magic
     ), fail_message
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Sandboxing only works on Linux")
+def test_sandbox_escape(tmp_path: Path):
+    runner = CliRunner()
+
+    in_path = tmp_path / "input"
+    in_path.touch()
+    extract_dir = tmp_path / "extract-dir"
+    params = ["--extract-dir", str(extract_dir), str(in_path)]
+
+    unrelated_file = tmp_path / "unrelated"
+
+    process_file_mock = mock.MagicMock(
+        side_effect=lambda *_args, **_kwargs: unrelated_file.write_text(
+            "sandbox escape"
+        )
+    )
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
+        result = runner.invoke(unblob.cli.cli, params)
+
+    assert result.exit_code != 0
+    assert isinstance(result.exception, PermissionError)
+    process_file_mock.assert_called_once()
