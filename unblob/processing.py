@@ -1,5 +1,6 @@
 import multiprocessing
 import shutil
+import sys
 from operator import attrgetter
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type, Union
@@ -9,6 +10,11 @@ import magic
 import plotext as plt
 from structlog import get_logger
 from unblob_native import math_tools as mt
+from unblob_native.sandbox import (  # type: ignore
+    AccessFS,
+    SandboxError,
+    restrict_access,
+)
 
 from unblob.handlers import BUILTIN_DIR_HANDLERS, BUILTIN_HANDLERS, Handlers
 
@@ -112,6 +118,30 @@ class ExtractionConfig:
         return extract_dir.expanduser().resolve()
 
 
+def sandbox(extract_dir: Path, report_file: Optional[Path]):
+    restrictions = [
+        AccessFS.read("/"),
+        AccessFS.read_write("/dev/shm"),  # noqa: S108
+        AccessFS.read_write(extract_dir.as_posix()),
+        AccessFS.make_dir(extract_dir.parent.as_posix()),
+    ]
+
+    if report_file:
+        restrictions += [
+            AccessFS.read_write(report_file),
+            AccessFS.make_reg(report_file.parent),
+        ]
+
+    if "pytest" in sys.modules:
+        restrictions += [
+            AccessFS.read_write("/tmp"),  # noqa: S108
+            AccessFS.read_write("/build"),
+            AccessFS.read_write(Path(__file__).parent.parent.resolve().as_posix()),
+        ]
+
+    restrict_access(*restrictions)
+
+
 @terminate_gracefully
 def process_file(
     config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
@@ -135,6 +165,13 @@ def process_file(
             "File not processed, as report could not be written", file=input_path
         )
         return ProcessResult()
+
+    try:
+        if not hasattr(process_file, "_sandboxed"):
+            sandbox(extract_dir, report_file)
+            process_file._sandboxed = True  # noqa: SLF001
+    except SandboxError:
+        logger.warning("Sandboxing FS access is unavailable on this system, skipping.")
 
     process_result = _process_task(config, task)
 
