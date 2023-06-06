@@ -376,11 +376,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1707679924,
-        "narHash": "sha256-Sz/W6V9c7KjYx4Mgog8zGY/Px9ARWoE5dmaA+AHCNVw=",
+        "lastModified": 1708513104,
+        "narHash": "sha256-taA20j7/kL5+Jy0iaFL4xZiFdJKzVkSeacRy4tkAkeg=",
         "owner": "onekey-sec",
         "repo": "unblob-native",
-        "rev": "371aa5848a4980216b51791e334577fea67ac88a",
+        "rev": "95bfa0f895cef2b5ddca34257ce3dbf5d8b0e220",
         "type": "github"
       },
       "original": {
