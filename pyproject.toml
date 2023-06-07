@@ -106,7 +106,7 @@ ignore = [
 ignore-init-module-imports = true
 
 [tool.ruff.per-file-ignores]
-"build.py" = [
+".github/*" = [
   "T201"  # print
 ]
 "tests/*" = [
