@@ -14,7 +14,6 @@ with pkgs; mkShell {
     python3Packages.pytest
     python3Packages.pytest-cov
     poetry
-    lzo
 
     nvfetcher
   ];
