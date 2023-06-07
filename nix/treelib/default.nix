@@ -1,13 +1,7 @@
-{ lib, buildPythonPackage, fetchPypi, future }:
+{ _sources, buildPythonPackage, future }:
 
 buildPythonPackage rec {
-  pname = "treelib";
-  version = "1.6.1";
-
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "sha256-HL//stK3XMrCfQIAzuBQe2+7Bybgr7n64Bet5dLOh4g=";
-  };
+  inherit (_sources.treelib) pname version src;
 
   propagatedBuildInputs = [ future ];
 

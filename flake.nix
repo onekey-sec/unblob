@@ -15,8 +15,12 @@
     url = "github:onekey-sec/sasquatch";
     inputs.nixpkgs.follows = "nixpkgs";
   };
+  inputs.flake-compat = {
+    url = "github:edolstra/flake-compat";
+    flake = false;
+  };
 
-  outputs = { self, nixpkgs, filter, unblob-native, pyperscan, sasquatch }:
+  outputs = { self, nixpkgs, filter, unblob-native, pyperscan, sasquatch, ... }:
     let
       # System types to support.
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
