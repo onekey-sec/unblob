@@ -52,9 +52,23 @@
       checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests);
 
       devShells = forAllSystems
-        (system: {
-          default = import ./shell.nix { pkgs = nixpkgsFor.${system}; };
-        });
+        (system:
+          with nixpkgsFor.${system}; {
+            default = mkShell {
+              packages = [
+                unblob.runtimeDeps
+                ruff
+                pyright
+                python3Packages.pytest
+                python3Packages.pytest-cov
+                poetry
+
+                nvfetcher
+              ];
+
+              env.LD_LIBRARY_PATH = lib.makeLibraryPath [ file ];
+            };
+          });
 
       legacyPackages = forAllSystems (system: nixpkgsFor.${system});
     };
