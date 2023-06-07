@@ -5,11 +5,7 @@ let
 in
 { pkgs ? flakePkgs }:
 
-with pkgs; let
-  update = writeShellScriptBin "update-python-libraries"
-    ''${update-python-libraries} "$@"'';
-in
-mkShell {
+with pkgs; mkShell {
   packages = [
     unblob
     unblob.runtimeDeps
@@ -19,6 +15,7 @@ mkShell {
     python3Packages.pytest-cov
     poetry
     lzo
-    update
+
+    nvfetcher
   ];
 }

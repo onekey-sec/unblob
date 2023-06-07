@@ -1,0 +1,16 @@
+[lzallright]
+src.github_tag = "vlaci/lzallright"
+fetch.github = "vlaci/lzallright"
+cargo_locks = [ "Cargo.lock" ]
+
+[jefferson]
+src.pypi = "jefferson"
+fetch.pypi = "jefferson"
+
+[ubi_reader]
+src.pypi = "ubi_reader"
+fetch.pypi = "ubi_reader"
+
+[treelib]
+src.pypi = "treelib"
+fetch.pypi = "treelib"
