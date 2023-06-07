@@ -3,33 +3,33 @@
 {
   jefferson = {
     pname = "jefferson";
-    version = "0.4.4";
+    version = "0.4.5";
     src = fetchurl {
-      url = "https://pypi.org/packages/source/j/jefferson/jefferson-0.4.4.tar.gz";
-      sha256 = "sha256-RHEXbKRQWTyPWIzSRLwW82u/TsDgiL7L5o+cUWgLLk0=";
+      url = "https://pypi.org/packages/source/j/jefferson/jefferson-0.4.5.tar.gz";
+      sha256 = "sha256-+cPOzzO3bCQAu8LrbjUJ5S/SR5OFitOYLIu5L9t/q+k=";
     };
   };
   lzallright = {
     pname = "lzallright";
-    version = "v0.2.2";
+    version = "v0.2.3";
     src = fetchFromGitHub {
       owner = "vlaci";
       repo = "lzallright";
       rev = "v0.2.3";
       fetchSubmodules = false;
-      sha256 = "sha256-MOTIUC/G92tB2ZOp3OzgKq3d9zGN6bfv83vXOK3deFI=";
+      sha256 = "sha256-Zzif6WtecgAkNmml0kt0Z+Ewx0L30ahr+kwzYR5aUAM=";
     };
     cargoLock."Cargo.lock" = {
-      lockFile = ./lzallright-v0.2.2/Cargo.lock;
+      lockFile = ./lzallright-v0.2.3/Cargo.lock;
       outputHashes = { };
     };
   };
   treelib = {
     pname = "treelib";
-    version = "1.6.1";
+    version = "1.6.4";
     src = fetchurl {
-      url = "https://pypi.org/packages/source/t/treelib/treelib-1.6.1.tar.gz";
-      sha256 = "sha256-HL//stK3XMrCfQIAzuBQe2+7Bybgr7n64Bet5dLOh4g=";
+      url = "https://pypi.org/packages/source/t/treelib/treelib-1.6.4.tar.gz";
+      sha256 = "sha256-Gi6Dj2uZ4mkLw9mS1aHwTNtK9lZL12iIg8I9FyV7uyo=";
     };
   };
   ubi_reader = {
