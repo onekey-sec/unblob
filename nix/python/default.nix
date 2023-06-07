@@ -10,6 +10,7 @@ let
       lzallright = final.callPackage ../lzallright { };
       ubi_reader = final.callPackage ../ubi_reader { };
       jefferson = final.callPackage ../jefferson { };
+      unblob = final.callPackage ../unblob { };
     };
   };
 in
