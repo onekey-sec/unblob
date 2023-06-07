@@ -90,8 +90,32 @@ pyenv local 3.8.12
 
 ### Installing Python dependencies
 
-We are using [poetry](https://python-poetry.org/) to manage our Python dependencies. `poetry
-install` will install all required dependencies for development.
+We are using [poetry](https://python-poetry.org/) to manage our Python
+dependencies. To install all required dependencies for development, you can run
+the following command:
+
+```
+poetry install --with dev
+```
+
+Please note that it installs dependencies within the dedicated virtual
+environment. So if you want to run `unblob` or `pytest`, you need to do it from
+within the virtual environment:
+
+Using poetry run:
+
+```
+poetry run unblob
+poetry run pytest tests -v
+```
+
+By dropping into the virtual environment:
+
+```
+poetry shell
+unblob
+pytest tests -v
+```
 
 ### Running pre-commit
 
