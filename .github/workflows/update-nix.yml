@@ -20,6 +20,7 @@ jobs:
       - name: Update flake.lock
         uses: DeterminateSystems/update-flake-lock@v19
         with:
+          token: ${{ secrets.CREATE_PR_TOKEN }}
           pr-title: "Update flake.lock" # Title of PR to be created
           pr-labels: | # Labels to be set on the PR
             dependencies
@@ -39,4 +40,6 @@ jobs:
           name: unblob
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Update vendored package versions
+        env:
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
         run: .github/workflows/update-vendored-nix-dependencies.py
