@@ -118,6 +118,6 @@ The Nix derivation installs all 3rd party dependencies.
 
 2.  If you need **squashfs support**, install sasquatch:
 
-        curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-3/sasquatch_1.0_amd64.deb
+        curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-4/sasquatch_1.0_amd64.deb
         sudo dpkg -i sasquatch_1.0_amd64.deb
         rm sasquatch_1.0_amd64.deb
