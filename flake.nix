@@ -52,9 +52,25 @@
       checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests);
 
       devShells = forAllSystems
-        (system: {
-          default = import ./shell.nix { pkgs = nixpkgsFor.${system}; };
-        });
+        (system:
+          with nixpkgsFor.${system};
+          let
+            update = pkgs.writeShellScriptBin "update-python-libraries"
+              ''${pkgs.update-python-libraries} "$@"'';
+          in
+          {
+            default = mkShell {
+              packages = [
+                unblob.runtimeDeps
+                ruff
+                pyright
+                python3Packages.pytest
+                python3Packages.pytest-cov
+                poetry
+                update
+              ];
+            };
+          });
 
       legacyPackages = forAllSystems (system: nixpkgsFor.${system});
     };
