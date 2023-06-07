@@ -9,13 +9,13 @@
 
 buildPythonPackage rec {
   pname = "lzallright";
-  version = "0.2.2";
+  version = "0.2.3";
 
   src = fetchFromGitHub {
     owner = "vlaci";
     repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-MOTIUC/G92tB2ZOp3OzgKq3d9zGN6bfv83vXOK3deFI=";
+    rev = "refs/tags/v${version}";
+    sha256 = "sha256-Zzif6WtecgAkNmml0kt0Z+Ewx0L30ahr+kwzYR5aUAM=";
   };
 
   cargoDeps = rustPlatform.fetchCargoTarball {
