@@ -8,7 +8,6 @@ apt-get install --no-install-recommends -y \
     e2fsprogs \
     gcc \
     git \
-    liblzo2-dev \
     lz4 \
     lziprecover \
     lzop \
