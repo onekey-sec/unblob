@@ -57,7 +57,6 @@ DEFAULT_SKIP_MAGIC = (
     "PDF document",
     "magic binary file",
     "MS Windows icon resource",
-    "PE32",
     "Web Open Font Format",
     "GNU message catalog",
     "Xilinx BIT data",
