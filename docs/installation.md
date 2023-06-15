@@ -111,6 +111,8 @@ The Nix derivation installs all 3rd party dependencies.
 
 ## Install extractors
 
+There is a handy `install-deps.sh` script included in the repository and PyPI packages that can be used to install the following dependencies.
+
 1.  With your operating system package manager:  
     On Ubuntu 22.04, install extractors with APT:
 
