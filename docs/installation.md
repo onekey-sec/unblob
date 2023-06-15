@@ -116,7 +116,7 @@ There is a handy `install-deps.sh` script included in the repository and PyPI pa
 1.  With your operating system package manager:  
     On Ubuntu 22.04, install extractors with APT:
 
-        sudo apt install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg libhyperscan-dev zstd
+        sudo apt install android-sdk-libsparse-utils e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover libhyperscan-dev zstd
 
 2.  If you need **squashfs support**, install sasquatch:
 

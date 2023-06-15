@@ -3,11 +3,11 @@
 apt-get update
 
 apt-get install --no-install-recommends -y \
+    android-sdk-libsparse-utils \
     curl \
     e2fsprogs \
     gcc \
     git \
-    img2simg \
     liblzo2-dev \
     lz4 \
     lziprecover \
