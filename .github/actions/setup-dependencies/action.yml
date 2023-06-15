@@ -9,15 +9,8 @@ description: "Install all required dependencies for worflows to run."
 runs:
   using: "composite"
   steps:
-    - name: Install 3rd party from apt
-      run: sudo apt install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lz4 lzop lziprecover img2simg zstd
-      shell: bash
-
-    - name: Install sasquatch
-      run: |
-        curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-4/sasquatch_1.0_amd64.deb
-        sudo dpkg -i sasquatch_1.0_amd64.deb
-        rm -f sasquatch_1.0_amd64.deb
+    - name: Install 3rd party dependencies
+      run: sudo unblob/install-deps.sh
       shell: bash
 
     - name: Setup Python
