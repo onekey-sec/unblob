@@ -6,15 +6,12 @@ apt-get install --no-install-recommends -y \
     android-sdk-libsparse-utils \
     curl \
     e2fsprogs \
-    gcc \
-    git \
     lz4 \
     lziprecover \
     lzop \
     p7zip-full \
     unar \
     xz-utils \
-    zlib1g-dev \
     libmagic1 \
     zstd
 
