@@ -316,7 +316,7 @@ dependencies = [
 
 [[package]]
 name = "lzallright"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "criterion",
  "cxx",
@@ -326,7 +326,7 @@ dependencies = [
 
 [[package]]
 name = "lzokay-sys"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "cxx",
  "cxx-build",

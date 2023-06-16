@@ -1,9 +1,9 @@
-{ _sources, buildPythonPackage, future }:
+{ _sources, buildPythonPackage, future, six }:
 
 buildPythonPackage rec {
   inherit (_sources.treelib) pname version src;
 
-  propagatedBuildInputs = [ future ];
+  propagatedBuildInputs = [ future six ];
 
   doCheck = false;
 }

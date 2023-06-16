@@ -8,16 +8,16 @@
         "pinned": false,
         "src": {
             "name": null,
-            "sha256": "sha256-RHEXbKRQWTyPWIzSRLwW82u/TsDgiL7L5o+cUWgLLk0=",
+            "sha256": "sha256-+cPOzzO3bCQAu8LrbjUJ5S/SR5OFitOYLIu5L9t/q+k=",
             "type": "url",
-            "url": "https://pypi.org/packages/source/j/jefferson/jefferson-0.4.4.tar.gz"
+            "url": "https://pypi.org/packages/source/j/jefferson/jefferson-0.4.5.tar.gz"
         },
-        "version": "0.4.4"
+        "version": "0.4.5"
     },
     "lzallright": {
         "cargoLocks": {
             "Cargo.lock": [
-                "./lzallright-v0.2.2/Cargo.lock",
+                "./lzallright-v0.2.3/Cargo.lock",
                 {}
             ]
         },
@@ -33,11 +33,11 @@
             "name": null,
             "owner": "vlaci",
             "repo": "lzallright",
-            "rev": "v0.2.2",
-            "sha256": "sha256-MOTIUC/G92tB2ZOp3OzgKq3d9zGN6bfv83vXOK3deFI=",
+            "rev": "v0.2.3",
+            "sha256": "sha256-Zzif6WtecgAkNmml0kt0Z+Ewx0L30ahr+kwzYR5aUAM=",
             "type": "github"
         },
-        "version": "v0.2.2"
+        "version": "v0.2.3"
     },
     "treelib": {
         "cargoLocks": null,
@@ -48,11 +48,11 @@
         "pinned": false,
         "src": {
             "name": null,
-            "sha256": "sha256-HL//stK3XMrCfQIAzuBQe2+7Bybgr7n64Bet5dLOh4g=",
+            "sha256": "sha256-Gi6Dj2uZ4mkLw9mS1aHwTNtK9lZL12iIg8I9FyV7uyo=",
             "type": "url",
-            "url": "https://pypi.org/packages/source/t/treelib/treelib-1.6.1.tar.gz"
+            "url": "https://pypi.org/packages/source/t/treelib/treelib-1.6.4.tar.gz"
         },
-        "version": "1.6.1"
+        "version": "1.6.4"
     },
     "ubi_reader": {
         "cargoLocks": null,
