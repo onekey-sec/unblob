@@ -104,6 +104,15 @@ class ExtractorDependencyNotFoundReport(ErrorReport):
 
 
 @attr.define(kw_only=True, frozen=True)
+class ExtractorTimedOut(ErrorReport):
+    """Describes an error when the extractor execution timed out."""
+
+    severity: Severity = Severity.ERROR
+    cmd: str
+    timeout: float
+
+
+@attr.define(kw_only=True, frozen=True)
 class MaliciousSymlinkRemoved(ErrorReport):
     """Describes an error when malicious symlinks have been removed from disk."""
 

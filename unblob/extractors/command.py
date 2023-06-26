@@ -6,10 +6,18 @@ from typing import TYPE_CHECKING, List, Optional, Union
 from structlog import get_logger
 
 from unblob.models import DirectoryExtractor, ExtractError, Extractor
-from unblob.report import ExtractCommandFailedReport, ExtractorDependencyNotFoundReport
+from unblob.report import (
+    ExtractCommandFailedReport,
+    ExtractorDependencyNotFoundReport,
+    ExtractorTimedOut,
+)
 
 if TYPE_CHECKING:
     import io
+
+# value that is high enough not to block long running execution such as extraction of large
+# disk images, but small enough to make sure unblob finish its execution at some point.
+COMMAND_TIMEOUT = 12 * 60 * 60
 
 logger = get_logger()
 
@@ -45,6 +53,7 @@ class Command(Extractor):
                 cmd,
                 stdout=stdout_file,
                 stderr=subprocess.PIPE,
+                timeout=COMMAND_TIMEOUT,
             )
             if res.returncode != 0:
                 error_report = ExtractCommandFailedReport(
@@ -62,6 +71,13 @@ class Command(Extractor):
             )
             logger.error(
                 "Can't run extract command. Is the extractor installed?",
+                **error_report.asdict(),
+            )
+            raise ExtractError(error_report) from None
+        except subprocess.TimeoutExpired as e:
+            error_report = ExtractorTimedOut(cmd=e.cmd, timeout=e.timeout)
+            logger.error(
+                "Extract command timed out.",
                 **error_report.asdict(),
             )
             raise ExtractError(error_report) from None
