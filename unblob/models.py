@@ -130,7 +130,7 @@ class ValidChunk(Chunk):
 class UnknownChunk(Chunk):
     r"""Gaps between valid chunks or otherwise unknown chunks.
 
-    Important for manual analysis, and analytical certanity: for example
+    Important for manual analysis, and analytical certainty: for example
     entropy, other chunks inside it, metadata, etc.
 
     These are not extracted, just logged for information purposes and further analysis,
