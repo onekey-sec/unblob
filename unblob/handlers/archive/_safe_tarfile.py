@@ -2,10 +2,10 @@ import os
 import tarfile
 from pathlib import Path
 
-import attrs
 from structlog import get_logger
 
 from unblob.extractor import is_safe_path
+from unblob.report import ExtractionProblem
 
 logger = get_logger()
 
@@ -13,17 +13,10 @@ RUNNING_AS_ROOT = os.getuid() == 0
 MAX_PATH_LEN = 255
 
 
-@attrs.define
-class ProblematicTarMember:
-    tarinfo: tarfile.TarInfo
-    problem: str
-    resolution: str
-
-
 class SafeTarFile:
     def __init__(self, inpath: Path):
         self.inpath = inpath
-        self.problems = []
+        self.reports = []
         self.tarfile = tarfile.open(inpath)
         self.directories = {}
 
@@ -143,4 +136,10 @@ class SafeTarFile:
 
     def record_problem(self, tarinfo, problem, resolution):
         logger.warning(f"{problem} {resolution}", path=tarinfo.name)  # noqa: G004
-        self.problems.append(ProblematicTarMember(tarinfo, problem, resolution))
+        self.reports.append(
+            ExtractionProblem(
+                path=tarinfo.name,
+                problem=problem,
+                resolution=resolution,
+            )
+        )

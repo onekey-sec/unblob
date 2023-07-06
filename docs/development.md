@@ -515,7 +515,7 @@ class Extractor(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def extract(self, inpath: Path, outdir: Path):
+    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
         """Extract the carved out chunk. Raises ExtractError on failure."""
 ```
 
@@ -538,7 +538,7 @@ class DirectoryExtractor(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def extract(self, paths: List[Path], outdir: Path):
+    def extract(self, paths: List[Path], outdir: Path) -> Optional[ExtractResult]:
         """Extract from a multi file path list.
 
         Raises ExtractError on failure.
