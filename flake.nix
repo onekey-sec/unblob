@@ -44,6 +44,11 @@
         commonArgs = {
           inherit src;
 
+          # python package  build will recompile PyO3 when built with maturin
+          # as there are different build features are used for the extension module
+          # and the standalone dylib which is used for tests and benchmarks
+          doNotLinkInheritedArtifacts = true;
+
           buildInputs = [
             # Add additional build inputs here
             pkgs.python3
