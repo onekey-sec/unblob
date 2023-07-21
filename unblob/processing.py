@@ -13,12 +13,13 @@ from unblob_native import math_tools as mt
 from unblob.handlers import BUILTIN_DIR_HANDLERS, BUILTIN_HANDLERS, Handlers
 
 from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
-from .file_utils import iterate_file
+from .file_utils import InvalidInputFormat, iterate_file
 from .finder import search_chunks
 from .iter_utils import pairwise
 from .logging import noformat
 from .models import (
     Chunk,
+    DirectoryHandler,
     DirectoryHandlers,
     ExtractError,
     File,
@@ -31,6 +32,7 @@ from .models import (
 )
 from .pool import make_pool
 from .report import (
+    CalculateMultiFileExceptionReport,
     EntropyReport,
     ExtractDirectoryExistsReport,
     FileMagicReport,
@@ -324,7 +326,7 @@ class _DirectoryTask:
             dir_handler = dir_handler_class()
 
             for path in dir_handler.PATTERN.get_files(self.dir_task.path):
-                multi_file = dir_handler.calculate_multifile(path)
+                multi_file = self._calculate_multifile(dir_handler, path, self.result)
 
                 if multi_file is None:
                     continue
@@ -348,6 +350,32 @@ class _DirectoryTask:
 
                 processed_paths.update(multi_file.paths)
         return processed_paths, extract_dirs
+
+    @staticmethod
+    def _calculate_multifile(
+        dir_handler: DirectoryHandler, path: Path, task_result: TaskResult
+    ) -> Optional[MultiFile]:
+        try:
+            return dir_handler.calculate_multifile(path)
+        except InvalidInputFormat as exc:
+            logger.debug(
+                "Invalid MultiFile format",
+                exc_info=exc,
+                handler=dir_handler.NAME,
+                path=path,
+                _verbosity=2,
+            )
+        except Exception as exc:
+            error_report = CalculateMultiFileExceptionReport(
+                handler=dir_handler.NAME,
+                exception=exc,
+                path=path,
+            )
+            task_result.add_report(error_report)
+            logger.warning(
+                "Unhandled Exception during multi file calculation",
+                **error_report.asdict(),
+            )
 
     def _check_conflicting_files(
         self, multi_file: MultiFile, processed_paths: Set[Path]

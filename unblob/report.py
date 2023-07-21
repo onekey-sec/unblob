@@ -79,6 +79,15 @@ class CalculateChunkExceptionReport(UnknownError):
 
 
 @attr.define(kw_only=True, frozen=True)
+class CalculateMultiFileExceptionReport(UnknownError):
+    """Describes an exception raised during calculate_chunk execution."""
+
+    path: Path
+    # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
+    handler: str
+
+
+@attr.define(kw_only=True, frozen=True)
 class ExtractCommandFailedReport(ErrorReport):
     """Describes an error when failed to run the extraction command."""
 
