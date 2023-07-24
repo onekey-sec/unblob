@@ -507,6 +507,16 @@ class MultiLevelSplitDirHandler(DirectoryHandler):
         )
 
 
+class ExceptionDirHandler(SplitDirHandler):
+    NAME = "exception-handler"
+    PATTERN = Glob("*.part0")
+    EXTRACTOR = None
+
+    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        del file
+        raise ValueError("Something bad happened")
+
+
 class DummyTestHandler(Handler):
     NAME = "dummy"
     PATTERNS = [Regex("AA")]
@@ -775,3 +785,27 @@ def test_multi_file_extraction_failed(
         for report in multi_file_reports
         for extraction_report in report.extraction_reports
     )
+
+
+def test_multi_file_calculate_exception(
+    multi_volume_zip: Path,
+    multi_file_extraction_config: ExtractionConfig,
+    extraction_root: Path,
+):
+    multi_file_extraction_config.dir_handlers = (ExceptionDirHandler,)
+    multi_file_extraction_config.handlers = (handlers.archive.zip.ZIPHandler,)
+
+    process_result = process_file(multi_file_extraction_config, multi_volume_zip)
+
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    directory = extraction_root / "input_extract"
+
+    multi_file_reports = task_result_by_path[directory].filter_reports(MultiFileReport)
+    assert not multi_file_reports
+    assert (directory / "test.part0") in task_result_by_path
+    assert (directory / "test.part1") in task_result_by_path
+    assert (directory / "test.part2") in task_result_by_path
+    assert (directory / "test2.part0") in task_result_by_path
+    assert (directory / "test2.part1") in task_result_by_path
+    assert (directory / "other") in task_result_by_path
