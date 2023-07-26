@@ -29,6 +29,8 @@ KERNEL_MODULE_SIGNATURE_FOOTER = b"~Module signature appended~\n"
 
 KERNEL_INIT_DATA_SECTION = ".init.data"
 
+SSIZE_MAX = 2147483647
+
 
 @attr.define(repr=False)
 class ElfChunk(ValidChunk):
@@ -261,6 +263,9 @@ class _ELFBase(StructHandler):
         if not self.is_valid_header(header):
             return None
         end_offset = self.get_end_offset(file, start_offset, header, endian)
+
+        if end_offset > SSIZE_MAX:
+            return None
 
         # kernel modules are always relocatable
         if header.e_type == lief.ELF.E_TYPE.RELOCATABLE.value:
