@@ -526,6 +526,15 @@ Two methods are exposed by this class:
 - `extract()`: you must override this function. This is where you'll perform the
   extraction of `inpath` content into `outdir` extraction directory
 
+!!! Recommendation
+
+    Although it is possible to implement `extract()` with path manipulations,
+    checks for path traversals, and performing io by using Python libraries
+    (`os`, `pathlib.Path`), but it turns out somewhat tedious.
+    Instead we recommend to remove boilerplate and use a helper class `FileSystem` from
+    [unblob/file_utils.py](https://github.com/onekey-sec/unblob/blob/main/unblob/file_utils.py)
+    which ensures that all file objects are created under its root.
+
 ### DirectoryExtractor class
 
 The `DirectoryExtractor` interface is defined in
@@ -551,6 +560,11 @@ Two methods are exposed by this class:
   external dependencies such as command line tools
 - `extract()`: you must override this function. This is where you'll perform the
   extraction of `paths` files into `outdir` extraction directory
+
+!!! Recommendation
+
+    Similarly to `Extractor`, it is recommended to use the `FileSystem` helper class to
+    implement `extract`.
 
 ### Example Extractor
 

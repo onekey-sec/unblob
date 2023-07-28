@@ -264,3 +264,27 @@ class ExtractionProblem(Report):
     problem: str
     resolution: str
     path: Optional[str] = None
+
+    @property
+    def log_msg(self):
+        return f"{self.problem} {self.resolution}"
+
+    def log_with(self, logger):
+        logger.warning(self.log_msg, path=self.path)
+
+
+@attr.define(kw_only=True, frozen=True)
+class LinkExtractionProblem(ExtractionProblem):
+    link_path: str
+
+    def log_with(self, logger):
+        logger.warning(self.log_msg, path=self.path, link_path=self.link_path)
+
+
+@attr.define(kw_only=True, frozen=True)
+class SpecialFileExtractionProblem(ExtractionProblem):
+    mode: int
+    device: int
+
+    def log_with(self, logger):
+        logger.warning(self.log_msg, path=self.path, mode=self.mode, device=self.device)

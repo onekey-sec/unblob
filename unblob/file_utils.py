@@ -1,4 +1,5 @@
 import enum
+import functools
 import io
 import math
 import mmap
@@ -6,13 +7,20 @@ import os
 import shutil
 import struct
 from pathlib import Path
-from typing import Iterator, List, Tuple, Union
+from typing import Iterable, Iterator, List, Optional, Tuple, Union
 
 from dissect.cstruct import Instance, cstruct
+from structlog import get_logger
 
 from .logging import format_hex
+from .report import (
+    ExtractionProblem,
+    LinkExtractionProblem,
+    SpecialFileExtractionProblem,
+)
 
 DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
+logger = get_logger()
 
 
 def is_safe_path(basedir: Path, path: Path) -> bool:
@@ -349,3 +357,204 @@ def read_until_past(file: File, pattern: bytes):
             return file.tell()
         if next_byte not in pattern:
             return file.tell() - 1
+
+
+def chop_root(path: Path):
+    """Make absolute paths relative by chopping off the root."""
+    if not path.is_absolute():
+        return path
+
+    relative_parts = list(path.parts[1:])
+    return Path("/".join(relative_parts))
+
+
+class _FSPath:
+    def __init__(self, *, root: Path, path: Path) -> None:
+        self.root = root
+        self.relative_path = chop_root(path)
+        self.absolute_path = root / self.relative_path
+        self.is_safe = is_safe_path(self.root, self.absolute_path)
+
+    def format_path(self) -> str:
+        return str(self.relative_path)
+
+
+class _FSLink:
+    def __init__(self, *, root: Path, src: Path, dst: Path) -> None:
+        self.dst = _FSPath(root=root, path=dst)
+        self.src = _FSPath(root=root, path=src)
+        self.is_safe = self.dst.is_safe and self.src.is_safe
+
+    def format_report(
+        self, description, resolution="Skipped."
+    ) -> LinkExtractionProblem:
+        return LinkExtractionProblem(
+            problem=description,
+            resolution=resolution,
+            path=str(self.dst.relative_path),
+            link_path=str(self.src.relative_path),
+        )
+
+
+class FileSystem:
+    """Restricts file system operations to a directory.
+
+    Path traversal violations are collected as a list of :ExtractionProblem:-s
+    and not reported immediately - violating operations looks like successful for the caller.
+
+    All input paths are interpreted as relative to the root directory.
+    Absolute paths are converted to relative paths by dropping the root /.
+    There is one exception to this universal base: symlink targets,
+    which are relative to the directory containing the symbolic link, because
+    this is how symlinks work.
+    """
+
+    problems: List[ExtractionProblem]
+
+    def __init__(self, root: Path):
+        self.root = root.resolve()
+        self.problems = []
+
+    def record_problem(self, problem: ExtractionProblem):
+        self.problems.append(problem)
+        problem.log_with(logger)
+
+    @functools.cached_property
+    def has_root_permissions(self):
+        return os.geteuid() == 0
+
+    def _fs_path(self, path: Path) -> _FSPath:
+        return _FSPath(root=self.root, path=path)
+
+    def get_checked_path(self, path: Path, path_use_description: str) -> Optional[Path]:
+        fs_path = self._fs_path(path)
+        if fs_path.is_safe:
+            return fs_path.absolute_path
+
+        report = ExtractionProblem(
+            path=fs_path.format_path(),
+            problem=f"Potential path traversal through {path_use_description}",
+            resolution="Skipped.",
+        )
+        self.record_problem(report)
+        return None
+
+    def write_bytes(self, path: Path, content: bytes):
+        logger.debug("creating file", file_path=path, _verbosity=3)
+        safe_path = self.get_checked_path(path, "write_bytes")
+
+        if safe_path:
+            safe_path.write_bytes(content)
+
+    def write_chunks(self, path: Path, chunks: Iterable[bytes]):
+        logger.debug("creating file", file_path=path, _verbosity=3)
+        safe_path = self.get_checked_path(path, "write_chunks")
+
+        if safe_path:
+            with safe_path.open("wb") as f:
+                for chunk in chunks:
+                    f.write(chunk)
+
+    def carve(self, path: Path, file: File, start_offset: int, size: int):
+        logger.debug("carving file", path=path, _verbosity=3)
+        safe_path = self.get_checked_path(path, "carve")
+
+        if safe_path:
+            carve(safe_path, file, start_offset, size)
+
+    def mkdir(self, path: Path, *, mode=0o777, parents=False, exist_ok=False):
+        logger.debug("creating directory", dir_path=path, _verbosity=3)
+        safe_path = self.get_checked_path(path, "mkdir")
+
+        if safe_path:
+            safe_path.mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
+
+    def mkfifo(self, path: Path, mode=0o666):
+        logger.debug("creating fifo", path=path, _verbosity=3)
+        safe_path = self.get_checked_path(path, "mkfifo")
+
+        if safe_path:
+            os.mkfifo(safe_path, mode=mode)
+
+    def mknod(self, path: Path, mode=0o600, device=0):
+        logger.debug("creating special file", special_path=path, _verbosity=3)
+        safe_path = self.get_checked_path(path, "mknod")
+
+        if safe_path:
+            if self.has_root_permissions:
+                os.mknod(safe_path, mode=mode, device=device)
+            else:
+                problem = SpecialFileExtractionProblem(
+                    problem="Root privileges are required to create block and char devices.",
+                    resolution="Skipped.",
+                    path=str(path),
+                    mode=mode,
+                    device=device,
+                )
+                self.record_problem(problem)
+
+    def _get_checked_link(self, src: Path, dst: Path) -> Optional[_FSLink]:
+        link = _FSLink(root=self.root, src=src, dst=dst)
+        if link.is_safe:
+            return link
+
+        self.record_problem(link.format_report("Potential path traversal through link"))
+        return None
+
+    def _path_to_root(self, from_dir: Path) -> Path:
+        # This version does not look at the existing symlinks, so while it looks cleaner it is also
+        # somewhat less precise:
+        #
+        # os.path.relpath(self.root, start=self.root / chop_root(from_dir))
+        #
+        # In contrast, the below version looks like a kludge, but using .resolve() actually
+        # calculates the correct path in more cases, even if it can still give a bad result due
+        # to ordering of symlink creation and resolve defaulting to non-strict checking.
+        # Calculation unfortunately might fall back to the potentially wrong string interpretation,
+        # which is the same as os.path.relpath, sharing the same failure case.
+        # Ultimately we can not easily catch all symlink based path traversals here, so there
+        # still remains work for `unblob.extractor.fix_symlink()`
+        #
+        absolute_from_dir = (self.root / chop_root(from_dir)).resolve()
+        ups = len(absolute_from_dir.parts) - len(self.root.parts)
+        return Path("/".join(["."] + [".."] * ups))
+
+    def create_symlink(self, src: Path, dst: Path):
+        """Create a symlink dst with the link/content/target src."""
+        logger.debug("creating symlink", file_path=dst, link_target=src, _verbosity=3)
+
+        if src.is_absolute():
+            # convert absolute paths to dst relative paths
+            # these would point to the same path if self.root would be the real root "/"
+            # but they are relocatable
+            src = self._path_to_root(dst.parent) / chop_root(src)
+
+        safe_link = self._get_checked_link(src=dst.parent / src, dst=dst)
+
+        if safe_link:
+            dst = safe_link.dst.absolute_path
+            dst.symlink_to(src)
+
+    def create_hardlink(self, src: Path, dst: Path):
+        """Create a new hardlink dst to the existing file src."""
+        logger.debug("creating hardlink", file_path=dst, link_target=src, _verbosity=3)
+        safe_link = self._get_checked_link(src=src, dst=dst)
+
+        if safe_link:
+            try:
+                src = safe_link.src.absolute_path
+                dst = safe_link.dst.absolute_path
+                os.link(src, dst)
+                # FIXME: from python 3.10 change the above to
+                #        dst.hardlink_to(src)
+                #        so as to make it consistent with create_symlink
+                #        (see Path.link_to vs Path.hardlink_to parameter order mess up)
+            except FileNotFoundError:
+                self.record_problem(
+                    safe_link.format_report("Hard link target does not exist.")
+                )
+            except PermissionError:
+                not_enough_privileges = (
+                    "Not enough privileges to create hardlink to block/char device."
+                )
+                self.record_problem(safe_link.format_report(not_enough_privileges))
