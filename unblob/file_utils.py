@@ -15,6 +15,14 @@ from .logging import format_hex
 DEFAULT_BUFSIZE = shutil.COPY_BUFSIZE  # type: ignore
 
 
+def is_safe_path(basedir: Path, path: Path) -> bool:
+    try:
+        basedir.joinpath(path).resolve().relative_to(basedir.resolve())
+    except ValueError:
+        return False
+    return True
+
+
 class SeekError(ValueError):
     """Specific ValueError for File.seek."""
 
@@ -250,6 +258,15 @@ def iterate_file(
             break
 
         yield data
+
+
+def carve(carve_path: Path, file: File, start_offset: int, size: int):
+    """Extract part of a file."""
+    carve_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with carve_path.open("xb") as f:
+        for data in iterate_file(file, start_offset, size):
+            f.write(data)
 
 
 def stream_scan(scanner, file: File):

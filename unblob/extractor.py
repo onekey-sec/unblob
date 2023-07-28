@@ -5,7 +5,7 @@ from pathlib import Path
 
 from structlog import get_logger
 
-from .file_utils import iterate_file
+from .file_utils import carve, is_safe_path
 from .models import Chunk, File, TaskResult, UnknownChunk, ValidChunk
 from .report import MaliciousSymlinkRemoved
 
@@ -14,12 +14,8 @@ logger = get_logger()
 
 def carve_chunk_to_file(carve_path: Path, file: File, chunk: Chunk):
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
-    carve_path.parent.mkdir(parents=True, exist_ok=True)
     logger.debug("Carving chunk", path=carve_path)
-
-    with carve_path.open("xb") as f:
-        for data in iterate_file(file, chunk.start_offset, chunk.size):
-            f.write(data)
+    carve(carve_path, file, chunk.start_offset, chunk.size)
 
 
 def fix_permission(path: Path):
@@ -30,14 +26,6 @@ def fix_permission(path: Path):
         path.chmod(0o644)
     elif path.is_dir():
         path.chmod(0o775)
-
-
-def is_safe_path(basedir: Path, path: Path) -> bool:
-    try:
-        basedir.joinpath(path).resolve().relative_to(basedir.resolve())
-    except ValueError:
-        return False
-    return True
 
 
 def is_recursive_link(path: Path) -> bool:

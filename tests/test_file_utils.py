@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 from typing import List
 
 import pytest
@@ -14,11 +15,32 @@ from unblob.file_utils import (
     convert_int64,
     decode_multibyte_integer,
     get_endian,
+    is_safe_path,
     iterate_file,
     iterate_patterns,
     round_down,
     round_up,
 )
+
+
+@pytest.mark.parametrize(
+    "basedir, path, expected",
+    [
+        ("/lib/out", "/lib/out/file", True),
+        ("/lib/out", "file", True),
+        ("/lib/out", "dir/file", True),
+        ("/lib/out", "some/dir/file", True),
+        ("/lib/out", "some/dir/../file", True),
+        ("/lib/out", "some/dir/../../file", True),
+        ("/lib/out", "some/dir/../../../file", False),
+        ("/lib/out", "some/dir/../../../", False),
+        ("/lib/out", "some/dir/../../..", False),
+        ("/lib/out", "../file", False),
+        ("/lib/out", "/lib/out/../file", False),
+    ],
+)
+def test_is_safe_path(basedir, path, expected):
+    assert is_safe_path(Path(basedir), Path(path)) is expected
 
 
 @pytest.mark.parametrize(
