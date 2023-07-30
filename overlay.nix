@@ -15,5 +15,11 @@ inputs: final: prev:
         unblob = pyFinal.callPackage ./nix/unblob { };
       });
   };
+  lief = prev.lief.overrideAttrs (super: {
+    postPatch = ''
+      substituteInPlace setup.py \
+        --replace 'cmake_args = ["-DLIEF_FORCE_API_EXPORTS=ON", "-DLIEF_PYTHON_API=on"]' 'cmake_args = ["-DLIEF_FORCE_API_EXPORTS=ON", "-DLIEF_PYTHON_API=on", "-DLIEF_EXAMPLES=off"]'
+    '';
+  });
   python3Packages = final.python3.pkgs;
 }
