@@ -26,7 +26,7 @@
 , treelib
   # Runtime dependencies (extractors)
 , pkgs
-, e2fsprogs
+, e2fsprogs-nofortify
 , lziprecover
 , lzop
 , p7zip
@@ -42,7 +42,7 @@ let
 
   # These dependencies are only added to PATH
   runtimeDeps = [
-    e2fsprogs
+    e2fsprogs-nofortify
     lziprecover
     lzop
     p7zip

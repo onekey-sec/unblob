@@ -4,6 +4,13 @@ inputs: final: prev:
   inherit (final.python3.pkgs) unblob;
   _sources = final.callPackage ./nix/_sources/generated.nix { };
 
+  # https://github.com/tytso/e2fsprogs/issues/152
+  e2fsprogs-nofortify = prev.e2fsprogs.overrideAttrs
+    (super: {
+      pname = "e2fsprogs-nofortify";
+      hardeningDisable = (super.hardeningDisable or [ ]) ++ [ "fortify3" ];
+    });
+
   # Lief 12.3 incompatibility with Cmake 3.26
   lief = prev.lief.overrideAttrs (super: {
     postPatch = ''
