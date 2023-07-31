@@ -58,9 +58,11 @@ class ZSTDHandler(Handler):
 
         last_block = False
         while not last_block:
-            block_header = int.from_bytes(
-                file.read(BLOCK_HEADER_LEN), byteorder="little"
-            )
+            block_header_val = file.read(BLOCK_HEADER_LEN)
+            # EOF
+            if not block_header_val:
+                raise InvalidInputFormat("Premature end of ZSTD stream.")
+            block_header = int.from_bytes(block_header_val, byteorder="little")
             last_block = block_header >> 0 & 0b1
             block_type = block_header >> 1 & 0b11
 
