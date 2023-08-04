@@ -20,6 +20,13 @@
     flake = false;
   };
 
+  nixConfig = {
+    extra-substituters = [ "https://unblob.cachix.org" ];
+    extra-trusted-public-keys = [
+      "unblob.cachix.org-1:5kWA6DwOg176rSqU8TOTBXWxsDB4LoCMfGfTgL5qCAE="
+    ];
+  };
+
   outputs = { self, nixpkgs, filter, unblob-native, pyperscan, sasquatch, ... }:
     let
       # System types to support.
