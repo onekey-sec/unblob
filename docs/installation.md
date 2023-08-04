@@ -71,18 +71,21 @@ The Nix derivation installs all 3rd party dependencies.
 1.  _Optional_: enable the experimental features so that you don't need to pass  
     `--extra-experimental-features "nix-command flakes"` to `nix` command invocations:
 
+          mkdir -p ~/.config/nix
           cat > ~/.config/nix/nix.conf <<EOF
           experimental-features = nix-command flakes
           EOF
 
-1.  _Optional_: use pre-built binaries from GitHub using [cachix](https://app.cachix.org/cache/unblob):
-
-        nix-env -iA cachix -f https://cachix.org/api/v1/install
-        cachix use unblob
-
 1.  Install unblob:
 
-        nix profile install github:onekey-sec/unblob
+        $ nix profile install github:onekey-sec/unblob
+        do you want to allow configuration setting 'extra-substituters' to be set to 'https://unblob.cachix.org' (y/N)? y
+        do you want to permanently mark this value as trusted (y/N)? y
+        do you want to allow configuration setting 'extra-trusted-public-keys' to be set to
+        'unblob.cachix.org-1:5kWA6DwOg176rSqU8TOTBXWxsDB4LoCMfGfTgL5qCAE=' (y/N)? y
+        do you want to permanently mark this value as trusted (y/N)? y
+
+    Using and trusting substituter (binary cache) and its public key is optional but greatly speeds up installation.
 
 - Check that everything works correctly:
 
