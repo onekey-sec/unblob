@@ -71,6 +71,7 @@ The Nix derivation installs all 3rd party dependencies.
 1.  _Optional_: enable the experimental features so that you don't need to pass  
     `--extra-experimental-features "nix-command flakes"` to `nix` command invocations:
 
+          mkdir -p ~/.config/nix
           cat > ~/.config/nix/nix.conf <<EOF
           experimental-features = nix-command flakes
           EOF
