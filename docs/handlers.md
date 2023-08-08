@@ -54,6 +54,7 @@
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2)`](#squashfs-v2) | FILESYSTEM | :octicons-check-16: |
+    | [`SQUASHFS (V2-NON-STANDARD)`](#squashfs-v2-non-standard) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V3)`](#squashfs-v3) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V3-BROADCOM)`](#squashfs-v3-broadcom) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V3-DDWRT)`](#squashfs-v3-ddwrt) | FILESYSTEM | :octicons-check-16: |
@@ -942,6 +943,23 @@
     === "Description"
 
         SquashFS version 2 is a compressed, read-only file system format designed for minimal storage usage. It builds upon version 1 with additional features and improvements for embedded systems and Linux distributions.
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [SquashFS Documentation](https://dr-emann.github.io/squashfs/){ target="_blank" }
+        - [SquashFS Wikipedia](https://en.wikipedia.org/wiki/SquashFS){ target="_blank" }
+## SquashFS (v2-non-standard)
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        SquashFS version 2 is a compressed, read-only file system format designed for minimal storage usage. It is commonly used in embedded systems and early Linux distributions.
 
         ---
 
