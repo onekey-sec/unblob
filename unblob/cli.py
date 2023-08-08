@@ -35,6 +35,19 @@ def restore_cursor():
     sys.stdout.write("\033[?25h")  # ANSI escape code to show cursor
 
 
+def get_version():
+    return pkg_resources.get_distribution("unblob").version
+
+
+def show_version(
+    ctx: click.Context, _param: click.Option, value: bool  # noqa: FBT001
+) -> None:
+    if not value or ctx.resilient_parsing:
+        return
+    click.echo(get_version())
+    ctx.exit(code=0)
+
+
 def show_external_dependencies(
     ctx: click.Context, _param: click.Option, value: bool  # noqa: FBT001
 ) -> None:
@@ -196,6 +209,13 @@ class UnblobContext(click.Context):
     help="Shows commands needs to be available for unblob to work properly",
     is_flag=True,
     callback=show_external_dependencies,
+    expose_value=False,
+)
+@click.option(
+    "--version",
+    help="Shows unblob version",
+    is_flag=True,
+    callback=show_version,
     expose_value=False,
 )
 def cli(
