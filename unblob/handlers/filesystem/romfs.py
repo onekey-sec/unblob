@@ -8,10 +8,21 @@ from typing import Dict, Optional
 
 from structlog import get_logger
 
-from unblob.extractor import is_safe_path
-
-from ...file_utils import Endian, InvalidInputFormat, read_until_past, round_up
-from ...models import Extractor, File, HexString, StructHandler, ValidChunk
+from ...file_utils import (
+    Endian,
+    FileSystem,
+    InvalidInputFormat,
+    read_until_past,
+    round_up,
+)
+from ...models import (
+    Extractor,
+    ExtractResult,
+    File,
+    HexString,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -164,12 +175,12 @@ class RomFSHeader:
     file: File
     end_offset: int
     inodes: Dict[int, "FileHeader"]
-    extract_root: Path
+    fs: FileSystem
 
     def __init__(
         self,
         file: File,
-        extract_root: Path,
+        fs: FileSystem,
     ):
         self.file = file
         self.file.seek(0, io.SEEK_END)
@@ -186,7 +197,7 @@ class RomFSHeader:
         self.header_end_offset = self.file.tell()
         self.inodes = {}
 
-        self.extract_root = extract_root
+        self.fs = fs
 
     def valid_checksum(self) -> bool:
         current_position = self.file.tell()
@@ -242,101 +253,50 @@ class RomFSHeader:
             self.inodes[addr] = file_header
         return file_header.next_filehdr
 
-    def create_symlink(self, extract_root: Path, output_path: Path, inode: FileHeader):
-        target = inode.content.decode("utf-8").lstrip("/")
+    def create_symlink(self, output_path: Path, inode: FileHeader):
+        target_path = Path(inode.content.decode("utf-8"))
+        self.fs.create_symlink(src=target_path, dst=output_path)
 
-        if target.startswith(".."):
-            target_path = extract_root.joinpath(output_path.parent, target).resolve()
-        else:
-            target_path = extract_root.joinpath(target).resolve()
-
-        if not is_safe_path(extract_root, target_path):
-            logger.warning(
-                "Path traversal attempt through symlink.", target_path=target_path
-            )
-            return
-        # we create relative paths to make the output directory portable
-        output_path.symlink_to(os.path.relpath(target_path, start=output_path.parent))
-
-    def create_hardlink(self, extract_root: Path, link_path: Path, inode: FileHeader):
+    def create_hardlink(self, output_path: Path, inode: FileHeader):
         if inode.spec_info in self.inodes:
-            target = str(self.inodes[inode.spec_info].path).lstrip("/")
-            target_path = extract_root.joinpath(target).resolve()
-
-            # we don't need to check for potential traversal given that, if the inode
-            # is in self.inodes, it already got verified in create_inode.
-            try:
-                os.link(target_path, link_path)
-            except FileNotFoundError:
-                logger.warning(
-                    "Hard link target does not exist, discarding.",
-                    target_path=target_path,
-                    link_path=link_path,
-                )
-            except PermissionError:
-                logger.warning(
-                    "Not enough privileges to create hardlink to block/char device, discarding.",
-                    target_path=target_path,
-                    link_path=link_path,
-                )
+            target_path = self.inodes[inode.spec_info].path
+            self.fs.create_hardlink(dst=output_path, src=target_path)
         else:
             logger.warning("Invalid hard link target", inode_key=inode.spec_info)
 
-    def create_inode(self, extract_root: Path, inode: FileHeader):
-        output_path = extract_root.joinpath(inode.path).resolve()
-        if not is_safe_path(extract_root, inode.path):
-            logger.warning(
-                "Path traversal attempt, discarding.", output_path=output_path
-            )
-            return
+    def create_inode(self, inode: FileHeader):
+        output_path = inode.path
         logger.info("dumping inode", inode=inode, output_path=str(output_path))
 
         if inode.fs_type == FSType.HARD_LINK:
-            self.create_hardlink(extract_root, output_path, inode)
+            self.create_hardlink(output_path, inode)
         elif inode.fs_type == FSType.SYMLINK:
-            self.create_symlink(extract_root, output_path, inode)
+            self.create_symlink(output_path, inode)
         elif inode.fs_type == FSType.DIRECTORY:
-            output_path.mkdir(mode=inode.mode, exist_ok=True)
+            self.fs.mkdir(output_path, mode=inode.mode, exist_ok=True)
         elif inode.fs_type == FSType.FILE:
-            with output_path.open("wb") as f:
-                f.write(inode.content)
+            self.fs.write_bytes(output_path, inode.content)
         elif inode.fs_type in [FSType.BLOCK_DEV, FSType.CHAR_DEV]:
-            os.mknod(inode.path, inode.mode, inode.dev)
+            self.fs.mknod(output_path, mode=inode.mode, device=inode.dev)
         elif inode.fs_type == FSType.FIFO:
-            os.mkfifo(output_path, inode.mode)
+            self.fs.mkfifo(output_path, mode=inode.mode)
 
     def dump_fs(self):
-        # first we create files and directories
-        fd_inodes = {
-            k: v
-            for k, v in self.inodes.items()
-            if v.fs_type in [FSType.FILE, FSType.DIRECTORY, FSType.FIFO, FSType.SOCKET]
-        }
-        for inode in sorted(fd_inodes.values(), key=lambda inode: inode.path):
-            self.create_inode(self.extract_root, inode)
-
-        if os.geteuid() != 0:
-            logger.warning(
-                "root privileges are required to create block and char devices, skipping."
+        def inodes(*inode_types):
+            return sorted(
+                (v for v in self.inodes.values() if v.fs_type in inode_types),
+                key=lambda inode: inode.path,
             )
-        else:
-            # then we create devices if we have enough privileges
-            dev_inodes = {
-                k: v
-                for k, v in self.inodes.items()
-                if v.fs_type in [FSType.BLOCK_DEV, FSType.CHAR_DEV]
-            }
-            for inode in sorted(dev_inodes.values(), key=lambda inode: inode.path):
-                self.create_inode(self.extract_root, inode)
 
-        # then we create links
-        links_inodes = {
-            k: v
-            for k, v in self.inodes.items()
-            if v.fs_type in [FSType.SYMLINK, FSType.HARD_LINK]
-        }
-        for inode in sorted(links_inodes.values(), key=lambda inode: inode.path):
-            self.create_inode(self.extract_root, inode)
+        # order of file object creation is important
+        sorted_inodes = (
+            inodes(FSType.FILE, FSType.DIRECTORY, FSType.FIFO, FSType.SOCKET)
+            + inodes(FSType.BLOCK_DEV, FSType.CHAR_DEV)
+            + inodes(FSType.SYMLINK, FSType.HARD_LINK)
+        )
+
+        for inode in sorted_inodes:
+            self.create_inode(inode)
 
     def __str__(self):
         return f"signature: {self.signature}\nfull_size: {self.full_size}\nchecksum: {self.checksum}\nvolume_name: {self.volume_name}"
@@ -344,11 +304,13 @@ class RomFSHeader:
 
 class RomfsExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
+        fs = FileSystem(outdir)
         with File.from_path(inpath) as f:
-            header = RomFSHeader(f, outdir)
+            header = RomFSHeader(f, fs)
             header.validate()
             header.recursive_walk(header.header_end_offset, None)
             header.dump_fs()
+            return ExtractResult(reports=list(fs.problems))
 
 
 class RomFSFSHandler(StructHandler):

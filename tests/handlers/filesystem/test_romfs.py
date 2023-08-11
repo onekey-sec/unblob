@@ -1,9 +1,7 @@
-from pathlib import Path
-
 import pytest
 
 from unblob.file_utils import File
-from unblob.handlers.filesystem.romfs import get_string, is_safe_path, valid_checksum
+from unblob.handlers.filesystem.romfs import get_string, valid_checksum
 
 
 @pytest.mark.parametrize(
@@ -44,23 +42,3 @@ def test_get_string(content, expected):
 )
 def test_valid_checksum(content, valid):
     assert valid_checksum(content) == valid
-
-
-@pytest.mark.parametrize(
-    "basedir, path, expected",
-    [
-        ("/lib/out", "/lib/out/file", True),
-        ("/lib/out", "file", True),
-        ("/lib/out", "dir/file", True),
-        ("/lib/out", "some/dir/file", True),
-        ("/lib/out", "some/dir/../file", True),
-        ("/lib/out", "some/dir/../../file", True),
-        ("/lib/out", "some/dir/../../../file", False),
-        ("/lib/out", "some/dir/../../../", False),
-        ("/lib/out", "some/dir/../../..", False),
-        ("/lib/out", "../file", False),
-        ("/lib/out", "/lib/out/../file", False),
-    ],
-)
-def test_is_safe_path(basedir, path, expected):
-    assert is_safe_path(Path(basedir), Path(path)) is expected

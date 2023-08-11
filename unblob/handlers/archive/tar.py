@@ -7,7 +7,14 @@ from typing import Optional
 from structlog import get_logger
 
 from ...file_utils import OffsetFile, SeekError, decode_int, round_up, snull
-from ...models import Extractor, File, HexString, StructHandler, ValidChunk
+from ...models import (
+    Extractor,
+    ExtractResult,
+    File,
+    HexString,
+    StructHandler,
+    ValidChunk,
+)
 from ._safe_tarfile import SafeTarFile
 
 logger = get_logger()
@@ -88,6 +95,7 @@ class TarExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
         with contextlib.closing(SafeTarFile(inpath)) as tarfile:
             tarfile.extractall(outdir)
+        return ExtractResult(reports=tarfile.reports)
 
 
 class TarHandler(StructHandler):

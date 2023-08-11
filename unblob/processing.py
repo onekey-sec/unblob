@@ -403,7 +403,8 @@ class _DirectoryTask:
 
         extraction_reports = []
         try:
-            multi_file.extract(extract_dir)
+            if result := multi_file.extract(extract_dir):
+                extraction_reports.extend(result.reports)
         except ExtractError as e:
             extraction_reports.extend(e.reports)
         except Exception as exc:
@@ -522,7 +523,7 @@ class _FileTask:
             return report
         return None
 
-    def _extract_chunk(self, file, chunk: ValidChunk):
+    def _extract_chunk(self, file, chunk: ValidChunk):  # noqa: C901
         skip_carving = chunk.is_whole_file
         if skip_carving:
             inpath = self.task.path
@@ -554,7 +555,8 @@ class _FileTask:
 
         extraction_reports = []
         try:
-            chunk.extract(inpath, extract_dir)
+            if result := chunk.extract(inpath, extract_dir):
+                extraction_reports.extend(result.reports)
 
             if carved_path and not self.config.keep_extracted_chunks:
                 logger.debug("Removing extracted chunk", path=carved_path)

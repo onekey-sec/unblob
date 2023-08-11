@@ -5,9 +5,21 @@ from typing import Optional
 from dissect.cstruct import Instance
 from structlog import get_logger
 
-from unblob.extractor import carve_chunk_to_file, is_safe_path
-from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser, snull
-from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
+from unblob.file_utils import (
+    Endian,
+    File,
+    FileSystem,
+    InvalidInputFormat,
+    StructParser,
+    snull,
+)
+from unblob.models import (
+    Extractor,
+    ExtractResult,
+    HexString,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -54,6 +66,7 @@ class HPIPKGExtractor(Extractor):
 
     def extract(self, inpath: Path, outdir: Path):
         entries = []
+        fs = FileSystem(outdir)
         with File.from_path(inpath) as file:
             header = self._struct_parser.parse("ipkg_header_t", file, Endian.LITTLE)
             file.seek(header.toc_offset, io.SEEK_SET)
@@ -64,28 +77,18 @@ class HPIPKGExtractor(Extractor):
                 entry_path = Path(snull(entry.name).decode("utf-8"))
                 if entry_path.parent.name:
                     raise InvalidInputFormat("Entry name contains directories.")
-                if not is_safe_path(outdir, entry_path):
-                    logger.warning(
-                        "Path traversal attempt, discarding.",
-                        outdir=outdir,
-                    )
-                    continue
                 entries.append(
                     (
-                        outdir.joinpath(outdir / entry_path.name),
-                        Chunk(
-                            start_offset=entry.offset,
-                            end_offset=entry.offset + entry.size,
-                        ),
+                        Path(entry_path.name),
+                        entry.offset,
+                        entry.size,
                     )
                 )
 
-            for carve_path, chunk in entries:
-                carve_chunk_to_file(
-                    file=file,
-                    chunk=chunk,
-                    carve_path=carve_path,
-                )
+            for carve_path, start_offset, size in entries:
+                fs.carve(carve_path, file, start_offset, size)
+
+            return ExtractResult(reports=list(fs.problems))
 
 
 class HPIPKGHandler(StructHandler):

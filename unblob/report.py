@@ -244,3 +244,47 @@ class MultiFileReport(Report):
     name: str
     paths: List[Path]
     extraction_reports: List[Report]
+
+
+@attr.define(kw_only=True, frozen=True)
+class ExtractionProblem(Report):
+    """A non-fatal problem discovered during extraction.
+
+    A report like this still means, that the extraction was successful,
+    but there were problems that got resolved.
+    The output is expected to be complete, with the exception of
+    the reported path.
+
+    Examples
+    --------
+    - duplicate entries for certain archive formats (tar, zip)
+    - unsafe symlinks pointing outside of extraction directory
+    """
+
+    problem: str
+    resolution: str
+    path: Optional[str] = None
+
+    @property
+    def log_msg(self):
+        return f"{self.problem} {self.resolution}"
+
+    def log_with(self, logger):
+        logger.warning(self.log_msg, path=self.path)
+
+
+@attr.define(kw_only=True, frozen=True)
+class LinkExtractionProblem(ExtractionProblem):
+    link_path: str
+
+    def log_with(self, logger):
+        logger.warning(self.log_msg, path=self.path, link_path=self.link_path)
+
+
+@attr.define(kw_only=True, frozen=True)
+class SpecialFileExtractionProblem(ExtractionProblem):
+    mode: int
+    device: int
+
+    def log_with(self, logger):
+        logger.warning(self.log_msg, path=self.path, mode=self.mode, device=self.device)

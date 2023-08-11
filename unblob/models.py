@@ -103,7 +103,7 @@ class ValidChunk(Chunk):
     handler: "Handler" = attr.ib(init=False, eq=False)
     is_encrypted: bool = attr.ib(default=False)
 
-    def extract(self, inpath: Path, outdir: Path):
+    def extract(self, inpath: Path, outdir: Path) -> Optional["ExtractResult"]:
         if self.is_encrypted:
             logger.warning(
                 "Encrypted file is not extracted",
@@ -112,7 +112,7 @@ class ValidChunk(Chunk):
             )
             raise ExtractError
 
-        self.handler.extract(inpath, outdir)
+        return self.handler.extract(inpath, outdir)
 
     def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
         return ChunkReport(
@@ -130,7 +130,7 @@ class ValidChunk(Chunk):
 class UnknownChunk(Chunk):
     r"""Gaps between valid chunks or otherwise unknown chunks.
 
-    Important for manual analysis, and analytical certanity: for example
+    Important for manual analysis, and analytical certainty: for example
     entropy, other chunks inside it, metadata, etc.
 
     These are not extracted, just logged for information purposes and further analysis,
@@ -154,8 +154,8 @@ class MultiFile(Blob):
 
     handler: "DirectoryHandler" = attr.ib(init=False, eq=False)
 
-    def extract(self, outdir: Path):
-        self.handler.extract(self.paths, outdir)
+    def extract(self, outdir: Path) -> Optional["ExtractResult"]:
+        return self.handler.extract(self.paths, outdir)
 
     def as_report(self, extraction_reports: List[Report]) -> MultiFileReport:
         return MultiFileReport(
@@ -253,13 +253,18 @@ class ExtractError(Exception):
         self.reports: Tuple[Report, ...] = reports
 
 
+@attr.define(kw_only=True)
+class ExtractResult:
+    reports: List[Report]
+
+
 class Extractor(abc.ABC):
     def get_dependencies(self) -> List[str]:
         """Return the external command dependencies."""
         return []
 
     @abc.abstractmethod
-    def extract(self, inpath: Path, outdir: Path):
+    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
         """Extract the carved out chunk.
 
         Raises ExtractError on failure.
@@ -272,7 +277,7 @@ class DirectoryExtractor(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def extract(self, paths: List[Path], outdir: Path):
+    def extract(self, paths: List[Path], outdir: Path) -> Optional[ExtractResult]:
         """Extract from a multi file path list.
 
         Raises ExtractError on failure.
@@ -381,7 +386,7 @@ class DirectoryHandler(abc.ABC):
     def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
         """Calculate the MultiFile in a directory, using a file matched by the pattern as a starting point."""
 
-    def extract(self, paths: List[Path], outdir: Path):
+    def extract(self, paths: List[Path], outdir: Path) -> Optional[ExtractResult]:
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", paths=paths)
             raise ExtractError
@@ -389,7 +394,7 @@ class DirectoryHandler(abc.ABC):
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
 
-        self.EXTRACTOR.extract(paths, outdir)
+        return self.EXTRACTOR.extract(paths, outdir)
 
 
 class Handler(abc.ABC):
@@ -414,7 +419,7 @@ class Handler(abc.ABC):
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         """Calculate the Chunk offsets from the File and the file type headers."""
 
-    def extract(self, inpath: Path, outdir: Path):
+    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", path=inpath)
             raise ExtractError
@@ -422,7 +427,7 @@ class Handler(abc.ABC):
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
 
-        self.EXTRACTOR.extract(inpath, outdir)
+        return self.EXTRACTOR.extract(inpath, outdir)
 
 
 class StructHandler(Handler):

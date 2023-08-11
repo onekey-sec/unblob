@@ -1,4 +1,6 @@
 import io
+import os
+from pathlib import Path
 from typing import List
 
 import pytest
@@ -6,19 +8,42 @@ import pytest
 from unblob.file_utils import (
     Endian,
     File,
+    FileSystem,
     InvalidInputFormat,
     StructParser,
+    chop_root,
     convert_int8,
     convert_int16,
     convert_int32,
     convert_int64,
     decode_multibyte_integer,
     get_endian,
+    is_safe_path,
     iterate_file,
     iterate_patterns,
     round_down,
     round_up,
 )
+
+
+@pytest.mark.parametrize(
+    "basedir, path, expected",
+    [
+        ("/lib/out", "/lib/out/file", True),
+        ("/lib/out", "file", True),
+        ("/lib/out", "dir/file", True),
+        ("/lib/out", "some/dir/file", True),
+        ("/lib/out", "some/dir/../file", True),
+        ("/lib/out", "some/dir/../../file", True),
+        ("/lib/out", "some/dir/../../../file", False),
+        ("/lib/out", "some/dir/../../../", False),
+        ("/lib/out", "some/dir/../../..", False),
+        ("/lib/out", "../file", False),
+        ("/lib/out", "/lib/out/../file", False),
+    ],
+)
+def test_is_safe_path(basedir, path, expected):
+    assert is_safe_path(Path(basedir), Path(path)) is expected
 
 
 @pytest.mark.parametrize(
@@ -338,3 +363,198 @@ class TestGetEndian:
         with pytest.raises(InvalidInputFormat):
             get_endian(file, 0xFFFF_0000)
         assert file.tell() == pos
+
+
+@pytest.mark.parametrize(
+    "input_path, expected",
+    [
+        pytest.param("/", ".", id="absolute-root"),
+        pytest.param("/path/to/file", "path/to/file", id="absolute-path"),
+        pytest.param(".", ".", id="current-directory"),
+        pytest.param("path/to/file", "path/to/file", id="relative-path"),
+    ],
+)
+def test_chop_root(input_path: str, expected: str):
+    assert chop_root(Path(input_path)) == Path(expected)
+
+
+class TestFileSystem:
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "/etc/passwd",
+            "file",
+            "some/dir/file",
+            "some/dir/../file",
+            "some/dir/../../file",
+        ],
+    )
+    def test_get_checked_path_success(self, path):
+        fs = FileSystem(Path("/unblob/sandbox"))
+        checked_path = fs.get_checked_path(Path(path), "test")
+        assert checked_path
+        assert fs.problems == []
+        assert checked_path.relative_to(fs.root)
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "../file",
+            "some/dir/../../../file",
+            "some/dir/../../../",
+            "some/dir/../../..",
+        ],
+    )
+    def test_get_checked_path_path_traversal_is_reported(self, path):
+        fs = FileSystem(Path("/unblob/sandbox"))
+        assert not fs.get_checked_path(Path(path), "test")
+        assert fs.problems
+
+    def test_get_checked_path_path_traversal_reports(self):
+        fs = FileSystem(Path("/unblob/sandbox"))
+        op1 = f"test1-{object()}"
+        op2 = f"test2-{object()}"
+        assert op1 != op2
+        assert not fs.get_checked_path(Path("../file"), op1)
+        assert not fs.get_checked_path(Path("../etc/passwd"), op2)
+
+        report1, report2 = fs.problems
+
+        assert "path traversal" in report1.problem
+        assert op1 in report1.problem
+        assert report1.path == "../file"
+
+        assert "path traversal" in report2.problem
+        assert op2 in report2.problem
+        assert report2.path == "../etc/passwd"
+
+    @pytest.fixture
+    def sandbox_parent(self, tmp_path: Path):
+        return tmp_path
+
+    @pytest.fixture
+    def sandbox_root(self, sandbox_parent: Path):
+        return sandbox_parent / "sandbox"
+
+    @pytest.fixture
+    def sandbox(self, sandbox_root: Path):
+        sandbox_root.mkdir(parents=True, exist_ok=True)
+        return FileSystem(sandbox_root)
+
+    def test_carve(self, sandbox: FileSystem):
+        file = File.from_bytes(b"0123456789")
+        sandbox.carve(Path("carved"), file, 1, 2)
+
+        assert (sandbox.root / "carved").read_bytes() == b"12"
+        assert sandbox.problems == []
+
+    def test_carve_outside_sandbox(self, sandbox: FileSystem):
+        file = File.from_bytes(b"0123456789")
+        sandbox.carve(Path("../carved"), file, 1, 2)
+
+        assert not (sandbox.root / "../carved").exists()
+        assert sandbox.problems
+
+    def test_mkdir(self, sandbox: FileSystem):
+        sandbox.mkdir(Path("directory"))
+
+        assert (sandbox.root / "directory").is_dir()
+        assert sandbox.problems == []
+
+    def test_mkdir_outside_sandbox(self, sandbox: FileSystem):
+        sandbox.mkdir(Path("../directory"))
+
+        assert not (sandbox.root / "../directory").exists()
+        assert sandbox.problems
+
+    def test_mkfifo(self, sandbox: FileSystem):
+        sandbox.mkfifo(Path("named_pipe"))
+
+        assert (sandbox.root / "named_pipe").is_fifo()
+        assert sandbox.problems == []
+
+    def test_mkfifo_outside_sandbox(self, sandbox: FileSystem):
+        sandbox.mkfifo(Path("../named_pipe"))
+
+        assert not (sandbox.root / "../named_pipe").exists()
+        assert sandbox.problems
+
+    def test_create_symlink(self, sandbox: FileSystem):
+        sandbox.create_symlink(Path("target file"), Path("symlink"))
+
+        output_path = sandbox.root / "symlink"
+        assert not output_path.exists()
+        assert os.readlink(output_path) == "target file"
+        assert sandbox.problems == []
+
+    def test_create_symlink_absolute_paths(self, sandbox: FileSystem):
+        sandbox.write_bytes(Path("target file"), b"test content")
+        sandbox.create_symlink(Path("/target file"), Path("/symlink"))
+
+        output_path = sandbox.root / "symlink"
+        assert output_path.exists()
+        assert os.readlink(output_path) == "target file"
+        assert sandbox.problems == []
+
+    def test_create_symlink_absolute_paths_self_referenced(self, sandbox: FileSystem):
+        sandbox.mkdir(Path("/etc"))
+        sandbox.create_symlink(Path("/etc/passwd"), Path("/etc/passwd"))
+
+        output_path = sandbox.root / "etc/passwd"
+        assert not output_path.exists()
+        assert os.readlink(output_path) == "../etc/passwd"
+        assert sandbox.problems == []
+
+    def test_create_symlink_outside_sandbox(self, sandbox: FileSystem):
+        sandbox.create_symlink(Path("target file"), Path("../symlink"))
+
+        output_path = sandbox.root / "../symlink"
+        assert not os.path.lexists(output_path)
+        assert sandbox.problems
+
+    def test_create_symlink_path_traversal(
+        self, sandbox: FileSystem, sandbox_parent: Path
+    ):
+        """Document a remaining path traversal scenario through a symlink chain.
+
+        unblob.extractor.fix_symlinks() exists to cover up cases like this.
+        """
+        (sandbox_parent / "outer-secret").write_text("private key")
+
+        # The path traversal is possible because at the creation of "secret" "future" does not exist
+        # so it is not yet possible to determine if it will be a symlink to be allowed or not.
+        # When the order of the below 2 lines are changed, the path traversal is recognized and prevented.
+        sandbox.create_symlink(Path("future/../outer-secret"), Path("secret"))
+        sandbox.create_symlink(Path("."), Path("future"))
+
+        assert sandbox.problems == []
+        assert (sandbox.root / "secret").read_text() == "private key"
+
+    def test_create_hardlink(self, sandbox: FileSystem):
+        output_path = sandbox.root / "hardlink"
+        linked_file = sandbox.root / "file"
+        linked_file.write_bytes(b"")
+        sandbox.create_hardlink(Path("file"), Path("hardlink"))
+
+        assert output_path.stat().st_nlink == 2
+        assert output_path.stat().st_ino == linked_file.stat().st_ino
+        assert sandbox.problems == []
+
+    def test_create_hardlink_absolute_paths(self, sandbox: FileSystem):
+        output_path = sandbox.root / "hardlink"
+        linked_file = sandbox.root / "file"
+        linked_file.write_bytes(b"")
+        sandbox.create_hardlink(Path("/file"), Path("/hardlink"))
+
+        assert output_path.stat().st_nlink == 2
+        assert output_path.stat().st_ino == linked_file.stat().st_ino
+        assert sandbox.problems == []
+
+    def test_create_hardlink_outside_sandbox(self, sandbox: FileSystem):
+        output_path = sandbox.root / "../hardlink"
+        linked_file = sandbox.root / "file"
+        linked_file.write_bytes(b"")
+        sandbox.create_hardlink(Path("file"), Path("../hardlink"))
+
+        assert not os.path.lexists(output_path)
+        assert sandbox.problems
