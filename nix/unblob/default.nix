@@ -20,6 +20,7 @@
 , pyperscan
 , python-magic
 , rarfile
+, rich
 , structlog
 , ubi_reader
 , unblob-native
@@ -90,6 +91,7 @@ let
       structlog
       ubi_reader
       unblob-native
+      rich
       rarfile
       treelib
     ];

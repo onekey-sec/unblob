@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
+import atexit
 import sys
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import click
+import pkg_resources
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 from structlog import get_logger
 
 from unblob.models import DirectoryHandlers, Handlers, ProcessResult
 from unblob.plugins import UnblobPluginManager
-from unblob.report import Severity
+from unblob.report import ChunkReport, Severity, StatReport, UnknownChunkReport
 
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
@@ -23,6 +28,24 @@ from .processing import (
 )
 
 logger = get_logger()
+
+
+def restore_cursor():
+    # Restore cursor visibility
+    sys.stdout.write("\033[?25h")  # ANSI escape code to show cursor
+
+
+def get_version():
+    return pkg_resources.get_distribution("unblob").version
+
+
+def show_version(
+    ctx: click.Context, _param: click.Option, value: bool  # noqa: FBT001
+) -> None:
+    if not value or ctx.resilient_parsing:
+        return
+    click.echo(get_version())
+    ctx.exit(code=0)
 
 
 def show_external_dependencies(
@@ -70,7 +93,7 @@ class UnblobContext(click.Context):
         handlers: Optional[Handlers] = None,
         dir_handlers: Optional[DirectoryHandlers] = None,
         plugin_manager: Optional[UnblobPluginManager] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         handlers = handlers or BUILTIN_HANDLERS
@@ -158,6 +181,13 @@ class UnblobContext(click.Context):
     help="File to store metadata generated during the extraction process (in JSON format).",
 )
 @click.option(
+    "--log",
+    "log_path",
+    default=Path("unblob.log"),
+    type=click.Path(path_type=Path),
+    help="File to save logs (in text format). Defaults to unblob.log.",
+)
+@click.option(
     "-s",
     "--skip_extraction",
     "skip_extraction",
@@ -181,10 +211,18 @@ class UnblobContext(click.Context):
     callback=show_external_dependencies,
     expose_value=False,
 )
+@click.option(
+    "--version",
+    help="Shows unblob version",
+    is_flag=True,
+    callback=show_version,
+    expose_value=False,
+)
 def cli(
     file: Path,
     extract_root: Path,
     report_file: Optional[Path],
+    log_path: Path,
     force: bool,  # noqa: FBT001
     process_num: int,
     depth: int,
@@ -198,7 +236,7 @@ def cli(
     plugin_manager: UnblobPluginManager,
     verbose: int,
 ) -> ProcessResult:
-    configure_logger(verbose, extract_root)
+    configure_logger(verbose, extract_root, log_path)
 
     plugin_manager.import_plugins(plugins_path)
     extra_handlers = plugin_manager.load_handlers_from_plugins()
@@ -219,10 +257,14 @@ def cli(
         handlers=handlers,
         dir_handlers=dir_handlers,
         keep_extracted_chunks=keep_extracted_chunks,
+        verbose=verbose,
     )
 
     logger.info("Start processing file", file=file)
-    return process_file(config, file, report_file)
+    process_results = process_file(config, file, report_file)
+    if verbose == 0:
+        print_report(process_results)
+    return process_results
 
 
 cli.context_class = UnblobContext
@@ -240,6 +282,108 @@ def get_exit_code_from_reports(reports: ProcessResult) -> int:
             return exit_code
 
     return 0
+
+
+def human_size(size: float):
+    units = ["B", "KB", "MB", "GB", "TB"]
+    i = 0
+    while size >= 1024 and i < len(units) - 1:
+        size /= 1024
+        i += 1
+    return f"{size:.2f} {units[i]}"
+
+
+def get_chunks_distribution(task_results: List) -> Dict:
+    chunks_distribution = {"unknown": 0}
+    for task_result in task_results:
+        chunk_reports = [
+            report
+            for report in task_result.reports
+            if isinstance(report, (ChunkReport, UnknownChunkReport))
+        ]
+
+        for chunk_report in chunk_reports:
+            if isinstance(chunk_report, UnknownChunkReport):
+                chunks_distribution["unknown"] += chunk_report.size
+                continue
+            if chunk_report.handler_name not in chunks_distribution:
+                chunks_distribution[chunk_report.handler_name] = 0
+            chunks_distribution[chunk_report.handler_name] += chunk_report.size
+
+    return chunks_distribution
+
+
+def get_size_report(task_results: List) -> Tuple[int, int, int, int]:
+    total_files = 0
+    total_dirs = 0
+    total_links = 0
+    extracted_size = 0
+
+    for task_result in task_results:
+        stat_reports = list(
+            filter(lambda x: isinstance(x, StatReport), task_result.reports)
+        )
+        for stat_report in stat_reports:
+            total_files += stat_report.is_file
+            total_dirs += stat_report.is_dir
+            total_links += stat_report.is_link
+            if stat_report.is_file:
+                extracted_size += stat_report.size
+
+    return total_files, total_dirs, total_links, extracted_size
+
+
+def print_report(reports: ProcessResult):
+    total_files, total_dirs, total_links, extracted_size = get_size_report(
+        reports.results
+    )
+    chunks_distribution = get_chunks_distribution(reports.results)
+
+    valid_size = 0
+    total_size = 0
+    for handler, size in chunks_distribution.items():
+        if handler != "unknown":
+            valid_size += size
+        total_size += size
+
+    if total_size == 0:
+        return
+
+    summary = Panel(
+        f"""Extracted files: [#00FFC8]{total_files}[/#00FFC8]
+Extracted directories: [#00FFC8]{total_dirs}[/#00FFC8]
+Extracted links: [#00FFC8]{total_links}[/#00FFC8]
+Extraction directory size: [#00FFC8]{human_size(extracted_size)}[/#00FFC8]
+Chunks identification ratio: [#00FFC8]{(valid_size/total_size) * 100:0.2f}%[/#00FFC8]""",
+        subtitle="Summary",
+        title=f"unblob ({get_version()})",
+    )
+
+    console = Console()
+    console.print(summary)
+
+    chunks_table = Table(title="Chunks distribution")
+    chunks_table.add_column("Chunk type", justify="left", style="#00FFC8", no_wrap=True)
+    chunks_table.add_column("Size", justify="center", style="#00FFC8", no_wrap=True)
+    chunks_table.add_column("Ratio", justify="center", style="#00FFC8", no_wrap=True)
+
+    for handler, size in sorted(
+        chunks_distribution.items(), key=lambda item: item[1], reverse=True
+    ):
+        chunks_table.add_row(
+            handler.upper(), human_size(size), f"{(size/total_size) * 100:0.2f}%"
+        )
+
+    console.print(chunks_table)
+
+    if len(reports.errors):
+        errors_table = Table(title="Encountered errors")
+        errors_table.add_column("Severity", justify="left", style="cyan", no_wrap=True)
+        errors_table.add_column("Name", justify="left", style="cyan", no_wrap=True)
+
+        for error in reports.errors:
+            errors_table.add_row(str(error.severity), error.__class__.__name__)
+        console.print(errors_table)
 
 
 def main():
@@ -261,6 +405,8 @@ def main():
     except Exception:
         logger.exception("Unhandled exception during unblob")
         sys.exit(1)
+    finally:
+        atexit.register(restore_cursor)
 
     sys.exit(get_exit_code_from_reports(reports))
 
