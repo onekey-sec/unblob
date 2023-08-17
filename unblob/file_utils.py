@@ -426,6 +426,9 @@ class FileSystem:
     def _fs_path(self, path: Path) -> _FSPath:
         return _FSPath(root=self.root, path=path)
 
+    def _ensure_parent_dir(self, path: Path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+
     def get_checked_path(self, path: Path, path_use_description: str) -> Optional[Path]:
         fs_path = self._fs_path(path)
         if fs_path.is_safe:
@@ -444,6 +447,7 @@ class FileSystem:
         safe_path = self.get_checked_path(path, "write_bytes")
 
         if safe_path:
+            self._ensure_parent_dir(safe_path)
             safe_path.write_bytes(content)
 
     def write_chunks(self, path: Path, chunks: Iterable[bytes]):
@@ -451,6 +455,7 @@ class FileSystem:
         safe_path = self.get_checked_path(path, "write_chunks")
 
         if safe_path:
+            self._ensure_parent_dir(safe_path)
             with safe_path.open("wb") as f:
                 for chunk in chunks:
                     f.write(chunk)
@@ -460,6 +465,7 @@ class FileSystem:
         safe_path = self.get_checked_path(path, "carve")
 
         if safe_path:
+            self._ensure_parent_dir(safe_path)
             carve(safe_path, file, start_offset, size)
 
     def mkdir(self, path: Path, *, mode=0o777, parents=False, exist_ok=False):
@@ -467,6 +473,7 @@ class FileSystem:
         safe_path = self.get_checked_path(path, "mkdir")
 
         if safe_path:
+            self._ensure_parent_dir(safe_path)
             safe_path.mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
 
     def mkfifo(self, path: Path, mode=0o666):
@@ -474,6 +481,7 @@ class FileSystem:
         safe_path = self.get_checked_path(path, "mkfifo")
 
         if safe_path:
+            self._ensure_parent_dir(safe_path)
             os.mkfifo(safe_path, mode=mode)
 
     def mknod(self, path: Path, mode=0o600, device=0):
@@ -482,6 +490,7 @@ class FileSystem:
 
         if safe_path:
             if self.has_root_permissions:
+                self._ensure_parent_dir(safe_path)
                 os.mknod(safe_path, mode=mode, device=device)
             else:
                 problem = SpecialFileExtractionProblem(
@@ -533,6 +542,7 @@ class FileSystem:
 
         if safe_link:
             dst = safe_link.dst.absolute_path
+            self._ensure_parent_dir(dst)
             dst.symlink_to(src)
 
     def create_hardlink(self, src: Path, dst: Path):
@@ -544,6 +554,7 @@ class FileSystem:
             try:
                 src = safe_link.src.absolute_path
                 dst = safe_link.dst.absolute_path
+                self._ensure_parent_dir(dst)
                 os.link(src, dst)
                 # FIXME: from python 3.10 change the above to
                 #        dst.hardlink_to(src)
