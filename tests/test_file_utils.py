@@ -21,6 +21,7 @@ from unblob.file_utils import (
     is_safe_path,
     iterate_file,
     iterate_patterns,
+    make_lost_and_found_path,
     round_down,
     round_up,
 )
@@ -391,10 +392,11 @@ class TestFileSystem:
     )
     def test_get_extraction_path_success(self, path):
         fs = FileSystem(Path("/unblob/sandbox"))
-        checked_path = fs._get_extraction_path(Path(path), "test")  # noqa: SLF001
-        assert checked_path
+        extraction_path = fs._get_extraction_path(Path(path), "test")  # noqa: SLF001
+        assert extraction_path
+        assert os.path.commonpath([extraction_path.resolve(), fs.root]) == str(fs.root)
+
         assert fs.problems == []
-        assert checked_path.relative_to(fs.root)
 
     @pytest.mark.parametrize(
         "path",
@@ -407,7 +409,10 @@ class TestFileSystem:
     )
     def test_get_extraction_path_path_traversal_is_reported(self, path):
         fs = FileSystem(Path("/unblob/sandbox"))
-        assert not fs._get_extraction_path(Path(path), "test")  # noqa: SLF001
+        extraction_path = fs._get_extraction_path(Path(path), "test")  # noqa: SLF001
+        assert extraction_path
+        assert os.path.commonpath([extraction_path.resolve(), fs.root]) == str(fs.root)
+
         assert fs.problems
 
     def test_get_extraction_path_path_traversal_reports(self):
@@ -415,8 +420,8 @@ class TestFileSystem:
         op1 = f"test1-{object()}"
         op2 = f"test2-{object()}"
         assert op1 != op2
-        assert not fs._get_extraction_path(Path("../file"), op1)  # noqa: SLF001
-        assert not fs._get_extraction_path(Path("../etc/passwd"), op2)  # noqa: SLF001
+        fs._get_extraction_path(Path("../file"), op1)  # noqa: SLF001
+        fs._get_extraction_path(Path("../etc/passwd"), op2)  # noqa: SLF001
 
         report1, report2 = fs.problems
 
@@ -462,7 +467,15 @@ class TestFileSystem:
         assert sandbox.problems == []
 
     def test_mkdir_outside_sandbox(self, sandbox: FileSystem):
-        sandbox.mkdir(Path("../directory"))
+        try:
+            sandbox.mkdir(Path("../directory"))
+            pytest.fail(
+                "expected failure, as lost+found directory is not created for mkdir"
+            )
+        except FileNotFoundError:
+            pass
+
+        sandbox.mkdir(Path("../directory"), parents=True)
 
         assert not (sandbox.root / "../directory").exists()
         assert sandbox.problems
@@ -558,3 +571,39 @@ class TestFileSystem:
 
         assert not os.path.lexists(output_path)
         assert sandbox.problems
+
+
+@pytest.mark.parametrize(
+    "input_path, expected_path",
+    [
+        # the important thing here is that there is a hash, that is different for different parents
+        # even if they are reduced to the same slug
+        pytest.param(
+            "file",
+            ".unblob-lost+found/_2727e5a04d8acc225b3320799348e34eff9ac515e1130101baab751a/file",
+            id="non-traversal",
+        ),
+        pytest.param(
+            "../file",
+            ".unblob-lost+found/_e90583b491d2138aab0c8a12478ee050701910fd80c84289ae747e7c/file",
+            id="path-traversal",
+        ),
+        pytest.param(
+            "../../file",
+            ".unblob-lost+found/_42a75ca4cfdad26e66c560d67ca640c8690ddbe20ba08e5e65d5733e/file",
+            id="path-traversal-further-down",
+        ),
+        pytest.param(
+            "/etc/passwd",
+            ".unblob-lost+found/etc_feb0ca54f8477feb6210163efa5aa746160c573118847d96422b5dfa/passwd",
+            id="absolute-path",
+        ),
+        pytest.param(
+            "../m@u/n,g.e<d>p!a#t%h&t*o/file.md",
+            ".unblob-lost+found/m-u-n-g-e-d-p-a-t-h-t-o_20bf817fac07c1c34418fcc37d153571577f9b67c5a0e5f0f63bcacb/file.md",
+            id="non-alnum-path-parts",
+        ),
+    ],
+)
+def test_make_lost_and_found_path(input_path: str, expected_path: str):
+    assert make_lost_and_found_path(Path(input_path)) == Path(expected_path)

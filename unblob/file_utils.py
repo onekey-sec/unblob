@@ -1,11 +1,14 @@
 import enum
 import functools
+import hashlib
 import io
 import math
 import mmap
 import os
+import re
 import shutil
 import struct
+import unicodedata
 from pathlib import Path
 from typing import Iterable, Iterator, List, Optional, Tuple, Union
 
@@ -16,6 +19,7 @@ from .logging import format_hex
 from .report import (
     ExtractionProblem,
     LinkExtractionProblem,
+    PathTraversalProblem,
     SpecialFileExtractionProblem,
 )
 
@@ -368,15 +372,38 @@ def chop_root(path: Path):
     return Path("/".join(relative_parts))
 
 
+def make_lost_and_found_path(path: Path) -> Path:
+    """Make a human readable, safe path."""
+    dir_path = path.parent
+
+    # . and .. would not be a valid filename, but they would lead to confusion
+    filename = {".": "dot", "..": "dot-dot"}.get(path.name, path.name)
+    dir_hash = hashlib.sha224(str(dir_path).encode(errors="ignore")).hexdigest()
+
+    # adapted from https://stackoverflow.com/questions/5574042/string-slugification-in-python
+    dir_slug = str(dir_path)
+    dir_slug = unicodedata.normalize("NFKD", dir_slug)
+    dir_slug = dir_slug.encode("ascii", "ignore").lower()
+    dir_slug = re.sub(rb"[^a-z0-9]+", b"-", dir_slug).strip(b"-")
+    dir_slug = re.sub(rb"[-]+", b"-", dir_slug).decode()
+
+    return Path(f".unblob-lost+found/{dir_slug}_{dir_hash}/{filename}")
+
+
 class _FSPath:
     def __init__(self, *, root: Path, path: Path) -> None:
         self.root = root
         self.relative_path = chop_root(path)
-        self.absolute_path = root / self.relative_path
-        self.is_safe = is_safe_path(self.root, self.absolute_path)
+        absolute_path = root / self.relative_path
+        self.is_safe = is_safe_path(root, absolute_path)
 
-    def format_path(self) -> str:
-        return str(self.relative_path)
+        if self.is_safe:
+            self.safe_relative_path = self.relative_path
+            self.absolute_path = absolute_path
+        else:
+            self.safe_relative_path = make_lost_and_found_path(path)
+            self.absolute_path = root / self.safe_relative_path
+            assert is_safe_path(root, self.absolute_path)
 
 
 class _FSLink:
@@ -429,80 +456,72 @@ class FileSystem:
     def _ensure_parent_dir(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
 
-    def _get_extraction_path(
-        self, path: Path, path_use_description: str
-    ) -> Optional[Path]:
+    def _get_extraction_path(self, path: Path, path_use_description: str) -> Path:
         fs_path = self._fs_path(path)
-        if fs_path.is_safe:
-            return fs_path.absolute_path
 
-        report = ExtractionProblem(
-            path=fs_path.format_path(),
-            problem=f"Potential path traversal through {path_use_description}",
-            resolution="Skipped.",
-        )
-        self.record_problem(report)
-        return None
+        if not fs_path.is_safe:
+            report = PathTraversalProblem(
+                path=str(fs_path.relative_path),
+                extraction_path=str(fs_path.safe_relative_path),
+                problem=f"Potential path traversal through {path_use_description}",
+                resolution="Redirected.",
+            )
+            self.record_problem(report)
+
+        return fs_path.absolute_path
 
     def write_bytes(self, path: Path, content: bytes):
         logger.debug("creating file", file_path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "write_bytes")
 
-        if safe_path:
-            self._ensure_parent_dir(safe_path)
-            safe_path.write_bytes(content)
+        self._ensure_parent_dir(safe_path)
+        safe_path.write_bytes(content)
 
     def write_chunks(self, path: Path, chunks: Iterable[bytes]):
         logger.debug("creating file", file_path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "write_chunks")
 
-        if safe_path:
-            self._ensure_parent_dir(safe_path)
-            with safe_path.open("wb") as f:
-                for chunk in chunks:
-                    f.write(chunk)
+        self._ensure_parent_dir(safe_path)
+        with safe_path.open("wb") as f:
+            for chunk in chunks:
+                f.write(chunk)
 
     def carve(self, path: Path, file: File, start_offset: int, size: int):
         logger.debug("carving file", path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "carve")
 
-        if safe_path:
-            self._ensure_parent_dir(safe_path)
-            carve(safe_path, file, start_offset, size)
+        self._ensure_parent_dir(safe_path)
+        carve(safe_path, file, start_offset, size)
 
     def mkdir(self, path: Path, *, mode=0o777, parents=False, exist_ok=False):
         logger.debug("creating directory", dir_path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "mkdir")
 
-        if safe_path:
-            self._ensure_parent_dir(safe_path)
-            safe_path.mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
+        safe_path.mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
 
     def mkfifo(self, path: Path, mode=0o666):
         logger.debug("creating fifo", path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "mkfifo")
 
-        if safe_path:
-            self._ensure_parent_dir(safe_path)
-            os.mkfifo(safe_path, mode=mode)
+        self._ensure_parent_dir(safe_path)
+        os.mkfifo(safe_path, mode=mode)
 
     def mknod(self, path: Path, mode=0o600, device=0):
         logger.debug("creating special file", special_path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "mknod")
 
-        if safe_path:
-            if self.has_root_permissions:
-                self._ensure_parent_dir(safe_path)
-                os.mknod(safe_path, mode=mode, device=device)
-            else:
-                problem = SpecialFileExtractionProblem(
-                    problem="Root privileges are required to create block and char devices.",
-                    resolution="Skipped.",
-                    path=str(path),
-                    mode=mode,
-                    device=device,
-                )
-                self.record_problem(problem)
+        if self.has_root_permissions:
+            self._ensure_parent_dir(safe_path)
+            os.mknod(safe_path, mode=mode, device=device)
+        else:
+            problem = SpecialFileExtractionProblem(
+                problem="Root privileges are required to create block and char devices.",
+                resolution="Skipped.",
+                path=str(path),
+                mode=mode,
+                device=device,
+            )
+            self.record_problem(problem)
 
     def _get_checked_link(self, src: Path, dst: Path) -> Optional[_FSLink]:
         link = _FSLink(root=self.root, src=src, dst=dst)

@@ -274,6 +274,18 @@ class ExtractionProblem(Report):
 
 
 @attr.define(kw_only=True, frozen=True)
+class PathTraversalProblem(ExtractionProblem):
+    extraction_path: str
+
+    def log_with(self, logger):
+        logger.warning(
+            self.log_msg,
+            path=self.path,
+            extraction_path=self.extraction_path,
+        )
+
+
+@attr.define(kw_only=True, frozen=True)
 class LinkExtractionProblem(ExtractionProblem):
     link_path: str
 
