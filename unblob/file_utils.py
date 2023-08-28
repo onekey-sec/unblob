@@ -429,7 +429,9 @@ class FileSystem:
     def _ensure_parent_dir(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
 
-    def get_checked_path(self, path: Path, path_use_description: str) -> Optional[Path]:
+    def _get_extraction_path(
+        self, path: Path, path_use_description: str
+    ) -> Optional[Path]:
         fs_path = self._fs_path(path)
         if fs_path.is_safe:
             return fs_path.absolute_path
@@ -444,7 +446,7 @@ class FileSystem:
 
     def write_bytes(self, path: Path, content: bytes):
         logger.debug("creating file", file_path=path, _verbosity=3)
-        safe_path = self.get_checked_path(path, "write_bytes")
+        safe_path = self._get_extraction_path(path, "write_bytes")
 
         if safe_path:
             self._ensure_parent_dir(safe_path)
@@ -452,7 +454,7 @@ class FileSystem:
 
     def write_chunks(self, path: Path, chunks: Iterable[bytes]):
         logger.debug("creating file", file_path=path, _verbosity=3)
-        safe_path = self.get_checked_path(path, "write_chunks")
+        safe_path = self._get_extraction_path(path, "write_chunks")
 
         if safe_path:
             self._ensure_parent_dir(safe_path)
@@ -462,7 +464,7 @@ class FileSystem:
 
     def carve(self, path: Path, file: File, start_offset: int, size: int):
         logger.debug("carving file", path=path, _verbosity=3)
-        safe_path = self.get_checked_path(path, "carve")
+        safe_path = self._get_extraction_path(path, "carve")
 
         if safe_path:
             self._ensure_parent_dir(safe_path)
@@ -470,7 +472,7 @@ class FileSystem:
 
     def mkdir(self, path: Path, *, mode=0o777, parents=False, exist_ok=False):
         logger.debug("creating directory", dir_path=path, _verbosity=3)
-        safe_path = self.get_checked_path(path, "mkdir")
+        safe_path = self._get_extraction_path(path, "mkdir")
 
         if safe_path:
             self._ensure_parent_dir(safe_path)
@@ -478,7 +480,7 @@ class FileSystem:
 
     def mkfifo(self, path: Path, mode=0o666):
         logger.debug("creating fifo", path=path, _verbosity=3)
-        safe_path = self.get_checked_path(path, "mkfifo")
+        safe_path = self._get_extraction_path(path, "mkfifo")
 
         if safe_path:
             self._ensure_parent_dir(safe_path)
@@ -486,7 +488,7 @@ class FileSystem:
 
     def mknod(self, path: Path, mode=0o600, device=0):
         logger.debug("creating special file", special_path=path, _verbosity=3)
-        safe_path = self.get_checked_path(path, "mknod")
+        safe_path = self._get_extraction_path(path, "mknod")
 
         if safe_path:
             if self.has_root_permissions:

@@ -389,9 +389,9 @@ class TestFileSystem:
             "some/dir/../../file",
         ],
     )
-    def test_get_checked_path_success(self, path):
+    def test_get_extraction_path_success(self, path):
         fs = FileSystem(Path("/unblob/sandbox"))
-        checked_path = fs.get_checked_path(Path(path), "test")
+        checked_path = fs._get_extraction_path(Path(path), "test")  # noqa: SLF001
         assert checked_path
         assert fs.problems == []
         assert checked_path.relative_to(fs.root)
@@ -405,18 +405,18 @@ class TestFileSystem:
             "some/dir/../../..",
         ],
     )
-    def test_get_checked_path_path_traversal_is_reported(self, path):
+    def test_get_extraction_path_path_traversal_is_reported(self, path):
         fs = FileSystem(Path("/unblob/sandbox"))
-        assert not fs.get_checked_path(Path(path), "test")
+        assert not fs._get_extraction_path(Path(path), "test")  # noqa: SLF001
         assert fs.problems
 
-    def test_get_checked_path_path_traversal_reports(self):
+    def test_get_extraction_path_path_traversal_reports(self):
         fs = FileSystem(Path("/unblob/sandbox"))
         op1 = f"test1-{object()}"
         op2 = f"test2-{object()}"
         assert op1 != op2
-        assert not fs.get_checked_path(Path("../file"), op1)
-        assert not fs.get_checked_path(Path("../etc/passwd"), op2)
+        assert not fs._get_extraction_path(Path("../file"), op1)  # noqa: SLF001
+        assert not fs._get_extraction_path(Path("../etc/passwd"), op2)  # noqa: SLF001
 
         report1, report2 = fs.problems
 
