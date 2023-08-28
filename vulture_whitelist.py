@@ -5,7 +5,7 @@ import sys
 
 import unblob.plugins
 from unblob import cli
-from unblob.file_utils import File, iterbits, round_down
+from unblob.file_utils import File, FileSystem, iterbits, round_down
 from unblob.handlers.compression.lzo import HeaderFlags as LZOHeaderFlags
 from unblob.models import SingleFile, TaskResult, _JSONEncoder
 from unblob.parser import _HexStringToRegex
@@ -32,6 +32,7 @@ cli.cli.context_class
 
 unblob.plugins.hookimpl
 File.from_bytes
+FileSystem.open
 
 iterbits
 round_down

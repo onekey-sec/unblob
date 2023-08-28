@@ -10,7 +10,7 @@ import shutil
 import struct
 import unicodedata
 from pathlib import Path
-from typing import Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Iterable, Iterator, List, Literal, Optional, Tuple, Union
 
 from dissect.cstruct import Instance, cstruct
 from structlog import get_logger
@@ -590,3 +590,16 @@ class FileSystem:
                     "Not enough privileges to create hardlink to block/char device."
                 )
                 self.record_problem(safe_link.format_report(not_enough_privileges))
+
+    def open(  # noqa: A003
+        self, path, mode: Literal["wb+", "rb+", "xb+"] = "wb+"
+    ) -> io.BufferedRandom:
+        """Create/open binary file for random access read-writing.
+
+        There is no intention in supporting anything other than binary files opened for random access.
+        """
+        logger.debug("create/open binary file for writing", file_path=path)
+        safe_path = self._get_extraction_path(path, "open")
+
+        self._ensure_parent_dir(safe_path)
+        return safe_path.open(mode)

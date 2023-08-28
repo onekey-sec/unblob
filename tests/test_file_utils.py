@@ -572,6 +572,40 @@ class TestFileSystem:
         assert not os.path.lexists(output_path)
         assert sandbox.problems
 
+    @pytest.mark.parametrize("path", [Path("ok-path"), Path("../outside-path")])
+    def test_open(self, path: Path, sandbox: FileSystem):
+        # can perform normal file operations
+        with sandbox.open(path) as f:
+            f.seek(100)
+            f.write(b"text")
+            assert f.tell() == 104
+            f.seek(102)
+            assert f.read(3) == b"xt"
+
+        # and it is also persisted
+        with sandbox.open(path, "rb+") as f:
+            assert f.read() == bytes(100) + b"text"
+
+    def test_open_no_path_traversal(self, sandbox: FileSystem):
+        path = Path("file")
+        with sandbox.open(path) as f:
+            f.write(b"content")
+
+        assert (sandbox.root / path).read_bytes() == b"content"
+        assert sandbox.problems == []
+
+    def test_open_outside_sandbox(self, sandbox: FileSystem):
+        path = Path("../file")
+        with sandbox.open(path) as f:
+            f.write(b"content")
+
+        assert not (sandbox.root / path).exists()
+        assert sandbox.problems
+        # the open is redirected to a lost+found directory, as path traversal is most probably a handler problem
+        # and the extraction could be successful on real hw/fw, we just do not know where to extract
+        real_out_path = ".unblob-lost+found/_e90583b491d2138aab0c8a12478ee050701910fd80c84289ae747e7c/file"
+        assert (sandbox.root / real_out_path).read_bytes() == b"content"
+
 
 @pytest.mark.parametrize(
     "input_path, expected_path",
