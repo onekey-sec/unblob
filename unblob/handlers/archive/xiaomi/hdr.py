@@ -104,7 +104,7 @@ class HDRExtractor(Extractor):
         with File.from_path(inpath) as file:
             for output_path, start_offset, size in self.parse(file):
                 fs.carve(output_path, file, start_offset, size)
-        return ExtractResult(reports=list(fs.problems))
+        return ExtractResult(reports=fs.problems)
 
     def parse(self, file: File) -> Iterable[Tuple[Path, int, int]]:
         header = self._struct_parser.parse(self.header_struct, file, Endian.LITTLE)

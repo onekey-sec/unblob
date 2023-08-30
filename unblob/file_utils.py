@@ -20,6 +20,7 @@ from .report import (
     ExtractionProblem,
     LinkExtractionProblem,
     PathTraversalProblem,
+    Report,
     SpecialFileExtractionProblem,
 )
 
@@ -436,7 +437,7 @@ class FileSystem:
     this is how symlinks work.
     """
 
-    problems: List[ExtractionProblem]
+    problems: List[Report]
 
     def __init__(self, root: Path):
         self.root = root.resolve()

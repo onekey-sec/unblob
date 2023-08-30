@@ -25,6 +25,7 @@ from unblob.file_utils import (
     round_down,
     round_up,
 )
+from unblob.report import PathTraversalProblem
 
 
 @pytest.mark.parametrize(
@@ -425,10 +426,12 @@ class TestFileSystem:
 
         report1, report2 = fs.problems
 
+        assert isinstance(report1, PathTraversalProblem)
         assert "path traversal" in report1.problem
         assert op1 in report1.problem
         assert report1.path == "../file"
 
+        assert isinstance(report2, PathTraversalProblem)
         assert "path traversal" in report2.problem
         assert op2 in report2.problem
         assert report2.path == "../etc/passwd"
