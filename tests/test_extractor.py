@@ -1,8 +1,11 @@
+import itertools
 from pathlib import Path, PosixPath
 
 import pytest
 
 from unblob.extractor import (
+    DIR_PERMISSION_MASK,
+    FILE_PERMISSION_MASK,
     carve_unknown_chunk,
     fix_extracted_directory,
     fix_permission,
@@ -31,15 +34,21 @@ def test_carve_unknown_chunk(tmp_path: Path):
 
 
 def test_fix_permission(tmpdir: Path):
-    tmpdir = PosixPath(tmpdir)
+    tmpdir = PosixPath(tmpdir / "dir")
     tmpfile = PosixPath(tmpdir / "file.txt")
-    tmpfile.touch()
-    tmpdir.chmod(0o777)
-    tmpfile.chmod(0o777)
-    fix_permission(tmpdir)
-    fix_permission(tmpfile)
-    assert (tmpdir.stat().st_mode & 0o777) == 0o775
-    assert (tmpfile.stat().st_mode & 0o777) == 0o644
+
+    for user, group, others in itertools.product(range(8), repeat=3):
+        permission = (user << 6) + (group << 3) + others
+        tmpdir.mkdir()
+        tmpfile.touch()
+        tmpfile.chmod(permission)
+        tmpdir.chmod(permission)
+        fix_permission(tmpdir)
+        fix_permission(tmpfile)
+        assert (tmpdir.stat().st_mode & 0o777) == permission | DIR_PERMISSION_MASK
+        assert (tmpfile.stat().st_mode & 0o777) == permission | FILE_PERMISSION_MASK
+        tmpfile.unlink()
+        tmpdir.rmdir()
 
 
 def test_fix_extracted_directory(tmpdir: Path, task_result: TaskResult):

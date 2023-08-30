@@ -11,6 +11,9 @@ from .report import MaliciousSymlinkRemoved
 
 logger = get_logger()
 
+FILE_PERMISSION_MASK = 0o644
+DIR_PERMISSION_MASK = 0o775
+
 
 def carve_chunk_to_file(carve_path: Path, file: File, chunk: Chunk):
     """Extract valid chunk to a file, which we then pass to another tool to extract it."""
@@ -19,13 +22,20 @@ def carve_chunk_to_file(carve_path: Path, file: File, chunk: Chunk):
 
 
 def fix_permission(path: Path):
+    if not path.exists():
+        return
+
     if path.is_symlink():
         return
 
+    mode = path.stat().st_mode
+
     if path.is_file():
-        path.chmod(0o644)
+        mode |= FILE_PERMISSION_MASK
     elif path.is_dir():
-        path.chmod(0o775)
+        mode |= DIR_PERMISSION_MASK
+
+    path.chmod(mode)
 
 
 def is_recursive_link(path: Path) -> bool:
