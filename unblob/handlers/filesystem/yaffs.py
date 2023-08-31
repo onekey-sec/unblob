@@ -724,7 +724,7 @@ class YAFFSExtractor(Extractor):
         parser.parse(store=True)
         fs = FileSystem(outdir)
         parser.extract(fs)
-        return ExtractResult(reports=list(fs.problems))
+        return ExtractResult(reports=fs.problems)
 
 
 class YAFFSHandler(Handler):

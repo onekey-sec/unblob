@@ -88,7 +88,7 @@ class HPIPKGExtractor(Extractor):
             for carve_path, start_offset, size in entries:
                 fs.carve(carve_path, file, start_offset, size)
 
-            return ExtractResult(reports=list(fs.problems))
+            return ExtractResult(reports=fs.problems)
 
 
 class HPIPKGHandler(StructHandler):

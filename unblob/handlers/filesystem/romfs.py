@@ -310,7 +310,7 @@ class RomfsExtractor(Extractor):
             header.validate()
             header.recursive_walk(header.header_end_offset, None)
             header.dump_fs()
-            return ExtractResult(reports=list(fs.problems))
+            return ExtractResult(reports=fs.problems)
 
 
 class RomFSFSHandler(StructHandler):

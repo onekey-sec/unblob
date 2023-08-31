@@ -570,7 +570,7 @@ Two methods are exposed by this class:
 
 Extractors are quite complex beasts, so rather than trying to come up with a
 fake example, we recommend you to read through our
-[RomFS extractor](https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/romfs.py#L334-L340)
+[RomFS extractor](https://github.com/onekey-sec/unblob/blob/868da1b53412e4f1fedaa3da72fab0852330a83e/unblob/handlers/filesystem/romfs.py#L305-L313)
 code to see what it looks like in real world applications.
 
 ## Guidelines
