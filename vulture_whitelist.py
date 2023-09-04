@@ -32,6 +32,9 @@ cli.cli.context_class
 
 unblob.plugins.hookimpl
 File.from_bytes
+File.readable
+File.writable
+File.seekable
 FileSystem.open
 
 iterbits

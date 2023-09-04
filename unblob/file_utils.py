@@ -41,18 +41,23 @@ class SeekError(ValueError):
 
 
 class File(mmap.mmap):
+    access: int
+
     @classmethod
     def from_bytes(cls, content: bytes):
         m = cls(-1, len(content))
         m.write(content)
         m.seek(0)
+        m.access = mmap.ACCESS_WRITE
         return m
 
     @classmethod
     def from_path(cls, path: Path, access=mmap.ACCESS_READ):
         mode = "r+b" if access == mmap.ACCESS_WRITE else "rb"
         with path.open(mode) as base_file:
-            return cls(base_file.fileno(), 0, access=access)
+            m = cls(base_file.fileno(), 0, access=access)
+            m.access = access
+            return m
 
     def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:
         try:
@@ -80,6 +85,15 @@ class File(mmap.mmap):
 
     def __exit__(self, _exc_type, _exc_val, _exc_tb):
         self.close()
+
+    def readable(self) -> bool:
+        return self.access in (mmap.ACCESS_READ, mmap.ACCESS_COPY)
+
+    def writable(self) -> bool:
+        return self.access in (mmap.ACCESS_WRITE, mmap.ACCESS_COPY)
+
+    def seekable(self) -> bool:
+        return True  # Memory-mapped files are always seekable
 
 
 class OffsetFile:
