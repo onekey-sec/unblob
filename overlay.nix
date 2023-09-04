@@ -36,6 +36,9 @@ inputs: final: prev:
         # Missing from nixpkgs
         treelib = pyFinal.callPackage ./nix/treelib { };
 
+        # Missing from nixpkgs
+        pyfatfs = pyFinal.callPackage ./nix/pyfatfs { };
+
         # The reason for everything
         unblob = pyFinal.callPackage ./nix/unblob { };
 

@@ -14,3 +14,7 @@ fetch.pypi = "ubi_reader"
 [treelib]
 src.pypi = "treelib"
 fetch.pypi = "treelib"
+
+[pyfatfs]
+src.pypi = "pyfatfs"
+fetch.pypi = "pyfatfs"

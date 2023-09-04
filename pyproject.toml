@@ -29,6 +29,7 @@ treelib = "^1.6.1"
 unblob-native = "^0.1.0"
 jefferson = "^0.4.5"
 rich = "^13.3.5"
+pyfatfs = "^1.0.5"
 
 [tool.poetry.group.dev]
 optional = true
