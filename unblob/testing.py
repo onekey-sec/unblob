@@ -14,10 +14,10 @@ from unblob.report import ExtractCommandFailedReport
 
 
 @pytest.fixture(scope="session", autouse=True)
-def configure_logging():  # noqa: PT004
-    configure_logger(
-        verbosity_level=3, extract_root=Path(""), log_path=Path("unblob.log")
-    )
+def configure_logging(tmp_path_factory):  # noqa: PT004
+    extract_root = tmp_path_factory.mktemp("extract")
+    log_path = tmp_path_factory.mktemp("logs") / "unblob.log"
+    configure_logger(verbosity_level=3, extract_root=extract_root, log_path=log_path)
 
     # https://pytest-cov.readthedocs.io/en/latest/subprocess-support.html#if-you-use-multiprocessing-process
     cleanup_on_sigterm()
