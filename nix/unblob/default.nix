@@ -17,6 +17,7 @@
 , plotext
 , pluggy
 , poetry-core
+, pyfatfs
 , pyperscan
 , python-magic
 , rarfile
@@ -86,6 +87,7 @@ let
       lz4
       plotext
       pluggy
+      pyfatfs
       pyperscan
       python-magic
       structlog
