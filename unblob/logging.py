@@ -89,8 +89,7 @@ def filter_debug_logs(verbosity_level: int):
 
 
 def configure_logger(verbosity_level: int, extract_root: Path, log_path: Path):
-    if log_path.exists():
-        log_path.unlink()
+    log_path.unlink(missing_ok=True)
 
     log_level = logging.DEBUG if verbosity_level > 0 else logging.CRITICAL
 
