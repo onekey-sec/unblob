@@ -20,7 +20,7 @@ unblob supports more than 30 formats. You can see their code in
 | ARC     | ❌         | ❌                 | ❌        | [archive/arc.py][arc-handler]         | [`unar`][arc-extractor]     |
 | ARJ     | ✅         | ✅                 | ❌        | [archive/arj.py][arj-handler]         | [`7z`][arj-extractor]       |
 | CAB     | ❌         | ❌                 | ❌        | [archive/cab.py][cab-handler]         | [`7z`][cab-extractor]       |
-| CPIO    | ✅         | ✅                 | ✅        | [archive/cpio.py][cpio-handler]       | [`7z`][cpio-extractor]      |
+| CPIO    | ✅         | ✅                 | ✅        | [archive/cpio.py][cpio-handler]       | unblob extractor            |
 | DMG     | ❌         | ❌                 | ❌        | [archive/dmg.py][dmg-handler]         | [`7z`][dmg-extractor]       |
 | RAR     | ❌         | ❌                 | ❌        | [archive/rar.py][rar-handler]         | [`unar`][rar-extractor]     |
 | 7ZIP    | ❌         | ❌                 | ❌        | [archive/sevenzip.py][7zip-handler]   | [`7z`][7zip-extractor]      |
@@ -37,7 +37,6 @@ unblob supports more than 30 formats. You can see their code in
 [cab-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/cab.py
 [cab-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/archive/cab.py#L43
 [cpio-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/cpio.py
-[cpio-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/archive/cpio.py#L49
 [dmg-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/dmg.py
 [dmg-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/archive/dmg.py#L67-L69
 [rar-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/rar.py
@@ -134,6 +133,35 @@ For compression formats, metadata cannot be preserved, as this information in mo
 [ubifs-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/ubi.py#L82
 [yaffs-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/yaffs.py
 [yaffs-extractor]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/yaffs.py
+
+## Vendors
+
+| Format                 | Preserved metadata                 | Handler                                         | Extractor command                               |
+| ---------------------- | ---------------------------------- | ----------------------------------------------- | ----------------------------------------------- |
+| HP BDL                 | ❌                                 | [archive/hp/bdl.py][hp-bdl]                     | unblob extractor                                |
+| HP IPKG                | ❌                                 | [archive/hp/ipkg.py][hp-ipkg]                   | unblob extractor                                |
+| Instar HD              | ❌                                 | [archive/instar/instar_hd.py][instar-hd]        | unblob extractor                                |
+| Instar BNEG            | ❌                                 | [archive/instar/bneg.py][instar-bneg]           | unblob extractor                                |
+| QNAP NAS               | ❌                                 | [archive/qnap/qnap_nas.py][qnap-nas]            | unblob extractor                                |
+| D-Link SHRS            | ❌                                 | [archive/dlink/encrpted_img.py][dlink-enc]      | unblob extractor                                |
+| D-Link encrpted (sic)  | ❌                                 | [archive/dlink/shrs.py][dlink-shrs]             | unblob extractor                                |
+| Engeniustech           | ❌                                 | [archive/engeniustech/engenius.py][engenius]    | unblob extractor                                |
+| Netgear TRX            | ❌                                 | [archive/netgear/trx.py][netgear-trx]           | unblob extractor                                |
+| Netgear CHK            | ❌                                 | [archive/netgear/chk.py][netgear-chk]           | unblob extractor                                |
+| Xiaomi HDR             | ❌                                 | [archive/xiaomi/hdr.py][xiaomi-hdr]             | unblob extractor                                |
+
+
+[hp-bdl]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/hp/bdl.py
+[hp-ipkg]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/hp/ipkg.py
+[instar-hd]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/instar/instar_hd.py
+[instar-bneg]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/instar/bneg.py
+[qnap-nas]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/qnap/qnap_nas.py
+[dlink-enc]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/dlink/encrpted_img.py
+[dlink-shrs]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/dlink/shrs.py
+[engenius]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/engeniustech/engenius.py
+[netgear-trx]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/netgear/trx.py
+[netgear-chk]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/netgear/chk.py
+[xiaomi-hdr]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/xiaomi/hdr.py
 
 ## Didn't find your format supported yet?
 

@@ -36,6 +36,15 @@ This might be the easiest method, depending on whether you have Python 3 install
 
         unblob --show-external-dependencies
 
+## Kali Linux
+
+If you're on Kali Linux, unblob is available through the [distribution
+repository](https://www.kali.org/tools/unblob/). You can install it with:
+
+```
+apt install unblob
+```
+
 ## Docker image
 
 unblob can be used right away from a `docker` image: `ghcr.io/onekey-sec/unblob:latest`,
