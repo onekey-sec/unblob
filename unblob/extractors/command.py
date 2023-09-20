@@ -54,6 +54,7 @@ class Command(Extractor):
                 stdout=stdout_file,
                 stderr=subprocess.PIPE,
                 timeout=COMMAND_TIMEOUT,
+                check=False,
             )
             if res.returncode != 0:
                 error_report = ExtractCommandFailedReport(
