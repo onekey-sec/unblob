@@ -99,7 +99,11 @@ ignore = [
   "N818",    # error-suffix-on-exception-name:          Exception names can be meaningful without smurfs
   "PLC0414", # useless-import-alias:                    Enable explicitly re-exporting public symbols
   "PLR09",   # too-many-{arguments,branches,...}:       We do not want to impose hard limits
+  "PTH201",  # path-constructor-current-directory:      Having "." explicitly passed expresses intent more clearly
+  "RUF012",  # mutable-class-default:                   Wants to annotate things like `Handler.PATTERNS` with `ClassVar`, producing noise
   "S101",    # assert:                                  Enable usage of asserts
+  "S603",    # subprocess-without-shell-equals-true:    This check just highlights, that we should check for untrusted inputs
+  "S607",    # start-process-with-partial-path:         In our case, the convenience of allowing partial paths outweighs the risks
   "TRY003",  # raise-vanilla-args:                      We are adding contextual information in exception messages
   "TRY400",  # error-instead-of-exception:              It is okay to log without backtrace in except blocks
 ]
