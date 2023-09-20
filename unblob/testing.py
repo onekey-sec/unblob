@@ -24,8 +24,12 @@ def configure_logging(tmp_path_factory):  # noqa: PT004
 
 
 def gather_integration_tests(test_data_path: Path):
+    # Path.glob() trips on some invalid files
     test_input_dirs = [
-        Path(p) for p in glob.iglob(f"{test_data_path}/**/__input__", recursive=True)
+        Path(p)
+        for p in glob.iglob(  # noqa: PTH207
+            f"{test_data_path}/**/__input__", recursive=True
+        )
     ]
     test_case_dirs = [p.parent for p in test_input_dirs]
     test_output_dirs = [p / "__output__" for p in test_case_dirs]
