@@ -738,7 +738,7 @@ def calculate_block_size(
     block_size = file_size // chunk_count
     block_size = max(min_limit, block_size)
     block_size = min(block_size, max_limit)
-    return block_size
+    return block_size  # noqa: RET504
 
 
 def format_entropy_plot(percentages: List[float], block_size: int):

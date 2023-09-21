@@ -107,7 +107,7 @@ def get_stream_size(footer_offset: int, file: File) -> int:
 
     # read Record 'Unpadded Size' and 'Uncompressed Size' for every Record
     blocks_size = 0
-    for _ in range(0, num_records):
+    for _ in range(num_records):
         size, unpadded_size = read_multibyte_int(file)
         index_size += size
 

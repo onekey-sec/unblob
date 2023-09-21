@@ -12,7 +12,6 @@ from unblob.report import UnknownError
     "value, expected",
     [
         (10, "0xa"),
-        (0xA, "0xa"),
         ("10", "10"),
         (noformat(10), 10),
         (noformat(Path("/absolute/path")), Path("/absolute/path")),

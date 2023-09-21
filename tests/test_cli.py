@@ -158,7 +158,7 @@ def test_non_existing_file(tmp_path: Path):
     result = runner.invoke(unblob.cli.cli, ["--extract-dir", str(tmp_path), str(path)])
     assert result.exit_code == 2
     assert "Invalid value for 'FILE'" in result.output
-    assert f"File '{str(path)}' does not exist" in result.output
+    assert f"File '{path!s}' does not exist" in result.output
 
 
 def test_dir_for_file(tmp_path: Path):
