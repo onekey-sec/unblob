@@ -93,7 +93,7 @@ class ZIPHandler(StructHandler):
         end_of_central_directory: Instance,
     ) -> bool:
         file.seek(start_offset + end_of_central_directory.offset_of_cd, io.SEEK_SET)
-        for _ in range(0, end_of_central_directory.total_entries):
+        for _ in range(end_of_central_directory.total_entries):
             cd_header = self.cparser_le.cd_file_header_t(file)
             if cd_header.flags & self.ENCRYPTED_FLAG:
                 return True

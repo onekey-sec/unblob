@@ -54,6 +54,7 @@ class Command(Extractor):
                 stdout=stdout_file,
                 stderr=subprocess.PIPE,
                 timeout=COMMAND_TIMEOUT,
+                check=False,
             )
             if res.returncode != 0:
                 error_report = ExtractCommandFailedReport(
@@ -64,7 +65,7 @@ class Command(Extractor):
                 )
 
                 logger.error("Extract command failed", **error_report.asdict())
-                raise ExtractError(error_report)  # noqa: TRY301
+                raise ExtractError(error_report)
         except FileNotFoundError:
             error_report = ExtractorDependencyNotFoundReport(
                 dependencies=self.get_dependencies()

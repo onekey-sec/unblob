@@ -55,7 +55,8 @@ def create_pr(
 def update_dependencies():
     with NamedTemporaryFile() as log:
         subprocess.run(
-            ["nvfetcher", "--build-dir", "nix/_sources", "--changelog", log.name]
+            ["nvfetcher", "--build-dir", "nix/_sources", "--changelog", log.name],
+            check=True,
         )
         return Path(log.name).read_text()
 
