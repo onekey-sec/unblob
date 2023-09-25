@@ -12,6 +12,7 @@ from ...models import (
     ExtractResult,
     File,
     HexString,
+    Regex,
     StructHandler,
     ValidChunk,
 )
@@ -98,17 +99,10 @@ class TarExtractor(Extractor):
         return ExtractResult(reports=tarfile.reports)
 
 
-class TarHandler(StructHandler):
+class _TarHandler(StructHandler):
     NAME = "tar"
 
-    PATTERNS = [
-        HexString("75 73 74 61 72 20 20 00"),
-        HexString("75 73 74 61 72 00 30 30"),
-    ]
-
-    # Since the magic is at 257, we have to subtract that from the match offset
-    # to get to the start of the file.
-    PATTERN_MATCH_OFFSET = -MAGIC_OFFSET
+    PATTERNS = []
 
     C_DEFINITIONS = r"""
         typedef struct posix_header
@@ -146,3 +140,80 @@ class TarHandler(StructHandler):
         if end_offset == -1:
             return None
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
+
+
+class TarUstarHandler(_TarHandler):
+    PATTERNS = [
+        HexString("75 73 74 61 72 20 20 00"),
+        HexString("75 73 74 61 72 00 30 30"),
+    ]
+
+    # Since the magic is at 257, we have to subtract that from the match offset
+    # to get to the start of the file.
+    PATTERN_MATCH_OFFSET = -MAGIC_OFFSET
+
+
+def _re_frame(regexp: str):
+    """Wrap regexp to ensure its integrity from concatenation.
+
+    E.g.: when the regex
+      a|b
+    is naively appended by regex c, the result
+      a|bc
+    will not match "ac", while
+      (a|b)c
+    will match "ac" as intended.
+    """
+    return f"({regexp})"
+
+
+def _re_alternatives(regexps):
+    return _re_frame("|".join(_re_frame(regexp) for regexp in regexps))
+
+
+def _padded_field(re_content_char, size, leftpad_re=" ", rightpad_re=r"[ \0x00]"):
+    field_regexes = []
+
+    for padsize in range(size):
+        content_re = f"{re_content_char}{{{size-padsize}}}"
+
+        for leftpadsize in range(padsize + 1):
+            rightpadsize = padsize - leftpadsize
+
+            left_re = f"{leftpad_re}{{{leftpadsize}}}" if leftpadsize else ""
+            right_re = f"{rightpad_re}{{{rightpadsize}}}" if rightpadsize else ""
+
+            field_regexes.append(f"{left_re}{content_re}{right_re}")
+
+    return _re_alternatives(field_regexes)
+
+
+class TarUnixHandler(_TarHandler):
+    PATTERNS = [
+        Regex(
+            r""
+            #  (pattern would be too big)   char name[100]
+            + _padded_field(r"[0-7]", 8)  # char mode[8]
+            + _padded_field(r"[0-7]", 8)  # char uid[8]
+            + _padded_field(r"[0-7]", 8)  # char gid[8]
+            + _padded_field(r"[0-7]", 12)  # char size[12]
+            + _padded_field(r"[0-7]", 12)  # char mtime[12]
+            + _padded_field(r"[0-7]", 8)  # char chksum[8]
+            + r"[0-7\x00]"  # char typeflag[1] - no extensions
+            # Extending/dropping typeflag pattern would cover all tar formats,
+            # r"[0-7xgA-Z\x00]" would probably match all current major implementations.
+            # Info on the values for typeflag:
+            #  - https://en.wikipedia.org/wiki/Tar_(computing)
+            #  - https://www.gnu.org/software/tar/manual/html_node/Standard.html
+            #  - https://github.com/openbsd/src/blob/master/bin/pax/tar.h
+            #  - https://codebrowser.dev/glibc/glibc/posix/tar.h.html
+            #  - https://www.ibm.com/docs/el/aix/7.2?topic=files-tarh-file
+            # Values 'A'-'Z' are reserved for custom implementations.
+            # All other values are reserved for future POSIX.1 revisions.
+            # Several places mention custom extensions and how they extract it,
+            # e.g. the IBM link above is quite explicit.
+            # Since its possible values are somewhat vague,
+            # it might be better still to not include this field in the pattern at all.
+        ),
+    ]
+    PATTERN_MATCH_OFFSET = -100  # go back to beginning of skipped name

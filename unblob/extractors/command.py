@@ -96,7 +96,6 @@ class Command(Extractor):
                 raise InvalidCommandTemplate("Invalid template placeholder", t) from k
             except ValueError as v:
                 raise InvalidCommandTemplate("The template is malformed", t) from v
-
         return args
 
     def get_dependencies(self) -> List[str]:
