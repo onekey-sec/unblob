@@ -136,6 +136,37 @@ class _TarHandler(StructHandler):
         header_size = snull(header.size)
         decode_int(header_size, 8)
 
+        def signed_sum(octets) -> int:
+            return sum(b if b < 128 else 256 - b for b in octets)
+
+        if header.chksum[6:8] not in (b"\x00 ", b" \x00"):
+            logger.error(
+                "Invalid checksum format",
+                actual_last_2_bytes=header.chksum[6:8],
+                handler=self.NAME,
+            )
+            return None
+        checksum = decode_int(header.chksum[:6], 8)
+        header_bytes_for_checksum = (
+            file[start_offset : start_offset + 148]
+            + b" " * 8  # chksum field is replaced with "blanks"
+            + file[start_offset + 156 : start_offset + 257]
+        )
+        extended_header_bytes = file[start_offset + 257 : start_offset + 500]
+        calculated_checksum_unsigned = sum(header_bytes_for_checksum)
+        calculated_checksum_signed = signed_sum(header_bytes_for_checksum)
+        checksums = (
+            calculated_checksum_unsigned,
+            calculated_checksum_unsigned + sum(extended_header_bytes),
+            # signed is of historical interest, calculating for the extended header is not needed
+            calculated_checksum_signed,
+        )
+        if checksum not in checksums:
+            logger.error(
+                "Tar header checksum mismatch", expected=str(checksum), actual=checksums
+            )
+            return None
+
         end_offset = _get_tar_end_offset(file, start_offset)
         if end_offset == -1:
             return None
