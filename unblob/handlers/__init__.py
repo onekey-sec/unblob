@@ -2,6 +2,7 @@ from ..models import DirectoryHandlers, Handlers
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
 from .archive.dlink import encrpted_img, shrs
 from .archive.engeniustech import engenius
+from .archive.ewf import ewf
 from .archive.hp import bdl, ipkg
 from .archive.instar import bneg, instar_hd
 from .archive.netgear import chk, trx
@@ -65,6 +66,8 @@ BUILTIN_HANDLERS: Handlers = (
     bdl.HPBDLHandler,
     instar_hd.InstarHDHandler,
     ipkg.HPIPKGHandler,
+    ewf.EWFEHandler,
+    ewf.EWFLHandler,
     sparse.SparseHandler,
     ar.ARHandler,
     arc.ARCHandler,
