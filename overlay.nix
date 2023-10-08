@@ -11,14 +11,8 @@ inputs: final: prev:
       hardeningDisable = (super.hardeningDisable or [ ]) ++ [ "fortify3" ];
     });
 
-  # Lief 12.3 incompatibility with Cmake 3.26
   lief = prev.lief.overrideAttrs (super: {
-    postPatch = ''
-      substituteInPlace setup.py \
-        --replace \
-                  'cmake_args = ["-DLIEF_FORCE_API_EXPORTS=ON", "-DLIEF_PYTHON_API=on"]' \
-                  'cmake_args = ["-DLIEF_FORCE_API_EXPORTS=ON", "-DLIEF_PYTHON_API=on", "-DLIEF_EXAMPLES=off"]'
-    '';
+    meta.platform = super.meta.platform ++ [ final.lib.platforms.darwin ];
   });
 
   # Own package updated independently of nixpkgs
@@ -44,6 +38,7 @@ inputs: final: prev:
 
         # Own package updated independently of nixpkgs
         unblob-native = inputs.unblob-native.packages.${final.system}.default;
+
       });
   };
 
