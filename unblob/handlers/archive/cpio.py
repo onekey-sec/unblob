@@ -165,7 +165,10 @@ class CPIOParserBase:
                     "CPIO entry filename is not null-byte terminated"
                 )
 
-            filename = snull(tmp_filename).decode("utf-8")
+            try:
+                filename = snull(tmp_filename).decode("utf-8")
+            except UnicodeDecodeError as e:
+                raise InvalidInputFormat from e
 
             if filename == CPIO_TRAILER_NAME:
                 current_offset += self._pad_content(c_filesize)
