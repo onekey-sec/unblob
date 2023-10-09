@@ -9,7 +9,7 @@ python3.pkgs.buildPythonApplication rec {
 
   nativeBuildInputs = with python3.pkgs; [ pytest-runner setuptools-scm ];
 
-  propagatedBuildInputs = with python3.pkgs; [ pip fs ];
+  propagatedBuildInputs = with python3.pkgs; [ fs ];
 
   postPatch = ''
     substituteInPlace ./setup.py --replace 'setuptools_scm~=5.0.0' setuptools_scm
