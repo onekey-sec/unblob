@@ -40,6 +40,7 @@ pyright = "^1.1.307"
 pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
 ruff = "^0.0.259"
+pyyaml = "^6.0.1"
 
 [tool.poetry.group.docs]
 optional = true
