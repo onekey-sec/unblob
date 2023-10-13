@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import atexit
 import sys
+from importlib.metadata import version
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import click
-import pkg_resources
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -36,7 +36,7 @@ def restore_cursor():
 
 
 def get_version():
-    return pkg_resources.get_distribution("unblob").version
+    return version("unblob")
 
 
 def show_version(
