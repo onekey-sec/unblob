@@ -1,4 +1,5 @@
 import gzip
+import zlib
 
 from ...file_utils import DEFAULT_BUFSIZE
 
@@ -10,6 +11,10 @@ class SingleMemberGzipReader(gzip._GzipReader):  # noqa: SLF001
         self._init_read()
         return self._read_gzip_header()
 
+    def _add_read_data(self, data):
+        self._crc = zlib.crc32(data, self._crc)
+        self._stream_size = self._stream_size + len(data)
+
     def read(self):
         uncompress = b""
 
@@ -17,7 +22,8 @@ class SingleMemberGzipReader(gzip._GzipReader):  # noqa: SLF001
             buf = self._fp.read(DEFAULT_BUFSIZE)
 
             uncompress = self._decompressor.decompress(buf, DEFAULT_BUFSIZE)
-            self._fp.prepend(self._decompressor.unconsumed_tail)
+            if hasattr(self._decompressor, "unconsumed_tail"):
+                self._fp.prepend(self._decompressor.unconsumed_tail)
             self._fp.prepend(self._decompressor.unused_data)
 
             if uncompress != b"":
