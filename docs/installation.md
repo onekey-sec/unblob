@@ -135,3 +135,8 @@ There is a handy `install-deps.sh` script included in the repository and PyPI pa
         curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-4/sasquatch_1.0_amd64.deb
         sudo dpkg -i sasquatch_1.0_amd64.deb
         rm sasquatch_1.0_amd64.deb
+3. If you need **squashfs(arm64) support**, install sasquatch(arm64):
+
+       curl -L -o sasquatch_1.0_arm64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-4/sasquatch_1.0_arm64.deb
+       sudo dpkg -i sasquatch_1.0_arm64.deb
+       rm sasquatch_1.0_arm64.deb
