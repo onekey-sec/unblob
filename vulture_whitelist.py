@@ -6,7 +6,7 @@ import sys
 import unblob.plugins
 from unblob import cli
 from unblob.file_utils import File, FileSystem, iterbits, round_down
-from unblob.handlers.archive.ewf import ZlibMagic as ZlibMagic
+from unblob.handlers.archive.ewf.ewf import ZlibMagic
 from unblob.handlers.compression.lzo import HeaderFlags as LZOHeaderFlags
 from unblob.models import SingleFile, TaskResult, _JSONEncoder
 from unblob.parser import _HexStringToRegex

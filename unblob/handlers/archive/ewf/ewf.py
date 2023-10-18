@@ -11,7 +11,6 @@ from unblob.file_utils import (
     Endian,
     File,
     FileSystem,
-    InvalidInputFormat,
     StructParser,
     iterate_file,
 )
@@ -40,7 +39,17 @@ C_DEFINITIONS = r"""
         uint32 chunk_count;
         uint32 sectors_per_chunks;
         uint32 bytes_per_sectors;
-        uint32 sectors_count;
+        char sectors_count[8];
+        uint32 yes;
+        uint32 no;
+        uint32 yes2;
+        char media[1];
+        char unknwon[3];
+        char unknown2[4];
+        char unknown3[4];
+        char smartlogs[4];
+        char compression_level[1];
+        char error_granularity[4];
     } volume_descriptor_t;
 
     typedef struct table_descriptor {
@@ -53,11 +62,14 @@ C_DEFINITIONS = r"""
         char offset[3];
         char compression_type[1];
     } table_entry_t;
-    typedef struct hash_descriptor {
-        char md5_hash[16];
-        char unknown[16];
-        uint32 adler_32;
-    } hash_descriptor_t;
+
+    typedef struct zlib_compressed {
+        uint32 compression_type;
+        uint32 compressed_information;
+        char check_bits[5];
+        char dictionary_flag[1];
+        uint16 compression_level;
+    } zlib_compressed_t;
 """
 
 EWF_HEADER_LEN = 13
@@ -85,48 +97,29 @@ def find_chunk_size(header: Instance) -> int:
     return int(power)
 
 
-def is_valid_header(header: Instance) -> bool:
-    if header.field_start != 0x01 or header.field_end != 0x0:
-        return False
-    return True
-
-
 class EWFExtractor(Extractor):
-    def __init__(self, header_struct: str):
-        self.header_struct = header_struct
+    def __init__(self):
         self._struct_parser = StructParser(C_DEFINITIONS)
 
-    def table_descriptor(
-        self, file: File, position: int, outdir: Path, sectors_per_chunk: int
-    ) -> Instance:
+    def table_descriptor(self, file: File, position: int, outdir: Path, sectors_per_chunk: int, table_offset_start):
         fs = FileSystem(outdir)
         entries = []
         header = self._struct_parser.parse("table_descriptor_t", file, Endian.LITTLE)
-        entry_path = Path("ewf.decrypted")
+        entry_path = Path("ewf.extracted")
 
         for _ in range(header.number_of_entries):
             entry = self._struct_parser.parse("table_entry_t", file, Endian.LITTLE)
-            entries.append(entry.offset)
+            entries.append(int.from_bytes(entry.offset, byteorder="little"))
+            
 
         with fs.open(entry_path) as output_file:
             for offset in entries:
-                file.seek(
-                    position
-                    + int.from_bytes(offset, byteorder="little")
-                    - DESCRIPTOR_LEN,
-                    io.SEEK_SET,
-                )
-
+                offset = position + offset - DESCRIPTOR_LEN
+                file.seek(offset, io.SEEK_SET)
+                
                 magic_bytes = file.read(2)
                 compressed = any(magic_bytes == magic.value for magic in ZlibMagic)
-
-                for chunk in iterate_file(
-                    file,
-                    position
-                    + int.from_bytes(offset, byteorder="little")
-                    - DESCRIPTOR_LEN,
-                    sectors_per_chunk,
-                ):
+                for chunk in iterate_file(file, offset, sectors_per_chunk):
                     if compressed:
                         compressed_chunk = zlib.decompress(chunk)
                         output_file.write(compressed_chunk)
@@ -135,68 +128,53 @@ class EWFExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
         with File.from_path(inpath) as file:
             file.seek(EWF_HEADER_LEN)  # we skip the initial header
-            data_descriptor = self._struct_parser.parse(
-                "data_descriptor_t", file, Endian.LITTLE
-            )
-            logger.debug("data_descriptor_t", header=data_descriptor, _verbosity=3)
+            data_descriptor = self._struct_parser.parse("data_descriptor_t", file, Endian.LITTLE)
 
+
+            sectors_per_chunk = 0
+            position = 0
             # the file is made of section, we loop over all the sections
             while data_descriptor.definition != Definition.DONE.value:
-                file.seek(data_descriptor.next_offset, io.SEEK_SET)
-                data_descriptor = self._struct_parser.parse(
-                    "data_descriptor_t", file, Endian.LITTLE
-                )
                 logger.debug("data_descriptor_t", header=data_descriptor, _verbosity=3)
+                file.seek(data_descriptor.next_offset, io.SEEK_SET)
+                data_descriptor = self._struct_parser.parse("data_descriptor_t", file, Endian.LITTLE)
 
                 if data_descriptor.definition == Definition.VOLUME.value:
-                    volume_descriptor = self._struct_parser.parse(
-                        "volume_descriptor_t", file, Endian.LITTLE
-                    )
+                    
+                    volume_descriptor = self._struct_parser.parse("volume_descriptor_t", file, Endian.LITTLE)
+                    error_granularity = int.from_bytes(volume_descriptor.error_granularity, byteorder="big")
+                    logger.debug("error_granularity", error_granularity=error_granularity, _verbosity=3)
                     sectors_per_chunk = find_chunk_size(volume_descriptor)
 
                 if data_descriptor.definition == Definition.SECTORS.value:
                     position = file.tell()
 
                 if data_descriptor.definition == Definition.TABLE.value:
-                    self.table_descriptor(file, position, outdir, sectors_per_chunk)
+                    table_offset_start = data_descriptor.next_offset
+                    self.table_descriptor(file, position, outdir, sectors_per_chunk, table_offset_start)
 
 
-class EFWHandlerBase(StructHandler):
+class _EFWHandlerBase(StructHandler):
     HEADER_STRUCT = "ewf_header_t"
+    EXTRACTOR = EWFExtractor()
+    C_DEFINITIONS = C_DEFINITIONS
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk:
-        header = self.parse_header(file, endian=Endian.LITTLE)
+        self.parse_header(file, endian=Endian.LITTLE)
 
-        if not is_valid_header(header):
-            raise InvalidInputFormat("Invalid EWF header")
-
-        data_descriptor = self._struct_parser.parse(
-            "data_descriptor_t", file, Endian.LITTLE
-        )
+        data_descriptor = self._struct_parser.parse("data_descriptor_t", file, Endian.LITTLE)
         while data_descriptor.definition != Definition.DONE.value:
             file.seek(data_descriptor.next_offset, io.SEEK_SET)
-            data_descriptor = self._struct_parser.parse(
-                "data_descriptor_t", file, Endian.LITTLE
-            )
+            data_descriptor = self._struct_parser.parse("data_descriptor_t", file, Endian.LITTLE)
 
         return ValidChunk(start_offset=start_offset, end_offset=file.tell())
 
 
-class EWFEHandler(EFWHandlerBase):
+class EWFEHandler(_EFWHandlerBase):
     NAME = "ewfe"
+    PATTERNS = [HexString("45 56 46 09 0d 0a ff 00 01 [2] 00")]
 
-    PATTERNS = [HexString("45 56 46 09 0d 0a ff 00")]
-
-    C_DEFINITIONS = C_DEFINITIONS
-    HEADER_STRUCT = "ewf_header_t"
-    EXTRACTOR = EWFExtractor("ewf_header_t")
-
-
-class EWFLHandler(EFWHandlerBase):
+class EWFLHandler(_EFWHandlerBase):
     NAME = "ewfl"
-
-    PATTERNS = [HexString("4C 56 46 09 0d 0a ff 00")]
-
-    C_DEFINITIONS = C_DEFINITIONS
-    HEADER_STRUCT = "ewf_header_t"
-    EXTRACTOR = EWFExtractor("ewf_header_t")
+    PATTERNS = [HexString("4C 56 46 09 0d 0a ff 00 01 [2] 00")]
+    
