@@ -14,6 +14,26 @@
         },
         "version": "0.4.5"
     },
+    "lief": {
+        "cargoLocks": null,
+        "date": null,
+        "extract": null,
+        "name": "lief",
+        "passthru": null,
+        "pinned": false,
+        "src": {
+            "deepClone": false,
+            "fetchSubmodules": false,
+            "leaveDotGit": false,
+            "name": null,
+            "owner": "lief-project",
+            "repo": "LIEF",
+            "rev": "0.13.2",
+            "sha256": "sha256-lH4SqwPB2Jp/wUI2Cll67PQbHbwMqpNuLy/ei8roiHg=",
+            "type": "github"
+        },
+        "version": "0.13.2"
+    },
     "lzallright": {
         "cargoLocks": {
             "Cargo.lock": [
