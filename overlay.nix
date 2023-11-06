@@ -31,11 +31,11 @@ inputs: final: prev:
       tomli
     ];
 
-    CXXFLAGS = lib.optional stdenv.isLinux [ "-ffunction-sections" "-fdata-sections" "-fvisibility-inlines-hidden" "-static-libstdc++" "-static-libgcc" ]
-      ++ lib.optional stdenv.isDarwin [ "-faligned-allocation" "-fno-aligned-new" "-fvisibility=hidden" ];
+    env.CXXFLAGS = toString (lib.optional stdenv.isLinux [ "-ffunction-sections" "-fdata-sections" "-fvisibility-inlines-hidden" "-static-libstdc++" "-static-libgcc" ]
+      ++ lib.optional stdenv.isDarwin [ "-faligned-allocation" "-fno-aligned-new" "-fvisibility=hidden" ]);
 
-    CFLAGS = lib.optional stdenv.isLinux [ "-ffunction-sections" "-fdata-sections" "-static-libstdc++" "-static-libgcc" ];
-    LDFLAGS = lib.optional stdenv.isLinux [ "-Wl,--gc-sections" "-Wl,--exclude-libs,ALL" ];
+    env.CFLAGS = toString (lib.optional stdenv.isLinux [ "-ffunction-sections" "-fdata-sections" "-static-libstdc++" "-static-libgcc" ]);
+    env.LDFLAGS = toString (lib.optional stdenv.isLinux [ "-Wl,--gc-sections" "-Wl,--exclude-libs,ALL" ]);
 
 
     dontUseCmakeConfigure = true;
