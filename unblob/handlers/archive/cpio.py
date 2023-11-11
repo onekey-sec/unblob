@@ -368,8 +368,7 @@ class PortableASCIIWithCRCParser(PortableASCIIParser):
 
         for chunk in iterate_file(self.file, start_offset, file_size):
             calculated_checksum += sum(bytearray(chunk))
-
-        return header_checksum == calculated_checksum
+        return header_checksum == calculated_checksum & 0xFF_FF_FF_FF
 
 
 class _CPIOExtractorBase(Extractor):
