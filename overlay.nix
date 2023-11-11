@@ -9,6 +9,12 @@ inputs: final: prev:
     (super: {
       pname = "e2fsprogs-nofortify";
       hardeningDisable = (super.hardeningDisable or [ ]) ++ [ "fortify3" ];
+
+      version = "1.47.0-3.ok1";
+      src = prev.fetchurl {
+        url = "https://github.com/onekey-sec/e2fsprogs/archive/refs/tags/v1.47.0-3.ok1.tar.gz";
+        hash = "sha256-fsLUySjAdgnRp5m405a4Egso+LXNLxR9Y7WHt8qAvFM=";
+      };
     });
 
   # Own package updated independently of nixpkgs
