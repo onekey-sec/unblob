@@ -9,14 +9,20 @@ on:
       - '**'
 
 env:
-  DOCKER_IMAGE: ghcr.io/onekey-sec/unblob:latest
+  DOCKER_IMAGE: ghcr.io/onekey-sec/unblob
 
 jobs:
-  build-and-push-image:
-    runs-on: ubuntu-20.04
+  build-image:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup git lfs
         uses: ./.github/actions/setup-git-lfs
@@ -27,37 +33,85 @@ jobs:
       - name: Poetry build
         run: poetry build --format wheel
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.DOCKER_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Check unblob - help
+        run: docker run --rm ${{ env.DOCKER_IMAGE }}:latest --help
+
+      - name: Check unblob - show-external-dependencies
+        run: docker run --rm ${{ env.DOCKER_IMAGE }}:latest --show-external-dependencies
+
+      - name: Check unblob - run for a file with --verbose
+        run: docker run --rm -v "$(pwd)"/tests/integration/archive/zip/regular:/test ${{ env.DOCKER_IMAGE }}:latest -v -e /tmp /test/__input__/apple.zip
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge-and-push-image:
+    runs-on: ubuntu-latest
+    needs:
+      - build-image
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and export to Docker
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          load: true
-          push: false
-          tags: ${{ env.DOCKER_IMAGE }}
-
-      - name: Check unblob - help
-        run: docker run --rm ${{ env.DOCKER_IMAGE }} --help
-
-      - name: Check unblob - show-external-dependencies
-        run: docker run --rm ${{ env.DOCKER_IMAGE }} --show-external-dependencies
-
-      - name: Check unblob - run for a file with --verbose
-        run: docker run --rm -v "$(pwd)"/tests/integration/archive/zip/regular:/test ${{ env.DOCKER_IMAGE }} -v -e /tmp /test/__input__/apple.zip
-
-      - name: Build and push
-        if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          tags: ${{ env.DOCKER_IMAGE }}
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.DOCKER_IMAGE }}@sha256:%s ' *)
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }}
