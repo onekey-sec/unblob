@@ -5,7 +5,6 @@ apt-get update
 apt-get install --no-install-recommends -y \
     android-sdk-libsparse-utils \
     curl \
-    e2fsprogs \
     lz4 \
     lziprecover \
     lzop \
