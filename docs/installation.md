@@ -132,11 +132,16 @@ There is a handy `install-deps.sh` script included in the repository and PyPI pa
 
 2.  If you need **squashfs support**, install sasquatch:
 
-        curl -L -o sasquatch_1.0_amd64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-4/sasquatch_1.0_amd64.deb
-        sudo dpkg -i sasquatch_1.0_amd64.deb
-        rm sasquatch_1.0_amd64.deb
-3. If you need **squashfs(arm64) support**, install sasquatch(arm64):
+        curl -L -o sasquatch_1.0.deb "https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-4/sasquatch_1.0_$(dpkg --print-architecture).deb"
+        sudo dpkg -i sasquatch_1.0.deb
+        rm sasquatch_1.0.deb
 
-       curl -L -o sasquatch_1.0_arm64.deb https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-4/sasquatch_1.0_arm64.deb
-       sudo dpkg -i sasquatch_1.0_arm64.deb
-       rm sasquatch_1.0_arm64.deb
+4. We maintain a fork of e2fsprogs based on Debian upstream, with some security fixes. You can install it this way:
+
+        curl -L -o libext2fs2_1.47.0-3.ok1.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok1/libext2fs2_1.47.0-3.ok1_$(dpkg --print-architecture).deb"
+        dpkg -i libext2fs2_1.47.0-3.ok1.deb
+        rm -f libext2fs2_1.47.0-3.ok1.deb
+
+        curl -L -o e2fsprogs_1.47.0-3.ok1.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok1/e2fsprogs_1.47.0-3.ok1_$(dpkg --print-architecture).deb"
+        dpkg -i e2fsprogs_1.47.0-3.ok1.deb
+        rm -f e2fsprogs_1.47.0-3.ok1.deb
