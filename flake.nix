@@ -188,6 +188,7 @@
         packages = {
           default = unblob-native;
           inherit libunblob-native;
+        } // lib.optionalAttrs (!(pkgs.cargo-llvm-cov.meta.broken or false)) {
           libunblob-native-llvm-coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs // {
             inherit cargoArtifacts;
           });
