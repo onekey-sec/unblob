@@ -55,7 +55,7 @@ class UnblobPluginManager(pluggy.PluginManager):
         if path.is_file():
             module_name = path.stem
             to_import = [(module_name, path)]
-        elif path.is_dir:
+        elif path.is_dir():
             to_import = [(p.parent.name, p) for p in path.glob("*/__init__.py")]
             to_import.extend((p.stem, p) for p in path.glob("*.py"))
         else:
