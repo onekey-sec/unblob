@@ -26,6 +26,7 @@ from .processing import (
     ExtractionConfig,
     process_file,
 )
+from .ui import NullProgressReporter, RichConsoleProgressReporter
 
 logger = get_logger()
 
@@ -258,6 +259,9 @@ def cli(
         dir_handlers=dir_handlers,
         keep_extracted_chunks=keep_extracted_chunks,
         verbose=verbose,
+        progress_reporter=NullProgressReporter
+        if verbose
+        else RichConsoleProgressReporter,
     )
 
     logger.info("Start processing file", file=file)

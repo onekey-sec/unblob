@@ -2,13 +2,11 @@ import multiprocessing
 import shutil
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type
 
 import attr
 import magic
 import plotext as plt
-from rich import progress
-from rich.style import Style
 from structlog import get_logger
 from unblob_native import math_tools as mt
 
@@ -45,6 +43,7 @@ from .report import (
     UnknownError,
 )
 from .signals import terminate_gracefully
+from .ui import NullProgressReporter, ProgressReporter
 
 logger = get_logger()
 
@@ -94,6 +93,7 @@ class ExtractionConfig:
     handlers: Handlers = BUILTIN_HANDLERS
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
+    progress_reporter: Type[ProgressReporter] = NullProgressReporter
 
     def get_extract_dir_for(self, path: Path) -> Path:
         """Return extraction dir under root with the name of path."""
@@ -146,26 +146,11 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
     processor = Processor(config)
     aggregated_result = ProcessResult()
 
-    if not config.verbose:
-        progress_display = progress.Progress(
-            progress.TextColumn(
-                "Extraction progress: {task.percentage:>3.0f}%",
-                style=Style(color="#00FFC8"),
-            ),
-            progress.BarColumn(
-                complete_style=Style(color="#00FFC8"), style=Style(color="#002060")
-            ),
-        )
-        progress_display.start()
-        overall_progress_task = progress_display.add_task("Extraction progress:")
+    progress_reporter = config.progress_reporter()
 
     def process_result(pool, result):
-        if config.verbose == 0 and progress_display.tasks[0].total is not None:
-            progress_display.update(
-                overall_progress_task,
-                advance=1,
-                total=progress_display.tasks[0].total + len(result.subtasks),
-            )
+        progress_reporter.update(result)
+
         for new_task in result.subtasks:
             pool.submit(new_task)
         aggregated_result.register(result)
@@ -176,13 +161,9 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
         result_callback=process_result,
     )
 
-    with pool:
+    with pool, progress_reporter:
         pool.submit(task)
         pool.process_until_done()
-
-    if not config.verbose:
-        progress_display.remove_task(overall_progress_task)
-        progress_display.stop()
 
     return aggregated_result
 

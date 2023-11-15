@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Type
 from unittest import mock
 
 import pytest
@@ -11,6 +11,11 @@ from unblob.extractors.command import MultiFileCommand
 from unblob.handlers import BUILTIN_HANDLERS
 from unblob.models import DirectoryHandler, Glob, Handler, HexString, MultiFile
 from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
+from unblob.ui import (
+    NullProgressReporter,
+    ProgressReporter,
+    RichConsoleProgressReporter,
+)
 
 
 class TestHandler(Handler):
@@ -174,18 +179,50 @@ def test_dir_for_file(tmp_path: Path):
 
 
 @pytest.mark.parametrize(
-    "params, expected_depth, expected_entropy_depth, expected_process_num, expected_verbosity",
+    "params, expected_depth, expected_entropy_depth, expected_process_num, expected_verbosity, expected_progress_reporter",
     [
-        pytest.param([], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 0, id="empty"),
         pytest.param(
-            ["--verbose"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 1, id="verbose-1"
+            [],
+            DEFAULT_DEPTH,
+            1,
+            DEFAULT_PROCESS_NUM,
+            0,
+            RichConsoleProgressReporter,
+            id="empty",
         ),
-        pytest.param(["-vv"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 2, id="verbose-2"),
         pytest.param(
-            ["-vvv"], DEFAULT_DEPTH, 1, DEFAULT_PROCESS_NUM, 3, id="verbose-3"
+            ["--verbose"],
+            DEFAULT_DEPTH,
+            1,
+            DEFAULT_PROCESS_NUM,
+            1,
+            NullProgressReporter,
+            id="verbose-1",
         ),
-        pytest.param(["--depth", "2"], 2, 1, DEFAULT_PROCESS_NUM, 0, id="depth"),
-        pytest.param(["--process-num", "2"], DEFAULT_DEPTH, 1, 2, 0, id="process-num"),
+        pytest.param(
+            ["-vv"],
+            DEFAULT_DEPTH,
+            1,
+            DEFAULT_PROCESS_NUM,
+            2,
+            NullProgressReporter,
+            id="verbose-2",
+        ),
+        pytest.param(
+            ["-vvv"],
+            DEFAULT_DEPTH,
+            1,
+            DEFAULT_PROCESS_NUM,
+            3,
+            NullProgressReporter,
+            id="verbose-3",
+        ),
+        pytest.param(
+            ["--depth", "2"], 2, 1, DEFAULT_PROCESS_NUM, 0, mock.ANY, id="depth"
+        ),
+        pytest.param(
+            ["--process-num", "2"], DEFAULT_DEPTH, 1, 2, 0, mock.ANY, id="process-num"
+        ),
     ],
 )
 def test_archive_success(
@@ -194,6 +231,7 @@ def test_archive_success(
     expected_entropy_depth: int,
     expected_process_num: int,
     expected_verbosity: int,
+    expected_progress_reporter: Type[ProgressReporter],
     tmp_path: Path,
 ):
     runner = CliRunner()
@@ -225,6 +263,7 @@ def test_archive_success(
         process_num=expected_process_num,
         handlers=BUILTIN_HANDLERS,
         verbose=expected_verbosity,
+        progress_reporter=expected_progress_reporter,
     )
     process_file_mock.assert_called_once_with(config, in_path, None)
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path, log_path)
