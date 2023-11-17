@@ -609,6 +609,30 @@ class TestFileSystem:
         real_out_path = ".unblob-lost+found/_e90583b491d2138aab0c8a12478ee050701910fd80c84289ae747e7c/file"
         assert (sandbox.root / real_out_path).read_bytes() == b"content"
 
+    @pytest.mark.parametrize("path", [Path("ok-path"), Path("../outside-path")])
+    def test_unlink(self, path: Path, sandbox: FileSystem):
+        with sandbox.open(path) as f:
+            f.write(b"content")
+        sandbox.unlink(path)
+        assert not (sandbox.root / path).exists()
+
+    def test_unlink_no_path_traversal(self, sandbox: FileSystem):
+        path = Path("file")
+        with sandbox.open(path) as f:
+            f.write(b"content")
+
+        sandbox.unlink(path)
+        assert not (sandbox.root / path).exists()
+        assert sandbox.problems == []
+
+    def test_unlink_outside_sandbox(self, sandbox: FileSystem):
+        path = Path("../file")
+        (sandbox.root / path).touch()
+        sandbox.unlink(path)
+
+        assert (sandbox.root / path).exists()
+        assert sandbox.problems
+
 
 @pytest.mark.parametrize(
     "input_path, expected_path",

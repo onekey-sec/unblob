@@ -618,3 +618,10 @@ class FileSystem:
 
         self._ensure_parent_dir(safe_path)
         return safe_path.open(mode)
+
+    def unlink(self, path):
+        """Delete file within extraction path."""
+        logger.debug("unlink file", file_path=path)
+        safe_path = self._get_extraction_path(path, "unlink")
+
+        safe_path.unlink(missing_ok=True)
