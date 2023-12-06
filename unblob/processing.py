@@ -75,6 +75,7 @@ DEFAULT_SKIP_MAGIC = (
     "python",  # (e.g. python 2.7 byte-compiled)
     "Composite Document File V2 Document",
     "Windows Embedded CE binary image",
+    "Intel serial flash for PCH ROM",
 )
 
 
