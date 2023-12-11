@@ -1,4 +1,24 @@
 {
+    "e2fsprogs": {
+        "cargoLocks": null,
+        "date": null,
+        "extract": null,
+        "name": "e2fsprogs",
+        "passthru": null,
+        "pinned": false,
+        "src": {
+            "deepClone": false,
+            "fetchSubmodules": false,
+            "leaveDotGit": false,
+            "name": null,
+            "owner": "onekey-sec",
+            "repo": "e2fsprogs",
+            "rev": "v1.47.0-3.ok1",
+            "sha256": "sha256-lGv1l9/guOEskvIE6DIsg/nRiDTvORZI0h7n623/fgU=",
+            "type": "github"
+        },
+        "version": "v1.47.0-3.ok1"
+    },
     "jefferson": {
         "cargoLocks": null,
         "date": null,
