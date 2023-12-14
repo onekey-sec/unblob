@@ -11,11 +11,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     flake-utils.url = "github:numtide/flake-utils";
 
     advisory-db = {
@@ -24,131 +19,36 @@
     };
   };
 
-  outputs = { self, nixpkgs, nix-filter, crane, rust-overlay, flake-utils, advisory-db, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs = { self, nixpkgs, nix-filter, crane, flake-utils, advisory-db, ... }: {
+    overlays.default = final: prev:
       let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ (import rust-overlay) ];
-        };
-
-        filter = nix-filter.lib;
-
-        inherit (pkgs) lib makeRustPlatform python3Packages;
-
-        rust-toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
-        craneLib = crane.lib.${system}.overrideToolchain rust-toolchain;
-        src = craneLib.cleanCargoSource (craneLib.path ./.);
-
-        # Common arguments can be set here to avoid repeating them later
-        commonArgs = {
-          inherit src;
-
-          # python package  build will recompile PyO3 when built with maturin
-          # as there are different build features are used for the extension module
-          # and the standalone dylib which is used for tests and benchmarks
-          doNotLinkInheritedArtifacts = true;
-
-          buildInputs = [
-            # Add additional build inputs here
-            pkgs.python3
-          ] ++ lib.optionals pkgs.stdenv.isDarwin [
-            # Additional darwin specific inputs can be set here
-            pkgs.libiconv
-          ];
-
-          # Additional environment variables can be set directly
-          # MY_CUSTOM_VAR = "some value";
-        };
-
-        craneLibLLvmTools = craneLib.overrideToolchain
-          (rust-toolchain.override {
-            extensions = [
-              "cargo"
-              "llvm-tools-preview"
-              "rustc"
-            ];
-          });
-
-        # Build *just* the cargo dependencies, so we can reuse
-        # all of that work (e.g. via cachix) when running in CI
-        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-
-        # Build the actual crate itself, reusing the dependency
-        # artifacts from above.
-        libunblob-native = craneLib.buildPackage (commonArgs // {
-          inherit cargoArtifacts;
-        });
-
-        rustPlatform = makeRustPlatform {
-          rustc = rust-toolchain;
-          cargo = rust-toolchain;
-        };
-
-        unblob-native = python3Packages.buildPythonPackage
-          {
-            inherit (libunblob-native) pname version;
-            format = "pyproject";
-
-            src = filter {
-              root = ./.;
-              include = [
-                "Cargo.toml"
-                "Cargo.lock"
-                "pyproject.toml"
-                "python"
-                "benches"
-                "src"
-                "README.md"
-                "LICENSE"
-              ];
-            };
-
-            buildInputs = commonArgs.buildInputs ++ [ pkgs.maturin ];
-
-            strictDeps = true;
-            doCheck = false;
-            cargoDeps = rustPlatform.importCargoLock {
-              lockFile = ./Cargo.lock;
-            };
-
-            nativeBuildInputs =
-              (with rustPlatform; [
-                cargoSetupHook
-                maturinBuildHook
-              ]);
-
-            passthru = {
-              tests = {
-                pytest =
-                  with python3Packages; buildPythonPackage
-                    {
-                      inherit (libunblob-native) pname version;
-                      format = "other";
-
-                      src = filter
-                        {
-                          root = ./.;
-                          include = [
-                            "pyproject.toml"
-                            "tests"
-                          ];
-                        };
-
-                      dontBuild = true;
-                      dontInstall = true;
-
-                      nativeCheckInputs = [
-                        unblob-native
-                        pytestCheckHook
-                      ];
-                    };
-              };
-            };
-          };
+        craneLib = crane.lib.${final.system};
+        nixFilter = nix-filter.lib;
       in
       {
-        checks = unblob-native.tests // {
+        pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+          (python-final: python-prev: {
+            unblob-native = python-final.callPackage ./. { inherit craneLib nixFilter; };
+          })
+        ];
+      };
+  }
+  // flake-utils.lib.eachDefaultSystem (system:
+    let
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ self.overlays.default ];
+      };
+
+      inherit (pkgs.python3Packages) unblob-native;
+    in
+    {
+
+      checks = unblob-native.tests // (
+        let
+          inherit (unblob-native) cargoArtifacts commonArgs craneLib libunblob-native src;
+        in
+        {
           # Build the crate as part of `nix flake check` for convenience
           inherit libunblob-native;
 
@@ -177,38 +77,25 @@
             inherit src advisory-db;
           };
 
-        } // lib.optionalAttrs (system == "x86_64-linux") {
-          # NB: cargo-tarpaulin only supports x86_64 systems
-          # Check code coverage (note: this will not upload coverage anywhere)
-          libunblob-native-coverage = craneLib.cargoTarpaulin (commonArgs // {
-            inherit cargoArtifacts;
-          });
-        };
+        }
+      );
 
-        packages = {
-          default = unblob-native;
-          inherit libunblob-native;
-        } // lib.optionalAttrs (!(pkgs.cargo-llvm-cov.meta.broken or false)) {
-          libunblob-native-llvm-coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs // {
-            inherit cargoArtifacts;
-          });
-        };
+      packages = {
+        default = unblob-native;
+        inherit unblob-native;
+      };
 
-        devShells.default = pkgs.mkShell {
-          inputsFrom = builtins.attrValues self.checks.${system};
+      devShells.default = pkgs.mkShell {
+        inputsFrom = builtins.attrValues self.checks.${system};
 
-          # Additional dev-shell environment variables can be set directly
-          # MY_CUSTOM_DEVELOPMENT_VAR = "something else";
+        nativeBuildInputs = with pkgs; [
+          black
+          maturin
+          pdm
+          ruff
+        ];
+      };
 
-          # Extra inputs can be added here
-          nativeBuildInputs = with pkgs; [
-            black
-            maturin
-            pdm
-            ruff
-          ];
-        };
-
-        formatter = pkgs.nixpkgs-fmt;
-      });
+      formatter = pkgs.nixpkgs-fmt;
+    });
 }
