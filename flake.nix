@@ -8,7 +8,7 @@
     inputs.nixpkgs.follows = "nixpkgs";
   };
   inputs.pyperscan = {
-    url = "git+https://github.com/vlaci/pyperscan/?ref=main&submodules=1";
+    url = "github:vlaci/pyperscan";
     inputs.nixpkgs.follows = "nixpkgs";
   };
   inputs.sasquatch = {
@@ -47,9 +47,9 @@
       overlays.default = nixpkgs.lib.composeManyExtensions [
         filter.overlays.default
         sasquatch.overlays.default
-        (import ./overlay.nix {
-          inherit pyperscan unblob-native;
-        })
+        unblob-native.overlays.default
+        pyperscan.overlays.default
+        (import ./overlay.nix)
       ];
       packages = forAllSystems (system: rec {
         inherit (nixpkgsFor.${system}) unblob;

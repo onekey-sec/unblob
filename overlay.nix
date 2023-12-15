@@ -1,4 +1,4 @@
-inputs: final: prev:
+final: prev:
 
 {
   inherit (final.python3.pkgs) unblob;
@@ -73,30 +73,21 @@ inputs: final: prev:
 
   });
 
-  python3 = prev.python3.override {
-    packageOverrides = pyFinal: pyPrev: {
+  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+    (python-final: python-prev: {
       # Own package updated independently of nixpkgs
-      lzallright = pyFinal.callPackage ./nix/lzallright { };
-
-      # Own package updated independently of nixpkgs
-      pyperscan = inputs.pyperscan.packages.${final.system}.default.vectorscan;
+      lzallright = python-final.callPackage ./nix/lzallright { };
 
       # Missing from nixpkgs
-      treelib = pyFinal.callPackage ./nix/treelib { };
+      treelib = python-final.callPackage ./nix/treelib { };
 
       # Missing from nixpkgs
-      pyfatfs = pyFinal.callPackage ./nix/pyfatfs { };
+      pyfatfs = python-final.callPackage ./nix/pyfatfs { };
 
       # The reason for everything
-      unblob = pyFinal.callPackage ./nix/unblob { };
-
-      # Own package updated independently of nixpkgs
-      unblob-native = inputs.unblob-native.packages.${final.system}.default;
-    };
-  };
-
-  # Existing alias is rebound to the updated package set for consistence
-  python3Packages = final.python3.pkgs;
+      unblob = python-final.callPackage ./nix/unblob { };
+    })
+  ];
 
   # Own package updated independently of nixpkgs
   ubi_reader = final.callPackage ./nix/ubi_reader { };
