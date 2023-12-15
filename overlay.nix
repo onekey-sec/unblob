@@ -76,9 +76,6 @@ final: prev:
 
   pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
     (python-final: python-prev: {
-      # Own package updated independently of nixpkgs
-      lzallright = python-final.callPackage ./nix/lzallright { };
-
       # Missing from nixpkgs
       treelib = python-final.callPackage ./nix/treelib { };
 

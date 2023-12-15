@@ -54,31 +54,6 @@
         },
         "version": "0.13.2"
     },
-    "lzallright": {
-        "cargoLocks": {
-            "Cargo.lock": [
-                "./lzallright-v0.2.3/Cargo.lock",
-                {}
-            ]
-        },
-        "date": null,
-        "extract": null,
-        "name": "lzallright",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "deepClone": false,
-            "fetchSubmodules": false,
-            "leaveDotGit": false,
-            "name": null,
-            "owner": "vlaci",
-            "repo": "lzallright",
-            "rev": "v0.2.3",
-            "sha256": "sha256-Zzif6WtecgAkNmml0kt0Z+Ewx0L30ahr+kwzYR5aUAM=",
-            "type": "github"
-        },
-        "version": "v0.2.3"
-    },
     "pyfatfs": {
         "cargoLocks": null,
         "date": null,

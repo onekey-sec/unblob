@@ -1,8 +1,3 @@
-[lzallright]
-src.github_tag = "vlaci/lzallright"
-fetch.github = "vlaci/lzallright"
-cargo_locks = [ "Cargo.lock" ]
-
 [jefferson]
 src.pypi = "jefferson"
 fetch.pypi = "jefferson"
