@@ -3,11 +3,11 @@
     "advisory-db": {
       "flake": false,
       "locked": {
-        "lastModified": 1688825073,
-        "narHash": "sha256-fK2huTDGHJc/oZjZWhMZMAt1nQSuuY6p41Y2pudtJdM=",
+        "lastModified": 1702116332,
+        "narHash": "sha256-Qzx1cRU8QnCmbEp0LJFoEzm7tetiNTc+wRTJTzPo2ko=",
         "owner": "rustsec",
         "repo": "advisory-db",
-        "rev": "5ceeefcbbabf4b510ef8ede121d6dc57d1a1f7f8",
+        "rev": "6ef1d1fd84c57e46253ff16bf7379c115e1062eb",
         "type": "github"
       },
       "original": {
@@ -34,20 +34,17 @@
     },
     "crane": {
       "inputs": {
-        "flake-compat": "flake-compat_2",
-        "flake-utils": "flake-utils",
         "nixpkgs": [
           "pyperscan",
           "nixpkgs"
-        ],
-        "rust-overlay": "rust-overlay"
+        ]
       },
       "locked": {
-        "lastModified": 1688772518,
-        "narHash": "sha256-ol7gZxwvgLnxNSZwFTDJJ49xVY5teaSvF7lzlo3YQfM=",
+        "lastModified": 1702141249,
+        "narHash": "sha256-8wDpJKbDTDqFmyJfNEJOLrHYDoEzCjCbmz+lSRoU3CI=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "8b08e96c9af8c6e3a2b69af5a7fa168750fcf88e",
+        "rev": "62fc1a0cbe144c1014d956e603d56bf1ffe69c7d",
         "type": "github"
       },
       "original": {
@@ -88,11 +85,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1689315904,
-        "narHash": "sha256-sztnVLSgeLNJSvvY2ggzxkswlzcN7gthNzjOfpCCToU=",
+        "lastModified": 1702362203,
+        "narHash": "sha256-etsSWZfvmVA9RWqixmoKTf+JLEMtjlOaLxh/tK80ZCg=",
         "owner": "nix-community",
         "repo": "fenix",
-        "rev": "31f37ee3e471af1b40f6d0c9657f77062bb13ee3",
+        "rev": "7622e4a2d4378861d9e83fc02c1eeb0e084bf3f2",
         "type": "github"
       },
       "original": {
@@ -132,61 +129,9 @@
         "type": "github"
       }
     },
-    "flake-compat_2": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1673956053,
-        "narHash": "sha256-4gtG9iQuiKITOjNQQeQIpoIB6b16fm+504Ch3sNKLd8=",
-        "owner": "edolstra",
-        "repo": "flake-compat",
-        "rev": "35bb57c0c8d8b62bbfd284272c928ceb64ddbde9",
-        "type": "github"
-      },
-      "original": {
-        "owner": "edolstra",
-        "repo": "flake-compat",
-        "type": "github"
-      }
-    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
-      },
-      "locked": {
-        "lastModified": 1687709756,
-        "narHash": "sha256-Y5wKlQSkgEK2weWdOu4J3riRd+kV/VCgHsqLNTTWQ/0=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "dbabf0ca0c0c4bce6ea5eaf65af5cb694d2082c7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "flake-utils_2": {
-      "inputs": {
-        "systems": "systems_2"
-      },
-      "locked": {
-        "lastModified": 1689068808,
-        "narHash": "sha256-6ixXo3wt24N/melDWjq70UuHQLxGV8jZvooRanIHXw0=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "919d646de7be200f3bf08cb76ae1f09402b6f9b4",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "flake-utils_3": {
-      "inputs": {
-        "systems": "systems_3"
       },
       "locked": {
         "lastModified": 1701680307,
@@ -238,26 +183,22 @@
         "advisory-db": "advisory-db",
         "crane": "crane",
         "fenix": "fenix",
-        "flake-utils": "flake-utils_2",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1702369100,
-        "narHash": "sha256-ld7Ly7nOTlLeKXPpVyIZzY7dJJZ0HwkwoqXtd3kFCOo=",
-        "ref": "main",
-        "rev": "a53dfb3623e0d0e3a46639c590316b1dd767f5d9",
-        "revCount": 92,
-        "submodules": true,
-        "type": "git",
-        "url": "https://github.com/vlaci/pyperscan/"
+        "lastModified": 1702643335,
+        "narHash": "sha256-3yBBz4lCU3namRlYhSt1vH6WcIo1sbwpgNabV0idF6Q=",
+        "owner": "vlaci",
+        "repo": "pyperscan",
+        "rev": "ea38e0770de2fa175d0f5fbe09861bb51742762f",
+        "type": "github"
       },
       "original": {
-        "ref": "main",
-        "submodules": true,
-        "type": "git",
-        "url": "https://github.com/vlaci/pyperscan/"
+        "owner": "vlaci",
+        "repo": "pyperscan",
+        "type": "github"
       }
     },
     "root": {
@@ -268,33 +209,6 @@
         "pyperscan": "pyperscan",
         "sasquatch": "sasquatch",
         "unblob-native": "unblob-native"
-      }
-    },
-    "rust-overlay": {
-      "inputs": {
-        "flake-utils": [
-          "pyperscan",
-          "crane",
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "pyperscan",
-          "crane",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1688351637,
-        "narHash": "sha256-CLTufJ29VxNOIZ8UTg0lepsn3X03AmopmaLTTeHDCL4=",
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "rev": "f9b92316727af9e6c7fee4a761242f7f46880329",
-        "type": "github"
-      },
-      "original": {
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "type": "github"
       }
     },
     "sasquatch": {
@@ -332,41 +246,11 @@
         "type": "github"
       }
     },
-    "systems_2": {
-      "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
-        "owner": "nix-systems",
-        "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-systems",
-        "repo": "default",
-        "type": "github"
-      }
-    },
-    "systems_3": {
-      "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
-        "owner": "nix-systems",
-        "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-systems",
-        "repo": "default",
-        "type": "github"
-      }
-    },
     "unblob-native": {
       "inputs": {
         "advisory-db": "advisory-db_2",
         "crane": "crane_2",
-        "flake-utils": "flake-utils_3",
+        "flake-utils": "flake-utils",
         "nix-filter": "nix-filter",
         "nixpkgs": [
           "nixpkgs"
