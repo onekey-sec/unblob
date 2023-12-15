@@ -9,6 +9,7 @@ final: prev:
     (super: {
       pname = "e2fsprogs-nofortify";
       hardeningDisable = (super.hardeningDisable or [ ]) ++ [ "fortify3" ];
+      nativeCheckInputs = (super.nativeCheckInputs or [ ]) ++ [ final.which ];
     });
 
   # Own package updated independently of nixpkgs
