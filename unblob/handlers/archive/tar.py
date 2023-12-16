@@ -59,8 +59,7 @@ def _get_end_of_last_tar_entry(file) -> int:
     if last_member is None:
         return -1
 
-    last_file_size = round_up(last_member.size, BLOCK_SIZE)
-    end_of_last_tar_entry = last_member.offset_data + last_file_size
+    end_of_last_tar_entry = tf.offset
     try:
         file.seek(end_of_last_tar_entry)
     except SeekError:
