@@ -1,8 +1,3 @@
-[lzallright]
-src.github_tag = "vlaci/lzallright"
-fetch.github = "vlaci/lzallright"
-cargo_locks = [ "Cargo.lock" ]
-
 [jefferson]
 src.pypi = "jefferson"
 fetch.pypi = "jefferson"
@@ -22,3 +17,7 @@ fetch.pypi = "pyfatfs"
 [lief]
 src.github_tag = "lief-project/LIEF"
 fetch.github = "lief-project/LIEF"
+
+[e2fsprogs]
+src.github_tag = "onekey-sec/e2fsprogs"
+fetch.github =  "onekey-sec/e2fsprogs"

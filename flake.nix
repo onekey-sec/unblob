@@ -7,8 +7,12 @@
     url = "github:onekey-sec/unblob-native";
     inputs.nixpkgs.follows = "nixpkgs";
   };
+  inputs.lzallright = {
+    url = "github:vlaci/lzallright";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
   inputs.pyperscan = {
-    url = "git+https://github.com/vlaci/pyperscan/?ref=main&submodules=1";
+    url = "github:vlaci/pyperscan";
     inputs.nixpkgs.follows = "nixpkgs";
   };
   inputs.sasquatch = {
@@ -27,7 +31,7 @@
     ];
   };
 
-  outputs = { self, nixpkgs, filter, unblob-native, pyperscan, sasquatch, ... }:
+  outputs = { self, nixpkgs, filter, unblob-native, lzallright, pyperscan, sasquatch, ... }:
     let
       # System types to support.
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
@@ -47,9 +51,10 @@
       overlays.default = nixpkgs.lib.composeManyExtensions [
         filter.overlays.default
         sasquatch.overlays.default
-        (import ./overlay.nix {
-          inherit pyperscan unblob-native;
-        })
+        unblob-native.overlays.default
+        lzallright.overlays.default
+        pyperscan.overlays.default
+        (import ./overlay.nix)
       ];
       packages = forAllSystems (system: rec {
         inherit (nixpkgsFor.${system}) unblob;

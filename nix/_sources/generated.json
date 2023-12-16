@@ -1,4 +1,24 @@
 {
+    "e2fsprogs": {
+        "cargoLocks": null,
+        "date": null,
+        "extract": null,
+        "name": "e2fsprogs",
+        "passthru": null,
+        "pinned": false,
+        "src": {
+            "deepClone": false,
+            "fetchSubmodules": false,
+            "leaveDotGit": false,
+            "name": null,
+            "owner": "onekey-sec",
+            "repo": "e2fsprogs",
+            "rev": "v1.47.0-3.ok1",
+            "sha256": "sha256-lGv1l9/guOEskvIE6DIsg/nRiDTvORZI0h7n623/fgU=",
+            "type": "github"
+        },
+        "version": "v1.47.0-3.ok1"
+    },
     "jefferson": {
         "cargoLocks": null,
         "date": null,
@@ -33,31 +53,6 @@
             "type": "github"
         },
         "version": "0.13.2"
-    },
-    "lzallright": {
-        "cargoLocks": {
-            "Cargo.lock": [
-                "./lzallright-v0.2.3/Cargo.lock",
-                {}
-            ]
-        },
-        "date": null,
-        "extract": null,
-        "name": "lzallright",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "deepClone": false,
-            "fetchSubmodules": false,
-            "leaveDotGit": false,
-            "name": null,
-            "owner": "vlaci",
-            "repo": "lzallright",
-            "rev": "v0.2.3",
-            "sha256": "sha256-Zzif6WtecgAkNmml0kt0Z+Ewx0L30ahr+kwzYR5aUAM=",
-            "type": "github"
-        },
-        "version": "v0.2.3"
     },
     "pyfatfs": {
         "cargoLocks": null,

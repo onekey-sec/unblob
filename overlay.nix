@@ -1,4 +1,4 @@
-inputs: final: prev:
+final: prev:
 
 {
   inherit (final.python3.pkgs) unblob;
@@ -9,12 +9,7 @@ inputs: final: prev:
     (super: {
       pname = "e2fsprogs-nofortify";
       hardeningDisable = (super.hardeningDisable or [ ]) ++ [ "fortify3" ];
-
-      version = "1.47.0-3.ok1";
-      src = prev.fetchurl {
-        url = "https://github.com/onekey-sec/e2fsprogs/archive/refs/tags/v1.47.0-3.ok1.tar.gz";
-        hash = "sha256-fsLUySjAdgnRp5m405a4Egso+LXNLxR9Y7WHt8qAvFM=";
-      };
+      nativeCheckInputs = (super.nativeCheckInputs or [ ]) ++ [ final.which ];
     });
 
   # Own package updated independently of nixpkgs
@@ -79,31 +74,18 @@ inputs: final: prev:
 
   });
 
-  python3 = prev.python3 // {
-    pkgs = prev.python3.pkgs.overrideScope
-      (pyFinal: pyPrev: {
-        # Own package updated independently of nixpkgs
-        lzallright = pyFinal.callPackage ./nix/lzallright { };
+  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+    (python-final: python-prev: {
+      # Missing from nixpkgs
+      treelib = python-final.callPackage ./nix/treelib { };
 
-        # Own package updated independently of nixpkgs
-        pyperscan = inputs.pyperscan.packages.${final.system}.default.vectorscan;
+      # Missing from nixpkgs
+      pyfatfs = python-final.callPackage ./nix/pyfatfs { };
 
-        # Missing from nixpkgs
-        treelib = pyFinal.callPackage ./nix/treelib { };
-
-        # Missing from nixpkgs
-        pyfatfs = pyFinal.callPackage ./nix/pyfatfs { };
-
-        # The reason for everything
-        unblob = pyFinal.callPackage ./nix/unblob { };
-
-        # Own package updated independently of nixpkgs
-        unblob-native = inputs.unblob-native.packages.${final.system}.default;
-      });
-  };
-
-  # Existing alias is rebound to the updated package set for consistence
-  python3Packages = final.python3.pkgs;
+      # The reason for everything
+      unblob = python-final.callPackage ./nix/unblob { };
+    })
+  ];
 
   # Own package updated independently of nixpkgs
   ubi_reader = final.callPackage ./nix/ubi_reader { };
