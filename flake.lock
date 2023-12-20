@@ -35,11 +35,11 @@
     "advisory-db_3": {
       "flake": false,
       "locked": {
-        "lastModified": 1702116332,
-        "narHash": "sha256-Qzx1cRU8QnCmbEp0LJFoEzm7tetiNTc+wRTJTzPo2ko=",
+        "lastModified": 1702914599,
+        "narHash": "sha256-QYwzxCTyW5cEmBOZuikoBs7pO4H6TkC6oikLxIxuzyk=",
         "owner": "rustsec",
         "repo": "advisory-db",
-        "rev": "6ef1d1fd84c57e46253ff16bf7379c115e1062eb",
+        "rev": "bc17aeb6838cfc331384dc4360a98ca4d56f2320",
         "type": "github"
       },
       "original": {
@@ -98,11 +98,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1702141249,
-        "narHash": "sha256-8wDpJKbDTDqFmyJfNEJOLrHYDoEzCjCbmz+lSRoU3CI=",
+        "lastModified": 1702956644,
+        "narHash": "sha256-6XxZSkhb/OkxIx705RHTTLYZ2qemmEC7tODD8f21gKw=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "62fc1a0cbe144c1014d956e603d56bf1ffe69c7d",
+        "rev": "537ebb11db883f9076e37d83e3c7ee69a4abb48c",
         "type": "github"
       },
       "original": {
@@ -237,11 +237,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1702642458,
-        "narHash": "sha256-S2AQHuR7UnOCXfXN7tY66Nq/BOBDwzluN40wCL3kvWQ=",
+        "lastModified": 1702646142,
+        "narHash": "sha256-6Dez14qlZ7cnVQfaiTHGuiTSAHvBoKtolgKF7ne9ASw=",
         "owner": "vlaci",
         "repo": "lzallright",
-        "rev": "ed5314d505881850626398184d772f4c8ab4cb0a",
+        "rev": "e5ec79a854902eda600529c54be298b76da2d8cf",
         "type": "github"
       },
       "original": {
@@ -267,11 +267,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1702272962,
-        "narHash": "sha256-D+zHwkwPc6oYQ4G3A1HuadopqRwUY/JkMwHz1YF7j4Q=",
+        "lastModified": 1702938738,
+        "narHash": "sha256-O7Vb0xC9s4Dmgxj8APEpuuMj7HsLgPbpy1UKvNVJp7o=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e97b3e4186bcadf0ef1b6be22b8558eab1cdeb5d",
+        "rev": "dd8e82f3b4017b8faa52c2b1897a38d53c3c26cb",
         "type": "github"
       },
       "original": {
@@ -291,11 +291,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1702643335,
-        "narHash": "sha256-3yBBz4lCU3namRlYhSt1vH6WcIo1sbwpgNabV0idF6Q=",
+        "lastModified": 1702653667,
+        "narHash": "sha256-gmKcqoSo+0LTbcOU6GRsMjmF4Qr28zOfJbTFIb1dHEU=",
         "owner": "vlaci",
         "repo": "pyperscan",
-        "rev": "ea38e0770de2fa175d0f5fbe09861bb51742762f",
+        "rev": "76f07b61c91309084a121bee292c138a8f96474a",
         "type": "github"
       },
       "original": {
@@ -376,11 +376,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1702559080,
-        "narHash": "sha256-RyLUjE+X3aINHrjzFDYITjX85UM+crEDpT9Fz5NHaJs=",
+        "lastModified": 1703063893,
+        "narHash": "sha256-EhATu75J0+VjdpGaso2J/Fc1+TBLpQVO7n0E19yZ7Xg=",
         "owner": "onekey-sec",
         "repo": "unblob-native",
-        "rev": "73fcc0b11f3055acc1025275ebb9756a634d8e8a",
+        "rev": "09e273e1c6969fd299eb34d2b54d17679650b364",
         "type": "github"
       },
       "original": {
