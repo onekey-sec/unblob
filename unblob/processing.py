@@ -77,6 +77,7 @@ DEFAULT_SKIP_MAGIC = (
     "Windows Embedded CE binary image",
     "Intel serial flash for PCH ROM",
 )
+DEFAULT_SKIP_EXTENSION = (".rlib",)
 
 
 @attr.define(kw_only=True)
@@ -87,6 +88,7 @@ class ExtractionConfig:
     entropy_plot: bool = False
     max_depth: int = DEFAULT_DEPTH
     skip_magic: Iterable[str] = DEFAULT_SKIP_MAGIC
+    skip_extension: Iterable[str] = DEFAULT_SKIP_EXTENSION
     skip_extraction: bool = False
     process_num: int = DEFAULT_PROCESS_NUM
     keep_extracted_chunks: bool = False
@@ -292,9 +294,14 @@ class Processor:
         should_skip_file = any(
             magic.startswith(pattern) for pattern in self._config.skip_magic
         )
+        should_skip_file |= task.path.suffix in self._config.skip_extension
 
         if should_skip_file:
-            log.debug("Ignoring file based on magic", magic=magic)
+            log.debug(
+                "Ignoring file based on magic or extension.",
+                magic=magic,
+                extension=task.path.suffix,
+            )
             return
 
         _FileTask(self._config, task, stat_report.size, result).process()
