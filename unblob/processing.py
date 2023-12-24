@@ -136,8 +136,9 @@ def process_file(
 
     process_result = _process_task(config, task)
 
-    # ensure that the root extraction directory is created even for empty extractions
-    extract_dir.mkdir(parents=True, exist_ok=True)
+    if not config.skip_extraction:
+        # ensure that the root extraction directory is created even for empty extractions
+        extract_dir.mkdir(parents=True, exist_ok=True)
 
     if report_file:
         write_json_report(report_file, process_result)
@@ -475,7 +476,7 @@ class _FileTask:
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
 
-        if self.carve_dir.exists():
+        if not self.config.skip_extraction and self.carve_dir.exists():
             # Extraction directory is not supposed to exist, it is usually a simple mistake of running
             # unblob again without cleaning up or using --force.
             # It would cause problems continuing, as it would mix up original and extracted files,
@@ -514,6 +515,13 @@ class _FileTask:
     ):
         if unknown_chunks:
             logger.warning("Found unknown Chunks", chunks=unknown_chunks)
+
+        if self.config.skip_extraction:
+            for chunk in unknown_chunks:
+                self.result.add_report(chunk.as_report(entropy=None))
+            for chunk in outer_chunks:
+                self.result.add_report(chunk.as_report(extraction_reports=[]))
+            return
 
         for chunk in unknown_chunks:
             carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
