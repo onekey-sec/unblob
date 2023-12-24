@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Type
+from typing import Iterable, List, Optional, Type
 from unittest import mock
 
 import pytest
@@ -10,7 +10,12 @@ from unblob.extractors import Command
 from unblob.extractors.command import MultiFileCommand
 from unblob.handlers import BUILTIN_HANDLERS
 from unblob.models import DirectoryHandler, Glob, Handler, HexString, MultiFile
-from unblob.processing import DEFAULT_DEPTH, DEFAULT_PROCESS_NUM, ExtractionConfig
+from unblob.processing import (
+    DEFAULT_DEPTH,
+    DEFAULT_PROCESS_NUM,
+    DEFAULT_SKIP_MAGIC,
+    ExtractionConfig,
+)
 from unblob.ui import (
     NullProgressReporter,
     ProgressReporter,
@@ -366,4 +371,52 @@ def test_skip_extraction(
     process_file_mock.assert_called_once()
     assert (
         process_file_mock.call_args.args[0].skip_extraction == skip_extraction
+    ), fail_message
+
+
+@pytest.mark.parametrize(
+    "args, skip_magic, fail_message",
+    [
+        ([], DEFAULT_SKIP_MAGIC, "Should have kept default skip magics"),
+        (
+            ["--skip-magic", "SUPERMAGIC"],
+            (*DEFAULT_SKIP_MAGIC, "SUPERMAGIC"),
+            "Should have kept default skip magics",
+        ),
+        (["--clear-skip-magics"], [], "Should have cleared default skip magics"),
+        (
+            ["--clear-skip-magics", "--skip-magic", "SUPERMAGIC"],
+            ["SUPERMAGIC"],
+            "Should have cleared default skip magics",
+        ),
+        (
+            ["--clear-skip-magics", "--skip-magic", DEFAULT_SKIP_MAGIC[1]],
+            [DEFAULT_SKIP_MAGIC[1]],
+            "Should allow user specified and remove the rest",
+        ),
+    ],
+)
+def test_clear_skip_magics(
+    args: List[str], skip_magic: Iterable[str], fail_message: str, tmp_path: Path
+):
+    runner = CliRunner()
+    in_path = (
+        Path(__file__).parent
+        / "integration"
+        / "archive"
+        / "zip"
+        / "regular"
+        / "__input__"
+        / "apple.zip"
+    )
+    params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
+
+    process_file_mock = mock.MagicMock()
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
+        result = runner.invoke(unblob.cli.cli, params)
+
+    assert result.exit_code == 0
+    process_file_mock.assert_called_once()
+    assert sorted(process_file_mock.call_args.args[0].skip_magic) == sorted(
+        skip_magic
     ), fail_message
