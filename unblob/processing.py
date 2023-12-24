@@ -476,7 +476,7 @@ class _FileTask:
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
 
-        if not self.config.skip_extraction and self.carve_dir.exists():
+        if self.carve_dir.exists() and not self.config.skip_extraction:
             # Extraction directory is not supposed to exist, it is usually a simple mistake of running
             # unblob again without cleaning up or using --force.
             # It would cause problems continuing, as it would mix up original and extracted files,
