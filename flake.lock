@@ -98,11 +98,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1703089493,
-        "narHash": "sha256-WUjYqUP/Lhhop9+aiHVFREgElunx1AHEWxqMT8ePfzo=",
+        "lastModified": 1703439018,
+        "narHash": "sha256-VT+06ft/x3eMZ1MJxWzQP3zXFGcrxGo5VR2rB7t88hs=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "2a5136f14a9ac93d9d370d64a36026c5de3ae8a4",
+        "rev": "afdcd41180e3dfe4dac46b5ee396e3b12ccc967a",
         "type": "github"
       },
       "original": {
@@ -267,11 +267,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1703499205,
-        "narHash": "sha256-lF9rK5mSUfIZJgZxC3ge40tp1gmyyOXZ+lRY3P8bfbg=",
+        "lastModified": 1704008649,
+        "narHash": "sha256-rGPSWjXTXTurQN9beuHdyJhB8O761w1Zc5BqSSmHvoM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e1fa12d4f6c6fe19ccb59cac54b5b3f25e160870",
+        "rev": "d44d59d2b5bd694cd9d996fd8c51d03e3e9ba7f7",
         "type": "github"
       },
       "original": {
@@ -376,11 +376,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1703413072,
-        "narHash": "sha256-JRIHZ5qTMIPDqiPX0zT+j4kMT4rN6Y9RiVWYr59NqGE=",
+        "lastModified": 1704182473,
+        "narHash": "sha256-2eX6s8dYMr4muu4N8UQWnj9lG+0qyt/KdF7T3bGpFs0=",
         "owner": "onekey-sec",
         "repo": "unblob-native",
-        "rev": "5b13f2a5cabf3c2e3a040966da7484faf14eeb37",
+        "rev": "0a696a0e17943e3d5a1b0e7c6f5e14fa48e052c7",
         "type": "github"
       },
       "original": {
