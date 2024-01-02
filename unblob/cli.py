@@ -200,7 +200,7 @@ class UnblobContext(click.Context):
 )
 @click.option(
     "-s",
-    "--skip_extraction",
+    "--skip-extraction",
     "skip_extraction",
     is_flag=True,
     show_default=True,
