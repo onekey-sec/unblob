@@ -61,6 +61,20 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.DOCKER_IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
+      - name: Docker container vulnerability scan
+        id: scan
+        uses: anchore/scan-action@v3
+        with:
+          image: ${{ env.DOCKER_IMAGE }}
+          fail-build: true
+          severity-cutoff: critical
+          only-fixed: true
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+
       - name: Check unblob - help
         run: docker run --rm ${{ env.DOCKER_IMAGE }}:latest --help
 
