@@ -1,0 +1,11 @@
+ame: "CodeQL config"
+
+queries:
+  - uses: security-and-quality
+
+paths:
+  - 'unblob'
+  - 'tests'
+
+paths-ignore:
+  - 'tests/integration/**/*'
