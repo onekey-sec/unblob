@@ -333,3 +333,37 @@ def test_skip_extension(
     result = runner.invoke(unblob.cli.cli, params)
     assert extracted_files_count == len(list(tmp_path.rglob("*")))
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    "args, skip_extraction, fail_message",
+    [
+        ([], False, "Should *NOT* have skipped extraction"),
+        (["-s"], True, "Should have skipped extraction"),
+        (["--skip-extraction"], True, "Should have skipped extraction"),
+    ],
+)
+def test_skip_extraction(
+    args: List[str], skip_extraction: bool, fail_message: str, tmp_path: Path
+):
+    runner = CliRunner()
+    in_path = (
+        Path(__file__).parent
+        / "integration"
+        / "archive"
+        / "zip"
+        / "regular"
+        / "__input__"
+        / "apple.zip"
+    )
+    params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
+
+    process_file_mock = mock.MagicMock()
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
+        result = runner.invoke(unblob.cli.cli, params)
+
+    assert result.exit_code == 0
+    process_file_mock.assert_called_once()
+    assert (
+        process_file_mock.call_args.args[0].skip_extraction == skip_extraction
+    ), fail_message
