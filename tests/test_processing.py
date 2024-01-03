@@ -447,6 +447,37 @@ def test_entropy_calculation(tmp_path: Path):
     )
 
 
+@pytest.mark.parametrize(
+    "skip_extraction, file_count, extracted_file_count",
+    [
+        (True, 5, 0),
+        (False, 5, 6),
+    ],
+)
+def test_skip_extraction(
+    skip_extraction: bool,
+    file_count: int,
+    extracted_file_count: int,
+    tmp_path: Path,
+    extraction_config: ExtractionConfig,
+):
+    input_file = tmp_path / "input"
+    with zipfile.ZipFile(input_file, "w") as zf:
+        for i in range(file_count):
+            zf.writestr(f"file{i}", data=b"This is a test file.")
+
+    extraction_config.extract_root = tmp_path / "output"
+    extraction_config.skip_extraction = skip_extraction
+
+    process_result = process_file(extraction_config, input_file)
+    task_result_by_path = {r.task.path: r for r in process_result.results}
+
+    assert len(task_result_by_path) == extracted_file_count + 1
+    assert (
+        len(list(extraction_config.extract_root.rglob("**/*"))) == extracted_file_count
+    )
+
+
 class ConcatenateExtractor(DirectoryExtractor):
     def extract(self, paths: List[Path], outdir: Path):
         outfile = outdir / "data"

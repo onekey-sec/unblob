@@ -8,12 +8,18 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import click
 from rich.console import Console
 from rich.panel import Panel
+from rich.style import Style
 from rich.table import Table
 from structlog import get_logger
 
 from unblob.models import DirectoryHandlers, Handlers, ProcessResult
 from unblob.plugins import UnblobPluginManager
-from unblob.report import ChunkReport, Severity, StatReport, UnknownChunkReport
+from unblob.report import (
+    ChunkReport,
+    Severity,
+    StatReport,
+    UnknownChunkReport,
+)
 
 from .cli_options import verbosity_option
 from .dependencies import get_dependencies, pretty_format_dependencies
@@ -200,7 +206,7 @@ class UnblobContext(click.Context):
 )
 @click.option(
     "-s",
-    "--skip_extraction",
+    "--skip-extraction",
     "skip_extraction",
     is_flag=True,
     show_default=True,
@@ -279,7 +285,10 @@ def cli(
     logger.info("Start processing file", file=file)
     process_results = process_file(config, file, report_file)
     if verbose == 0:
-        print_report(process_results)
+        if skip_extraction:
+            print_scan_report(process_results)
+        else:
+            print_report(process_results)
     return process_results
 
 
@@ -347,6 +356,50 @@ def get_size_report(task_results: List) -> Tuple[int, int, int, int]:
                 extracted_size += stat_report.size
 
     return total_files, total_dirs, total_links, extracted_size
+
+
+def print_scan_report(reports: ProcessResult):
+    console = Console(stderr=True)
+
+    chunks_offset_table = Table(
+        expand=False,
+        show_lines=True,
+        show_edge=True,
+        style=Style(color="white"),
+        header_style=Style(color="white"),
+        row_styles=[Style(color="red")],
+    )
+    chunks_offset_table.add_column("Start offset")
+    chunks_offset_table.add_column("End offset")
+    chunks_offset_table.add_column("Size")
+    chunks_offset_table.add_column("Description")
+
+    for task_result in reports.results:
+        chunk_reports = [
+            report
+            for report in task_result.reports
+            if isinstance(report, (ChunkReport, UnknownChunkReport))
+        ]
+        chunk_reports.sort(key=lambda x: x.start_offset)
+
+        for chunk_report in chunk_reports:
+            if isinstance(chunk_report, ChunkReport):
+                chunks_offset_table.add_row(
+                    f"{chunk_report.start_offset:0d}",
+                    f"{chunk_report.end_offset:0d}",
+                    human_size(chunk_report.size),
+                    chunk_report.handler_name,
+                    style=Style(color="#00FFC8"),
+                )
+            if isinstance(chunk_report, UnknownChunkReport):
+                chunks_offset_table.add_row(
+                    f"{chunk_report.start_offset:0d}",
+                    f"{chunk_report.end_offset:0d}",
+                    human_size(chunk_report.size),
+                    "unknown",
+                    style=Style(color="#008ED5"),
+                )
+    console.print(chunks_offset_table)
 
 
 def print_report(reports: ProcessResult):
