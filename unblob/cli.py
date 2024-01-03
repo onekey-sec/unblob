@@ -22,6 +22,7 @@ from .logging import configure_logger
 from .processing import (
     DEFAULT_DEPTH,
     DEFAULT_PROCESS_NUM,
+    DEFAULT_SKIP_EXTENSION,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
     process_file,
@@ -167,6 +168,15 @@ class UnblobContext(click.Context):
     multiple=True,
 )
 @click.option(
+    "--skip-extension",
+    "skip_extension",
+    type=click.STRING,
+    default=DEFAULT_SKIP_EXTENSION,
+    help="Skip processing files with given extension",
+    show_default=True,
+    multiple=True,
+)
+@click.option(
     "-p",
     "--process-num",
     "process_num",
@@ -229,6 +239,7 @@ def cli(
     depth: int,
     entropy_depth: int,
     skip_magic: Iterable[str],
+    skip_extension: Iterable[str],
     skip_extraction: bool,  # noqa: FBT001
     keep_extracted_chunks: bool,  # noqa: FBT001
     handlers: Handlers,
@@ -254,6 +265,7 @@ def cli(
         entropy_plot=bool(verbose >= 3),
         skip_extraction=skip_extraction,
         skip_magic=skip_magic,
+        skip_extension=skip_extension,
         process_num=process_num,
         handlers=handlers,
         dir_handlers=dir_handlers,

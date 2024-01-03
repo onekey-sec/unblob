@@ -302,3 +302,34 @@ def test_keep_extracted_chunks(
         process_file_mock.call_args.args[0].keep_extracted_chunks
         == keep_extracted_chunks
     ), fail_message
+
+
+@pytest.mark.parametrize(
+    "skip_extension, extracted_files_count",
+    [
+        pytest.param([], 5, id="skip-extension-empty"),
+        pytest.param([""], 5, id="skip-zip-extension-empty-suffix"),
+        pytest.param([".zip"], 1, id="skip-extension-zip"),
+        pytest.param([".rlib"], 5, id="skip-extension-rlib"),
+    ],
+)
+def test_skip_extension(
+    skip_extension: List[str], extracted_files_count: int, tmp_path: Path
+):
+    runner = CliRunner()
+    in_path = (
+        Path(__file__).parent
+        / "integration"
+        / "archive"
+        / "zip"
+        / "regular"
+        / "__input__"
+        / "apple.zip"
+    )
+    args = []
+    for suffix in skip_extension:
+        args += ["--skip-extension", suffix]
+    params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
+    result = runner.invoke(unblob.cli.cli, params)
+    assert extracted_files_count == len(list(tmp_path.rglob("*")))
+    assert result.exit_code == 0
