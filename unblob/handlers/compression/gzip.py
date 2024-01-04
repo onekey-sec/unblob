@@ -24,10 +24,21 @@ from typing import List, Optional
 from structlog import get_logger
 
 from unblob.extractors import Command
+from unblob.extractors.command import MultiFileCommand
 from unblob.models import Extractor
 
 from ...file_utils import InvalidInputFormat
-from ...models import File, Handler, HexString, ValidChunk
+from ...models import (
+    DirectoryExtractor,
+    DirectoryHandler,
+    ExtractResult,
+    File,
+    Glob,
+    Handler,
+    HexString,
+    MultiFile,
+    ValidChunk,
+)
 from ._gzip_reader import SingleMemberGzipReader
 
 logger = get_logger()
@@ -71,10 +82,22 @@ class GZIPExtractor(Extractor):
     def get_dependencies(self) -> List[str]:
         return ["7z"]
 
-    def extract(self, inpath: Path, outdir: Path):
+    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
         name = get_gzip_embedded_name(inpath) or "gzip.uncompressed"
         extractor = Command("7z", "x", "-y", "{inpath}", "-so", stdout=name)
-        extractor.extract(inpath, outdir)
+        return extractor.extract(inpath, outdir)
+
+
+class MultiGZIPExtractor(DirectoryExtractor):
+    def get_dependencies(self) -> List[str]:
+        return ["7z"]
+
+    def extract(self, paths: List[Path], outdir: Path) -> Optional[ExtractResult]:
+        name = get_gzip_embedded_name(paths[0]) or "gzip.uncompressed"
+        extractor = MultiFileCommand(
+            "7z", "x", "-p", "-y", "{inpath}", "-so", stdout=name
+        )
+        return extractor.extract(paths, outdir)
 
 
 class GZIPHandler(Handler):
@@ -124,3 +147,41 @@ class GZIPHandler(Handler):
             start_offset=start_offset,
             end_offset=file.tell(),
         )
+
+
+class MultiVolumeGzipHandler(DirectoryHandler):
+    NAME = "multi-gzip"
+    EXTRACTOR = MultiGZIPExtractor()
+
+    PATTERN = Glob("*.gz.*")
+
+    def is_valid_gzip(self, path: Path) -> bool:
+        with File.from_path(path) as f:
+            try:
+                fp = SingleMemberGzipReader(f)
+                if not fp.read_header():
+                    return False
+            except gzip.BadGzipFile:
+                return False
+        return True
+
+    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        paths = sorted(file.parent.glob(f"{file.stem}.*"))
+
+        # we 'discard' paths that are not the first in the ordered list,
+        # otherwise we will end up with colliding reports, one for every
+        # path in the list.
+        if file != paths[0]:
+            return None
+
+        if self.is_valid_gzip(file):
+            files_size = sum(path.stat().st_size for path in paths)
+            logger.debug(
+                "Multi-volume files", paths=paths, files_size=files_size, _verbosity=2
+            )
+
+            return MultiFile(
+                name=paths[0].stem,
+                paths=paths,
+            )
+        return None
