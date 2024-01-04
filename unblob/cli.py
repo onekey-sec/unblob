@@ -168,9 +168,11 @@ class UnblobContext(click.Context):
     "--skip-magic",
     "skip_magic",
     type=click.STRING,
-    default=DEFAULT_SKIP_MAGIC,
-    help="Skip processing files with given magic prefix",
-    show_default=True,
+    help=f"""Skip processing files with given magic prefix.
+        The provided values are appended to unblob's own skip magic list unless
+        --clear-skip-magic is provided.
+        [default: {', '.join(DEFAULT_SKIP_MAGIC)}]
+    """,
     multiple=True,
 )
 @click.option(
@@ -181,6 +183,14 @@ class UnblobContext(click.Context):
     help="Skip processing files with given extension",
     show_default=True,
     multiple=True,
+)
+@click.option(
+    "--clear-skip-magics",
+    "clear_skip_magics",
+    is_flag=True,
+    show_default=True,
+    default=False,
+    help="Clear unblob's own skip magic list.",
 )
 @click.option(
     "-p",
@@ -246,6 +256,7 @@ def cli(
     entropy_depth: int,
     skip_magic: Iterable[str],
     skip_extension: Iterable[str],
+    clear_skip_magics: bool,  # noqa: FBT001
     skip_extraction: bool,  # noqa: FBT001
     keep_extracted_chunks: bool,  # noqa: FBT001
     handlers: Handlers,
@@ -262,6 +273,9 @@ def cli(
 
     extra_dir_handlers = plugin_manager.load_dir_handlers_from_plugins()
     dir_handlers += tuple(extra_dir_handlers)
+
+    extra_magics_to_skip = () if clear_skip_magics else DEFAULT_SKIP_MAGIC
+    skip_magic = tuple(sorted(set(skip_magic).union(extra_magics_to_skip)))
 
     config = ExtractionConfig(
         extract_root=extract_root,
