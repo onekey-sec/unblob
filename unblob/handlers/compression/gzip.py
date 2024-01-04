@@ -174,11 +174,7 @@ class MultiVolumeGzipHandler(DirectoryHandler):
         if file != paths[0]:
             return None
 
-        valid_gzips = sum([self.is_valid_gzip(path) for path in paths])
-
-        # the presence of multiple valid gzips with the same stem would mean each volume
-        # is independently compressed.
-        if valid_gzips == 1:
+        if self.is_valid_gzip(file):
             files_size = sum(path.stat().st_size for path in paths)
             logger.debug(
                 "Multi-volume files", paths=paths, files_size=files_size, _verbosity=2
