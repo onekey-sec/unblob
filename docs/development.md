@@ -95,7 +95,7 @@ dependencies. To install all required dependencies for development, you can run
 the following command:
 
 ```
-poetry install --with dev
+poetry install --with dev --all-extras
 ```
 
 Please note that it installs dependencies within the dedicated virtual
