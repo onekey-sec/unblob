@@ -139,7 +139,7 @@ class _TarHandler(StructHandler):
             return sum(b if b < 128 else 256 - b for b in octets)
 
         if header.chksum[6:8] not in (b"\x00 ", b" \x00"):
-            logger.error(
+            logger.debug(
                 "Invalid checksum format",
                 actual_last_2_bytes=header.chksum[6:8],
                 handler=self.NAME,
