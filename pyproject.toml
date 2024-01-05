@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "unblob"
-version = "23.12.16"
+version = "24.1.4"
 description = "Extract files from any kind of container formats"
 authors = ["ONEKEY <support@onekey.com>"]
 license = "MIT"
