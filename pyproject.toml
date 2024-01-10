@@ -35,6 +35,9 @@ test = [
   "pytest     ~= 7.0.0",
 ]
 
+[tool.pdm.resolution.overrides]
+pyyaml = "~= 6.0.1"  # For Python 3.12 compatibility
+
 [build-system]
 requires = ["maturin>=0.14,<0.15"]
 build-backend = "maturin"

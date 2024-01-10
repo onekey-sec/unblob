@@ -93,6 +93,8 @@
           maturin
           pdm
           ruff
+          rustc
+          cargo
         ];
       };
 
