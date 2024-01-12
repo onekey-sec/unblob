@@ -28,7 +28,7 @@ OS_LIST = [
 class EXTHandler(StructHandler):
     NAME = "extfs"
 
-    PATTERNS = [HexString("53 ef ( 01 | 02 ) 00 ( 00 | 01 | 02 | 03 | 04 ) 00")]
+    PATTERNS = [HexString("53 ef ( 00 | 01 | 02 ) 00 ( 00 | 01 | 02 | 03 | 04 ) 00")]
 
     C_DEFINITIONS = r"""
         typedef struct ext4_superblock {
@@ -67,7 +67,7 @@ class EXTHandler(StructHandler):
     EXTRACTOR = Command("debugfs", "-R", 'rdump / "{outdir}"', "{inpath}")
 
     def valid_header(self, header) -> bool:
-        if header.s_state not in [0x1, 0x2]:
+        if header.s_state not in [0x0, 0x1, 0x2]:
             logger.debug("ExtFS header state not valid", state=header.s_state)
             return False
         if header.s_errors not in [0x0, 0x1, 0x2, 0x3]:
