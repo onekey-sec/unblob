@@ -49,7 +49,7 @@ optional = true
 mkdocs-material = "9.5.4"
 mkdocstrings = "^0.24.0"
 pillow = ">=9.4,<11.0"
-cairosvg = "^2.7.0"
+cairosvg = "^2.7.1"
 mkdocstrings-python = "^0.8.3"
 
 [tool.poetry.scripts]
