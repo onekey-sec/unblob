@@ -1267,20 +1267,19 @@ extra = ["pygments (>=2.12)"]
 
 [[package]]
 name = "pyperscan"
-version = "0.2.2"
+version = "0.3.0"
 description = ""
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pyperscan-0.2.2-cp38-abi3-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:3dcf7ae969f98c76c07dfc0732a3319bb325834d13d89c6ec7a9dc32c0d15bf3"},
-    {file = "pyperscan-0.2.2-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e5c6d99a8953d1fdeb544dcf657dfcaa1ab69fc25ea92b439e2cf562f6becf05"},
-    {file = "pyperscan-0.2.2-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1f34896b8ed1f21d5b4f68053f4a6cf56732f09c087a1c67c149cb3335f45bee"},
-    {file = "pyperscan-0.2.2.tar.gz", hash = "sha256:8d4eb5f1facd5b8c7ae5adcec75ea999e1aa97e5a49a29ae6afe87814d7ed35d"},
+    {file = "pyperscan-0.3.0-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:26570f9d84758f6a2b636612a97e621511cdc7dbdffff9668ec264eb2ecbf285"},
+    {file = "pyperscan-0.3.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:27c5b507b581a12bd69ec7e7acdd575e2047e76cd5ff0577a2d30ebbc9d4efec"},
+    {file = "pyperscan-0.3.0-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:59413cb6a30912b4eb7eadf4e9ba97fe01d759bf58cd083685f3389c29773568"},
+    {file = "pyperscan-0.3.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b05a7683727919b7abf42ccb80277e9f5dd06b70e40ed6756e0f948047cf0a2"},
+    {file = "pyperscan-0.3.0-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:095552cb789f9d4596a49e59bfc92f5814ed0836a721241d0e24b5dec1bd2b61"},
+    {file = "pyperscan-0.3.0-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:fa05bba61bad569c41a55835c05f3184c5f643f9b6ecfe9a4bf1ab6a79184dce"},
+    {file = "pyperscan-0.3.0.tar.gz", hash = "sha256:a77215265381be7e12878f577cd1c3babbdc57006af9c6f1372df70b4992cbd6"},
 ]
-
-[package.extras]
-dev = ["pre-commit (>=2.20,<3.0)"]
-test = ["pytest (>=7.0.0,<7.1.0)"]
 
 [[package]]
 name = "pyright"
@@ -1758,4 +1757,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "d11f159e2c0444d5f7d720585073bb90baa64d557c6b11b39d15f146e0083c5e"
+content-hash = "5a0688afc79272a93c7a282f92ada44dffa0db6fcb5532e70131b6bc7d529f3e"
