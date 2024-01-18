@@ -37,7 +37,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"
 pyright = "^1.1.347"
-pre-commit = "^2.15.0"
+pre-commit = "^3.5.0"
 pytest-cov = "^3.0.0"
 ruff = "^0.0.259"
 pyyaml = "^6.0.1"
