@@ -46,7 +46,7 @@ pyyaml = "^6.0.1"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-mkdocs-material = "8.5.10"
+mkdocs-material = "9.5.4"
 mkdocstrings = "^0.19.1"
 pillow = ">=9.4,<11.0"
 cairosvg = "^2.7.0"
