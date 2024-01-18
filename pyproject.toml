@@ -36,7 +36,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"
-pyright = "^1.1.307"
+pyright = "^1.1.347"
 pre-commit = "^2.15.0"
 pytest-cov = "^3.0.0"
 ruff = "^0.0.259"
@@ -157,6 +157,7 @@ exclude = ["unblob/testing.py"]
 
 [tool.pyright]
 exclude = ["build"]
+typeCheckingMode = "basic"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

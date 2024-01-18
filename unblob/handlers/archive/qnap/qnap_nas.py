@@ -116,7 +116,7 @@ class QnapHandler(Handler):
         context = QTSSearchContext(start_offset=start_offset, file=file, end_offset=-1)
 
         try:
-            scanner = hyperscan_stream_end_magic_db.build(context, _hyperscan_match)
+            scanner = hyperscan_stream_end_magic_db.build(context, _hyperscan_match)  # type: ignore
             stream_scan(scanner, file)
         except Exception as e:
             logger.debug(

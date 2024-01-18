@@ -82,7 +82,7 @@ def test_build_hyperscan_database():
         m.append((pattern_id, start, end))
         return Scan.Continue
 
-    db.build(matches, on_match).scan(b"A123456789BB")
+    db.build(matches, on_match).scan(b"A123456789BB")  # type: ignore
 
     assert len(matches) == 2
     assert matches[0][1] == 0
