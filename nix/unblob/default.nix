@@ -107,6 +107,7 @@ let
 
     pythonRelaxDeps = [
       "dissect.cstruct"
+      "lief"
       "structlog"
     ];
 
