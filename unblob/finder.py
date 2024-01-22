@@ -150,7 +150,7 @@ def search_chunks(
         start_offset=0,
     )
 
-    scanner = hyperscan_db.build(hyperscan_context, _hyperscan_match)
+    scanner = hyperscan_db.build(hyperscan_context, _hyperscan_match)  # type: ignore
 
     try:
         stream_scan_chunks(scanner, file, hyperscan_context)
