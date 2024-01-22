@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Setup git lfs
         uses: ./.github/actions/setup-git-lfs
-      - uses: cachix/install-nix-action@v22
+      - uses: cachix/install-nix-action@v25
         with:
           install_url: https://releases.nixos.org/nix/nix-2.13.3/install
           extra_nix_config: |
