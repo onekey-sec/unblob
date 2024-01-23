@@ -59,6 +59,7 @@ DEFAULT_SKIP_MAGIC = (
     "HP Printer Job Language",
     "Intel serial flash for PCH ROM",
     "JPEG",
+    "Java module image",
     "MPEG",
     "MS Windows icon resource",
     "Macromedia Flash data",
