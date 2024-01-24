@@ -41,6 +41,7 @@ pre-commit = "^3.5.0"
 pytest-cov = "^3.0.0"
 ruff = "^0.1.13"
 pyyaml = "^6.0.1"
+atheris = { version = "^2.3.0", python = "<3.12" }
 
 [tool.poetry.group.docs]
 optional = true
