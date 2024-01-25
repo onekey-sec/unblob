@@ -44,6 +44,8 @@ from unblob.parser import InvalidHexString, hexstring2regex
             rb"\x00(\x01|\x02(\x03|\x04))\x05",
             id="nested-alternative",
         ),
+        pytest.param("^ 00", rb"^\x00", id="start-anchor"),
+        pytest.param("00 $", rb"\x00$", id="end-anchor"),
     ],
 )
 def test_simple_convert(hex_string, expected_regex):
@@ -72,6 +74,16 @@ def test_single_comment():
     assert regex == rb"\x01\x02"
 
 
-def test_invalid_hexstring():
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        pytest.param("invalid hexstring", id="invalid"),
+        pytest.param("00 ^", id="start-anchor-at-end"),
+        pytest.param("00 ^ 01", id="start-anchor-at-middle"),
+        pytest.param("$ 00", id="end-anchor-at-start"),
+        pytest.param("00 $ 01", id="end-anchor-at-middle"),
+    ],
+)
+def test_invalid_hexstring(pattern):
     with pytest.raises(InvalidHexString):
-        hexstring2regex("invalid hexstring")
+        hexstring2regex(pattern)

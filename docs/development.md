@@ -443,6 +443,10 @@ PATTERNS = [
 ]
 ```
 
+In addition, start and end of input anchors (`^` and `$` like in regular
+expressions) can also be used to restrict a match to the beginning or the end of
+the input file.
+
 ### DirectoryPatterns
 
 The `DirectoryHandler` uses these patterns to identify the starting/main file of a given
