@@ -1,6 +1,6 @@
 import itertools
 
-from lark.exceptions import UnexpectedCharacters
+from lark.exceptions import UnexpectedInput
 from lark.lark import Lark
 from lark.visitors import Transformer
 
@@ -16,7 +16,7 @@ _hex_string_parser = Lark(
 
     %ignore COMMENT
 
-    start: item+
+    start: START_ANCHOR? item+ END_ANCHOR?
 
     item: LITERAL           -> literal
         | WILDCARD          -> wildcard
@@ -29,6 +29,8 @@ _hex_string_parser = Lark(
     alternative: "(" item+ (ALTERNATIVE_SEPARATOR item+)+ ")"
     ALTERNATIVE_SEPARATOR: "|"
     LITERAL: HEXDIGIT HEXDIGIT
+    START_ANCHOR: "^"
+    END_ANCHOR: "$"
     WILDCARD: "??"
     FIRSTNIBLE: "?" HEXDIGIT
     SECONDNIBLE: HEXDIGIT "?"
@@ -89,6 +91,6 @@ class InvalidHexString(ValueError):
 def hexstring2regex(hexastr):
     try:
         parsed = _hex_string_parser.parse(hexastr)
-    except UnexpectedCharacters as e:
+    except UnexpectedInput as e:
         raise InvalidHexString(str(e)) from e
     return _HexStringToRegex().transform(parsed)
