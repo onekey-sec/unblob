@@ -24,7 +24,7 @@ jobs:
           python-version: 3.8
 
       - name: Restore pip cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: pip-3.8
@@ -34,7 +34,7 @@ jobs:
         shell: bash
 
       - name: Restore poetry cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pypoetry/cache
@@ -42,7 +42,7 @@ jobs:
           key: poetry-cache-and-artifacts-3.8
 
       - name: Restore virtualenvs
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pypoetry/virtualenvs
           key: venv-${{ hashFiles('poetry.lock') }}-3.8
