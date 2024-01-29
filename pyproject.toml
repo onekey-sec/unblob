@@ -152,6 +152,20 @@ norecursedirs = """
   tests/integration
 """
 
+[tool.coverage.paths]
+source = ["unblob", "tests"]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+sigterm = true
+concurrency = ["multiprocessing"]
+source = ["unblob", "tests"]
+
+[tool.coverage.report]
+skip_covered = true
+fail_under = 90
+
 [tool.vulture]
 paths = ["unblob/", "vulture_whitelist.py" ]
 exclude = ["unblob/testing.py"]
