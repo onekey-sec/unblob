@@ -35,7 +35,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_IMAGE }}
-
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=sha
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -56,8 +59,7 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+          tags: ${{ steps.meta.output.tags }}
           outputs: type=image,name=${{ env.DOCKER_IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Docker container vulnerability scan
