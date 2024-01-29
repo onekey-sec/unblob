@@ -18,7 +18,7 @@ jobs:
     name: Build Nix - ${{ matrix.arch }}.${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup git lfs
         uses: ./.github/actions/setup-git-lfs
       - uses: cachix/install-nix-action@v25
