@@ -35,11 +35,11 @@ pyfatfs = "^1.0.5"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.4.4"
+pytest = "^8.0.0"
 pyright = "^1.1.349"
 pre-commit = "^3.5.0"
-pytest-cov = "^3.0.0"
-ruff = ">=0.1.13,<0.3.0"
+pytest-cov = ">=3,<5"
+ruff = "^0.1.13"
 pyyaml = "^6.0.1"
 atheris = { version = "^2.3.0", python = "<3.12" }
 
