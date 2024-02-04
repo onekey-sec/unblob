@@ -12,6 +12,15 @@ final: prev:
       nativeCheckInputs = (super.nativeCheckInputs or [ ]) ++ [ final.which ];
     });
 
+  simg2img = prev.simg2img.overrideAttrs (super: {
+    postPatch = ''
+      substituteInPlace output_file.cpp \
+        --replace-fail \
+        'aligned_offset = offset & ~(4096 - 1);' \
+        'aligned_offset = offset & ~(sysconf(_SC_PAGESIZE) - 1);'
+    '';
+  });
+
   # Own package updated independently of nixpkgs
   jefferson = final.callPackage ./nix/jefferson { };
 
