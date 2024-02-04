@@ -34,7 +34,7 @@
   outputs = { self, nixpkgs, filter, unblob-native, lzallright, pyperscan, sasquatch, ... }:
     let
       # System types to support.
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
 
       # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
