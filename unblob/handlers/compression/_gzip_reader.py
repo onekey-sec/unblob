@@ -3,7 +3,7 @@ import zlib
 
 from ...file_utils import DEFAULT_BUFSIZE
 
-# pyright: reportGeneralTypeIssues=false
+# pyright: reportAttributeAccessIssue=false
 
 
 class SingleMemberGzipReader(gzip._GzipReader):  # noqa: SLF001
