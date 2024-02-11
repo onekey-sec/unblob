@@ -18,30 +18,47 @@ class TestChunk:
     @pytest.mark.parametrize(
         "chunk1, chunk2, result",
         [
-            (
+            pytest.param(
                 Chunk(start_offset=0, end_offset=10),
                 Chunk(start_offset=1, end_offset=2),
                 True,
+                id="starts-after-ends-before",
             ),
-            (
+            pytest.param(
                 Chunk(start_offset=0, end_offset=10),
                 Chunk(start_offset=11, end_offset=12),
                 False,
+                id="starts-after-ends-after",
             ),
-            (
+            pytest.param(
                 Chunk(start_offset=0, end_offset=10),
                 Chunk(start_offset=15, end_offset=20),
                 False,
+                id="starts-after-ends-after",
             ),
-            (
+            pytest.param(
                 Chunk(start_offset=1, end_offset=2),
                 Chunk(start_offset=3, end_offset=5),
                 False,
+                id="starts-after-ends-after",
             ),
-            (
+            pytest.param(
                 Chunk(start_offset=0, end_offset=10),
                 Chunk(start_offset=1, end_offset=10),
                 True,
+                id="starts-after-ends-same",
+            ),
+            pytest.param(
+                Chunk(start_offset=0, end_offset=10),
+                Chunk(start_offset=0, end_offset=9),
+                True,
+                id="starts-same-ends-before",
+            ),
+            pytest.param(
+                Chunk(start_offset=0, end_offset=10),
+                Chunk(start_offset=0, end_offset=10),
+                False,
+                id="starts-same-ends-same",
             ),
         ],
     )
