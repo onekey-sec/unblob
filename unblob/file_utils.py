@@ -568,11 +568,21 @@ class FileSystem:
         """Create a symlink dst with the link/content/target src."""
         logger.debug("creating symlink", file_path=dst, link_target=src, _verbosity=3)
 
-        if src.is_absolute():
-            # convert absolute paths to dst relative paths
-            # these would point to the same path if self.root would be the real root "/"
-            # but they are relocatable
-            src = self._path_to_root(dst.parent) / chop_root(src)
+        if dst.is_absolute():
+            # If the symlink destination is absolute, we need to make it relative to the root
+            # so it can be safely created in the extraction directory.
+            # If the resulting path points to outside of the extraction directory, we skip it.
+            dst = self.root / chop_root(dst)
+            if not is_safe_path(self.root, dst):
+                self.record_problem(
+                    LinkExtractionProblem(
+                        problem="Potential path traversal through symlink",
+                        resolution="Skipped.",
+                        path=str(dst),
+                        link_path=str(src),
+                    )
+                )
+                return
 
         safe_link = self._get_checked_link(src=src, dst=dst)
 
