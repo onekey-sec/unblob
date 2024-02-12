@@ -222,7 +222,7 @@ class CPIOParserBase:
                         self.file[entry.start_offset : entry.start_offset + entry.size]
                     ).decode("utf-8")
                 )
-                fs.create_symlink(src=link_path, dst=entry.path)
+                fs.create_symlink(src=entry.path, dst=link_path)
             elif (
                 stat.S_ISCHR(entry.mode)
                 or stat.S_ISBLK(entry.mode)

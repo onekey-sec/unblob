@@ -574,12 +574,20 @@ class FileSystem:
             # but they are relocatable
             src = self._path_to_root(dst.parent) / chop_root(src)
 
-        safe_link = self._get_checked_link(src=dst.parent / src, dst=dst)
+        safe_link = self._get_checked_link(src=src, dst=dst)
 
         if safe_link:
-            dst = safe_link.dst.absolute_path
-            self._ensure_parent_dir(dst)
-            dst.symlink_to(src)
+            src = safe_link.src.absolute_path
+            self._ensure_parent_dir(src)
+            logger.debug(f"Creating symlink {src} -> {dst}")
+
+            # Create symlink at src pointing to dst
+            src.symlink_to(dst)
+
+            if not src.is_symlink():
+                self.record_problem(
+                    safe_link.format_report("Symlink creation failed.")
+                )
 
     def create_hardlink(self, src: Path, dst: Path):
         """Create a new hardlink dst to the existing file src."""
