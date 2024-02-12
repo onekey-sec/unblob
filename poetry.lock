@@ -989,13 +989,13 @@ mkdocs = ">=1.1"
 
 [[package]]
 name = "mkdocs-material"
-version = "9.5.7"
+version = "9.5.9"
 description = "Documentation that simply works"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "mkdocs_material-9.5.7-py3-none-any.whl", hash = "sha256:0be8ce8bcfebb52bae9b00cf9b851df45b8a92d629afcfd7f2c09b2dfa155ea3"},
-    {file = "mkdocs_material-9.5.7.tar.gz", hash = "sha256:16110292575d88a338d2961f3cb665cf12943ff8829e551a9b364f24019e46af"},
+    {file = "mkdocs_material-9.5.9-py3-none-any.whl", hash = "sha256:a5d62b73b3b74349e45472bfadc129c871dd2d4add68d84819580597b2f50d5d"},
+    {file = "mkdocs_material-9.5.9.tar.gz", hash = "sha256:635df543c01c25c412d6c22991872267723737d5a2f062490f33b2da1c013c6d"},
 ]
 
 [package.dependencies]
@@ -1012,7 +1012,7 @@ regex = ">=2022.4"
 requests = ">=2.26,<3.0"
 
 [package.extras]
-git = ["mkdocs-git-committers-plugin-2 (>=1.1,<2.0)", "mkdocs-git-revision-date-localized-plugin (>=1.2,<2.0)"]
+git = ["mkdocs-git-committers-plugin-2 (>=1.1,<2.0)", "mkdocs-git-revision-date-localized-plugin (>=1.2.4,<2.0)"]
 imaging = ["cairosvg (>=2.6,<3.0)", "pillow (>=10.2,<11.0)"]
 recommended = ["mkdocs-minify-plugin (>=0.7,<1.0)", "mkdocs-redirects (>=1.2,<2.0)", "mkdocs-rss-plugin (>=1.6,<2.0)"]
 
@@ -1916,4 +1916,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "1533c3b161013f7407a39e53631347964e89321ddebb388c5bf1b541191514df"
+content-hash = "1d5e7ec49567127a9373af5d985ffa17a92d8fe6afc4e96c84aa23e6b1a391b4"
