@@ -423,7 +423,7 @@ class _FSPath:
 
 class _FSLink:
     def __init__(self, *, root: Path, src: Path, dst: Path) -> None:
-        self.dst = _FSPath(root=root, path=dst)
+        self.dst = _FSPath(root=root, path=root / src.parent / dst)
         self.src = _FSPath(root=root, path=src)
         self.is_safe = self.dst.is_safe and self.src.is_safe
 
