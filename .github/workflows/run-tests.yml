@@ -30,7 +30,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Check pre-commit hook
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
 
 
   check_pyright:
