@@ -83,9 +83,10 @@ class SafeTarFile:
                     "Converted to extraction relative path.",
                 )
                 tarinfo.linkname = f"./{tarinfo.linkname}"
+
             if not is_safe_path(
                 basedir=extract_root,
-                path=extract_root / tarinfo.linkname,
+                path=extract_root / Path(tarinfo.name).parent / tarinfo.linkname,
             ):
                 self.record_problem(
                     tarinfo,
