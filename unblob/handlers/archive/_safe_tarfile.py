@@ -82,7 +82,7 @@ class SafeTarFile:
                     "Absolute path as link target.",
                     "Converted to extraction relative path.",
                 )
-                tarinfo.linkname = f"./{tarinfo.linkname}"
+                tarinfo.linkname = f"{extract_root}/{tarinfo.linkname}"
 
             if not is_safe_path(
                 basedir=extract_root,
