@@ -76,24 +76,63 @@ class SafeTarFile:
 
         # prevent traversal attempts through links
         if tarinfo.islnk() or tarinfo.issym():
-            if Path(tarinfo.linkname).is_absolute():
-                self.record_problem(
-                    tarinfo,
-                    "Absolute path as link target.",
-                    "Converted to extraction relative path.",
-                )
-                tarinfo.linkname = f"{extract_root}/{tarinfo.linkname}"
+            link_target = Path(tarinfo.linkname)
 
-            if not is_safe_path(
-                basedir=extract_root,
-                path=extract_root / Path(tarinfo.name).parent / tarinfo.linkname,
-            ):
-                self.record_problem(
-                    tarinfo,
-                    "Traversal attempt through link path.",
-                    "Skipped.",
-                )
-                return
+            # Check if the link is absolute and make it relative to extract_root
+            if link_target.is_absolute():
+                # Strip leading '/' to make the path relative
+                rel_target = link_target.relative_to('/')
+
+                if Path(tarinfo.linkname).is_absolute():
+                    self.record_problem(
+                        tarinfo,
+                        "Absolute path as link target.",
+                        "Converted to extraction relative path.",
+                    )
+            else:
+                # Directly use the relative link target. If it points to an unsafe path, we'll
+                # check and fix below
+                rel_target = link_target
+
+            # The symlink will point to our relative target (may be updated below if unsafe)
+            tarinfo.linkname = rel_target
+
+            # Resolve the link target to an absolute path
+            resolved_path = (extract_root / tarinfo.name).parent / rel_target
+
+            # If the resolved path points outside of extract_root, we need to fix it!
+            if not is_safe_path(extract_root, resolved_path):
+                logger.warning("Traversal attempt through link path.", src=tarinfo.name, dest=tarinfo.linkname, basedir=extract_root, resovled_path=resolved_path)
+
+                for drop_count in range(0, len(str(rel_target).split('/'))):
+                    new_path = (extract_root / tarinfo.name).parent / Path("/".join(["placeholder"] * drop_count)) / rel_target
+                    resolved_path = os.path.abspath(new_path)
+                    if str(resolved_path).startswith(str(extract_root)):
+                        break
+                else:
+                    # We didn't hit the break, we couldn't resolve the path safely
+                    self.record_problem(
+                        tarinfo,
+                        "Traversal attempt through link path.",
+                        "Skipped.",
+                    )
+                    return
+
+                # Double check that it's safe now
+                if not is_safe_path(extract_root, resolved_path):
+                    self.record_problem(
+                        tarinfo,
+                        "Traversal attempt through link path.",
+                        "Skipped.",
+                    )
+                    return
+
+                # Prepend placeholder directories before rel_target to get a valid path
+                # within extract_root. This is the relative version of resolved_path.
+                rel_target = Path("/".join(["placeholder"] * drop_count)) / rel_target
+                tarinfo.linkname = rel_target
+
+            logger.debug("Creating symlink", points_to=resolved_path, name=tarinfo.name)
 
         target_path = extract_root / tarinfo.name
         # directories are special: we can not set their metadata now + they might also be already existing
