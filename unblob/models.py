@@ -87,6 +87,9 @@ class Chunk(Blob):
         return (
             self.start_offset < other.start_offset
             and self.end_offset >= other.end_offset
+        ) or (
+            self.start_offset <= other.start_offset
+            and self.end_offset > other.end_offset
         )
 
     def contains_offset(self, offset: int) -> bool:
