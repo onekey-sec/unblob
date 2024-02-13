@@ -334,7 +334,13 @@ def test_skip_extension(
     args = []
     for suffix in skip_extension:
         args += ["--skip-extension", suffix]
-    params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
+    params = [
+        *args,
+        "--keep-extracted-chunks",
+        "--extract-dir",
+        str(tmp_path),
+        str(in_path),
+    ]
     result = runner.invoke(unblob.cli.cli, params)
     assert extracted_files_count == len(list(tmp_path.rglob("*")))
     assert result.exit_code == 0
@@ -409,7 +415,13 @@ def test_clear_skip_magics(
         / "__input__"
         / "apple.zip"
     )
-    params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
+    params = [
+        *args,
+        "--keep-extracted-chunks",
+        "--extract-dir",
+        str(tmp_path),
+        str(in_path),
+    ]
 
     process_file_mock = mock.MagicMock()
     with mock.patch.object(unblob.cli, "process_file", process_file_mock):

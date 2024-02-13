@@ -310,7 +310,9 @@ def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
     #                 ├── hello
     #                 └── world
     fw_extract_root = tmp_path / "fw_extract_root"
-    config = ExtractionConfig(extract_root=fw_extract_root, entropy_depth=0)
+    config = ExtractionConfig(
+        extract_root=fw_extract_root, keep_extracted_chunks=True, entropy_depth=0
+    )
     process_result = process_file(config, fw)
     assert process_result.errors == []
     extracted_fw_paths, outsiders = sort_paths(
@@ -331,7 +333,11 @@ def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
     #                     ├── hello
     #                     └── world
     fw_extract_of_extract_root = tmp_path / "fw_extract_of_extract_root"
-    config = ExtractionConfig(extract_root=fw_extract_of_extract_root, entropy_depth=0)
+    config = ExtractionConfig(
+        extract_root=fw_extract_of_extract_root,
+        keep_extracted_chunks=True,
+        entropy_depth=0,
+    )
     process_result = process_file(config, extracted_fw_zip)
 
     # we expect exactly 1 problem reported, related to the extraction of "internal.zip"

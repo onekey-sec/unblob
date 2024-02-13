@@ -604,8 +604,18 @@ class _FileTask:
 
         extraction_reports = []
         try:
-            if result := chunk.extract(inpath, extract_dir):
-                extraction_reports.extend(result.reports)
+            result = chunk.extract(inpath, extract_dir)
+            chunk_reports = result.reports if result else []
+            extraction_reports.extend(chunk_reports)
+            successfully_extracted = not chunk_reports
+
+            if (
+                successfully_extracted
+                and chunk.is_whole_file
+                and not self.config.keep_extracted_chunks
+            ):
+                logger.debug("Removing successfully processed file.", path=inpath)
+                inpath.unlink()
 
             if carved_path and not self.config.keep_extracted_chunks:
                 logger.debug("Removing extracted chunk", path=carved_path)
