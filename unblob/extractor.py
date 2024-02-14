@@ -47,6 +47,12 @@ def is_recursive_link(path: Path) -> bool:
     return False
 
 
+def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
+    # This is a temporary function for existing unit tests in tests/test_extractor.py
+    fix_extracted_directory(outdir, task_result)
+    return path
+
+
 def sanitize_symlink_target(base_dir, current_dir, target):
     # Normalize all paths to their absolute forms
     base_dir_abs = os.path.abspath(base_dir)
