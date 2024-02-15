@@ -112,7 +112,7 @@ class SafeTarFile:
                 )
 
             # The symlink will point to our relative target (may be updated below if unsafe)
-            tarinfo.linkname = rel_target
+            tarinfo.linkname = rel_target.as_posix()
             logger.info(
                 "Link target is relative", linkname=tarinfo.linkname, name=tarinfo.name
             )
@@ -160,7 +160,7 @@ class SafeTarFile:
                 # Prepend placeholder directories before rel_target to get a valid path
                 # within extract_root. This is the relative version of resolved_path.
                 rel_target = Path("/".join(["placeholder"] * drop_count)) / rel_target
-                tarinfo.linkname = rel_target
+                tarinfo.linkname = rel_target.as_posix()
 
             logger.debug("Creating symlink", points_to=resolved_path, name=tarinfo.name)
 
