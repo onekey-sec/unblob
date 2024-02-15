@@ -25,7 +25,7 @@ from unblob.file_utils import (
     round_down,
     round_up,
 )
-from unblob.report import PathTraversalProblem
+from unblob.report import LinkExtractionProblem, PathTraversalProblem
 
 
 @pytest.mark.parametrize(
@@ -502,6 +502,30 @@ class TestFileSystem:
         assert not output_path.exists()
         assert os.readlink(output_path) == "target file"
         assert sandbox.problems == []
+
+    def test_create_symlink_target_inside_sandbox(self, sandbox: FileSystem):
+        # ./sbin/shell -> ../bin/sh
+        sandbox.mkdir(Path("bin"))
+        sandbox.write_bytes(Path("bin/sh"), b"posix shell")
+        sandbox.mkdir(Path("sbin"))
+        sandbox.create_symlink(Path("../bin/sh"), Path("sbin/shell"))
+
+        output_path = sandbox.root / "sbin/shell"
+        assert output_path.read_bytes() == b"posix shell"
+        assert output_path.exists()
+        assert os.readlink(output_path) == "../bin/sh"
+        assert sandbox.problems == []
+
+    def test_create_symlink_target_outside_sandbox(self, sandbox: FileSystem):
+        # /shell -> ../bin/sh
+        sandbox.mkdir(Path("bin"))
+        sandbox.write_bytes(Path("bin/sh"), b"posix shell")
+        sandbox.create_symlink(Path("../bin/sh"), Path("/shell"))
+
+        assert any(p for p in sandbox.problems if isinstance(p, LinkExtractionProblem))
+        output_path = sandbox.root / "shell"
+        assert not output_path.exists()
+        assert not output_path.is_symlink()
 
     def test_create_symlink_absolute_paths(self, sandbox: FileSystem):
         sandbox.write_bytes(Path("target file"), b"test content")
