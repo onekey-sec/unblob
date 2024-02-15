@@ -63,7 +63,7 @@ class SafeTarFile:
                 "Absolute path.",
                 "Converted to extraction relative path.",
             )
-            tarinfo.name = f"./{tarinfo.name}"
+            tarinfo.name = str(Path(tarinfo.name).relative_to("/"))
 
         # prevent traversal attempts through file name
         if not is_safe_path(basedir=extract_root, path=extract_root / tarinfo.name):
@@ -77,12 +77,33 @@ class SafeTarFile:
         # prevent traversal attempts through links
         if tarinfo.islnk() or tarinfo.issym():
             if Path(tarinfo.linkname).is_absolute():
+
+                def calculate_linkname():
+                    root = extract_root.resolve()
+                    path = (extract_root / tarinfo.name).resolve()
+
+                    if path.parts[: len(root.parts)] != root.parts:
+                        return None
+
+                    depth = max(0, len(path.parts) - len(root.parts) - 1)
+                    return ("/".join([".."] * depth) or ".") + tarinfo.linkname
+
+                relative_linkname = calculate_linkname()
+                if relative_linkname is None:
+                    self.record_problem(
+                        tarinfo,
+                        "Absolute path conversion to extraction relative failed - would escape root.",
+                        "Skipped.",
+                    )
+                    return
+
+                assert not Path(relative_linkname).is_absolute()
                 self.record_problem(
                     tarinfo,
                     "Absolute path as link target.",
                     "Converted to extraction relative path.",
                 )
-                tarinfo.linkname = f"./{tarinfo.linkname}"
+                tarinfo.linkname = relative_linkname
 
             resolved_path = (extract_root / tarinfo.name).parent / tarinfo.linkname
             if not is_safe_path(basedir=extract_root, path=resolved_path):
