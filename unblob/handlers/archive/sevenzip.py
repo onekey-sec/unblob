@@ -106,6 +106,12 @@ class MultiVolumeSevenZipHandler(DirectoryHandler):
     PATTERN = Glob("*.7z.001")
 
     def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+        paths = sorted(
+            [p for p in file.parent.glob(f"{file.stem}.*") if p.resolve().exists()]
+        )
+        if not paths:
+            return None
+
         with file.open("rb") as f:
             header_data = f.read(HEADER_SIZE)
 
@@ -116,8 +122,6 @@ class MultiVolumeSevenZipHandler(DirectoryHandler):
         check_header_crc(header)
         size = calculate_sevenzip_size(header)
         logger.debug("Sevenzip header", header=header, size=size, _verbosity=3)
-
-        paths = sorted(file.parent.glob(f"{file.stem}.*"))
 
         files_size = sum(path.stat().st_size for path in paths)
         logger.debug(
