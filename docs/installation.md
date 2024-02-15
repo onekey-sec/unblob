@@ -138,10 +138,13 @@ There is a handy `install-deps.sh` script included in the repository and PyPI pa
 
 4. We maintain a fork of e2fsprogs based on Debian upstream, with some security fixes. You can install it this way:
 
-        curl -L -o libext2fs2_1.47.0-3.ok1.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok1/libext2fs2_1.47.0-3.ok1_$(dpkg --print-architecture).deb"
-        dpkg -i libext2fs2_1.47.0-3.ok1.deb
-        rm -f libext2fs2_1.47.0-3.ok1.deb
+        curl -L -o e2fsprogs_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/e2fsprogs_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
+        curl -L -o libext2fs2_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/libext2fs2_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
+        curl -L -o libss2_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/libss2_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
+        sudo dpkg -i libext2fs2_1.47.0-3.ok2.deb libss2_1.47.0-3.ok2.deb e2fsprogs_1.47.0-3.ok2.deb
+        rm -f libext2fs2_1.47.0-3.ok2.deb libss2_1.47.0-3.ok2.deb e2fsprogs_1.47.0-3.ok2.de
 
-        curl -L -o e2fsprogs_1.47.0-3.ok1.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok1/e2fsprogs_1.47.0-3.ok1_$(dpkg --print-architecture).deb"
-        dpkg -i e2fsprogs_1.47.0-3.ok1.deb
-        rm -f e2fsprogs_1.47.0-3.ok1.deb
+   In case you already had e2fsprogs installed, you might need to upgrade some more packages from e2fsprogs.
+   You can get the names of the installed e2fsprogs binary packages this way:
+
+        sudo dpkg-query -W -f '${db:Status-Abbrev}\t${source:Package}\t${Package}\n' | grep '^i...e2fsprogs' | cut -f3

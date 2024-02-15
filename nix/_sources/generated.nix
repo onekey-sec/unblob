@@ -3,13 +3,13 @@
 {
   e2fsprogs = {
     pname = "e2fsprogs";
-    version = "v1.47.0-3.ok1";
+    version = "v1.47.0-3.ok2";
     src = fetchFromGitHub {
       owner = "onekey-sec";
       repo = "e2fsprogs";
-      rev = "v1.47.0-3.ok1";
+      rev = "v1.47.0-3.ok2";
       fetchSubmodules = false;
-      sha256 = "sha256-lGv1l9/guOEskvIE6DIsg/nRiDTvORZI0h7n623/fgU=";
+      sha256 = "sha256-LvPWZlrH/P4PHupC+e+R1v9C41FBBqKp3cRaqHxkNTw=";
     };
   };
   jefferson = {
