@@ -57,7 +57,7 @@ class _SquashFSBase(StructHandler):
         endian = get_endian(file, self.BIG_ENDIAN_MAGIC)
         header = self.parse_header(file, endian)
 
-        end_of_data_offset = start_offset + header.bytes_used
+        end_of_data_offset = (start_offset + header.bytes_used) & 0xFF_FF_FF_FF
         file.seek(end_of_data_offset)
         padding = file.read(
             round_up(header.bytes_used, max(PAD_SIZES)) - header.bytes_used
