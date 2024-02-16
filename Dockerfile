@@ -7,7 +7,7 @@ RUN chown -R unblob /data
 WORKDIR /data/output
 
 COPY unblob/install-deps.sh /
-RUN /install-deps.sh
+RUN sh -xeu /install-deps.sh
 
 USER unblob
 ENV PATH="/home/unblob/.local/bin:${PATH}"
