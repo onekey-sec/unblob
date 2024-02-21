@@ -1,3 +1,5 @@
+use pyo3::prelude::*;
+
 pub fn shannon_entropy(data: &[u8]) -> f64 {
     let mut entropy = 0.0;
     let mut counts = [0; 256];
@@ -16,6 +18,24 @@ pub fn shannon_entropy(data: &[u8]) -> f64 {
     }
 
     entropy
+}
+/// Calculates Shannon entropy of data
+#[pyfunction(name = "shannon_entropy")]
+pub fn py_shannon_entropy(py: Python, data: &[u8]) -> PyResult<f64> {
+    py.allow_threads(|| Ok(shannon_entropy(data)))
+}
+
+pub fn init_module(py: Python, root_module: &PyModule) -> PyResult<()> {
+    let module = PyModule::new(py, "math_tools")?;
+    module.add_function(wrap_pyfunction!(py_shannon_entropy, module)?)?;
+
+    root_module.add_submodule(module)?;
+
+    py.import("sys")?
+        .getattr("modules")?
+        .set_item("unblob_native.math", module)?;
+
+    Ok(())
 }
 
 #[cfg(test)]

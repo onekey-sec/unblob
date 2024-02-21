@@ -93,6 +93,7 @@ ignore = [
   "D203",    # one-blank-line-before-class:    D211 (no-blank-line-before-class) is used instead
   "D213",    # multi-line-summary-second-line: D212 (multi-line-summary-first-line) is used instead
   "E501",    # line-too-long:                  Let black handle line length violations
+  "UP007",   # non-pep604-annotation:          Python 3.8 support needs legacy annotations
 ]
 
 [tool.ruff.per-file-ignores]
