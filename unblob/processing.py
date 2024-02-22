@@ -1,6 +1,6 @@
+import functools
 import multiprocessing
 import shutil
-import sys
 from operator import attrgetter
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type, Union
@@ -105,6 +105,7 @@ class ExtractionConfig:
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
     progress_reporter: Type[ProgressReporter] = NullProgressReporter
+    sandbox_access_restrictions: List[AccessFS] = []
 
     def get_extract_dir_for(self, path: Path) -> Path:
         """Return extraction dir under root with the name of path."""
@@ -118,28 +119,28 @@ class ExtractionConfig:
         return extract_dir.expanduser().resolve()
 
 
-def sandbox(extract_dir: Path, report_file: Optional[Path]):
-    restrictions = [
-        AccessFS.read("/"),
-        AccessFS.read_write("/dev/shm"),  # noqa: S108
-        AccessFS.read_write(extract_dir.as_posix()),
-        AccessFS.make_dir(extract_dir.parent.as_posix()),
-    ]
+def call_once(fn):
+    fn.__called_once__ = False
 
-    if report_file:
-        restrictions += [
-            AccessFS.read_write(report_file),
-            AccessFS.make_reg(report_file.parent),
-        ]
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if fn.__called_once__:
+            return
+        fn.__called_once__ = True
+        fn(*args, **kwargs)
 
-    if "pytest" in sys.modules:
-        restrictions += [
-            AccessFS.read_write("/tmp"),  # noqa: S108
-            AccessFS.read_write("/build"),
-            AccessFS.read_write(Path(__file__).parent.parent.resolve().as_posix()),
-        ]
+    return wrapper
 
-    restrict_access(*restrictions)
+
+@call_once
+def try_enter_sandbox(config: ExtractionConfig):
+    if not config.sandbox_access_restrictions:
+        return
+    try:
+        restrict_access(*config.sandbox_access_restrictions)
+    except SandboxError:
+        logger.warning("Sandboxing FS access is unavailable on this system, skipping.")
+        restrict_access(*config.sandbox_access_restrictions)
 
 
 @terminate_gracefully
@@ -166,12 +167,7 @@ def process_file(
         )
         return ProcessResult()
 
-    try:
-        if not hasattr(process_file, "_sandboxed"):
-            sandbox(extract_dir, report_file)
-            process_file._sandboxed = True  # noqa: SLF001
-    except SandboxError:
-        logger.warning("Sandboxing FS access is unavailable on this system, skipping.")
+    try_enter_sandbox(config)
 
     process_result = _process_task(config, task)
 
