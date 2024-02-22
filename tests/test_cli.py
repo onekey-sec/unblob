@@ -270,6 +270,7 @@ def test_archive_success(
         handlers=BUILTIN_HANDLERS,
         verbose=expected_verbosity,
         progress_reporter=expected_progress_reporter,
+        sandbox_access_restrictions=mock.ANY,
     )
     process_file_mock.assert_called_once_with(config, in_path, None)
     logger_config_mock.assert_called_once_with(expected_verbosity, tmp_path, log_path)
