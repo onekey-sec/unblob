@@ -11,6 +11,7 @@ from rich.panel import Panel
 from rich.style import Style
 from rich.table import Table
 from structlog import get_logger
+from unblob_native.sandbox import AccessFS
 
 from unblob.models import DirectoryHandlers, Handlers, ProcessResult
 from unblob.plugins import UnblobPluginManager
@@ -277,6 +278,27 @@ def cli(
     extra_magics_to_skip = () if clear_skip_magics else DEFAULT_SKIP_MAGIC
     skip_magic = tuple(sorted(set(skip_magic).union(extra_magics_to_skip)))
 
+    sandbox_access_restrictions = [
+        # Python, shared libraries and so on
+        AccessFS.read("/"),
+        # Multiprocessing
+        AccessFS.read_write("/dev/shm"),  # noqa: S108
+        # Extracted contents
+        AccessFS.read_write(extract_root.as_posix()),
+        AccessFS.make_dir(extract_root.parent.as_posix()),
+    ]
+
+    if report_file:
+        sandbox_access_restrictions += [
+            AccessFS.read_write(report_file),
+            AccessFS.make_reg(report_file.parent),
+        ]
+    if log_path:
+        sandbox_access_restrictions += [
+            AccessFS.read_write(log_path),
+            AccessFS.make_reg(log_path.parent),
+        ]
+
     config = ExtractionConfig(
         extract_root=extract_root,
         force_extract=force,
@@ -294,6 +316,7 @@ def cli(
         progress_reporter=NullProgressReporter
         if verbose
         else RichConsoleProgressReporter,
+        sandbox_access_restrictions=sandbox_access_restrictions,
     )
 
     logger.info("Start processing file", file=file)
