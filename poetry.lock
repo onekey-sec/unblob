@@ -1800,16 +1800,18 @@ lzallright = ">=0.2.1,<0.3.0"
 
 [[package]]
 name = "unblob-native"
-version = "0.1.1"
+version = "0.1.2"
 description = "Performance-critical functionality for Unblob"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "unblob_native-0.1.1-cp38-abi3-macosx_10_7_x86_64.whl", hash = "sha256:784943096db6b45c7baf1c095dd32207fdc15b9be0777653c8108b46b1542858"},
-    {file = "unblob_native-0.1.1-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:048854b48b2444b613708e0a887d80d778e3073b97f89cd7917b98057e3420df"},
-    {file = "unblob_native-0.1.1-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ecad0d466c4beb184fc859e53a35bb964ff9b2cee04c2efe389120468d9c1699"},
-    {file = "unblob_native-0.1.1-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ac38d8f493865dca5330205f6589b1334a7191e1a24c79267eaec6ebe3910f88"},
-    {file = "unblob_native-0.1.1.tar.gz", hash = "sha256:c01746db33ff377860bfa1c5c88871a6ca10f08a51ab49b3ae7fc68025ba12fa"},
+    {file = "unblob_native-0.1.2-cp38-abi3-macosx_10_7_x86_64.whl", hash = "sha256:c2fd9e4f4ea9b86a884bd6d125aae9a5762a99123ad64a32053c7d951ef5feed"},
+    {file = "unblob_native-0.1.2-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:f61508f8b5fd7e3035dbcf3a72a32572652a2f7dcf28a3ee7844bed72f7819c7"},
+    {file = "unblob_native-0.1.2-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4d55da81977d78192a37be707cad7e12982ededa96d9a38f951bfeac5a02b609"},
+    {file = "unblob_native-0.1.2-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:95d99de83cf06e59ad16b6368dfe57869cf9a89ba6f6611eccd2fd20e91430cc"},
+    {file = "unblob_native-0.1.2-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:e42c25087f056998160799d80ffe892a0c4e11bb6c23475c0961df2d12de7e26"},
+    {file = "unblob_native-0.1.2-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:5fd94b1e4878056d865894ed1032b6bb04a25641af1740b06b416bb41da22daf"},
+    {file = "unblob_native-0.1.2.tar.gz", hash = "sha256:da64b57cc5d05c009c823ee34b17e75e45c2b83df1322b5e4bf2df414fe14655"},
 ]
 
 [[package]]
