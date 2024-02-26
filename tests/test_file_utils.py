@@ -81,6 +81,18 @@ def fake_file() -> File:
     return File.from_bytes(b"0123456789abcdefghijklmnopqrst")
 
 
+class TestFile:
+    def test_file_from_empty_bytes(self):
+        with pytest.raises(InvalidInputFormat):
+            File.from_bytes(b"")
+
+    def test_file_from_empty_file(self, tmp_path):
+        file_path = tmp_path / "file"
+        file_path.touch()
+        with pytest.raises(InvalidInputFormat):
+            File.from_path(file_path)
+
+
 class TestStructParser:
     def test_parse_correct_endianness(self):
         test_content = b"\x01\x02\x03\x04"
