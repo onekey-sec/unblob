@@ -167,7 +167,11 @@ class MultiVolumeGzipHandler(DirectoryHandler):
 
     def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
         paths = sorted(
-            [p for p in file.parent.glob(f"{file.stem}.*") if p.resolve().exists()]
+            [
+                p
+                for p in file.parent.glob(f"{file.stem}.*")
+                if p.resolve().exists() and p.stat().st_size > 0
+            ]
         )
 
         # we 'discard' paths that are not the first in the ordered list,
