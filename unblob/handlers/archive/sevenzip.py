@@ -107,11 +107,7 @@ class MultiVolumeSevenZipHandler(DirectoryHandler):
 
     def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
         paths = sorted(
-            [
-                p
-                for p in file.parent.glob(f"{file.stem}.*")
-                if p.resolve().exists() and p.stat().st_size > 0
-            ]
+            [p for p in file.parent.glob(f"{file.stem}.*") if p.resolve().exists()]
         )
         if not paths:
             return None
