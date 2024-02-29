@@ -156,7 +156,12 @@ class MultiVolumeGzipHandler(DirectoryHandler):
     PATTERN = Glob("*.gz.*")
 
     def is_valid_gzip(self, path: Path) -> bool:
-        with File.from_path(path) as f:
+        try:
+            file = File.from_path(path)
+        except ValueError:
+            return False
+
+        with file as f:
             try:
                 fp = SingleMemberGzipReader(f)
                 if not fp.read_header():
