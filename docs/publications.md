@@ -9,7 +9,7 @@
 ## Demo & Workshop
 
 - [BlackHat EU Arsenal 2023](https://www.blackhat.com/eu-23/arsenal/schedule/index.html#unblob-a-firmware-extraction-framework-35757)
-- [IT-S NOW Vienna 2023](https://its-now.science/?schedule#1W13)
+- [IT-S NOW Vienna 2023](https://its-now.science/?review2023#2023-1W3)
 - [BlackHat Asia Arsenal 2023](https://www.blackhat.com/asia-23/arsenal/schedule/index.html#unblob-30358)
 - [DEFCON Demo Labs 2022](https://forum.defcon.org/node/242253)
 - [BlackHat USA Arsenal 2022](https://www.blackhat.com/us-22/arsenal/schedule/#unblob-26664)
