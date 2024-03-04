@@ -1278,17 +1278,20 @@ files = [
 
 [[package]]
 name = "pyfatfs"
-version = "1.0.5"
+version = "1.1.0"
 description = "FAT12/FAT16/FAT32 implementation with VFAT support"
 optional = false
-python-versions = "~=3.6"
+python-versions = "~=3.8"
 files = [
-    {file = "pyfatfs-1.0.5-py3-none-any.whl", hash = "sha256:2376ac3c4d80f9edee170969b665b0ab5e2ec744db0811e1aa50945b59aa0d16"},
-    {file = "pyfatfs-1.0.5.tar.gz", hash = "sha256:e49ea062119fdf6198c7bbbcfe08589d8919e34ac21f5f604d0ed8b5c444972d"},
+    {file = "pyfatfs-1.1.0-py3-none-any.whl", hash = "sha256:7401fd39d9e92f531b2abea5b5d1d2c19d5461f4ba9ce8819b1ba35aea73c65d"},
+    {file = "pyfatfs-1.1.0.tar.gz", hash = "sha256:9725ccd0a4da1c09c27358abbf10f08c043ac84210af576803e087f51a2b30e0"},
 ]
 
 [package.dependencies]
-fs = ">=2.4.0,<3.0.0"
+fs = ">=2.4,<3.0"
+
+[package.extras]
+development = ["build (>=0.9,<1.0)", "codacy-coverage (>=1.3,<2.0)", "coveralls (>=3.0,<4.0)", "flake8 (>=7.0,<8.0)", "flake8-docstrings (>=1.6,<2.0)", "pip-tools (>=7.3,<8.0)", "pytest (>=6.2,<7.0)", "pytest-cov (>=2.11,<3.0)", "pytest-mock (>=3.5,<4.0)", "pytest-runner (>=5.3,<6.0)", "sphinx (>=7.1.2,<7.2.0)"]
 
 [[package]]
 name = "pygments"
