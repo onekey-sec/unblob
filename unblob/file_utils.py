@@ -40,17 +40,13 @@ class SeekError(ValueError):
     """Specific ValueError for File.seek."""
 
 
-class InvalidInputFormat(Exception):
-    pass
-
-
 class File(mmap.mmap):
     access: int
 
     @classmethod
     def from_bytes(cls, content: bytes):
         if not content:
-            raise InvalidInputFormat("Can't create File from empty bytes.")
+            raise ValueError("Can't create File from empty bytes.")
         m = cls(-1, len(content))
         m.write(content)
         m.seek(0)
@@ -59,12 +55,14 @@ class File(mmap.mmap):
 
     @classmethod
     def from_path(cls, path: Path, access=mmap.ACCESS_READ):
+        """Create File.
+
+        Needs a valid non-empty file,
+        raises ValueError on empty files.
+        """
         mode = "r+b" if access == mmap.ACCESS_WRITE else "rb"
         with path.open(mode) as base_file:
-            try:
-                m = cls(base_file.fileno(), 0, access=access)
-            except ValueError as exc:
-                raise InvalidInputFormat from exc
+            m = cls(base_file.fileno(), 0, access=access)
             m.access = access
             return m
 
@@ -122,6 +120,10 @@ class OffsetFile:
 
     def tell(self):
         return self._file.tell() - self._offset
+
+
+class InvalidInputFormat(Exception):
+    pass
 
 
 class Endian(enum.Enum):

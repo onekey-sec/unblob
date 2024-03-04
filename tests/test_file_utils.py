@@ -83,13 +83,13 @@ def fake_file() -> File:
 
 class TestFile:
     def test_file_from_empty_bytes(self):
-        with pytest.raises(InvalidInputFormat):
+        with pytest.raises(ValueError):  # noqa: PT011
             File.from_bytes(b"")
 
     def test_file_from_empty_file(self, tmp_path):
         file_path = tmp_path / "file"
         file_path.touch()
-        with pytest.raises(InvalidInputFormat):
+        with pytest.raises(ValueError, match="cannot mmap an empty file"):
             File.from_path(file_path)
 
 

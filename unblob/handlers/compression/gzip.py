@@ -156,7 +156,12 @@ class MultiVolumeGzipHandler(DirectoryHandler):
     PATTERN = Glob("*.gz.*")
 
     def is_valid_gzip(self, path: Path) -> bool:
-        with File.from_path(path) as f:
+        try:
+            file = File.from_path(path)
+        except ValueError:
+            return False
+
+        with file as f:
             try:
                 fp = SingleMemberGzipReader(f)
                 if not fp.read_header():
@@ -167,11 +172,7 @@ class MultiVolumeGzipHandler(DirectoryHandler):
 
     def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
         paths = sorted(
-            [
-                p
-                for p in file.parent.glob(f"{file.stem}.*")
-                if p.resolve().exists() and p.stat().st_size > 0
-            ]
+            [p for p in file.parent.glob(f"{file.stem}.*") if p.resolve().exists()]
         )
 
         # we 'discard' paths that are not the first in the ordered list,
