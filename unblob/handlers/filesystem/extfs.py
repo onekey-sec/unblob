@@ -84,6 +84,12 @@ class EXTHandler(StructHandler):
                 "ExtFS header major version too high", rev_level=header.s_rev_level
             )
             return False
+        if header.s_log_block_size > 6:
+            logger.debug(
+                "ExtFS header s_log_block_size is too large",
+                s_log_block_size=header.s_log_block_size,
+            )
+            return False
         return True
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
