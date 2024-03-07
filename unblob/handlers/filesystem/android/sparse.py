@@ -1,9 +1,8 @@
 import io
 from typing import Optional
 
-from structlog import get_logger
-
 from unblob.extractors.command import Command
+from unblob.logging import get_logger
 
 from ....file_utils import Endian
 from ....models import File, Regex, StructHandler, ValidChunk

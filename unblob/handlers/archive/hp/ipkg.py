@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Optional
 
 from dissect.cstruct import Instance
-from structlog import get_logger
 
 from unblob.file_utils import (
     Endian,
@@ -13,6 +12,7 @@ from unblob.file_utils import (
     StructParser,
     snull,
 )
+from unblob.logging import get_logger
 from unblob.models import (
     Extractor,
     ExtractResult,

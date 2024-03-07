@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import List, Optional
 
 from dissect.cstruct import Instance
-from structlog import get_logger
 
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...file_utils import Endian, StructParser, get_endian, round_up
 from ...models import Extractor, File, HexString, StructHandler, ValidChunk

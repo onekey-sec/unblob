@@ -21,10 +21,9 @@ import zlib
 from pathlib import Path
 from typing import List, Optional
 
-from structlog import get_logger
-
 from unblob.extractors import Command
 from unblob.extractors.command import MultiFileCommand
+from unblob.logging import get_logger
 from unblob.models import Extractor
 
 from ...file_utils import InvalidInputFormat

@@ -2,9 +2,8 @@ import io
 import lzma
 from typing import Optional
 
-from structlog import get_logger
-
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...file_utils import (
     DEFAULT_BUFSIZE,

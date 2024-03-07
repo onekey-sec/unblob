@@ -19,7 +19,7 @@ feel free to do so !
 """
 from typing import Optional
 
-from structlog import get_logger
+from unblob.logging import get_logger
 
 from ...extractors import Command
 from ...file_utils import Endian

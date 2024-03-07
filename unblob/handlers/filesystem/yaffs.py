@@ -7,7 +7,6 @@ from typing import Iterable, List, Optional, Tuple
 
 import attr
 from dissect.cstruct import Instance
-from structlog import get_logger
 from treelib import Tree
 from treelib.exceptions import NodeIDAbsentError
 
@@ -21,6 +20,7 @@ from unblob.file_utils import (
     read_until_past,
     snull,
 )
+from unblob.logging import get_logger
 from unblob.models import Extractor, ExtractResult, Handler, HexString, ValidChunk
 
 logger = get_logger()

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Union
 
-from structlog import get_logger
+from unblob.logging import get_logger
 
 from .file_utils import carve, is_safe_path
 from .models import Chunk, File, PaddingChunk, TaskResult, UnknownChunk, ValidChunk

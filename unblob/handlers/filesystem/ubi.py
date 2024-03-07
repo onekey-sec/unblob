@@ -3,9 +3,8 @@ import statistics
 from pathlib import Path
 from typing import Optional
 
-from structlog import get_logger
-
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...file_utils import InvalidInputFormat, get_endian, iterate_patterns
 from ...iter_utils import get_intervals

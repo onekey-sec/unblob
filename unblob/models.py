@@ -7,7 +7,8 @@ from typing import Iterable, List, Optional, Tuple, Type, TypeVar
 
 import attr
 import attrs
-from structlog import get_logger
+
+from unblob.logging import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .identifiers import new_id

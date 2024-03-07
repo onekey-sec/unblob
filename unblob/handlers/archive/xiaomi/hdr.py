@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Iterable, Optional, Tuple, cast
 
 from dissect.cstruct import Instance
-from structlog import get_logger
 
 from unblob.file_utils import (
     File,
@@ -13,6 +12,7 @@ from unblob.file_utils import (
     iterate_file,
     snull,
 )
+from unblob.logging import get_logger
 from unblob.models import (
     Endian,
     Extractor,

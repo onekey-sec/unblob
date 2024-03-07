@@ -6,9 +6,9 @@ import io
 from typing import Optional
 
 from lz4.block import LZ4BlockError, decompress
-from structlog import get_logger
 
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int32
 from ...models import File, Handler, HexString, ValidChunk

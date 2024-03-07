@@ -6,7 +6,7 @@ from enum import IntEnum, unique
 from pathlib import Path
 from typing import Dict, Optional
 
-from structlog import get_logger
+from unblob.logging import get_logger
 
 from ...file_utils import (
     Endian,

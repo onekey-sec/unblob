@@ -6,7 +6,8 @@ from typing import Optional, Type
 
 import attr
 from dissect.cstruct import Instance
-from structlog import get_logger
+
+from unblob.logging import get_logger
 
 from ...file_utils import (
     Endian,

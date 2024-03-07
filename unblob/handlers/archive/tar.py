@@ -4,7 +4,7 @@ import tarfile
 from pathlib import Path
 from typing import Optional
 
-from structlog import get_logger
+from unblob.logging import get_logger
 
 from ...file_utils import OffsetFile, SeekError, decode_int, round_up, snull
 from ...models import (

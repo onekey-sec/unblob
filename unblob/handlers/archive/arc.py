@@ -1,9 +1,9 @@
 from typing import Optional
 
 from dissect.cstruct import Instance
-from structlog import get_logger
 
 from unblob.extractors.command import Command
+from unblob.logging import get_logger
 
 from ...models import File, HexString, StructHandler, ValidChunk
 

@@ -2,10 +2,10 @@ from typing import Optional
 
 from pyfatfs._exceptions import PyFATException
 from pyfatfs.PyFat import PyFat
-from structlog import get_logger
 
 from unblob.extractors.command import Command
 from unblob.file_utils import InvalidInputFormat
+from unblob.logging import get_logger
 
 from ...models import File, Handler, HexString, ValidChunk
 

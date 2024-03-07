@@ -1,7 +1,7 @@
 import functools
 import signal
 
-from structlog import get_logger
+from unblob.logging import get_logger
 
 logger = get_logger()
 

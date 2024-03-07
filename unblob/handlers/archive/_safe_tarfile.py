@@ -2,9 +2,8 @@ import os
 import tarfile
 from pathlib import Path
 
-from structlog import get_logger
-
 from unblob.extractor import is_safe_path
+from unblob.logging import get_logger
 from unblob.report import ExtractionProblem
 
 logger = get_logger()

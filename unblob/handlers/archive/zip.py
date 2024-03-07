@@ -3,7 +3,8 @@ import struct
 from typing import Optional
 
 from dissect.cstruct import Instance
-from structlog import get_logger
+
+from unblob.logging import get_logger
 
 from ...extractors import Command
 from ...file_utils import InvalidInputFormat, iterate_patterns

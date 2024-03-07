@@ -5,9 +5,9 @@ from typing import Optional
 import attr
 from dissect.cstruct import Instance
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
-from structlog import get_logger
 
 from unblob.file_utils import File, iterate_file, stream_scan
+from unblob.logging import get_logger
 from unblob.models import (
     Endian,
     Extractor,

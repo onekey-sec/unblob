@@ -3,9 +3,8 @@ import zlib
 from pathlib import Path
 from typing import Optional
 
-from structlog import get_logger
-
 from unblob.handlers.archive.dmg import DMGHandler
+from unblob.logging import get_logger
 
 from ...file_utils import DEFAULT_BUFSIZE, InvalidInputFormat
 from ...models import Extractor, File, Handler, HexString, ValidChunk

@@ -10,9 +10,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.style import Style
 from rich.table import Table
-from structlog import get_logger
 from unblob_native.sandbox import AccessFS
 
+from unblob.logging import get_logger
 from unblob.models import DirectoryHandlers, Handlers, ProcessResult
 from unblob.plugins import UnblobPluginManager
 from unblob.report import (
@@ -49,7 +49,9 @@ def get_version():
 
 
 def show_version(
-    ctx: click.Context, _param: click.Option, value: bool  # noqa: FBT001
+    ctx: click.Context,
+    _param: click.Option,
+    value: bool,  # noqa: FBT001
 ) -> None:
     if not value or ctx.resilient_parsing:
         return
@@ -58,7 +60,9 @@ def show_version(
 
 
 def show_external_dependencies(
-    ctx: click.Context, _param: click.Option, value: bool  # noqa: FBT001
+    ctx: click.Context,
+    _param: click.Option,
+    value: bool,  # noqa: FBT001
 ) -> None:
     if not value or ctx.resilient_parsing:
         return

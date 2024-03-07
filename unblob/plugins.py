@@ -6,9 +6,9 @@ from types import ModuleType
 from typing import List, Optional, Tuple, Type
 
 import pluggy
-from structlog import get_logger
 
 from unblob import hookspecs
+from unblob.logging import get_logger
 from unblob.models import DirectoryHandler, Handler
 
 # The entrypoints are defined by the to-be-loaded plugins. The version

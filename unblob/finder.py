@@ -7,7 +7,8 @@ from typing import List, Optional
 
 import attr
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
-from structlog import get_logger
+
+from unblob.logging import get_logger
 
 from .file_utils import DEFAULT_BUFSIZE, InvalidInputFormat, SeekError
 from .handlers import Handlers

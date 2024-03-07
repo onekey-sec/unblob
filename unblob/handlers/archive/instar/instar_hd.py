@@ -2,10 +2,9 @@ import mmap
 import shutil
 from pathlib import Path
 
-from structlog import get_logger
-
 from unblob.file_utils import File
 from unblob.handlers.archive.zip import ZIPHandler
+from unblob.logging import get_logger
 from unblob.models import Extractor, HexString
 
 logger = get_logger()

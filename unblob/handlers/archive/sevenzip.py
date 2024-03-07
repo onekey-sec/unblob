@@ -21,9 +21,8 @@ import binascii
 from pathlib import Path
 from typing import Optional
 
-from structlog import get_logger
-
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...extractors.command import MultiFileCommand
 from ...file_utils import Endian, InvalidInputFormat, StructParser

@@ -34,9 +34,8 @@ which helps identifying the exact end offset.
 import io
 from typing import List, Optional
 
-from structlog import get_logger
-
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int16
 from ...models import File, HexString, StructHandler, ValidChunk

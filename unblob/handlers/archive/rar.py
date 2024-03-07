@@ -10,9 +10,9 @@ https://www.rarlab.com/technote.htm#rarsign
 from typing import Optional
 
 import rarfile
-from structlog import get_logger
 
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...models import File, Handler, HexString, ValidChunk
 

@@ -2,9 +2,9 @@ from typing import Optional
 
 import attr
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
-from structlog import get_logger
 
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...file_utils import InvalidInputFormat, SeekError, StructParser, stream_scan
 from ...models import File, Handler, HexString, Regex, ValidChunk

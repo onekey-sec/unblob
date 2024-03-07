@@ -3,9 +3,8 @@ import zlib
 from enum import IntEnum
 from typing import Optional
 
-from structlog import get_logger
-
 from unblob.extractors import Command
+from unblob.logging import get_logger
 
 from ...file_utils import Endian, convert_int32
 from ...models import File, HexString, StructHandler, ValidChunk

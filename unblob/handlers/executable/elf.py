@@ -6,7 +6,6 @@ from typing import Optional
 import attr
 import lief
 from dissect.cstruct import Instance
-from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
 from unblob.file_utils import (
@@ -18,6 +17,7 @@ from unblob.file_utils import (
     iterate_patterns,
     round_up,
 )
+from unblob.logging import get_logger
 from unblob.models import HexString, StructHandler, ValidChunk
 
 lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)

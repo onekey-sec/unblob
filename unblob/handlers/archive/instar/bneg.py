@@ -2,10 +2,10 @@ from pathlib import Path
 from typing import Optional
 
 from dissect.cstruct import Instance
-from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
 from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
+from unblob.logging import get_logger
 from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
 
 logger = get_logger()

@@ -3,7 +3,6 @@ import io
 from typing import Optional
 
 from dissect.cstruct import Instance
-from structlog import get_logger
 
 from unblob.file_utils import (
     Endian,
@@ -12,6 +11,7 @@ from unblob.file_utils import (
     read_until_past,
     round_up,
 )
+from unblob.logging import get_logger
 
 from ...extractors import Command
 from ...models import File, HexString, StructHandler, ValidChunk

@@ -5,9 +5,9 @@ from typing import Optional
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from dissect.cstruct import Instance
-from structlog import get_logger
 
 from unblob.file_utils import File, InvalidInputFormat
+from unblob.logging import get_logger
 from unblob.models import (
     Endian,
     Extractor,

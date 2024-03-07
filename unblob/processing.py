@@ -8,7 +8,6 @@ from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type, Union
 import attr
 import magic
 import plotext as plt
-from structlog import get_logger
 from unblob_native import math_tools as mt
 from unblob_native.sandbox import (  # type: ignore
     AccessFS,
@@ -17,6 +16,7 @@ from unblob_native.sandbox import (  # type: ignore
 )
 
 from unblob.handlers import BUILTIN_DIR_HANDLERS, BUILTIN_HANDLERS, Handlers
+from unblob.logging import get_logger
 
 from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
 from .file_utils import InvalidInputFormat, iterate_file

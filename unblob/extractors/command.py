@@ -3,8 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Union
 
-from structlog import get_logger
-
+from unblob.logging import get_logger
 from unblob.models import DirectoryExtractor, ExtractError, Extractor
 from unblob.report import (
     ExtractCommandFailedReport,

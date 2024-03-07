@@ -13,7 +13,8 @@ from pathlib import Path
 from typing import Iterable, Iterator, List, Literal, Optional, Tuple, Union
 
 from dissect.cstruct import Instance, cstruct
-from structlog import get_logger
+
+from unblob.logging import get_logger
 
 from .logging import format_hex
 from .report import (
