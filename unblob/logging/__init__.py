@@ -1,13 +1,15 @@
+import inspect
 import logging
 import pdb  # noqa: T100
 import sys
-from logging.handlers import WatchedFileHandler
 from os import getpid
 from pathlib import Path
 from typing import Any
 
 import structlog
 from dissect.cstruct import Instance, dumpstruct
+
+from unblob.logging.structured import StructuredAdapter, StructuredFormatter
 
 
 def format_hex(value: int):
@@ -91,64 +93,87 @@ def filter_debug_logs(verbosity_level: int):
 def configure_logger(verbosity_level: int, extract_root: Path, log_path: Path):
     log_path.unlink(missing_ok=True)
 
-    log_level = logging.DEBUG if verbosity_level > 0 else logging.CRITICAL
+    logging.addLevelName(8, "TRACE")
+    logging.addLevelName(6, "DUMP")
 
-    processors = [
-        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-    ]
+    verbose_levels = {
+        1: logging.DEBUG,
+        2: 8,
+        3: 6,
+    }
 
-    shared_processors = [
-        structlog.stdlib.add_log_level,
-        filter_debug_logs(verbosity_level or 2),
-        structlog.processors.TimeStamper(
-            key="timestamp", fmt="%Y-%m-%d %H:%M.%S", utc=True
-        ),
-        pretty_print_types(extract_root),
-        add_pid_to_log_message,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.StackInfoRenderer(),
-    ]
-
-    structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(logging.DEBUG),
-        processors=shared_processors + processors,
-        logger_factory=structlog.stdlib.LoggerFactory(),
+    log_level = (
+        verbose_levels.get(verbosity_level, 3)
+        if verbosity_level > 0
+        else logging.CRITICAL
     )
 
-    formatter = structlog.stdlib.ProcessorFormatter(
-        foreign_pre_chain=shared_processors,
-        processors=[
-            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-            structlog.dev.ConsoleRenderer(
-                colors=sys.stdout.isatty(),
-                exception_formatter=structlog.dev.plain_traceback,
-            ),
-        ],
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+    # ch.setLevel(6)
+
+    formatter = StructuredFormatter(
+        "{asctime} {name:26} {levelname:14} {message:36} | {params}",
+        style="{",
+        defaults=dict(params=""),
     )
 
-    file_formatter = structlog.stdlib.ProcessorFormatter(
-        foreign_pre_chain=shared_processors,
-        processors=[
-            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-            structlog.dev.ConsoleRenderer(
-                colors=False, exception_formatter=structlog.dev.plain_traceback
-            ),
-        ],
-    )
+    # processors = [
+    #     structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    # ]
+
+    # shared_processors = [
+    #     structlog.stdlib.add_log_level,
+    #     filter_debug_logs(verbosity_level or 2),
+    #     structlog.processors.TimeStamper(
+    #         key="timestamp", fmt="%Y-%m-%d %H:%M.%S", utc=True
+    #     ),
+    #     pretty_print_types(extract_root),
+    #     add_pid_to_log_message,
+    #     structlog.processors.UnicodeDecoder(),
+    #     structlog.processors.StackInfoRenderer(),
+    # ]
+
+    # structlog.configure(
+    #     wrapper_class=structlog.make_filtering_bound_logger(logging.DEBUG),
+    #     processors=shared_processors + processors,
+    #     logger_factory=structlog.stdlib.LoggerFactory(),
+    # )
+
+    # formatter = structlog.stdlib.ProcessorFormatter(
+    #     foreign_pre_chain=shared_processors,
+    #     processors=[
+    #         structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+    #         structlog.dev.ConsoleRenderer(
+    #             colors=sys.stdout.isatty(),
+    #             exception_formatter=structlog.dev.plain_traceback,
+    #         ),
+    #     ],
+    # )
+
+    # file_formatter = structlog.stdlib.ProcessorFormatter(
+    #     foreign_pre_chain=shared_processors,
+    #     processors=[
+    #         structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+    #         structlog.dev.ConsoleRenderer(
+    #             colors=False, exception_formatter=structlog.dev.plain_traceback
+    #         ),
+    #     ],
+    # )
 
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     console_handler.setLevel(log_level)
 
-    file_handler = WatchedFileHandler(log_path.as_posix())
-    file_handler.setFormatter(file_formatter)
-    file_handler.setLevel(logging.DEBUG)
+    # file_handler = WatchedFileHandler(log_path.as_posix())
+    # file_handler.setFormatter(file_formatter)
+    # file_handler.setLevel(logging.DEBUG)
 
     root_logger = logging.getLogger()
     root_logger.addHandler(console_handler)
-    root_logger.addHandler(file_handler)
-    root_logger.setLevel(logging.DEBUG)
-    structlog.get_logger().debug(
+    # root_logger.addHandler(file_handler)
+    root_logger.setLevel(log_level)
+    get_logger().debug(
         "Logging configured",
         vebosity_level=noformat(verbosity_level),
         extract_root=extract_root.expanduser().resolve(),
@@ -169,3 +194,13 @@ class _MultiprocessingPdb(pdb.Pdb):
 def multiprocessing_breakpoint():
     """Call this in Process forks instead of the builtin `breakpoint` function for debugging with PDB."""
     return _MultiprocessingPdb().set_trace(frame=sys._getframe(1))  # noqa: SLF001
+
+
+def get_logger():
+    cf = inspect.currentframe()
+    name = "NO-NAME"
+    if cf:
+        mod = inspect.getmodule(cf.f_back)
+        name = mod.__name__
+    logger = logging.getLogger(name)
+    return StructuredAdapter(logger)
