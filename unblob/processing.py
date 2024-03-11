@@ -1,3 +1,4 @@
+import functools
 import multiprocessing
 import shutil
 from operator import attrgetter
@@ -9,6 +10,11 @@ import magic
 import plotext as plt
 from structlog import get_logger
 from unblob_native import math_tools as mt
+from unblob_native.sandbox import (  # type: ignore
+    AccessFS,
+    SandboxError,
+    restrict_access,
+)
 
 from unblob.handlers import BUILTIN_DIR_HANDLERS, BUILTIN_HANDLERS, Handlers
 
@@ -99,6 +105,7 @@ class ExtractionConfig:
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
     progress_reporter: Type[ProgressReporter] = NullProgressReporter
+    sandbox_access_restrictions: List[AccessFS] = []
 
     def get_extract_dir_for(self, path: Path) -> Path:
         """Return extraction dir under root with the name of path."""
@@ -110,6 +117,30 @@ class ExtractionConfig:
         extract_name = path.name + self.extract_suffix
         extract_dir = self.extract_root / relative_path.with_name(extract_name)
         return extract_dir.expanduser().resolve()
+
+
+def call_once(fn):
+    fn.__called_once__ = False
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if fn.__called_once__:
+            return
+        fn.__called_once__ = True
+        fn(*args, **kwargs)
+
+    return wrapper
+
+
+@call_once
+def try_enter_sandbox(config: ExtractionConfig):
+    if not config.sandbox_access_restrictions:
+        return
+    try:
+        restrict_access(*config.sandbox_access_restrictions)
+    except SandboxError:
+        logger.warning("Sandboxing FS access is unavailable on this system, skipping.")
+        restrict_access(*config.sandbox_access_restrictions)
 
 
 @terminate_gracefully
@@ -135,6 +166,8 @@ def process_file(
             "File not processed, as report could not be written", file=input_path
         )
         return ProcessResult()
+
+    try_enter_sandbox(config)
 
     process_result = _process_task(config, task)
 
