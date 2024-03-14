@@ -64,7 +64,6 @@ DEFAULT_SKIP_MAGIC = (
     "MS Windows icon resource",
     "Macromedia Flash data",
     "Microsoft Excel",
-    "Microsoft OOXML",
     "Microsoft PowerPoint",
     "Microsoft Word",
     "OpenDocument",
