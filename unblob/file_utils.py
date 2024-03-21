@@ -628,7 +628,7 @@ class FileSystem:
 
     def unlink(self, path):
         """Delete file within extraction path."""
-        logger.debug("unlink file", file_path=path)
+        logger.debug("unlink file", file_path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "unlink")
 
         safe_path.unlink(missing_ok=True)
