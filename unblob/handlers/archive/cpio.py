@@ -210,6 +210,11 @@ class CPIOParserBase:
             if entry.path.name in ("", "."):
                 continue
 
+            # There are cases where CPIO archives have duplicated entries
+            # We then unlink the files to overwrite them and avoid an error.
+            if not stat.S_ISDIR(entry.mode):
+                fs.unlink(entry.path)
+
             if stat.S_ISREG(entry.mode):
                 fs.carve(entry.path, self.file, entry.start_offset, entry.size)
             elif stat.S_ISDIR(entry.mode):
