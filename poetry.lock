@@ -1514,13 +1514,13 @@ pyyaml = "*"
 
 [[package]]
 name = "rarfile"
-version = "4.1"
+version = "4.2"
 description = "RAR archive reader for Python"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "rarfile-4.1-py3-none-any.whl", hash = "sha256:17d7554c93c776ceae677e9d927051267d4c5eba38bf64b9cc89a415d9a5f901"},
-    {file = "rarfile-4.1.tar.gz", hash = "sha256:db60b3b5bc1c4bdeb941427d50b606d51df677353385255583847639473eda48"},
+    {file = "rarfile-4.2-py3-none-any.whl", hash = "sha256:8757e1e3757e32962e229cab2432efc1f15f210823cc96ccba0f6a39d17370c9"},
+    {file = "rarfile-4.2.tar.gz", hash = "sha256:8e1c8e72d0845ad2b32a47ab11a719bc2e41165ec101fd4d3fe9e92aa3f469ef"},
 ]
 
 [[package]]
