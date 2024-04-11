@@ -8,7 +8,7 @@ from structlog import get_logger
 from unblob.handlers.archive.dmg import DMGHandler
 
 from ...file_utils import DEFAULT_BUFSIZE, InvalidInputFormat
-from ...models import Extractor, File, Handler, HexString, ValidChunk
+from ...models import Extractor, File, Handler, Regex, ValidChunk
 
 logger = get_logger()
 
@@ -28,10 +28,10 @@ class ZlibHandler(Handler):
     NAME = "zlib"
 
     PATTERNS = [
-        HexString("78 01"),  # low compression
-        HexString("78 9c"),  # default compression
-        HexString("78 da"),  # best compression
-        HexString("78 5e"),  # compressed
+        Regex(r"^\x78\x01"),  # low compression
+        Regex(r"^\x78\x9c"),  # default compression
+        Regex(r"^\x78\xda"),  # best compression
+        Regex(r"^\x78\x5e"),  # compressed
     ]
 
     EXTRACTOR = ZlibExtractor()
