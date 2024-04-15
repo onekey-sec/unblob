@@ -23,10 +23,10 @@ def carve_chunk_to_file(carve_path: Path, file: File, chunk: Chunk):
 
 
 def fix_permission(path: Path):
-    if not path.exists():
+    if path.is_symlink():
         return
 
-    if path.is_symlink():
+    if not path.exists():
         return
 
     mode = path.stat().st_mode
