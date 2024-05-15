@@ -7,7 +7,7 @@ from structlog import get_logger
 
 from unblob.extractors import Command
 
-from ...file_utils import InvalidInputFormat, get_endian, iterate_patterns
+from ...file_utils import InvalidInputFormat, SeekError, get_endian, iterate_patterns
 from ...iter_utils import get_intervals
 from ...models import File, Handler, HexString, StructHandler, ValidChunk
 
@@ -137,8 +137,10 @@ class UBIHandler(Handler):
             first_bytes = file.read(len(self._UBI_EC_HEADER))
             if first_bytes == b"" or first_bytes != self._UBI_EC_HEADER:
                 break
-            file.seek(offset + peb_size)
-
+            try:
+                file.seek(offset + peb_size)
+            except SeekError:
+                break
         return offset
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
