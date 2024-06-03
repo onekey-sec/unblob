@@ -35,7 +35,7 @@ jobs:
           sudo apt install -q -y qemu-system-aarch64 qemu-efi binfmt-support qemu-user-static
           mkdir -p ~/.config/nix
           echo "system-features = aarch64-linux arm-linux" | sudo tee -a /etc/nix/nix.conf
-      - uses: cachix/cachix-action@v14
+      - uses: cachix/cachix-action@v15
         with:
           name: unblob
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
