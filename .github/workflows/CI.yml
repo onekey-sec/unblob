@@ -38,7 +38,7 @@ jobs:
             arch: x86_64-linux
           - os: ubuntu-latest
             arch: aarch64-linux
-          - os: macos-latest
+          - os: macos-13
             arch: x86_64-darwin
     name: Build Nix - ${{ matrix.arch }}.${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -178,7 +178,7 @@ jobs:
           EOF
 
   wheel-macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     needs: [checks, pytest, pyright]
     strategy:
       matrix:
