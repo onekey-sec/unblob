@@ -81,7 +81,7 @@ class UBIFSHandler(StructHandler):
     """
     HEADER_STRUCT = "ubifs_sb_node_t"
 
-    EXTRACTOR = Command("ubireader_extract_files", "{inpath}", "-o", "{outdir}")
+    EXTRACTOR = Command("ubireader_extract_files", "{inpath}", "-w", "-o", "{outdir}")
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         endian = get_endian(file, self._BIG_ENDIAN_MAGIC)
