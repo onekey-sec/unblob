@@ -188,7 +188,8 @@ class ZIPHandler(StructHandler):
             if offset == end_of_central_directory_offset:
                 break
         else:
-            raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
+            # if we can't find 32bit ZIP EOCD, we fall back to ZIP64
+            end_of_central_directory = self._parse_zip64(file, start_offset, offset)
 
         has_encrypted_files = self.has_encrypted_files(
             file, start_offset, end_of_central_directory
