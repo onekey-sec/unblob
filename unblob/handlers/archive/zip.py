@@ -167,6 +167,7 @@ class ZIPHandler(StructHandler):
         has_encrypted_files = False
         file.seek(start_offset, io.SEEK_SET)
 
+        offset = None
         for offset in iterate_patterns(
             file, struct.pack("<I", self.EOCD_RECORD_HEADER)
         ):
@@ -188,7 +189,9 @@ class ZIPHandler(StructHandler):
             if offset == end_of_central_directory_offset:
                 break
         else:
-            # if we can't find 32bit ZIP EOCD, we fall back to ZIP64
+            if offset is None:
+                raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
+            # if we can't find a valid 32bit ZIP EOCD, we fall back to ZIP64
             end_of_central_directory = self._parse_zip64(file, start_offset, offset)
 
         has_encrypted_files = self.has_encrypted_files(
