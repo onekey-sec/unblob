@@ -29,7 +29,7 @@ class ZSTDHandler(Handler):
     def get_frame_header_size(self, frame_header_descriptor: int) -> int:
         single_segment = (frame_header_descriptor >> 5 & 1) & 0b1
         dictionary_id = frame_header_descriptor >> 0 & 0b11
-        frame_content_size = (frame_header_descriptor >> 6) & 0b1
+        frame_content_size = (frame_header_descriptor >> 6) & 0b11
         return (
             int(not single_segment)
             + DICT_ID_FIELDSIZE_MAP[dictionary_id]
