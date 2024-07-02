@@ -34,6 +34,7 @@ from .models import (
 from .pool import make_pool
 from .report import (
     CalculateMultiFileExceptionReport,
+    CarveReport,
     EntropyReport,
     ExtractDirectoryExistsReport,
     FileMagicReport,
@@ -579,6 +580,10 @@ class _FileTask:
             carved_path = None
         else:
             inpath = carve_valid_chunk(self.carve_dir, file, chunk)
+            self.result.add_report(
+                CarveReport.from_chunk(self.task.path, inpath, chunk)
+            )
+
             extract_dir = self.carve_dir / (inpath.name + self.config.extract_suffix)
             carved_path = inpath
 
