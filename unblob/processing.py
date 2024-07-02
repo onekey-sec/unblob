@@ -95,6 +95,7 @@ class ExtractionConfig:
     process_num: int = DEFAULT_PROCESS_NUM
     keep_extracted_chunks: bool = False
     extract_suffix: str = "_extract"
+    carve_suffix: str = "_extract"
     handlers: Handlers = BUILTIN_HANDLERS
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
@@ -579,7 +580,7 @@ class _FileTask:
             carved_path = None
         else:
             inpath = carve_valid_chunk(self.carve_dir, file, chunk)
-            extract_dir = self.carve_dir / (inpath.name + self.config.extract_suffix)
+            extract_dir = self.carve_dir / (inpath.name + self.config.carve_suffix)
             carved_path = inpath
 
         if extract_dir.exists():
