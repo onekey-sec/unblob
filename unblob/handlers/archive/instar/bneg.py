@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Optional
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
@@ -70,7 +69,7 @@ class BNEGHandler(StructHandler):
     HEADER_STRUCT = "bneg_header_t"
     EXTRACTOR = BNEGExtractor()
 
-    def is_valid_header(self, header: Instance) -> bool:
+    def is_valid_header(self, header) -> bool:
         if header.partition_1_size == 0:
             return False
         if header.partition_2_size == 0:

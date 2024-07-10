@@ -2,7 +2,6 @@ import binascii
 import io
 from typing import Optional
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.file_utils import (
@@ -61,7 +60,7 @@ class _JFFS2Base(StructHandler):
         file.seek(-2, io.SEEK_CUR)
         return endian
 
-    def valid_header(self, header: Instance, node_start_offset: int, eof: int) -> bool:
+    def valid_header(self, header, node_start_offset: int, eof: int) -> bool:
         header_crc = (binascii.crc32(header.dumps()[:-4], -1) ^ -1) & 0xFFFFFFFF
         check_crc = True
 

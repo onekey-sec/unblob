@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
 
 import attr
-from dissect.cstruct import Instance
 from structlog import get_logger
 from treelib import Tree
 from treelib.exceptions import NodeIDAbsentError
@@ -259,7 +258,7 @@ def valid_name(name: bytes) -> bool:
         return True
 
 
-def is_valid_header(header: Instance) -> bool:
+def is_valid_header(header) -> bool:
     if not valid_name(header.name[:-3]):
         return False
     if header.type > 5:
@@ -284,7 +283,7 @@ class YAFFSParser:
         else:
             self.config = config
 
-    def build_entry(self, header: Instance, chunk: YAFFSChunk) -> YAFFSEntry:
+    def build_entry(self, header, chunk: YAFFSChunk) -> YAFFSEntry:
         raise NotImplementedError
 
     def build_chunk(self, spare: bytes, offset: int) -> YAFFSChunk:
@@ -398,7 +397,7 @@ class YAFFSParser:
         object_id_offset = 4
         object_id_start = page_size + ecc_offset + object_id_offset
         object_id_end = object_id_start + 4
-        spare_signature = self.file[object_id_start:object_id_end] + b"\xFF\xFF"
+        spare_signature = self.file[object_id_start:object_id_end] + b"\xff\xff"
 
         config.spare_size = (
             self.file[object_id_end : object_id_end + page_size].find(spare_signature)
@@ -459,7 +458,6 @@ class YAFFSParser:
                 "Can't find entry within the YAFFS tree, something's wrong.",
                 object_id=object_id,
             )
-            pass
         return None
 
     def resolve_path(self, entry: YAFFSEntry) -> Path:
@@ -534,7 +532,7 @@ class YAFFS2Parser(YAFFSParser):
             object_id=yaffs2_packed_tags.object_id,
         )
 
-    def build_entry(self, header: Instance, chunk: YAFFSChunk) -> YAFFSEntry:
+    def build_entry(self, header, chunk: YAFFSChunk) -> YAFFSEntry:
         return YAFFS2Entry(
             object_id=chunk.object_id,
             object_type=header.type,
@@ -549,7 +547,7 @@ class YAFFS2Parser(YAFFSParser):
             st_mtime=header.st_mtime,
             st_ctime=header.st_ctime,
             equiv_id=header.equiv_id,
-            alias=snull(header.alias.replace(b"\xFF", b"")).decode("utf-8"),
+            alias=snull(header.alias.replace(b"\xff", b"")).decode("utf-8"),
             st_rdev=header.st_rdev,
             win_ctime=header.win_ctime,
             win_mtime=header.win_mtime,
@@ -644,14 +642,14 @@ class YAFFS1Parser(YAFFSParser):
             block_status=yaffs_sparse.block_status,
         )
 
-    def build_entry(self, header: Instance, chunk: YAFFSChunk) -> YAFFSEntry:
+    def build_entry(self, header, chunk: YAFFSChunk) -> YAFFSEntry:
         return YAFFSEntry(
             object_type=header.type,
             object_id=chunk.object_id,
             parent_obj_id=header.parent_obj_id,
             sum_no_longer_used=header.sum_no_longer_used,
             name=snull(header.name[0:128]).decode("utf-8"),
-            alias=snull(header.alias.replace(b"\xFF", b"")).decode("utf-8"),
+            alias=snull(header.alias.replace(b"\xff", b"")).decode("utf-8"),
             file_size=header.file_size,
             equiv_id=header.equivalent_object_id,
         )

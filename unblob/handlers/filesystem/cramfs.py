@@ -2,8 +2,6 @@ import binascii
 import struct
 from typing import Optional
 
-from dissect.cstruct import Instance
-
 from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int32, get_endian
@@ -59,7 +57,7 @@ class CramFSHandler(StructHandler):
         self,
         file: File,
         start_offset: int,
-        header: Instance,
+        header,
         endian: Endian,
     ) -> bool:
         # old cramfs format do not support crc

@@ -2,7 +2,6 @@ import io
 from pathlib import Path
 from typing import Optional
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
@@ -59,7 +58,7 @@ class NetgearCHKHandler(StructHandler):
     HEADER_STRUCT = "chk_header_t"
     EXTRACTOR = CHKExtractor()
 
-    def is_valid_header(self, header: Instance) -> bool:
+    def is_valid_header(self, header) -> bool:
         if header.header_len != len(header):
             return False
         try:

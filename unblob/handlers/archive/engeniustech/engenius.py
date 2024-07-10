@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Optional
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
@@ -81,7 +80,7 @@ class EngeniusHandler(StructHandler):
     EXTRACTOR = EngeniusExtractor()
     PATTERN_MATCH_OFFSET = -0x5C
 
-    def is_valid_header(self, header: Instance) -> bool:
+    def is_valid_header(self, header) -> bool:
         if header.length <= len(header):
             return False
         try:

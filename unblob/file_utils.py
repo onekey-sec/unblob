@@ -12,7 +12,7 @@ import unicodedata
 from pathlib import Path
 from typing import Iterable, Iterator, List, Literal, Optional, Tuple, Union
 
-from dissect.cstruct import Instance, cstruct
+from dissect.cstruct import cstruct
 from structlog import get_logger
 
 from .logging import format_hex
@@ -336,7 +336,7 @@ class StructParser:
         struct_name: str,
         file: Union[File, bytes],
         endian: Endian,
-    ) -> Instance:
+    ):
         cparser = self.cparser_le if endian is Endian.LITTLE else self.cparser_be
         struct_parser = getattr(cparser, struct_name)
         return struct_parser(file)

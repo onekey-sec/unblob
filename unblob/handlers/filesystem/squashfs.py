@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import List, Optional
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -297,7 +296,7 @@ class SquashFSv4LEHandler(_SquashFSBase):
 class SquashFSv4BEExtractor(Extractor):
     EXECUTABLE = "sasquatch-v4be"
 
-    def is_avm(self, header: Instance) -> bool:
+    def is_avm(self, header) -> bool:
         # see https://raw.githubusercontent.com/Freetz/freetz/master/tools/make/squashfs4-host-be/AVM-BE-format.txt
         return header.bytes_used == header.mkfs_time
 
