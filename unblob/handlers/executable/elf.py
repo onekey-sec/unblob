@@ -38,6 +38,12 @@ class ElfChunk(ValidChunk):
         # however we want to keep carved out ELF files, as they are the interesting stuff!
         elf = lief.ELF.parse(str(inpath))
 
+        if elf is None:
+            logger.error(
+                "Trying to extract an invalid ELF file.", inpath=inpath, outdir=outdir
+            )
+            return
+
         is_kernel = (
             elf.header.file_type == lief.ELF.E_TYPE.EXECUTABLE
             and elf.has_section(KERNEL_INIT_DATA_SECTION)
@@ -132,21 +138,13 @@ class _ELFBase(StructHandler):
     SECTION_HEADER_STRUCT = "elf_shdr_t"
     PROGRAM_HEADER_STRUCT = "elf_phdr_t"
 
-    @staticmethod
-    def _check_field(field, value):
-        # LIEF uses pybind11 where Enum lookup always finds a value, but unknown values are returned as '???'
-        # https://github.com/pybind/pybind11/blob/68a0b2dfd8cb3f5ac1846f22b6a8d0d539cb493c/include/pybind11/pybind11.h#L1907
-        # we need to validate if the matched value is indeed a valid value
-        if field(value).name not in field.__members__:
-            raise ValueError
-
     def is_valid_header(self, header: Instance) -> bool:
         # check that header fields have valid values
         try:
-            self._check_field(lief.ELF.E_TYPE, header.e_type)
-            self._check_field(lief.ELF.ARCH, header.e_machine)
-            self._check_field(lief.ELF.VERSION, header.e_version)
-        except ValueError:
+            lief.ELF.E_TYPE(header.e_type)
+            lief.ELF.ARCH(header.e_machine)
+            lief.ELF.VERSION(header.e_version)
+        except RuntimeError:
             return False
         return True
 
@@ -167,10 +165,13 @@ class _ELFBase(StructHandler):
                 self.SECTION_HEADER_STRUCT, file, endian
             )
 
-            if (
-                lief.ELF.SECTION_TYPES(section_header.sh_type)
-                == lief.ELF.SECTION_TYPES.NOBITS
-            ):
+            try:
+                if (
+                    lief.ELF.SECTION_TYPES(section_header.sh_type)
+                    == lief.ELF.SECTION_TYPES.NOBITS
+                ):
+                    continue
+            except RuntimeError:
                 continue
 
             section_end = section_header.sh_offset + section_header.sh_size
