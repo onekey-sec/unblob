@@ -3,7 +3,6 @@ import io
 from pathlib import Path
 from typing import Iterable, Optional, cast
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
@@ -75,12 +74,12 @@ class NetgearTRXBase(StructHandler):
             start_offset=start_offset, end_offset=start_offset + header.len
         )
 
-    def is_valid_header(self, header: Instance) -> bool:
+    def is_valid_header(self, header) -> bool:
         if header.len < len(header):
             return False
         return True
 
-    def _is_crc_valid(self, file: File, start_offset: int, header: Instance) -> bool:
+    def _is_crc_valid(self, file: File, start_offset: int, header) -> bool:
         file.seek(start_offset + CRC_CONTENT_OFFSET)
         content = bytearray(file.read(header.len - CRC_CONTENT_OFFSET))
         computed_crc = (binascii.crc32(content) ^ -1) & 0xFFFFFFFF

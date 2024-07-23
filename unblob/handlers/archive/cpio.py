@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Optional, Type
 
 import attr
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from ...file_utils import (
@@ -252,7 +251,7 @@ class CPIOParserBase:
         return end_offset
 
     @classmethod
-    def _pad_header(cls, header: Instance, c_namesize: int) -> int:
+    def _pad_header(cls, header, c_namesize: int) -> int:
         return round_up(len(header) + c_namesize, cls._PAD_ALIGN)
 
     @classmethod

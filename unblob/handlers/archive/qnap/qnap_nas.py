@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Optional
 
 import attr
-from dissect.cstruct import Instance
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
 from structlog import get_logger
 
@@ -44,7 +43,7 @@ class QTSSearchContext:
     end_offset: int
 
 
-def is_valid_header(header: Instance) -> bool:
+def is_valid_header(header) -> bool:
     try:
         header.device_id.decode("utf-8")
         header.file_version.decode("utf-8")

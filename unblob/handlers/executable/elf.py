@@ -5,7 +5,6 @@ from typing import Optional
 
 import attr
 import lief
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
@@ -138,7 +137,7 @@ class _ELFBase(StructHandler):
     SECTION_HEADER_STRUCT = "elf_shdr_t"
     PROGRAM_HEADER_STRUCT = "elf_phdr_t"
 
-    def is_valid_header(self, header: Instance) -> bool:
+    def is_valid_header(self, header) -> bool:
         # check that header fields have valid values
         try:
             lief.ELF.E_TYPE(header.e_type)
@@ -197,9 +196,7 @@ class _ELFBase(StructHandler):
 
         return last_program_end
 
-    def get_end_offset(
-        self, file: File, start_offset: int, header: Instance, endian
-    ) -> int:
+    def get_end_offset(self, file: File, start_offset: int, header, endian) -> int:
         # Usually the section header is the last, but in some cases the program headers are
         # put to the end of the file, and in some cases sections header and actual sections
         # can be also intermixed, so we need also to check the end of the last section and

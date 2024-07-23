@@ -1,6 +1,5 @@
 from typing import Optional
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractors.command import Command
@@ -54,7 +53,7 @@ class ARCHandler(StructHandler):
         except UnicodeDecodeError:
             return False
 
-    def valid_header(self, header: Instance) -> bool:
+    def valid_header(self, header) -> bool:
         if header.archive_marker != 0x1A:
             return False
         if header.header_type > 0x07:

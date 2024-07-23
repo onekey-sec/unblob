@@ -2,7 +2,6 @@ import io
 from pathlib import Path
 from typing import Optional
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.file_utils import (
@@ -48,7 +47,7 @@ C_DEFINITIONS = r"""
 """
 
 
-def is_valid_header(header: Instance) -> bool:
+def is_valid_header(header) -> bool:
     if header.toc_offset == 0 or header.toc_entries == 0:
         return False
     try:

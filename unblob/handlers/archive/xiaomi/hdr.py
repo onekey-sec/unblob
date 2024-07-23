@@ -3,7 +3,6 @@ import io
 from pathlib import Path
 from typing import Iterable, Optional, Tuple, cast
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.file_utils import (
@@ -74,7 +73,7 @@ def calculate_crc(file: File, start_offset: int, size: int) -> int:
     return (digest ^ -1) & 0xFFFFFFFF
 
 
-def is_valid_blob_header(blob_header: Instance) -> bool:
+def is_valid_blob_header(blob_header) -> bool:
     if blob_header.magic == BLOB_MAGIC:
         return False
     if not blob_header.size:
@@ -86,7 +85,7 @@ def is_valid_blob_header(blob_header: Instance) -> bool:
     return True
 
 
-def is_valid_header(header: Instance) -> bool:
+def is_valid_header(header) -> bool:
     if header.signature_offset < len(header):
         return False
     if not header.blob_offsets[0]:
@@ -147,7 +146,7 @@ class HDRHandlerBase(StructHandler):
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
 
     def _is_crc_valid(
-        self, file: File, header: Instance, start_offset: int, end_offset: int
+        self, file: File, header, start_offset: int, end_offset: int
     ) -> bool:
         computed_crc = calculate_crc(
             file,

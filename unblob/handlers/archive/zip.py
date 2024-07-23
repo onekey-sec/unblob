@@ -2,7 +2,6 @@ import io
 import struct
 from typing import Optional
 
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from ...extractors import Command
@@ -90,7 +89,7 @@ class ZIPHandler(StructHandler):
         self,
         file: File,
         start_offset: int,
-        end_of_central_directory: Instance,
+        end_of_central_directory,
     ) -> bool:
         file.seek(start_offset + end_of_central_directory.offset_of_cd, io.SEEK_SET)
         for _ in range(end_of_central_directory.total_entries):
@@ -104,7 +103,7 @@ class ZIPHandler(StructHandler):
         return False
 
     @staticmethod
-    def is_zip64_eocd(end_of_central_directory: Instance):
+    def is_zip64_eocd(end_of_central_directory):
         # see https://pkware.cachefly.net/webdocs/APPNOTE/APPNOTE-6.3.1.TXT section J
         return (
             end_of_central_directory.disk_number == 0xFFFF
@@ -116,14 +115,14 @@ class ZIPHandler(StructHandler):
         )
 
     @staticmethod
-    def is_zip64_cd_file(file_header: Instance):
+    def is_zip64_cd_file(file_header):
         # see https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT section 4.3.9.2
         return (
             file_header.file_size == 0xFFFFFFFF
             or file_header.compress_size == 0xFFFFFFFF
         )
 
-    def _parse_zip64(self, file: File, start_offset: int, offset: int) -> Instance:
+    def _parse_zip64(self, file: File, start_offset: int, offset: int):
         file.seek(start_offset, io.SEEK_SET)
         for eocd_locator_offset in iterate_patterns(
             file, struct.pack("<I", self.ZIP64_EOCD_LOCATOR_HEADER)

@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.file_utils import File, InvalidInputFormat
@@ -70,7 +69,7 @@ class SHRSHandler(StructHandler):
     HEADER_STRUCT = "dlink_header_t"
     EXTRACTOR = SHRSExtractor()
 
-    def is_valid_header(self, header: Instance, file: File) -> bool:
+    def is_valid_header(self, header, file: File) -> bool:
         if header.file_size < len(header):
             return False
         # we're exactly past the header, we compute the digest

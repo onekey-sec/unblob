@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Optional
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.file_utils import File, InvalidInputFormat
@@ -53,7 +52,7 @@ class EncrptedHandler(StructHandler):
     HEADER_STRUCT = "dlink_header_t"
     EXTRACTOR = EncrptedExtractor()
 
-    def is_valid_header(self, header: Instance) -> bool:
+    def is_valid_header(self, header) -> bool:
         if header.size < len(header):
             return False
         return True

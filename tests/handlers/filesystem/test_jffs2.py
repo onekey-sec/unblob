@@ -1,7 +1,6 @@
 import binascii
 
 import pytest
-from dissect.cstruct import Instance
 from helpers import unhex
 
 from unblob.file_utils import Endian, File
@@ -59,7 +58,7 @@ def get_valid_jffs2_old_be_header():
     )
 
 
-def calculate_crc(header: Instance):
+def calculate_crc(header):
     return (binascii.crc32(header.dumps()[:-4], -1) ^ -1) & 0xFFFFFFFF
 
 
@@ -188,9 +187,7 @@ JFFS2_OLD_BE_HEADER_HIGH_TOTLEN.totlen = len(JFFS2_OLD_BE_HEADER_HIGH_TOTLEN) - 
         ),
     ],
 )
-def test_valid_header_new(
-    header: Instance, node_start_offset: int, eof: int, expected: bool
-):
+def test_valid_header_new(header, node_start_offset: int, eof: int, expected: bool):
     header.hdr_crc = calculate_crc(header)
     assert new_handler.valid_header(header, node_start_offset, eof) == expected
 
@@ -270,9 +267,7 @@ def test_valid_header_new(
         ),
     ],
 )
-def test_valid_header_old(
-    header: Instance, node_start_offset: int, eof: int, expected: bool
-):
+def test_valid_header_old(header, node_start_offset: int, eof: int, expected: bool):
     header.hdr_crc = calculate_crc(header)
     assert old_handler.valid_header(header, node_start_offset, eof) == expected
 
