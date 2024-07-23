@@ -120,7 +120,7 @@ class _JFFS2Base(StructHandler):
                 # to the size of an erase block.
                 if header.magic in [0x0000, 0xFFFF]:
                     file.seek(-len(header), io.SEEK_CUR)
-                    current_offset = read_until_past(file, b"\x00\xFF")
+                    current_offset = read_until_past(file, b"\x00\xff")
                     continue
 
                 logger.debug(

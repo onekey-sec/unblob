@@ -39,7 +39,7 @@ WITH_SQUEEZED_DATA = """\
 def test_with_squized_data():
     binary = unhex(WITH_SQUEEZED_DATA)
     assert binary[:0x10] == EXPECTED[:0x10]
-    assert binary[0x10:0x30] == b"\xFF\x00" * 0x10
+    assert binary[0x10:0x30] == b"\xff\x00" * 0x10
     assert binary[0x30:] == EXPECTED[0x10:]
 
 
@@ -53,7 +53,7 @@ WITH_SQUEEZED_END = """\
 def test_with_squized_end():
     binary = unhex(WITH_SQUEEZED_END)
     assert len(binary) == 0x40
-    assert binary == b"\xFF" * 0x40
+    assert binary == b"\xff" * 0x40
 
 
 WITH_SQUEEZE_AFTER_SQUEEZE = """\

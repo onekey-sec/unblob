@@ -31,6 +31,7 @@ we will observe compress'ed chunks followed by other chunks in the
 wild.  The only ones I observed were followed by null bytes sentinels,
 which helps identifying the exact end offset.
 """
+
 import io
 from typing import List, Optional
 

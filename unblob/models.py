@@ -159,7 +159,8 @@ class PaddingChunk(Chunk):
     """
 
     def as_report(
-        self, entropy: Optional[EntropyReport]  #   noqa: ARG002
+        self,
+        entropy: Optional[EntropyReport],  #   noqa: ARG002
     ) -> ChunkReport:
         return ChunkReport(
             id=self.id,

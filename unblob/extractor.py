@@ -1,4 +1,5 @@
 """File extraction related functions."""
+
 import errno
 import os
 from pathlib import Path

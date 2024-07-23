@@ -109,7 +109,9 @@ class UnblobPluginManager(pluggy.PluginManager):
     def load_dir_handlers_from_plugins(
         self,
     ) -> List[Type[DirectoryHandler]]:
-        extra_handlers = list(itertools.chain(*self.hook.unblob_register_dir_handlers()))  # type: ignore
+        extra_handlers = list(
+            itertools.chain(*self.hook.unblob_register_dir_handlers())
+        )  # type: ignore
         if extra_handlers:
             logger.debug(
                 "Loaded directory handlers from plugins", handlers=extra_handlers

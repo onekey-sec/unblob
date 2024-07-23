@@ -17,6 +17,7 @@ https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zForm
 
 https://py7zr.readthedocs.io/en/latest/archive_format.html
 """
+
 import binascii
 from pathlib import Path
 from typing import Optional
