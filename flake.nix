@@ -67,9 +67,21 @@
         (system:
           with nixpkgsFor.${system}; {
             default = mkShell {
-              packages = [
+              venvDir = "./.venv";
+              buildInputs = [
+                # A Python interpreter including the 'venv' module is required to bootstrap
+                # the environment.
+                python3Packages.python
+
+                # This executes some shell code to initialize a venv in $venvDir before
+                # dropping into the shell
+                python3Packages.venvShellHook
+
+                # This hook is used to patch downloaded binaries in venv to use libraries
+                # from the nix store.
+                autoPatchelfHook
+
                 unblob.runtimeDeps
-                ruff
                 pyright
                 python3Packages.pytest
                 python3Packages.pytest-cov
@@ -78,7 +90,18 @@
                 nvfetcher
               ];
 
-              env.LD_LIBRARY_PATH = lib.makeLibraryPath [ file ];
+              postVenvCreation =
+                let
+                  apply_patches = lib.concatMapStringsSep
+                    "\n"
+                    (patch: "patch -f -p1 -d $VIRTUAL_ENV/lib/python3*/site-packages < ${patch}")
+                    pkgs.python3Packages.python-magic.patches;
+                in
+                ''
+                  poetry install --all-extras --sync --with dev
+                  autoPatchelf "$VIRTUAL_ENV/"
+                  ${apply_patches}
+                '';
             };
           });
 
