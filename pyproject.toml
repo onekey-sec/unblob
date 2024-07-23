@@ -11,7 +11,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.8"
 click = "^8.1.7"
-"dissect.cstruct" = "^2.0"
+"dissect.cstruct" = ">=2.0,<5.0"
 attrs = ">=23.1.0"
 structlog = ">=24.1.0"
 arpy = "^2.3.0"
