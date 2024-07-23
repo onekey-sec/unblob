@@ -581,13 +581,13 @@ code to see what it looks like in real world applications.
 
 ### Code style
 
-We adhere to PEP8 and enforce proper formatting of source files using
-[black](https://github.com/psf/black) so you should not worry about formatting
-source code at all, `pre-commit` will take care of it.
+We adhere to PEP8 and enforce proper formatting of source files using [ruff
+format](https://docs.astral.sh/ruff/formatter/) so you should not worry about
+formatting source code at all, `pre-commit` will take care of it.
 
-For linting we use [ruff](https://ruff.rs). Lint errors can be shown in your
-editor of choice by one of the [editor
-plugins](https://beta.ruff.rs/docs/editor-integrations/).
+For linting we use [ruff check](https://docs.astral.sh/ruff/linter/). Lint
+errors can be shown in your editor of choice by one of the [editor
+plugins](https://docs.astral.sh/ruff/editors/).
 
 ### File Format Correctness
 

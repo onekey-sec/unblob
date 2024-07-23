@@ -23,12 +23,12 @@ repos:
         entry: poetry run ruff check --force-exclude
         args:
           [--output-format=full, --fix, --show-fixes, --exit-non-zero-on-fix]
-
-  - repo: https://github.com/psf/black
-    rev: 23.1.0
-    hooks:
-      - id: black
-        name: Check black
+      - id: ruff-format
+        name: Format python (ruff)
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        entry: poetry run ruff format --force-exclude
 
   - repo: https://github.com/jendrikseipp/vulture
     rev: v2.7
