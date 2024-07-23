@@ -53,7 +53,7 @@ class LZMAHandler(Handler):
             return False
         # uncompressed size is either unknown (0xFFFFFFFFFFFFFFFF) or
         # smaller than 256GB  (section 1.1.3 of format definition)
-        if not (
+        if not (  # noqa: SIM103
             uncompressed_size == 0xFFFFFFFFFFFFFFFF
             or uncompressed_size < MAX_UNCOMPRESSED_SIZE
         ):

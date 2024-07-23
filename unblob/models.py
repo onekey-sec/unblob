@@ -39,7 +39,7 @@ class Task:
 
 @attr.define
 class Blob:
-    id: str = attr.field(  # noqa: A003
+    id: str = attr.field(
         factory=new_id,
     )
 

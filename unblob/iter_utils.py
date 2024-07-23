@@ -19,6 +19,7 @@ def get_intervals(values: List[int]) -> List[int]:
     -------
     >>> get_intervals([1, 4, 5, 6, 10])
     [3, 1, 1, 4]
+
     """
     all_diffs = []
     for value, next_value in pairwise(values):

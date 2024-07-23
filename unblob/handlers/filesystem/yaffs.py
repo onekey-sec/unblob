@@ -263,7 +263,7 @@ def is_valid_header(header) -> bool:
         return False
     if header.type > 5:
         return False
-    if header.sum_no_longer_used != 0xFFFF:
+    if header.sum_no_longer_used != 0xFFFF:  # noqa: SIM103
         return False
     return True
 

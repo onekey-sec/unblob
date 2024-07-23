@@ -37,7 +37,7 @@ class Command(Extractor):
         cmd = self._make_extract_command(inpath, outdir)
         command = shlex.join(cmd)
         logger.debug("Running extract command", command=command)
-        stdout_file: Union[int, "io.FileIO"] = subprocess.PIPE
+        stdout_file: Union[int, io.FileIO] = subprocess.PIPE
 
         def no_op():
             pass

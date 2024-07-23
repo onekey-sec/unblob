@@ -221,9 +221,7 @@ class RomFSHeader:
         Inodes addresses must be 16 bytes aligned and placed within
         the RomFS on file.
         """
-        if (self.header_end_offset <= addr <= self.eof) and (addr % 16 == 0):
-            return True
-        return False
+        return (self.header_end_offset <= addr <= self.eof) and (addr % 16 == 0)
 
     def is_recursive(self, addr) -> bool:
         return addr in self.inodes

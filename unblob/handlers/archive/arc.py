@@ -58,7 +58,7 @@ class ARCHandler(StructHandler):
             return False
         if header.header_type > 0x07:
             return False
-        if not self.valid_name(header.name):
+        if not self.valid_name(header.name):  # noqa: SIM103
             return False
         return True
 

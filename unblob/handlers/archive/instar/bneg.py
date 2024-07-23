@@ -76,7 +76,7 @@ class BNEGHandler(StructHandler):
             return False
         if header.major != 0x1:
             return False
-        if header.minor != 0x1:
+        if header.minor != 0x1:  # noqa: SIM103
             return False
 
         return True

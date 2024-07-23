@@ -217,7 +217,7 @@ class EntropyReport(Report):
 @final
 @attr.define(kw_only=True, frozen=True)
 class ChunkReport(Report):
-    id: str  # noqa: A003
+    id: str
     handler_name: str
     start_offset: int
     end_offset: int
@@ -229,7 +229,7 @@ class ChunkReport(Report):
 @final
 @attr.define(kw_only=True, frozen=True)
 class UnknownChunkReport(Report):
-    id: str  # noqa: A003
+    id: str
     start_offset: int
     end_offset: int
     size: int
@@ -239,7 +239,7 @@ class UnknownChunkReport(Report):
 @final
 @attr.define(kw_only=True, frozen=True)
 class MultiFileReport(Report):
-    id: str  # noqa: A003
+    id: str
     handler_name: str
     name: str
     paths: List[Path]
@@ -259,6 +259,7 @@ class ExtractionProblem(Report):
     --------
     - duplicate entries for certain archive formats (tar, zip)
     - unsafe symlinks pointing outside of extraction directory
+
     """
 
     problem: str
