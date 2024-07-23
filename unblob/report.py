@@ -13,6 +13,12 @@ import attr
 class Report:
     """A common base class for different reports."""
 
+    def __attrs_post_init__(self):
+        for field in attr.fields(type(self)):
+            value = getattr(self, field.name)
+            if isinstance(value, int):
+                object.__setattr__(self, field.name, int(value))
+
     def asdict(self) -> dict:
         return attr.asdict(self)
 
