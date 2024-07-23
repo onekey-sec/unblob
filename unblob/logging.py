@@ -7,7 +7,14 @@ from pathlib import Path
 from typing import Any
 
 import structlog
-from dissect.cstruct import Instance, dumpstruct
+from dissect.cstruct import dumpstruct
+
+try:
+    # dissect.cstruct >= 4.0
+    from dissect.cstruct import Structure
+except ImportError:
+    # dissect.cstruct == 2.0
+    from dissect.cstruct import Instance as Structure
 
 
 def format_hex(value: int):
@@ -42,7 +49,7 @@ def _format_message(value: Any, extract_root: Path) -> Any:
             new_value = value
         return new_value.as_posix().encode("utf-8", errors="surrogateescape")
 
-    if isinstance(value, Instance):
+    if isinstance(value, Structure):
         return dumpstruct(value, output="string")
 
     if isinstance(value, int):
