@@ -13,18 +13,22 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.290"
+  - repo: local
     hooks:
       - id: ruff
         name: Check python (ruff)
-        args: [--show-source, --fix, --exit-non-zero-on-fix]
-
-  - repo: https://github.com/psf/black
-    rev: 23.1.0
-    hooks:
-      - id: black
-        name: Check black
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        entry: poetry run ruff check --force-exclude
+        args:
+          [--output-format=full, --fix, --show-fixes, --exit-non-zero-on-fix]
+      - id: ruff-format
+        name: Format python (ruff)
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        entry: poetry run ruff format --force-exclude
 
   - repo: https://github.com/jendrikseipp/vulture
     rev: v2.7

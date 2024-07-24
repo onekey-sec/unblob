@@ -52,7 +52,9 @@ def test_search_chunks(data):
 
     with File.from_bytes(data) as file:
         task = Task(
-            path=Path("/dev/shm/nonexistent"), depth=0, blob_id=""  # noqa: S108
+            path=Path("/dev/shm/nonexistent"),  # noqa: S108
+            depth=0,
+            blob_id="",
         )
         result = TaskResult(task)
         search_chunks(file, len(data), config.handlers, result)

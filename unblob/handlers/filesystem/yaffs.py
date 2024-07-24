@@ -25,9 +25,9 @@ from unblob.models import Extractor, ExtractResult, Handler, HexString, ValidChu
 logger = get_logger()
 
 SPARE_START_BIG_ENDIAN_ECC = b"\x00\x00\x10\x00"
-SPARE_START_BIG_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x00\x10\x00"
+SPARE_START_BIG_ENDIAN_NO_ECC = b"\xff\xff\x00\x00\x10\x00"
 SPARE_START_LITTLE_ENDIAN_ECC = b"\x00\x10\x00\x00"
-SPARE_START_LITTLE_ENDIAN_NO_ECC = b"\xFF\xFF\x00\x10\x00\x00"
+SPARE_START_LITTLE_ENDIAN_NO_ECC = b"\xff\xff\x00\x10\x00\x00"
 SPARE_START_LEN = 6
 
 # YAFFS_OBJECT_TYPE_DIRECTORY, YAFFS_OBJECT_TYPE_FILE
@@ -263,7 +263,7 @@ def is_valid_header(header) -> bool:
         return False
     if header.type > 5:
         return False
-    if header.sum_no_longer_used != 0xFFFF:
+    if header.sum_no_longer_used != 0xFFFF:  # noqa: SIM103
         return False
     return True
 

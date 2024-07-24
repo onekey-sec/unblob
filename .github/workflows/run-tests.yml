@@ -29,6 +29,9 @@ jobs:
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Setup 3rd party dependencies
+        uses: ./.github/actions/setup-dependencies
+
       - name: Check pre-commit hook
         uses: pre-commit/action@v3.0.1
 

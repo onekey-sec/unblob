@@ -14,6 +14,7 @@ malformed and followed by garbage/random content that triggers
 BadGzipFile errors when gzip library tries to read the next stream
 header.
 """
+
 import gzip
 import io
 import struct

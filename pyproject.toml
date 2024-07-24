@@ -39,7 +39,7 @@ pytest = "^8.0.0"
 pyright = "^1.1.349"
 pre-commit = "^3.5.0"
 pytest-cov = ">=3,<6"
-ruff = ">=0.1.13,<0.6.0"
+ruff = "0.5.4"
 pyyaml = "^6.0.1"
 atheris = { version = "^2.3.0", python = "<3.12" }
 
@@ -59,6 +59,7 @@ unblob = "unblob.cli:main"
 [tool.ruff]
 target-version = "py38"
 
+[tool.ruff.lint]
 select = [
   "A",      # flake8-builtins
   "ARG",    # flake8-unused-arguments
@@ -72,7 +73,6 @@ select = [
   "FBT",    # flake8-boolean-trap
   "G",      # flake8-logging-format
   "I",      # isort
-  "ISC",    # flake8-implicit-str-concats
   "N",      # pep8-naming
   "PIE",    # flake8-pie
   "PL",     # pylint
@@ -113,7 +113,7 @@ ignore = [
 # Do not remove unused imports automatically in __init__.py files
 ignore-init-module-imports = true
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 ".github/*" = [
   "T201"  # print
 ]
@@ -122,20 +122,20 @@ ignore-init-module-imports = true
   "FBT003",  # boolean-positional-value-in-function-call:     allowed test parameters
 ]
 
-[tool.ruff.flake8-comprehensions]
+[tool.ruff.lint.flake8-comprehensions]
 allow-dict-calls-with-keyword-arguments = true  # code like `dict(a=1, b=2)` is allowed
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 8
 
-[tool.ruff.pylint]
+[tool.ruff.lint.pylint]
 allow-magic-value-types = [
   "bytes",
   "int",   # bunch of ad-hoc bitmask values
   "str",
 ]
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 mark-parentheses = false
 parametrize-names-type = "csv"

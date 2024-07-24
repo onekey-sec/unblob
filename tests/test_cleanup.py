@@ -2,6 +2,7 @@
 
 The tests use zip files as inputs - for simplicity
 """
+
 import io
 import zipfile
 from pathlib import Path

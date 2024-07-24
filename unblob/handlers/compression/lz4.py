@@ -2,6 +2,7 @@
 
 Frame format definition: https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md.
 """
+
 import io
 from typing import Optional
 
@@ -26,9 +27,9 @@ _2BITS = 0x03
 END_MARK = 0x00000000
 
 CONTENT_SIZE_LEN = 8
-BLOCK_SIZE_LEN = (
-    FRAME_SIZE_LEN
-) = BLOCK_CHECKSUM_LEN = CONTENT_CHECKSUM_LEN = MAGIC_LEN = DICTID_LEN = 4
+BLOCK_SIZE_LEN = FRAME_SIZE_LEN = BLOCK_CHECKSUM_LEN = CONTENT_CHECKSUM_LEN = (
+    MAGIC_LEN
+) = DICTID_LEN = 4
 FLG_LEN = BD_LEN = HC_LEN = 1
 MAX_LEGACY_BLOCK_SIZE = 8 * 1024 * 1024  # 8 MB
 

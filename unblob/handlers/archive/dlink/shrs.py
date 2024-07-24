@@ -76,9 +76,7 @@ class SHRSHandler(StructHandler):
         digest = hashlib.sha512(file.read(header.file_size_no_padding)).digest()
         # we seek back to where we were
         file.seek(-header.file_size_no_padding, io.SEEK_CUR)
-        if digest != header.encrypted_digest:
-            return False
-        return True
+        return digest == header.encrypted_digest
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, endian=Endian.BIG)

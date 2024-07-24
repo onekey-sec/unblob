@@ -88,7 +88,7 @@ def is_valid_blob_header(blob_header) -> bool:
 def is_valid_header(header) -> bool:
     if header.signature_offset < len(header):
         return False
-    if not header.blob_offsets[0]:
+    if not header.blob_offsets[0]:  # noqa: SIM103
         return False
     return True
 

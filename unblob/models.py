@@ -39,7 +39,7 @@ class Task:
 
 @attr.define
 class Blob:
-    id: str = attr.field(  # noqa: A003
+    id: str = attr.field(
         factory=new_id,
     )
 
@@ -159,7 +159,8 @@ class PaddingChunk(Chunk):
     """
 
     def as_report(
-        self, entropy: Optional[EntropyReport]  #   noqa: ARG002
+        self,
+        entropy: Optional[EntropyReport],  #   noqa: ARG002
     ) -> ChunkReport:
         return ChunkReport(
             id=self.id,

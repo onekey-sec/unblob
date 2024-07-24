@@ -44,7 +44,6 @@ class TRXExtractor(Extractor):
             header = self._struct_parser.parse("trx_header_t", file, Endian.LITTLE)
             file.seek(0, io.SEEK_END)
             eof = file.tell()
-            i = 0
             offsets = sorted(
                 [
                     offset
@@ -52,10 +51,9 @@ class TRXExtractor(Extractor):
                     if offset > 0
                 ]
             )
-            for start_offset, end_offset in zip(offsets, offsets[1:]):
+            for i, (start_offset, end_offset) in enumerate(zip(offsets, offsets[1:])):
                 chunk = Chunk(start_offset=start_offset, end_offset=end_offset)
                 carve_chunk_to_file(outdir.joinpath(Path(f"part{i}")), file, chunk)
-                i += 1
 
 
 class NetgearTRXBase(StructHandler):
@@ -75,9 +73,7 @@ class NetgearTRXBase(StructHandler):
         )
 
     def is_valid_header(self, header) -> bool:
-        if header.len < len(header):
-            return False
-        return True
+        return header.len >= len(header)
 
     def _is_crc_valid(self, file: File, start_offset: int, header) -> bool:
         file.seek(start_offset + CRC_CONTENT_OFFSET)

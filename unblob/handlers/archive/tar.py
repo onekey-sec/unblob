@@ -94,7 +94,7 @@ def _find_end_of_padding(file, *, find_from: int) -> int:
 class TarExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
         with contextlib.closing(SafeTarFile(inpath)) as tarfile:
-            tarfile.extractall(outdir)
+            tarfile.extractall(outdir)  # noqa: S202 tarfile-unsafe-members
         return ExtractResult(reports=tarfile.reports)
 
 

@@ -53,9 +53,7 @@ class EncrptedHandler(StructHandler):
     EXTRACTOR = EncrptedExtractor()
 
     def is_valid_header(self, header) -> bool:
-        if header.size < len(header):
-            return False
-        return True
+        return header.size >= len(header)
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, endian=Endian.BIG)

@@ -48,7 +48,9 @@ def get_version():
 
 
 def show_version(
-    ctx: click.Context, _param: click.Option, value: bool  # noqa: FBT001
+    ctx: click.Context,
+    _param: click.Option,
+    value: bool,  # noqa: FBT001
 ) -> None:
     if not value or ctx.resilient_parsing:
         return
@@ -57,7 +59,9 @@ def show_version(
 
 
 def show_external_dependencies(
-    ctx: click.Context, _param: click.Option, value: bool  # noqa: FBT001
+    ctx: click.Context,
+    _param: click.Option,
+    value: bool,  # noqa: FBT001
 ) -> None:
     if not value or ctx.resilient_parsing:
         return

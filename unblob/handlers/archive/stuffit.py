@@ -17,6 +17,7 @@ the moment:
 If you have the resources to add support for these archive formats,
 feel free to do so !
 """
+
 from typing import Optional
 
 from structlog import get_logger

@@ -613,7 +613,7 @@ class FileSystem:
                 )
                 self.record_problem(safe_link.format_report(not_enough_privileges))
 
-    def open(  # noqa: A003
+    def open(
         self, path, mode: Literal["wb+", "rb+", "xb+"] = "wb+"
     ) -> io.BufferedRandom:
         """Create/open binary file for random access read-writing.

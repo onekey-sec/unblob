@@ -23,7 +23,7 @@ logger = get_logger()
 
 # The .xz file format definition: https://tukaani.org/xz/xz-file-format-1.0.4.txt
 
-STREAM_START_MAGIC = b"\xFD\x37\x7A\x58\x5A\x00"
+STREAM_START_MAGIC = b"\xfd\x37\x7a\x58\x5a\x00"
 
 STREAM_END_MAGIC_PATTERNS = [
     HexString("00 00 59 5A"),  # None

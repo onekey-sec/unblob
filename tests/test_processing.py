@@ -438,10 +438,10 @@ def test_entropy_calculation(tmp_path: Path):
     assert unknown_entropy.block_size == 1024
     assert round(unknown_entropy.mean, 2) == 98.05  # noqa: PLR2004
     assert unknown_entropy.highest == 100.0  # noqa: PLR2004
-    assert unknown_entropy.lowest == 0.0  # noqa: PLR2004
+    assert unknown_entropy.lowest == 0.0
 
     # we should have entropy calculated for files without extractions, except for empty files
-    assert [] == get_all("empty.txt", EntropyReport)
+    assert get_all("empty.txt", EntropyReport) == []
     assert [EntropyReport(percentages=[100.0], block_size=1024, mean=100.0)] == get_all(
         "0-255.bin", EntropyReport
     )
