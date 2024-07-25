@@ -114,9 +114,9 @@ class ZIPHandler(StructHandler):
             or end_of_central_directory.offset_of_cd == 0xFFFFFFFF
         )
 
-    @staticmethod
-    def is_zip64_cd_file(file_header):
+    def has_zip64_tag(self, file):
         # see https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT section 4.3.9.2
+        file_header = self.cparser_le.partial_cd_file_header_t(file)
         return (
             file_header.file_size == 0xFFFFFFFF
             or file_header.compress_size == 0xFFFFFFFF
@@ -144,23 +144,23 @@ class ZIPHandler(StructHandler):
                         "Missing ZIP64 EOCD header record header in ZIP chunk."
                     )
                 return zip64_eocd
-        raise InvalidInputFormat(
-            "Missing ZIP64 EOCD locator record header in ZIP chunk."
-        )
+        return None
 
-    def is_zip64(self, file, start_offset, offset, end_of_central_directory):
+    def get_zip64_eocd(self, file, start_offset, offset, end_of_central_directory):
+        # some values in the CD can be FFFF, indicating its a zip64
+        # if the offset of the CD is 0xFFFFFFFF, its definitely one
+        # otherwise we check every other header indicating zip64
+        if self.is_zip64_eocd(end_of_central_directory):
+            return self._parse_zip64(file, start_offset, offset)
+
         absolute_offset_of_cd = start_offset + end_of_central_directory.offset_of_cd
 
         if 0 < absolute_offset_of_cd < offset:
             file.seek(absolute_offset_of_cd, io.SEEK_SET)
-            file_header = self.cparser_le.partial_cd_file_header_t(file)
-            if self.is_zip64_cd_file(file_header):
-                return True
+            if self.has_zip64_tag(file):
+                return self._parse_zip64(file, start_offset, offset)
 
-        # some values in the CD can be FFFF, indicating its a zip64
-        # if the offset of the CD is 0xFFFFFFFF, its definitely one
-        # otherwise we check every other header indicating zip64
-        return self.is_zip64_eocd(end_of_central_directory)
+        return None
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         has_encrypted_files = False
@@ -173,9 +173,11 @@ class ZIPHandler(StructHandler):
             file.seek(offset, io.SEEK_SET)
             end_of_central_directory = self.parse_header(file)
 
-            if self.is_zip64(file, start_offset, offset, end_of_central_directory):
-                file.seek(offset, io.SEEK_SET)
-                end_of_central_directory = self._parse_zip64(file, start_offset, offset)
+            zip64_eocd = self.get_zip64_eocd(
+                file, start_offset, offset, end_of_central_directory
+            )
+            if zip64_eocd is not None:
+                end_of_central_directory = zip64_eocd
                 break
 
             # the EOCD offset is equal to the offset of CD + size of CD
@@ -188,10 +190,7 @@ class ZIPHandler(StructHandler):
             if offset == end_of_central_directory_offset:
                 break
         else:
-            if offset is None:
-                raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
-            # if we can't find a valid 32bit ZIP EOCD, we fall back to ZIP64
-            end_of_central_directory = self._parse_zip64(file, start_offset, offset)
+            raise InvalidInputFormat("Missing EOCD record header in ZIP chunk.")
 
         has_encrypted_files = self.has_encrypted_files(
             file, start_offset, end_of_central_directory
