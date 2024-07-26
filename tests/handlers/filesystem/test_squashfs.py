@@ -6,6 +6,7 @@ from helpers import unhex
 
 from unblob.file_utils import round_up
 from unblob.handlers.filesystem.squashfs import (
+    SquashFSv1Handler,
     SquashFSv3Handler,
     SquashFSv4BEHandler,
     SquashFSv4LEHandler,
@@ -115,6 +116,32 @@ SQUASHFS_V3_BE_NO_PAD_CONTENTS = unhex(
 """
 )
 
+SQUASHFS_V1_LE_NO_PAD_CONTENTS = unhex(
+    """\
+00000000  68 73 71 73 25 03 00 00  40 01 00 00 A3 12 4B 00  |hsqs%.....K...K.|
+00000010  00 00 00 00 13 DF 4A 00  B0 F7 4A 00 01 00 00 00  |......J...J.....|
+00000020  00 80 0F 00 00 01 00 A1  82 C8 4D 18 18 AD 0E 00  |..........M.....|
+00000030  00 00 00 90 32 00 00 5D  00 80 00 00 00 3F 91 45  |....2..].....?.E|
+00000040  84 68 3B DE DE A6 11 C2  7E 99 A6 01 25 A5 98 99  |.h;.....~...%...|
+00000050  6C C8 E3 5F C6 96 35 39  B8 DC E2 A2 BC C3 6A C0  |l.._..59......j.|
+00000060  84 B4 3E 33 48 CD 5F 6D  FC 6E 0E 10 F9 17 BA D0  |..>3H._m.n......|
+00000070  D5 B8 6B D2 D1 5D 62 0D  8C A7 F1 C6 C8 C2 87 1D  |..k..]b.........|
+00000080  5C C0 F3 5C 04 8D 96 3F  94 B9 F1 6B 12 67 F0 78  |\\..\\...?...k.g.x|
+00000090  8C 73 66 F6 D6 15 A1 B2  0A EF BF DE DD B7 DD 40  |.sf............@|
+000000a0  7B DD 13 2E 1F AD A3 E7  AB 77 DF A3 D9 28 D2 2E  |{........w...(..|
+000000b0  83 B2 78 48 5C 1E 19 65  05 85 FD 58 A2 65 BD 83  |..xH\\..e...X.e..|
+000000c0  D2 BE E6 C1 B6 27 94 99  AA 0E DF 70 75 85 0B 02  |.....'.....pu...|
+000000d0  22 98 17 FE F8 7D 2E 9C  59 3A 24 17 13 0F 76 04  |"....}..Y:$...v.|
+000000e0  F8 F2 26 A3 33 B1 3C 48  68 00 20 75 13 02 2D DF  |..&.3.<Hh. u..-.|
+000000f0  E6 4B C4 25 9B 55 3F EB  C3 07 A7 69 38 51 9D 1C  |.K.%.U?....i8Q..|
+00000100  0C 77 8C 35 9A 66 BE F8  B4 4B 28 59 B1 EB 54 11  |.w.5.f...K(Y..T.|
+00000110  CB 14 69 9F 8A 41 BF 71  27 59 E2 32 2E B4 46 16  |..i..A.q'Y.2..F.|
+00000120  B2 DB B2 1E 3A 47 B0 3E  70 D0 AE EC B7 62 5B 2E  |....:G.>p....b[.|
+00000130  59 3D 3B 7A AD D3 D4 C6  8E 4A 53 A3 9F 88 E9 0A  |Y=;z.....JS.....|
+00000140
+"""
+)
+
 
 def pad_contents(contents: bytes, alignment: int):
     content_size = len(contents)
@@ -129,6 +156,7 @@ def pad_contents(contents: bytes, alignment: int):
         pytest.param(SQUASHFS_V4_BE_NO_PAD_CONTENTS, SquashFSv4BEHandler, id="v4_be"),
         pytest.param(SQUASHFS_V3_LE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_le"),
         pytest.param(SQUASHFS_V3_BE_NO_PAD_CONTENTS, SquashFSv3Handler, id="v3_be"),
+        pytest.param(SQUASHFS_V1_LE_NO_PAD_CONTENTS, SquashFSv1Handler, id="v1_le"),
     ],
 )
 @pytest.mark.parametrize(

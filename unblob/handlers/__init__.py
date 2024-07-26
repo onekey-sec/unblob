@@ -43,6 +43,7 @@ BUILTIN_HANDLERS: Handlers = (
     jffs2.JFFS2OldHandler,
     ntfs.NTFSHandler,
     romfs.RomFSFSHandler,
+    squashfs.SquashFSv1Handler,
     squashfs.SquashFSv2Handler,
     squashfs.SquashFSv3Handler,
     squashfs.SquashFSv3DDWRTHandler,
