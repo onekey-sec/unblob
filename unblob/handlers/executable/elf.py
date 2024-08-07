@@ -19,7 +19,7 @@ from unblob.file_utils import (
 )
 from unblob.models import HexString, StructHandler, ValidChunk
 
-lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)
+lief.logging.set_level(lief.logging.LEVEL.ERROR)
 
 logger = get_logger()
 
@@ -44,7 +44,7 @@ class ElfChunk(ValidChunk):
             return
 
         is_kernel = (
-            elf.header.file_type == lief.ELF.E_TYPE.EXECUTABLE
+            elf.header.file_type == lief.ELF.Header.FILE_TYPE.EXEC
             and elf.has_section(KERNEL_INIT_DATA_SECTION)
         )
         if is_kernel:
@@ -76,10 +76,10 @@ def extract_initramfs(elf, file: File, outdir):
     if not init_data.size:
         return
 
-    is_64bit = elf.header.identity_class == lief.ELF.ELF_CLASS.CLASS64
+    is_64bit = elf.header.identity_class == lief.ELF.Header.CLASS.ELF64
     endian = (
         Endian.LITTLE
-        if elf.header.identity_data == lief.ELF.ELF_DATA.LSB
+        if elf.header.identity_data == lief.ELF.Header.ELF_DATA.LSB
         else Endian.BIG
     )
 
@@ -140,9 +140,9 @@ class _ELFBase(StructHandler):
     def is_valid_header(self, header) -> bool:
         # check that header fields have valid values
         try:
-            lief.ELF.E_TYPE(header.e_type)
+            lief.ELF.Header.FILE_TYPE(header.e_type)
             lief.ELF.ARCH(header.e_machine)
-            lief.ELF.VERSION(header.e_version)
+            lief.ELF.Header.VERSION(header.e_version)
         except RuntimeError:
             return False
         return True
@@ -166,8 +166,8 @@ class _ELFBase(StructHandler):
 
             try:
                 if (
-                    lief.ELF.SECTION_TYPES(section_header.sh_type)
-                    == lief.ELF.SECTION_TYPES.NOBITS
+                    lief.ELF.Section.TYPE(section_header.sh_type)
+                    == lief.ELF.Section.TYPE.NOBITS
                 ):
                     continue
             except RuntimeError:
@@ -261,7 +261,7 @@ class _ELFBase(StructHandler):
         end_offset = self.get_end_offset(file, start_offset, header, endian)
 
         # kernel modules are always relocatable
-        if header.e_type == lief.ELF.E_TYPE.RELOCATABLE.value:
+        if header.e_type == lief.ELF.Header.FILE_TYPE.REL.value:
             end_offset = self.get_signed_kernel_module_end_offset(file, end_offset)
 
         # do a special extraction of ELF files with ElfChunk
