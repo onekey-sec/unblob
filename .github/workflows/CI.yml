@@ -28,7 +28,7 @@ jobs:
       - name: Check Python formatting
         run: nix develop -c -- black --check --diff --color .
       - name: Ruff
-        run: nix develop -c -- ruff .
+        run: nix develop -c -- ruff check .
 
   build-nix:
     strategy:
