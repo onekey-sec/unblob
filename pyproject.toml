@@ -39,7 +39,7 @@ pytest = "^8.0.0"
 pyright = "^1.1.349"
 pre-commit = "^3.5.0"
 pytest-cov = ">=3,<6"
-ruff = "0.5.6"
+ruff = "0.5.7"
 pyyaml = "^6.0.1"
 atheris = { version = "^2.3.0", python = "<3.12" }
 
