@@ -282,8 +282,7 @@ def iterate_file(
     file_read = file.read
     while read_bytes < size:
         remaining = size - read_bytes
-        if remaining < buffer_size:
-            buffer_size = remaining
+        buffer_size = min(remaining, buffer_size)
         read_bytes += buffer_size
         data = file_read(buffer_size)
 
