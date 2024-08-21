@@ -143,7 +143,7 @@ class _TarHandler(StructHandler):
                 "Invalid checksum format",
                 actual_last_2_bytes=header.chksum[6:8],
                 handler=self.NAME,
-                verbosity=3,
+                _verbosity=3,
             )
             return None
         checksum = decode_int(header.chksum[:6], 8)
