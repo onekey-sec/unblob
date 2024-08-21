@@ -174,8 +174,7 @@ class _ELFBase(StructHandler):
                 continue
 
             section_end = section_header.sh_offset + section_header.sh_size
-            if section_end > last_section_end:
-                last_section_end = section_end
+            last_section_end = max(section_end, last_section_end)
 
         return last_section_end
 
@@ -191,8 +190,7 @@ class _ELFBase(StructHandler):
             )
 
             program_end = program_header.p_offset + program_header.p_filesz
-            if program_end > last_program_end:
-                last_program_end = program_end
+            last_program_end = max(program_end, last_program_end)
 
         return last_program_end
 
