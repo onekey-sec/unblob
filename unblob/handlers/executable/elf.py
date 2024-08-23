@@ -19,7 +19,7 @@ from unblob.file_utils import (
 )
 from unblob.models import HexString, StructHandler, ValidChunk
 
-lief.logging.set_level(lief.logging.LEVEL.ERROR)
+lief.logging.disable()
 
 logger = get_logger()
 
