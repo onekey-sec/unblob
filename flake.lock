@@ -311,28 +311,7 @@
         "lzallright": "lzallright",
         "nixpkgs": "nixpkgs",
         "pyperscan": "pyperscan",
-        "sasquatch": "sasquatch",
         "unblob-native": "unblob-native"
-      }
-    },
-    "sasquatch": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1686077968,
-        "narHash": "sha256-0itva+j5WMKvueiUaO253UQ1S6W29xgtFvV4i3yvMtU=",
-        "owner": "onekey-sec",
-        "repo": "sasquatch",
-        "rev": "8d7b1edef55c9e7d995fcdd3bd3f0db1b3fac83f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "onekey-sec",
-        "repo": "sasquatch",
-        "type": "github"
       }
     },
     "systems": {
