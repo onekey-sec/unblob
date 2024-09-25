@@ -1266,13 +1266,13 @@ test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.4)", "pytest-co
 
 [[package]]
 name = "plotext"
-version = "5.3.1"
+version = "5.3.2"
 description = "plotext plots directly on terminal"
 optional = false
 python-versions = ">=3.5"
 files = [
-    {file = "plotext-5.3.1-py3-none-any.whl", hash = "sha256:1c2f3729ccdd7545bcfec4859a30c728a595d830c1ffce7062e140ae3a342af6"},
-    {file = "plotext-5.3.1.tar.gz", hash = "sha256:8e81473f57aefdb1234ac897837fd4a4ab9c340acb9c326d63ae7a34d12d45b8"},
+    {file = "plotext-5.3.2-py3-none-any.whl", hash = "sha256:394362349c1ddbf319548cfac17ca65e6d5dfc03200c40dfdc0503b3e95a2283"},
+    {file = "plotext-5.3.2.tar.gz", hash = "sha256:52d1e932e67c177bf357a3f0fe6ce14d1a96f7f7d5679d7b455b929df517068e"},
 ]
 
 [package.extras]
