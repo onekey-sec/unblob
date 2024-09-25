@@ -33,10 +33,10 @@
   };
   pyfatfs = {
     pname = "pyfatfs";
-    version = "1.0.5";
+    version = "1.1.0";
     src = fetchurl {
-      url = "https://files.pythonhosted.org/packages/source/p/pyfatfs/pyfatfs-1.0.5.tar.gz";
-      sha256 = "sha256-5J6gYhGf32GYx7u8/ghYnYkZ40rCH19gTQ7YtcREly0=";
+      url = "https://pypi.org/packages/source/p/pyfatfs/pyfatfs-1.1.0.tar.gz";
+      sha256 = "sha256-lyXM0KTaHAnCc1irvxDwjAQ6yEIQr1doA+CH9RorMOA=";
     };
   };
   treelib = {
