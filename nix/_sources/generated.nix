@@ -20,17 +20,6 @@
       sha256 = "sha256-+cPOzzO3bCQAu8LrbjUJ5S/SR5OFitOYLIu5L9t/q+k=";
     };
   };
-  lief = {
-    pname = "lief";
-    version = "0.13.2";
-    src = fetchFromGitHub {
-      owner = "lief-project";
-      repo = "LIEF";
-      rev = "0.13.2";
-      fetchSubmodules = false;
-      sha256 = "sha256-lH4SqwPB2Jp/wUI2Cll67PQbHbwMqpNuLy/ei8roiHg=";
-    };
-  };
   pyfatfs = {
     pname = "pyfatfs";
     version = "1.1.0";

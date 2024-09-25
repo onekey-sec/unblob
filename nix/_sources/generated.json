@@ -34,26 +34,6 @@
         },
         "version": "0.4.5"
     },
-    "lief": {
-        "cargoLocks": null,
-        "date": null,
-        "extract": null,
-        "name": "lief",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "deepClone": false,
-            "fetchSubmodules": false,
-            "leaveDotGit": false,
-            "name": null,
-            "owner": "lief-project",
-            "repo": "LIEF",
-            "rev": "0.14.1",
-            "sha256": "sha256-briOqt/S3YUl6Aon5sKXhutL8VFUSgnK2Wy4UKnHE20=",
-            "type": "github"
-        },
-        "version": "0.14.1"
-    },
     "pyfatfs": {
         "cargoLocks": null,
         "date": null,
