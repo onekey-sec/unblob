@@ -34,26 +34,6 @@
         },
         "version": "0.4.5"
     },
-    "lief": {
-        "cargoLocks": null,
-        "date": null,
-        "extract": null,
-        "name": "lief",
-        "passthru": null,
-        "pinned": false,
-        "src": {
-            "deepClone": false,
-            "fetchSubmodules": false,
-            "leaveDotGit": false,
-            "name": null,
-            "owner": "lief-project",
-            "repo": "LIEF",
-            "rev": "0.14.1",
-            "sha256": "sha256-briOqt/S3YUl6Aon5sKXhutL8VFUSgnK2Wy4UKnHE20=",
-            "type": "github"
-        },
-        "version": "0.14.1"
-    },
     "pyfatfs": {
         "cargoLocks": null,
         "date": null,
@@ -63,11 +43,11 @@
         "pinned": false,
         "src": {
             "name": null,
-            "sha256": "sha256-5J6gYhGf32GYx7u8/ghYnYkZ40rCH19gTQ7YtcREly0=",
+            "sha256": "sha256-lyXM0KTaHAnCc1irvxDwjAQ6yEIQr1doA+CH9RorMOA=",
             "type": "url",
-            "url": "https://pypi.org/packages/source/p/pyfatfs/pyfatfs-1.0.5.tar.gz"
+            "url": "https://pypi.org/packages/source/p/pyfatfs/pyfatfs-1.1.0.tar.gz"
         },
-        "version": "1.0.5"
+        "version": "1.1.0"
     },
     "treelib": {
         "cargoLocks": null,
