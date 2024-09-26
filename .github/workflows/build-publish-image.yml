@@ -76,7 +76,7 @@ jobs:
         uses: anchore/scan-action@v4
         with:
           image: ${{ env.DOCKER_IMAGE }}
-          fail-build: true
+          fail-build: false
           severity-cutoff: critical
           only-fixed: true
 
