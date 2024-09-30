@@ -12,13 +12,14 @@ let
     url = "https://github.com/edolstra/flake-compat/archive/${lock.nodes.flake-compat.locked.rev}.tar.gz";
     sha256 = lock.nodes.flake-compat.locked.narHash;
   };
+  nix-filter = import (fetchTarball {
+    url = "https://github.com/numtide/nix-filter/archive/${lock.nodes.filter.locked.rev}.tar.gz";
+    sha256 = lock.nodes.filter.locked.narHash;
+  });
 
-  startsWith = pref: str: with builtins; substring 0 (stringLength pref) str == pref;
-
-  src = builtins.path {
-    path = ./.;
-    name = "source";
-    filter = path: type: builtins.any (x: startsWith (toString x) path) flakeManifest;
+  src = nix-filter {
+    root = ./.;
+    include = flakeManifest;
   };
 in
 (import flake-compat { inherit src; }).shellNix.default
