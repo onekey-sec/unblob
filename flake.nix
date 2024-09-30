@@ -65,7 +65,7 @@
           inherit (devenv.packages.${system}) devenv;
         });
 
-      checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests);
+      checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests // self.devShells.${system});
 
       devShells = forAllSystems
         (system: {
