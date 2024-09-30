@@ -19,6 +19,10 @@
     url = "github:edolstra/flake-compat";
     flake = false;
   };
+  inputs.devenv = {
+    url = "github:vlaci/devenv/python-wrapper";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
 
   nixConfig = {
     extra-substituters = [ "https://unblob.cachix.org" ];
@@ -27,7 +31,7 @@
     ];
   };
 
-  outputs = { self, nixpkgs, filter, unblob-native, lzallright, pyperscan, ... }:
+  outputs = { self, nixpkgs, devenv, filter, unblob-native, lzallright, pyperscan, ... }@inputs:
     let
       # System types to support.
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -51,54 +55,28 @@
         pyperscan.overlays.default
         (import ./overlay.nix)
       ];
-      packages = forAllSystems (system: rec {
-        inherit (nixpkgsFor.${system}) unblob;
-        default = unblob;
-      });
+      packages = forAllSystems (system:
+        let
+          inherit (nixpkgsFor.${system}) unblob;
+        in
+        {
+          inherit unblob;
+          default = unblob;
+          inherit (devenv.packages.${system}) devenv;
+        });
 
       checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests);
 
       devShells = forAllSystems
-        (system:
-          with nixpkgsFor.${system}; {
-            default = mkShell {
-              venvDir = "./.venv";
-              buildInputs = [
-                # A Python interpreter including the 'venv' module is required to bootstrap
-                # the environment.
-                python3Packages.python
-
-                # This executes some shell code to initialize a venv in $venvDir before
-                # dropping into the shell
-                python3Packages.venvShellHook
-
-                # This hook is used to patch downloaded binaries in venv to use libraries
-                # from the nix store.
-                autoPatchelfHook
-
-                unblob.runtimeDeps
-                pyright
-                python3Packages.pytest
-                python3Packages.pytest-cov
-                poetry
-
-                nvfetcher
-              ];
-
-              postVenvCreation =
-                let
-                  apply_patches = lib.concatMapStringsSep
-                    "\n"
-                    (patch: "patch -f -p1 -d $VIRTUAL_ENV/lib/python3*/site-packages < ${patch}")
-                    pkgs.python3Packages.python-magic.patches;
-                in
-                ''
-                  poetry install --all-extras --sync --with dev
-                  autoPatchelf "$VIRTUAL_ENV/"
-                  ${apply_patches}
-                '';
-            };
-          });
+        (system: {
+          default = devenv.lib.mkShell {
+            inherit inputs;
+            pkgs = nixpkgsFor.${system};
+            modules = [
+              ./devenv.nix
+            ];
+          };
+        });
 
       legacyPackages = forAllSystems (system: nixpkgsFor.${system});
     };
