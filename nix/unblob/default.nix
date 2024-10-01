@@ -33,6 +33,7 @@
 , lzop
 , p7zip
 , sasquatch
+, sasquatch-v4be
 , simg2img
 , unar
 }:
@@ -49,6 +50,7 @@ let
     lzop
     p7zip
     sasquatch
+    sasquatch-v4be
     simg2img
     unar
     # shadowed by python packages of the same name

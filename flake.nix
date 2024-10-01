@@ -15,10 +15,6 @@
     url = "github:vlaci/pyperscan";
     inputs.nixpkgs.follows = "nixpkgs";
   };
-  inputs.sasquatch = {
-    url = "github:onekey-sec/sasquatch";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
   inputs.flake-compat = {
     url = "github:edolstra/flake-compat";
     flake = false;
@@ -31,7 +27,7 @@
     ];
   };
 
-  outputs = { self, nixpkgs, filter, unblob-native, lzallright, pyperscan, sasquatch, ... }:
+  outputs = { self, nixpkgs, filter, unblob-native, lzallright, pyperscan, ... }:
     let
       # System types to support.
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -50,7 +46,6 @@
     {
       overlays.default = nixpkgs.lib.composeManyExtensions [
         filter.overlays.default
-        sasquatch.overlays.default
         unblob-native.overlays.default
         lzallright.overlays.default
         pyperscan.overlays.default
