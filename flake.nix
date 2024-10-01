@@ -77,7 +77,13 @@
         }
       );
 
-      checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests // self.devShells.${system});
+      checks = forAllSystems (
+        system:
+        {
+          inherit (nixpkgsFor.${system}) unblob;
+        }
+        // self.devShells.${system}
+      );
 
       devShells = forAllSystems (system: {
         default = devenv.lib.mkShell {

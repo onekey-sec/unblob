@@ -1,9 +1,6 @@
 final: prev:
 
 {
-  inherit (final.python3.pkgs) unblob;
-  _sources = final.callPackage ./nix/_sources/generated.nix { };
-
   # https://github.com/tytso/e2fsprogs/issues/152
   e2fsprogs-nofortify = prev.e2fsprogs.overrideAttrs (super: {
     pname = "e2fsprogs-nofortify";
@@ -11,22 +8,26 @@ final: prev:
     nativeCheckInputs = (super.nativeCheckInputs or [ ]) ++ [ final.which ];
   });
 
-  # Own package updated independently of nixpkgs
-  jefferson = final.callPackage ./nix/jefferson { };
+  unblob =
+    let
+      pyproject_toml = (builtins.fromTOML (builtins.readFile ./pyproject.toml));
+      version = pyproject_toml.tool.poetry.version;
+    in
+    (prev.unblob.override { e2fsprogs = final.e2fsprogs-nofortify; }).overridePythonAttrs (super: {
+      inherit version;
 
-  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-    (python-final: python-prev: {
-      # Missing from nixpkgs
-      treelib = python-final.callPackage ./nix/treelib { };
+      src = final.nix-filter {
+        root = ./.;
+        include = [
+          "pyproject.toml"
+          "unblob"
+          "tests"
+        ];
+      };
 
-      # Missing from nixpkgs
-      pyfatfs = python-final.callPackage ./nix/pyfatfs { };
-
-      # The reason for everything
-      unblob = python-final.callPackage ./nix/unblob { };
-    })
-  ];
-
-  # Own package updated independently of nixpkgs
-  ubi_reader = final.callPackage ./nix/ubi_reader { };
+      # override disabling of 'test_all_handlers[filesystem.extfs]' from upstream
+      pytestFlagsArray = [
+        "--no-cov"
+      ];
+    });
 }
