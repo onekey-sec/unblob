@@ -1,7 +1,7 @@
 {
   description = "Extract files from any kind of container formats";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:vlaci/nixpkgs/unblob";
   inputs.filter.url = "github:numtide/nix-filter";
   inputs.unblob-native = {
     url = "github:onekey-sec/unblob-native";
