@@ -1,9 +1,6 @@
 final: prev:
 
 {
-  inherit (final.python3.pkgs) unblob;
-  _sources = final.callPackage ./nix/_sources/generated.nix { };
-
   # https://github.com/tytso/e2fsprogs/issues/152
   e2fsprogs-nofortify = prev.e2fsprogs.overrideAttrs
     (super: {
@@ -12,31 +9,31 @@ final: prev:
       nativeCheckInputs = (super.nativeCheckInputs or [ ]) ++ [ final.which ];
     });
 
-  simg2img = prev.simg2img.overrideAttrs (super: {
-    postPatch = ''
-      substituteInPlace output_file.cpp \
-        --replace-fail \
-        'aligned_offset = offset & ~(4096 - 1);' \
-        'aligned_offset = offset & ~(sysconf(_SC_PAGESIZE) - 1);'
-    '';
-  });
+  unblob =
+    let
+      pyproject_toml = (builtins.fromTOML (builtins.readFile ./pyproject.toml));
+      version = pyproject_toml.tool.poetry.version;
+    in
+    (prev.unblob.override { e2fsprogs = final.e2fsprogs-nofortify; }).overridePythonAttrs
+      (super: {
+        inherit version;
 
-  # Own package updated independently of nixpkgs
-  jefferson = final.callPackage ./nix/jefferson { };
+        src = final.nix-filter {
+          root = ./.;
+          include = [
+            "pyproject.toml"
+            "unblob"
+            "tests"
+          ];
+        };
 
-  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-    (python-final: python-prev: {
-      # Missing from nixpkgs
-      treelib = python-final.callPackage ./nix/treelib { };
-
-      # Missing from nixpkgs
-      pyfatfs = python-final.callPackage ./nix/pyfatfs { };
-
-      # The reason for everything
-      unblob = python-final.callPackage ./nix/unblob { };
-    })
-  ];
-
-  # Own package updated independently of nixpkgs
-  ubi_reader = final.callPackage ./nix/ubi_reader { };
+        passthru = super.passthru // {
+          tests.pytest = super.passthru.tests.pytest.overridePythonAttrs (tsuper: {
+            # override disabling of 'test_all_handlers[filesystem.extfs]' from upstream
+            pytestFlagsArray = [
+              "--no-cov"
+            ];
+          });
+        };
+      });
 }

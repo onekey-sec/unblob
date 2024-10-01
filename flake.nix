@@ -71,8 +71,6 @@
                 python3Packages.pytest
                 python3Packages.pytest-cov
                 poetry
-
-                nvfetcher
               ];
 
               postVenvCreation =
