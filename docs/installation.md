@@ -70,6 +70,23 @@ Help on usage:
 docker run --rm --pull always ghcr.io/onekey-sec/unblob:latest --help
 ```
 
+⚠️  When you bind mount directories from the host in the container using the `-v` option, you must
+make sure that they are owned by the same `uid:gid` pair otherwise you'll get
+into permission issues.
+
+If you're on a multi-user Linux host (i.e. your $UID is > 1000), it's recommended you
+launch the container this way to map the container user's UID to yours:
+
+```console
+docker run \
+  --rm \
+  --pull always \
+  -u $UID:$GID
+  -v /path/to/extract-dir/on/host:/data/output \
+  -v /path/to/files/on/host:/data/input \
+ghcr.io/onekey-sec/unblob:latest /data/input/path/to/file
+```
+
 ## nix package
 
 unblob can be built and run using the [Nix](https://nixos.org) package manager.
