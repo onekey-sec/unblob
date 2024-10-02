@@ -227,6 +227,29 @@ class UnknownChunkReport(Report):
     entropy: Optional[EntropyReport]
 
 
+@attr.define(kw_only=True, frozen=True)
+class CarveReport(Report):
+    """Describes a successful carving operation."""
+
+    carved_from: Path
+    carved_to: Path
+    start_offset: int
+    end_offset: int
+    handler_name: str
+
+    @classmethod
+    def from_chunk(
+        cls, carved_from: Path, carved_to: Path, chunk: "ValidChunk"  # noqa: F821
+    ):
+        return cls(
+            carved_from=carved_from,
+            carved_to=carved_to,
+            start_offset=chunk.start_offset,
+            end_offset=chunk.end_offset,
+            handler_name=chunk.handler.NAME,
+        )
+
+
 @final
 @attr.define(kw_only=True, frozen=True)
 class MultiFileReport(Report):
