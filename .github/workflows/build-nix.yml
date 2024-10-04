@@ -25,7 +25,7 @@ jobs:
         uses: ./.github/actions/setup-git-lfs
       - uses: cachix/install-nix-action@v29
         with:
-          install_url: https://releases.nixos.org/nix/nix-2.13.3/install
+          install_url: https://releases.nixos.org/nix/nix-2.18.8/install
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
       - name: Setup emulation
@@ -41,4 +41,6 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           extraPullNames: pyperscan
       - run: |
-          nix flake check -L --option system ${{ matrix.arch }} --extra-platforms ${{ matrix.arch }}
+          nix build -L --option system ${{ matrix.arch }} --extra-platforms ${{ matrix.arch }} .#packages.${{ matrix.arch }}.devenv
+      - run: |
+          nix flake check -L --impure --option system ${{ matrix.arch }} --extra-platforms ${{ matrix.arch }}

@@ -9,3 +9,5 @@ build/
 .coverage*
 /.venv/
 unblob.log
+/.devenv
+/.direnv
