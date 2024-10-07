@@ -62,7 +62,11 @@
         {
           inherit unblob;
           default = unblob;
-          inherit (devenv.packages.${system}) devenv;
+          devenv = devenv.packages.${system}.devenv.overrideAttrs (_: {
+            checkFlags = [
+              "--skip=test::test_nonexistent_script"
+            ];
+          });
         });
 
       checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests // self.devShells.${system});
