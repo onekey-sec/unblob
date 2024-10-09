@@ -3,7 +3,8 @@ import logging
 import sys
 from pathlib import Path
 
-import atheris
+import atheris.import_hook
+import atheris.instrument_bytecode
 import structlog
 
 
@@ -21,7 +22,9 @@ def extract(inpath: Path, outpath: Path):  # noqa: ARG001
     return
 
 
-with atheris.instrument_imports(include=["unblob"], exclude=["unblob_native"]):
+with atheris.import_hook.instrument_imports(
+    include=["unblob"], exclude=["unblob_native"]
+):
     from unblob.extractors.command import Command
     from unblob.file_utils import File
     from unblob.finder import search_chunks
@@ -32,7 +35,7 @@ with atheris.instrument_imports(include=["unblob"], exclude=["unblob_native"]):
     Command.extract = classmethod(extract)  # type: ignore
 
 
-@atheris.instrument_func
+@atheris.instrument_bytecode.instrument_func
 def test_search_chunks(data):
     config = ExtractionConfig(
         extract_root=Path("/dev/shm"),  # noqa: S108
