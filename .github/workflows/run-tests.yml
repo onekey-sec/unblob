@@ -20,21 +20,11 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: default
-          toolchain: 1.57.0
-
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v2
-
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
 
       - name: Check pre-commit hook
         uses: pre-commit/action@v3.0.1
-
 
   check_pyright:
     name: Check - pyright
