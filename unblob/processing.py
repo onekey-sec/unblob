@@ -45,7 +45,6 @@ from .report import (
     StatReport,
     UnknownError,
 )
-from .signals import terminate_gracefully
 from .ui import NullProgressReporter, ProgressReporter
 
 logger = get_logger()
