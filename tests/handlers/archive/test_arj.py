@@ -1,10 +1,10 @@
 import copy
 
 import pytest
-from helpers import unhex
 
 from unblob.file_utils import File
 from unblob.handlers.archive.arj import ARJChecksumError, ARJHandler, InvalidARJSize
+from unblob.testing import unhex
 
 ARJ_CONTENTS = unhex(
     """\

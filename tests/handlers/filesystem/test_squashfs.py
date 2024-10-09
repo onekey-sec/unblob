@@ -2,7 +2,6 @@ import io
 from typing import Optional
 
 import pytest
-from helpers import unhex
 
 from unblob.file_utils import round_up
 from unblob.handlers.filesystem.squashfs import (
@@ -11,6 +10,7 @@ from unblob.handlers.filesystem.squashfs import (
     SquashFSv4BEHandler,
     SquashFSv4LEHandler,
 )
+from unblob.testing import unhex
 
 SQUASHFS_V4_LE_NO_PAD_CONTENTS = unhex(
     """\

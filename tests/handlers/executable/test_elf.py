@@ -1,9 +1,9 @@
 import pytest
-from helpers import unhex
 
 from unblob.file_utils import File
 from unblob.handlers.executable.elf import ELF64Handler
 from unblob.models import ValidChunk
+from unblob.testing import unhex
 
 ELF_CONTENT = unhex(
     """\
