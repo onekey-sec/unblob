@@ -29,17 +29,23 @@ repos:
         types_or: [python, pyi]
         require_serial: true
         entry: poetry run ruff format --force-exclude
+      - id: nixfmt
+        name: Format Nix (nixfmt)
+        types: [nix]
+        language: system
+        require_serial: true
+        entry: bash -c 'command -v nix && nix "$@" || echo "skipping nixfmt"' nix
+        args:
+          - --experimental-features
+          - nix-command flakes
+          - --accept-flake-config
+          - fmt
 
   - repo: https://github.com/jendrikseipp/vulture
     rev: v2.7
     hooks:
       - id: vulture
         name: Check vulture
-
-  - repo: https://github.com/nix-community/nixpkgs-fmt
-    rev: v1.3.0
-    hooks:
-      - id: nixpkgs-fmt
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.21.0
