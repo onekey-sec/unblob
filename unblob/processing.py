@@ -43,7 +43,6 @@ from .report import (
     StatReport,
     UnknownError,
 )
-from .signals import terminate_gracefully
 from .ui import NullProgressReporter, ProgressReporter
 
 logger = get_logger()
@@ -111,7 +110,6 @@ class ExtractionConfig:
         return extract_dir.expanduser().resolve()
 
 
-@terminate_gracefully
 def process_file(
     config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
 ) -> ProcessResult:
