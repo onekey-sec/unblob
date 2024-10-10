@@ -23,6 +23,11 @@ jobs:
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
 
+      - name: Setup Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.18.8/install
+
       - name: Check pre-commit hook
         uses: pre-commit/action@v3.0.1
 
