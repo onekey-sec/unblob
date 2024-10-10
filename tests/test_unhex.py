@@ -1,5 +1,6 @@
 import pytest
-from helpers import unhex
+
+from unblob.testing import unhex
 
 EMACS_VIM = """\
 00000000: 0102 0304 0506 0708 090a 0b0c 0d0e 0f10  ................

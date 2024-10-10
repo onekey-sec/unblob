@@ -1,8 +1,8 @@
 import pytest
-from helpers import unhex
 
 from unblob.file_utils import File, InvalidInputFormat
 from unblob.handlers.compression.xz import XZHandler
+from unblob.testing import unhex
 
 XZ_NONE_CONTENT = unhex(
     """\

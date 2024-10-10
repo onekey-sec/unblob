@@ -44,7 +44,7 @@ class File(mmap.mmap):
     access: int
 
     @classmethod
-    def from_bytes(cls, content: bytes):
+    def from_bytes(cls, content: Union[bytes, bytearray]):
         if not content:
             raise ValueError("Can't create File from empty bytes.")
         m = cls(-1, len(content))
@@ -193,7 +193,7 @@ def decode_int(value, base: int) -> int:
         raise InvalidInputFormat from exc
 
 
-def decode_multibyte_integer(data: bytes) -> Tuple[int, int]:
+def decode_multibyte_integer(data: Union[bytes, bytearray]) -> Tuple[int, int]:
     """Decode multi-bytes integer into integer size and integer value.
 
     Multibyte integers of static length are stored in little endian byte order.

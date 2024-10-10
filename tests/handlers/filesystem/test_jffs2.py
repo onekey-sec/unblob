@@ -1,10 +1,10 @@
 import binascii
 
 import pytest
-from helpers import unhex
 
 from unblob.file_utils import Endian, File
 from unblob.handlers.filesystem.jffs2 import JFFS2NewHandler, JFFS2OldHandler
+from unblob.testing import unhex
 
 VALID_JFFS2_NEW_LE_HEADER_CONTENT = unhex(
     """\

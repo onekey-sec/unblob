@@ -1,5 +1,4 @@
 import pytest
-from helpers import unhex
 
 from unblob.file_utils import File
 from unblob.handlers.archive.tar import (
@@ -7,6 +6,7 @@ from unblob.handlers.archive.tar import (
     TarUstarHandler,
     _get_tar_end_offset,
 )
+from unblob.testing import unhex
 
 GNU_TAR_CONTENTS = unhex(
     """\
