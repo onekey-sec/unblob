@@ -7,7 +7,10 @@ python3.pkgs.buildPythonApplication rec {
 
   doCheck = false;
 
-  nativeBuildInputs = with python3.pkgs; [ setuptools setuptools-scm ];
+  nativeBuildInputs = with python3.pkgs; [
+    setuptools
+    setuptools-scm
+  ];
   propagatedBuildInputs = with python3.pkgs; [ fs ];
 
   postPatch = ''

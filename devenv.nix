@@ -18,7 +18,10 @@
     };
   };
 
-  packages = with pkgs; [
-    nvfetcher
-  ] ++ unblob.runtimeDeps;
+  packages =
+    with pkgs;
+    [
+      nvfetcher
+    ]
+    ++ unblob.runtimeDeps;
 }
