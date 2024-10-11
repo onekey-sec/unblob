@@ -4,6 +4,7 @@ mod sandbox_impl;
 
 use pyo3::{create_exception, exceptions::PyException, prelude::*, types::PyTuple};
 use std::path::PathBuf;
+use thiserror::Error;
 
 #[derive(Clone, Debug)]
 pub enum AccessFS {
@@ -11,6 +12,18 @@ pub enum AccessFS {
     ReadWrite(PathBuf),
     MakeReg(PathBuf),
     MakeDir(PathBuf),
+}
+
+#[derive(Debug, Error)]
+#[non_exhaustive]
+pub enum SandboxError {
+    #[error("Sandboxing is not implemented on this system")]
+    NotImplemented,
+    #[error("Could not enforce sandbox restrictions")]
+    NotEnforced,
+    #[cfg(target_os = "linux")]
+    #[error(transparent)]
+    LandlockError(#[from] landlock::RulesetError),
 }
 
 /// Enforces access restrictions
@@ -22,10 +35,29 @@ fn py_restrict_access(rules: &Bound<'_, PyTuple>) -> PyResult<()> {
             .map(|r| Ok(r.extract::<PyAccessFS>()?.access))
             .collect::<PyResult<Vec<_>>>()?,
     )
-    .map_err(|err| SandboxError::new_err(err.to_string()))
+    .map_err(|err| PySandboxError::new_err((PySandboxErrorKind::from(&err), err.to_string())))
 }
 
-create_exception!(unblob_native.sandbox, SandboxError, PyException);
+create_exception!(unblob_native.sandbox, PySandboxError, PyException);
+
+#[pyclass(eq, eq_int, name = "SandboxErrorKind")]
+#[derive(PartialEq)]
+enum PySandboxErrorKind {
+    NotImplementend,
+    NotEnforced,
+    Unknown,
+}
+
+impl From<&SandboxError> for PySandboxErrorKind {
+    fn from(value: &SandboxError) -> Self {
+        #[allow(unreachable_patterns)] // There are conditional pattern variants that may not exist
+        match value {
+            SandboxError::NotImplemented => Self::NotImplementend,
+            SandboxError::NotEnforced => Self::NotEnforced,
+            _ => Self::Unknown,
+        }
+    }
+}
 
 #[pyclass(name = "AccessFS", module = "unblob_native.sandbox")]
 #[derive(Clone)]
@@ -68,7 +100,7 @@ pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyAccessFS>()?;
     module.add(
         "SandboxError",
-        root_module.py().get_type_bound::<SandboxError>(),
+        root_module.py().get_type_bound::<PySandboxError>(),
     )?;
 
     root_module.add_submodule(&module)?;
