@@ -39,7 +39,7 @@ test = [
 pyyaml = "~= 6.0.1"  # For Python 3.12 compatibility
 
 [build-system]
-requires = ["maturin>=0.14,<0.15"]
+requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
