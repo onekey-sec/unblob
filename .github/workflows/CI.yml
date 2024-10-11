@@ -104,8 +104,6 @@ jobs:
           cache-dependency-path: |
             ./pdm.lock
             ./Cargo.lock
-      - name: Work around requests bug https://github.com/psf/requests/issues/6437
-        run: pip install --force requests==2.29.0
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install dependencies
         run: |
