@@ -9,34 +9,11 @@ readme = "README.md"
 
 requires-python = ">=3.8"
 dynamic = ["version"] # Calculated from the rust module version
+dependencies = []
 
 [project.urls]
 homepage = "https://unblob.org"
 repository = "https://github.com/onekey-sec/unblob-native"
-
-[tool.pdm.scripts]
-venv = "pdm sync -d"
-pre-commit = "pre-commit run --all"
-pyright = "pyright"
-pytest = "python -m pytest tests"
-clippy = "cargo clippy --all-targets -- --deny warnings"
-test = "cargo test"
-all = { composite = ["clippy", "test", "venv", "pre-commit", "pyright", "pytest"] }
-
-[tool.pdm.dev-dependencies]
-dev = [
-  "black      ~= 23.3.0",
-  "pre-commit ~= 2.20",
-  "pyright    == 1.1.306",
-  "ruff       ~= 0.0.264",
-]
-
-test = [
-  "pytest     ~= 7.0.0",
-]
-
-[tool.pdm.resolution.overrides]
-pyyaml = "~= 6.0.1"  # For Python 3.12 compatibility
 
 [build-system]
 requires = ["maturin>=1.0,<2.0"]
@@ -136,3 +113,28 @@ reportUnusedCallResult = "warning"
 reportUnknownArgumentType = "none"
 reportUnknownVariableType = "none"
 reportUnknownMemberType = "none"
+
+[tool.pdm.scripts]
+venv = "pdm sync -d"
+pre-commit = "pre-commit run --all"
+pyright = "pyright"
+pytest = "python -m pytest tests"
+clippy = "cargo clippy --all-targets -- --deny warnings"
+test = "cargo test"
+all = { composite = ["clippy", "test", "venv", "pre-commit", "pyright", "pytest"] }
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "black>=24.8.0",
+    "pre-commit>=3.5.0",
+    "pyright>=1.1.384",
+    "ruff>=0.6.9",
+]
+
+test = [
+    "pytest>=8.3.3",
+]
+
+[tool.pdm.resolution.overrides]
+pyyaml = "~= 6.0.1"  # For Python 3.12 compatibility
+
