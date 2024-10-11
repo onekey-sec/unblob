@@ -55,7 +55,7 @@ pub fn restrict_access(access_rules: &[AccessFS]) -> Result<(), Box<dyn std::err
 
     let create_directory: Vec<&Path> = access_rules.iter().filter_map(AccessFS::make_dir).collect();
 
-    let status = Ruleset::new()
+    let status = Ruleset::default()
         .handle_access(AccessFs::from_all(abi))?
         .create()?
         .add_rules(path_beneath_rules(read_write, AccessFs::from_all(abi)))?

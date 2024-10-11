@@ -5,9 +5,9 @@ use pyo3::prelude::*;
 
 /// Performance-critical functionality
 #[pymodule]
-fn _native(py: Python, m: &PyModule) -> PyResult<()> {
-    math_tools::init_module(py, m)?;
-    sandbox::init_module(py, m)?;
+fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    math_tools::init_module(m)?;
+    sandbox::init_module(m)?;
 
     pyo3_log::init();
 

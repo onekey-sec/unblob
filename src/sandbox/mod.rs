@@ -15,7 +15,7 @@ pub enum AccessFS {
 
 /// Enforces access restrictions
 #[pyfunction(name = "restrict_access", signature=(*rules))]
-fn py_restrict_access(rules: &PyTuple) -> PyResult<()> {
+fn py_restrict_access(rules: &Bound<'_, PyTuple>) -> PyResult<()> {
     sandbox_impl::restrict_access(
         &rules
             .iter()
@@ -62,14 +62,19 @@ impl PyAccessFS {
     }
 }
 
-pub fn init_module(py: Python, root_module: &PyModule) -> PyResult<()> {
-    let module = PyModule::new(py, "sandbox")?;
-    module.add_function(wrap_pyfunction!(py_restrict_access, module)?)?;
+pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
+    let module = PyModule::new_bound(root_module.py(), "sandbox")?;
+    module.add_function(wrap_pyfunction!(py_restrict_access, &module)?)?;
     module.add_class::<PyAccessFS>()?;
-    module.add("SandboxError", py.get_type::<SandboxError>())?;
+    module.add(
+        "SandboxError",
+        root_module.py().get_type_bound::<SandboxError>(),
+    )?;
 
-    root_module.add_submodule(module)?;
-    py.import("sys")?
+    root_module.add_submodule(&module)?;
+    root_module
+        .py()
+        .import_bound("sys")?
         .getattr("modules")?
         .set_item("unblob_native.sandbox", module)?;
 
