@@ -1,11 +1,12 @@
 use landlock::{
-    path_beneath_rules, Access, AccessFs, Ruleset, RulesetAttr, RulesetCreatedAttr, ABI,
+    path_beneath_rules, Access, AccessFs, Ruleset, RulesetAttr, RulesetCreatedAttr, RulesetStatus,
+    ABI,
 };
 use log;
 
 use std::path::Path;
 
-use crate::sandbox::AccessFS;
+use crate::sandbox::{AccessFS, SandboxError};
 
 impl AccessFS {
     fn read(&self) -> Option<&Path> {
@@ -41,7 +42,7 @@ impl AccessFS {
     }
 }
 
-pub fn restrict_access(access_rules: &[AccessFS]) -> Result<(), Box<dyn std::error::Error>> {
+pub fn restrict_access(access_rules: &[AccessFS]) -> Result<(), SandboxError> {
     let abi = ABI::V2;
 
     let read_only: Vec<&Path> = access_rules.iter().filter_map(AccessFS::read).collect();
@@ -55,7 +56,7 @@ pub fn restrict_access(access_rules: &[AccessFS]) -> Result<(), Box<dyn std::err
 
     let create_directory: Vec<&Path> = access_rules.iter().filter_map(AccessFS::make_dir).collect();
 
-    let status = Ruleset::new()
+    let status = Ruleset::default()
         .handle_access(AccessFs::from_all(abi))?
         .create()?
         .add_rules(path_beneath_rules(read_write, AccessFs::from_all(abi)))?
@@ -63,6 +64,11 @@ pub fn restrict_access(access_rules: &[AccessFS]) -> Result<(), Box<dyn std::err
         .add_rules(path_beneath_rules(create_directory, AccessFs::MakeDir))?
         .add_rules(path_beneath_rules(read_only, AccessFs::from_read(abi)))?
         .restrict_self()?;
+
+    if status.ruleset == RulesetStatus::NotEnforced {
+        log::error!("Could not enforce restictions");
+        return Err(SandboxError::NotEnforced);
+    }
 
     log::info!(
         "Activated FS access restrictions; rules={:?}, status={:?}",

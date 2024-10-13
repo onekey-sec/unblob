@@ -25,13 +25,15 @@ pub fn py_shannon_entropy(py: Python, data: &[u8]) -> PyResult<f64> {
     py.allow_threads(|| Ok(shannon_entropy(data)))
 }
 
-pub fn init_module(py: Python, root_module: &PyModule) -> PyResult<()> {
-    let module = PyModule::new(py, "math_tools")?;
-    module.add_function(wrap_pyfunction!(py_shannon_entropy, module)?)?;
+pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
+    let module = PyModule::new_bound(root_module.py(), "math_tools")?;
+    module.add_function(wrap_pyfunction!(py_shannon_entropy, &module)?)?;
 
-    root_module.add_submodule(module)?;
+    root_module.add_submodule(&module)?;
 
-    py.import("sys")?
+    root_module
+        .py()
+        .import_bound("sys")?
         .getattr("modules")?
         .set_item("unblob_native.math", module)?;
 

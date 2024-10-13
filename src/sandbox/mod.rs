@@ -4,6 +4,7 @@ mod sandbox_impl;
 
 use pyo3::{create_exception, exceptions::PyException, prelude::*, types::PyTuple};
 use std::path::PathBuf;
+use thiserror::Error;
 
 #[derive(Clone, Debug)]
 pub enum AccessFS {
@@ -13,19 +14,50 @@ pub enum AccessFS {
     MakeDir(PathBuf),
 }
 
+#[derive(Debug, Error)]
+#[non_exhaustive]
+pub enum SandboxError {
+    #[error("Sandboxing is not implemented on this system")]
+    NotImplemented,
+    #[error("Could not enforce sandbox restrictions")]
+    NotEnforced,
+    #[cfg(target_os = "linux")]
+    #[error(transparent)]
+    LandlockError(#[from] landlock::RulesetError),
+}
+
 /// Enforces access restrictions
 #[pyfunction(name = "restrict_access", signature=(*rules))]
-fn py_restrict_access(rules: &PyTuple) -> PyResult<()> {
+fn py_restrict_access(rules: &Bound<'_, PyTuple>) -> PyResult<()> {
     sandbox_impl::restrict_access(
         &rules
             .iter()
             .map(|r| Ok(r.extract::<PyAccessFS>()?.access))
             .collect::<PyResult<Vec<_>>>()?,
     )
-    .map_err(|err| SandboxError::new_err(err.to_string()))
+    .map_err(|err| PySandboxError::new_err((PySandboxErrorKind::from(&err), err.to_string())))
 }
 
-create_exception!(unblob_native.sandbox, SandboxError, PyException);
+create_exception!(unblob_native.sandbox, PySandboxError, PyException);
+
+#[pyclass(eq, eq_int, name = "SandboxErrorKind")]
+#[derive(PartialEq)]
+enum PySandboxErrorKind {
+    NotImplementend,
+    NotEnforced,
+    Unknown,
+}
+
+impl From<&SandboxError> for PySandboxErrorKind {
+    fn from(value: &SandboxError) -> Self {
+        #[allow(unreachable_patterns)] // There are conditional pattern variants that may not exist
+        match value {
+            SandboxError::NotImplemented => Self::NotImplementend,
+            SandboxError::NotEnforced => Self::NotEnforced,
+            _ => Self::Unknown,
+        }
+    }
+}
 
 #[pyclass(name = "AccessFS", module = "unblob_native.sandbox")]
 #[derive(Clone)]
@@ -62,14 +94,19 @@ impl PyAccessFS {
     }
 }
 
-pub fn init_module(py: Python, root_module: &PyModule) -> PyResult<()> {
-    let module = PyModule::new(py, "sandbox")?;
-    module.add_function(wrap_pyfunction!(py_restrict_access, module)?)?;
+pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
+    let module = PyModule::new_bound(root_module.py(), "sandbox")?;
+    module.add_function(wrap_pyfunction!(py_restrict_access, &module)?)?;
     module.add_class::<PyAccessFS>()?;
-    module.add("SandboxError", py.get_type::<SandboxError>())?;
+    module.add(
+        "SandboxError",
+        root_module.py().get_type_bound::<PySandboxError>(),
+    )?;
 
-    root_module.add_submodule(module)?;
-    py.import("sys")?
+    root_module.add_submodule(&module)?;
+    root_module
+        .py()
+        .import_bound("sys")?
         .getattr("modules")?
         .set_item("unblob_native.sandbox", module)?;
 

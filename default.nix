@@ -1,11 +1,12 @@
-{ lib
-, stdenv
-, craneLib
-, nixFilter
-, maturin
-, rustPlatform
-, libiconv
-, python3
+{
+  lib,
+  stdenv,
+  craneLib,
+  nixFilter,
+  maturin,
+  rustPlatform,
+  libiconv,
+  python3,
 }:
 
 let
@@ -20,12 +21,14 @@ let
     # and the standalone dylib which is used for tests and benchmarks
     doNotLinkInheritedArtifacts = true;
 
-    buildInputs = [
-      python3
-    ] ++ lib.optionals stdenv.isDarwin [
-      # Additional darwin specific inputs can be set here
-      libiconv
-    ];
+    buildInputs =
+      [
+        python3
+      ]
+      ++ lib.optionals stdenv.isDarwin [
+        # Additional darwin specific inputs can be set here
+        libiconv
+      ];
   };
 
   # Build *just* the cargo dependencies, so we can reuse
@@ -34,9 +37,12 @@ let
 
   # Build the actual crate itself, reusing the dependency
   # artifacts from above.
-  libunblob-native = craneLib.buildPackage (commonArgs // {
-    inherit cargoArtifacts;
-  });
+  libunblob-native = craneLib.buildPackage (
+    commonArgs
+    // {
+      inherit cargoArtifacts;
+    }
+  );
   self = python3.pkgs.buildPythonPackage {
 
     inherit (libunblob-native) pname version;
@@ -64,39 +70,44 @@ let
       lockFile = ./Cargo.lock;
     };
 
-    nativeBuildInputs =
-      (with rustPlatform; [
+    nativeBuildInputs = (
+      with rustPlatform;
+      [
         cargoSetupHook
         maturinBuildHook
-      ]);
-
+      ]
+    );
 
     passthru = {
-      inherit cargoArtifacts craneLib commonArgs libunblob-native;
+      inherit
+        cargoArtifacts
+        craneLib
+        commonArgs
+        libunblob-native
+        ;
       tests = {
         pytest =
-          with python3.pkgs; buildPythonPackage
-            {
-              inherit (libunblob-native) pname version;
-              format = "other";
+          with python3.pkgs;
+          buildPythonPackage {
+            inherit (libunblob-native) pname version;
+            format = "other";
 
-              src = nixFilter
-                {
-                  root = ./.;
-                  include = [
-                    "pyproject.toml"
-                    "tests"
-                  ];
-                };
-
-              dontBuild = true;
-              dontInstall = true;
-
-              nativeCheckInputs = [
-                self
-                pytestCheckHook
+            src = nixFilter {
+              root = ./.;
+              include = [
+                "pyproject.toml"
+                "tests"
               ];
             };
+
+            dontBuild = true;
+            dontInstall = true;
+
+            nativeCheckInputs = [
+              self
+              pytestCheckHook
+            ];
+          };
       };
     };
   };

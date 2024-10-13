@@ -6,10 +6,7 @@
 
     nix-filter.url = "github:numtide/nix-filter";
 
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    crane.url = "github:ipetkov/crane";
 
     flake-utils.url = "github:numtide/flake-utils";
 
@@ -19,85 +16,112 @@
     };
   };
 
-  outputs = { self, nixpkgs, nix-filter, crane, flake-utils, advisory-db, ... }: {
-    overlays.default = final: prev:
-      let
-        craneLib = crane.lib.${final.system};
-        nixFilter = nix-filter.lib;
-      in
-      {
-        pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-          (python-final: python-prev: {
-            unblob-native = python-final.callPackage ./. { inherit craneLib nixFilter; };
-          })
-        ];
-      };
-  }
-  // flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [ self.overlays.default ];
-      };
-
-      inherit (pkgs.python3Packages) unblob-native;
-    in
+  outputs =
     {
-
-      checks = unblob-native.tests // (
+      self,
+      nixpkgs,
+      nix-filter,
+      crane,
+      flake-utils,
+      advisory-db,
+      ...
+    }:
+    {
+      overlays.default =
+        final: prev:
         let
-          inherit (unblob-native) cargoArtifacts commonArgs craneLib libunblob-native src;
+          craneLib = crane.mkLib final;
+          nixFilter = nix-filter.lib;
         in
         {
-          # Build the crate as part of `nix flake check` for convenience
-          inherit libunblob-native;
+          pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+            (python-final: python-prev: {
+              unblob-native = python-final.callPackage ./. { inherit craneLib nixFilter; };
+            })
+          ];
+        };
+    }
+    // flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ self.overlays.default ];
+        };
 
-          # Run clippy (and deny all warnings) on the crate source,
-          # again, reusing the dependency artifacts from above.
-          #
-          # Note that this is done as a separate derivation so that
-          # we can block the CI if there are issues here, but not
-          # prevent downstream consumers from building our crate by itself.
-          libunblob-native-clippy = craneLib.cargoClippy (commonArgs // {
-            inherit cargoArtifacts;
-            cargoClippyExtraArgs = "--all-targets -- --deny warnings";
-          });
+        inherit (pkgs.python3Packages) unblob-native;
+      in
+      {
 
-          libunblob-native-doc = craneLib.cargoDoc (commonArgs // {
-            inherit cargoArtifacts;
-          });
+        checks =
+          unblob-native.tests
+          // (
+            let
+              inherit (unblob-native)
+                cargoArtifacts
+                commonArgs
+                craneLib
+                libunblob-native
+                src
+                ;
+            in
+            {
+              # Build the crate as part of `nix flake check` for convenience
+              inherit libunblob-native;
 
-          # Check formatting
-          libunblob-native-fmt = craneLib.cargoFmt {
-            inherit src;
-          };
+              # Run clippy (and deny all warnings) on the crate source,
+              # again, reusing the dependency artifacts from above.
+              #
+              # Note that this is done as a separate derivation so that
+              # we can block the CI if there are issues here, but not
+              # prevent downstream consumers from building our crate by itself.
+              libunblob-native-clippy = craneLib.cargoClippy (
+                commonArgs
+                // {
+                  inherit cargoArtifacts;
+                  cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+                }
+              );
 
-          # Audit dependencies
-          libunblob-native-audit = craneLib.cargoAudit {
-            inherit src advisory-db;
-          };
+              libunblob-native-doc = craneLib.cargoDoc (
+                commonArgs
+                // {
+                  inherit cargoArtifacts;
+                }
+              );
 
-        }
-      );
+              # Check formatting
+              libunblob-native-fmt = craneLib.cargoFmt {
+                inherit src;
+              };
 
-      packages = {
-        default = unblob-native;
-        inherit unblob-native;
-      };
+              # Audit dependencies
+              libunblob-native-audit = craneLib.cargoAudit {
+                inherit src advisory-db;
+              };
 
-      devShells.default = pkgs.mkShell {
-        inputsFrom = builtins.attrValues self.checks.${system};
+            }
+          );
 
-        nativeBuildInputs = with pkgs; [
-          black
-          maturin
-          pdm
-          ruff
-          rustc
-          cargo
-        ];
-      };
+        packages = {
+          default = unblob-native;
+          inherit unblob-native;
+        };
 
-      formatter = pkgs.nixpkgs-fmt;
-    });
+        devShells.default = pkgs.mkShell {
+          inputsFrom = builtins.attrValues self.checks.${system};
+
+          nativeBuildInputs = with pkgs; [
+            black
+            maturin
+            pdm
+            ruff
+            rustc
+            cargo
+          ];
+        };
+
+        formatter = pkgs.nixfmt-rfc-style;
+      }
+    );
 }
