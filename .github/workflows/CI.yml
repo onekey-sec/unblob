@@ -159,9 +159,9 @@ jobs:
           manylinux: auto
           docker-options: -e CARGO_NET_GIT_FETCH_WITH_CLI=true
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-linux-${{ matrix.target }}-${{ matrix.platform }}
           path: dist
       - name: Test wheels
         run: |
@@ -197,9 +197,9 @@ jobs:
           args: --verbose --release --out dist
           sccache: "true"
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-macos-${{ matrix.target }}
           path: dist
       - uses: pdm-project/setup-pdm@v3
         name: Setup PDM
@@ -222,9 +222,9 @@ jobs:
           command: sdist
           args: --out dist
       - name: Upload sdist
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: sdist
           path: dist
 
   release:
@@ -233,9 +233,9 @@ jobs:
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: [build-nix, wheel-linux, wheel-macos, sdist]
     steps:
-      - uses: actions/download-artifact@v4.1.7
+      - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          merge-multiple: true
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
         env:
