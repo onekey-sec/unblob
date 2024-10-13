@@ -1920,18 +1920,18 @@ lzallright = ">=0.2.1,<0.3.0"
 
 [[package]]
 name = "unblob-native"
-version = "0.1.3"
+version = "0.1.4"
 description = "Performance-critical functionality for Unblob"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "unblob_native-0.1.3-cp38-abi3-macosx_10_7_x86_64.whl", hash = "sha256:11e27ee80c8c52f0c1d315d0c05695da3814a4b36da47cbb1c6a1dd7a0f81a12"},
-    {file = "unblob_native-0.1.3-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:6c4adf1c8609f620449a6aa362548443569d683f84e73ef20615935d7a0ee403"},
-    {file = "unblob_native-0.1.3-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b268206100cb656d86f747ffe444e0808c1983d4efabe4e6d43a735738f0ecfe"},
-    {file = "unblob_native-0.1.3-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5f455172f7025b088c3af0931614109c634f881f7e497c5343ea14849c0d3f4b"},
-    {file = "unblob_native-0.1.3-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:4d7b8256cba2ab4d2afed40b4a57a560082009d58ce2a7e4927c9e957185f365"},
-    {file = "unblob_native-0.1.3-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:cdba5a8b50fef3067f83aac44d809bab6a5f65037778c23b7abc04be0a995473"},
-    {file = "unblob_native-0.1.3.tar.gz", hash = "sha256:92f300677d3f4328682a2a2bf90dd498c826652752c9f2ab2731a82e31903008"},
+    {file = "unblob_native-0.1.4-cp38-abi3-macosx_10_7_x86_64.whl", hash = "sha256:3e7b8e976b3363fcf2c40328c963d3aab15a3233af78507ef846669735822010"},
+    {file = "unblob_native-0.1.4-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:cce0bcae3fb28a91d2c8af3e3c407962f4a7eb442d9c47a8e84dec84b340b7d7"},
+    {file = "unblob_native-0.1.4-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:de416b6481534fe4ad329801ea0e8fd7afcecdbd7e73a8854d95497c7e1f3dc7"},
+    {file = "unblob_native-0.1.4-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b29b7dbd319d27ccdab48fc4dfd3fc3b320343f62f794fd36ae8e9ca755fc67"},
+    {file = "unblob_native-0.1.4-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:be11c409a6868646a28edfaf28f89ac7cba836975d0870694df83ecb906df0fe"},
+    {file = "unblob_native-0.1.4-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:2ba8af660b81ec8ea823390406800c994548dc38f46bf96a466af3db6f592e47"},
+    {file = "unblob_native-0.1.4.tar.gz", hash = "sha256:fdcc963090358617850ab0d0e2c9f69551212f3267d2b3e8ce8e2a25cf513af9"},
 ]
 
 [[package]]
@@ -2065,4 +2065,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "8ef93e585816ad6eb6641b456b1a945d7b3301e3cf3752c35412e97946a9e54b"
+content-hash = "2b8414d8c00f7b73376eae4067c447fde2a91fb06c61ec2d1f9a2ad0f6033362"
