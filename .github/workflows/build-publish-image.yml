@@ -73,7 +73,7 @@ jobs:
 
       - name: Docker container vulnerability scan
         id: scan
-        uses: anchore/scan-action@v4
+        uses: anchore/scan-action@v5
         with:
           image: ${{ env.DOCKER_IMAGE }}
           fail-build: false
