@@ -13,7 +13,7 @@ crate-type = [
 
 [dependencies]
 log = "0.4.22"
-pyo3 = "0.22.3"
+pyo3 = "0.22.4"
 pyo3-log = "0.11.0"
 thiserror = "1.0.64"
 
