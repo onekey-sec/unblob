@@ -43,7 +43,7 @@ create_exception!(unblob_native.sandbox, PySandboxError, PyException);
 #[pyclass(eq, eq_int, name = "SandboxErrorKind")]
 #[derive(PartialEq)]
 enum PySandboxErrorKind {
-    NotImplementend,
+    NotImplemented,
     NotEnforced,
     Unknown,
 }
@@ -52,7 +52,7 @@ impl From<&SandboxError> for PySandboxErrorKind {
     fn from(value: &SandboxError) -> Self {
         #[allow(unreachable_patterns)] // There are conditional pattern variants that may not exist
         match value {
-            SandboxError::NotImplemented => Self::NotImplementend,
+            SandboxError::NotImplemented => Self::NotImplemented,
             SandboxError::NotEnforced => Self::NotEnforced,
             _ => Self::Unknown,
         }
