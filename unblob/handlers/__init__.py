@@ -1,5 +1,6 @@
 from ..models import DirectoryHandlers, Handlers
 from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
+from .archive.autel import ecc
 from .archive.dlink import encrpted_img, shrs
 from .archive.engeniustech import engenius
 from .archive.hp import bdl, ipkg
@@ -100,6 +101,7 @@ BUILTIN_HANDLERS: Handlers = (
     elf.ELF64Handler,
     zlib.ZlibHandler,
     engenius.EngeniusHandler,
+    ecc.AutelECCHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
