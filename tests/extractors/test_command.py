@@ -34,7 +34,14 @@ def test_command_templating_with_invalid_substitution(template):
 
 def test_command_execution(tmpdir: Path):
     outdir = PosixPath(tmpdir)
-    command = Command("sh", "-c", "> {outdir}/created")
+    # fmt: off
+    command = Command(
+        "python",
+        "-c",
+        "import pathlib\n"
+        "pathlib.Path('{outdir}/created').touch()",
+    )
+    # fmt: on
 
     command.extract(Path("foo"), outdir)
 
@@ -43,7 +50,14 @@ def test_command_execution(tmpdir: Path):
 
 def test_command_execution_failure(tmpdir: Path):
     outdir = PosixPath(tmpdir)
-    command = Command("sh", "-c", ">&1 echo -n stdout; >&2 echo -n stderr; false")
+    command = Command(
+        "python",
+        "-c",
+        "import sys\n"
+        "sys.stdout.write('stdout')\n"
+        "sys.stderr.write('stderr')\n"
+        "sys.exit(1)",
+    )
 
     with pytest.raises(ExtractError) as excinfo:
         command.extract(Path("input"), outdir)
