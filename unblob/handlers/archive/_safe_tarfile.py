@@ -17,7 +17,7 @@ class SafeTarFile:
     def __init__(self, inpath: Path):
         self.inpath = inpath
         self.reports = []
-        self.tarfile = tarfile.open(inpath)
+        self.tarfile = tarfile.open(inpath)  # noqa: SIM115
         self.directories = {}
 
     def close(self):
