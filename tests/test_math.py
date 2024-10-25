@@ -2,6 +2,9 @@ import pytest
 
 from unblob_native import math_tools
 
+UNIFORM_DISTRIBUTION = bytes(x for x in range(256))
+NON_UNIFORM_DISTRIBUTION = bytes([0] * 256)
+
 
 @pytest.mark.parametrize(
     "data,entropy",
@@ -15,3 +18,22 @@ from unblob_native import math_tools
 )
 def test_shannon_entropy(data: bytes, entropy: float):
     assert math_tools.shannon_entropy(data) == pytest.approx(entropy)
+
+
+@pytest.mark.parametrize(
+    "data,chi_square_value",
+    [
+        pytest.param(b"", 0, id="empty"),
+        pytest.param(UNIFORM_DISTRIBUTION, 1.0, id="uniform distribution"),
+        pytest.param(NON_UNIFORM_DISTRIBUTION, 0.0, id="non uniform distribution"),
+        pytest.param(
+            UNIFORM_DISTRIBUTION + NON_UNIFORM_DISTRIBUTION,
+            0.0,
+            id="partially uniform distribution",
+        ),
+    ],
+)
+def test_chi_square_entropy(data: bytes, chi_square_value: float):
+    assert math_tools.chi_square_probability(data) == pytest.approx(
+        chi_square_value, abs=1e-4
+    )
