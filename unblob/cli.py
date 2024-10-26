@@ -265,19 +265,20 @@ class UnblobContext(click.Context):
     expose_value=False,
 )
 def cli(
+    *,
     file: Path,
     extract_root: Path,
     report_file: Optional[Path],
     log_path: Path,
-    force: bool,  # noqa: FBT001
+    force: bool,
     process_num: int,
     depth: int,
     randomness_depth: int,
     skip_magic: Iterable[str],
     skip_extension: Iterable[str],
-    clear_skip_magics: bool,  # noqa: FBT001
-    skip_extraction: bool,  # noqa: FBT001
-    keep_extracted_chunks: bool,  # noqa: FBT001
+    clear_skip_magics: bool,
+    skip_extraction: bool,
+    keep_extracted_chunks: bool,
     carve_suffix: str,
     extract_suffix: str,
     handlers: Handlers,
