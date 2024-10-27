@@ -57,7 +57,7 @@ def gather_integration_tests(test_data_path: Path):
 def extraction_config(tmp_path: Path):
     config = ExtractionConfig(
         extract_root=tmp_path,
-        entropy_depth=0,
+        randomness_depth=0,
         keep_extracted_chunks=True,
     )
 

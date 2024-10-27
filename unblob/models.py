@@ -14,9 +14,9 @@ from .identifiers import new_id
 from .parser import hexstring2regex
 from .report import (
     ChunkReport,
-    EntropyReport,
     ErrorReport,
     MultiFileReport,
+    RandomnessReport,
     Report,
     UnknownChunkReport,
 )
@@ -134,19 +134,19 @@ class UnknownChunk(Chunk):
     r"""Gaps between valid chunks or otherwise unknown chunks.
 
     Important for manual analysis, and analytical certainty: for example
-    entropy, other chunks inside it, metadata, etc.
+    randomness, other chunks inside it, metadata, etc.
 
     These are not extracted, just logged for information purposes and further analysis,
-    like most common bytes (like \x00 and \xFF), ASCII strings, high entropy, etc.
+    like most common bytes (like \x00 and \xFF), ASCII strings, high randomness, etc.
     """
 
-    def as_report(self, entropy: Optional[EntropyReport]) -> UnknownChunkReport:
+    def as_report(self, randomness: Optional[RandomnessReport]) -> UnknownChunkReport:
         return UnknownChunkReport(
             id=self.id,
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
-            entropy=entropy,
+            randomness=randomness,
         )
 
 
@@ -155,12 +155,12 @@ class PaddingChunk(Chunk):
     r"""Gaps between valid chunks or otherwise unknown chunks.
 
     Important for manual analysis, and analytical certanity: for example
-    entropy, other chunks inside it, metadata, etc.
+    randomness, other chunks inside it, metadata, etc.
     """
 
     def as_report(
         self,
-        entropy: Optional[EntropyReport],  #   noqa: ARG002
+        randomness: Optional[RandomnessReport],  #   noqa: ARG002
     ) -> ChunkReport:
         return ChunkReport(
             id=self.id,

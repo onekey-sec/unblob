@@ -2,6 +2,7 @@ import platform
 import sys
 import zipfile
 from pathlib import Path
+from statistics import mean
 from typing import Collection, List, Optional, Tuple, Type, TypeVar
 
 import attr
@@ -25,20 +26,21 @@ from unblob.models import (
 from unblob.processing import (
     ExtractionConfig,
     calculate_block_size,
-    calculate_entropy,
+    calculate_randomness,
     calculate_unknown_chunks,
-    format_entropy_plot,
+    format_randomness_plot,
     process_file,
     remove_inner_chunks,
 )
 from unblob.report import (
     ChunkReport,
-    EntropyReport,
     ExtractDirectoryExistsReport,
     FileMagicReport,
     HashReport,
     MultiFileCollisionReport,
     MultiFileReport,
+    RandomnessMeasurements,
+    RandomnessReport,
     StatReport,
     UnknownChunkReport,
     UnknownError,
@@ -197,9 +199,16 @@ def test_calculate_block_size(
     )
 
 
-def test_format_entropy_plot_error():
+def test_format_randomness_plot_error():
     with pytest.raises(TypeError):
-        format_entropy_plot(percentages=[], block_size=1024)
+        format_randomness_plot(
+            RandomnessReport(
+                shannon=RandomnessMeasurements(percentages=[], block_size=1024, mean=0),
+                chi_square=RandomnessMeasurements(
+                    percentages=[], block_size=1024, mean=0
+                ),
+            )
+        )
 
 
 @pytest.mark.parametrize(
@@ -213,19 +222,22 @@ def test_format_entropy_plot_error():
         pytest.param([100.0] * 100, "None", id="block_size-can-be-anything3"),
     ],
 )
-def test_format_entropy_plot_no_exception(percentages: List[float], block_size: int):
-    assert str(block_size) in format_entropy_plot(
-        percentages=percentages,
-        block_size=block_size,
+def test_format_randomness_plot_no_exception(percentages: List[float], block_size: int):
+    assert str(block_size) in format_randomness_plot(
+        RandomnessReport(
+            shannon=RandomnessMeasurements(
+                percentages=percentages, block_size=block_size, mean=mean(percentages)
+            ),
+            chi_square=RandomnessMeasurements(
+                percentages=percentages, block_size=block_size, mean=mean(percentages)
+            ),
+        )
     )
 
 
-def test_calculate_entropy_no_exception():
-    report = calculate_entropy(Path(sys.executable))
-    format_entropy_plot(
-        percentages=report.percentages,
-        block_size=report.block_size,
-    )
+def test_calculate_randomness_no_exception():
+    report = calculate_randomness(Path(sys.executable))
+    format_randomness_plot(report)
 
 
 @pytest.mark.parametrize(
@@ -250,7 +262,7 @@ def test_calculate_entropy_no_exception():
 def test_ExtractionConfig_get_extract_dir_for(  # noqa: N802
     extract_root: str, path: str, result: str
 ):
-    cfg = ExtractionConfig(extract_root=Path(extract_root), entropy_depth=0)
+    cfg = ExtractionConfig(extract_root=Path(extract_root), randomness_depth=0)
     assert cfg.get_extract_dir_for(Path(path)) == Path(result)
 
 
@@ -310,7 +322,7 @@ def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
     #                 ├── hello
     #                 └── world
     fw_extract_root = tmp_path / "fw_extract_root"
-    config = ExtractionConfig(extract_root=fw_extract_root, entropy_depth=0)
+    config = ExtractionConfig(extract_root=fw_extract_root, randomness_depth=0)
     process_result = process_file(config, fw)
     assert process_result.errors == []
     extracted_fw_paths, outsiders = sort_paths(
@@ -331,7 +343,9 @@ def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
     #                     ├── hello
     #                     └── world
     fw_extract_of_extract_root = tmp_path / "fw_extract_of_extract_root"
-    config = ExtractionConfig(extract_root=fw_extract_of_extract_root, entropy_depth=0)
+    config = ExtractionConfig(
+        extract_root=fw_extract_of_extract_root, randomness_depth=0
+    )
     process_result = process_file(config, extracted_fw_zip)
 
     # we expect exactly 1 problem reported, related to the extraction of "internal.zip"
@@ -364,7 +378,7 @@ def test_processing_with_non_posix_paths(tmp_path: Path):
     file_with_non_unicode_dir.write_bytes(b"content")
 
     extract_root = tmp_path / "extract_root"
-    config = ExtractionConfig(extract_root=extract_root, entropy_depth=0)
+    config = ExtractionConfig(extract_root=extract_root, randomness_depth=0)
 
     for path in (non_unicode_file, file_with_non_unicode_dir):
         process_result = process_file(config, path)
@@ -384,8 +398,8 @@ def test_processing_with_non_posix_paths(tmp_path: Path):
         )
 
 
-def test_entropy_calculation(tmp_path: Path):
-    """Process a file with unknown chunk and a zip file with entropy calculation enabled.
+def test_randomness_calculation(tmp_path: Path):
+    """Process a file with unknown chunk and a zip file with randomness calculation enabled.
 
     The input file structure is
     - zip-chunk
@@ -411,8 +425,8 @@ def test_entropy_calculation(tmp_path: Path):
 
     config = ExtractionConfig(
         extract_root=tmp_path / "extract_root",
-        entropy_depth=100,
-        entropy_plot=True,
+        randomness_depth=100,
+        randomness_plot=True,
         handlers=(handlers.archive.zip.ZIPHandler,),
     )
 
@@ -427,24 +441,36 @@ def test_entropy_calculation(tmp_path: Path):
 
     # ** verification
 
-    # the unknown chunk report for the second chunk for the input file should have an entropy report
+    # the unknown chunk report for the second chunk for the input file should have a randomness report
     # with a percentages (scaled up bits) of 64 items, for 0, 6, 8, 8, ... bits of entropies
     [unknown_chunk_report] = get_all("input-file", UnknownChunkReport)
-    unknown_entropy = unknown_chunk_report.entropy
+    unknown_randomness = unknown_chunk_report.randomness
     assert (
-        unknown_entropy is not None
+        unknown_randomness is not None
     )  # removes pyright complaints for the below lines :(
-    assert unknown_entropy.percentages == [0.0, 75.0] + [100.0] * 62
-    assert unknown_entropy.block_size == 1024
-    assert round(unknown_entropy.mean, 2) == 98.05  # noqa: PLR2004
-    assert unknown_entropy.highest == 100.0  # noqa: PLR2004
-    assert unknown_entropy.lowest == 0.0
+    assert unknown_randomness.shannon.percentages == [0.0, 75.0] + [100.0] * 62
+    assert unknown_randomness.shannon.block_size == 1024
+    assert round(unknown_randomness.shannon.mean, 2) == 98.05  # noqa: PLR2004
+    assert unknown_randomness.shannon.highest == 100.0  # noqa: PLR2004
+    assert unknown_randomness.shannon.lowest == 0.0
+    assert unknown_randomness.chi_square.percentages == [0.0, 0.0] + [100.0] * 62
+    assert unknown_randomness.chi_square.block_size == 1024
+    assert round(unknown_randomness.shannon.mean, 2) == 98.05  # noqa: PLR2004
+    assert unknown_randomness.chi_square.highest == 100.0  # noqa: PLR2004
+    assert unknown_randomness.chi_square.lowest == 0.0
 
-    # we should have entropy calculated for files without extractions, except for empty files
-    assert get_all("empty.txt", EntropyReport) == []
-    assert [EntropyReport(percentages=[100.0], block_size=1024, mean=100.0)] == get_all(
-        "0-255.bin", EntropyReport
-    )
+    # we should have randomness calculated for files without extractions, except for empty files
+    assert get_all("empty.txt", RandomnessReport) == []
+    assert [
+        RandomnessReport(
+            shannon=RandomnessMeasurements(
+                percentages=[100.0], block_size=1024, mean=100.0
+            ),
+            chi_square=RandomnessMeasurements(
+                percentages=[100.0], block_size=1024, mean=100.0
+            ),
+        )
+    ] == get_all("0-255.bin", RandomnessReport)
 
 
 @pytest.mark.parametrize(
@@ -580,7 +606,7 @@ def extraction_root(tmp_path: Path):
 def multi_file_extraction_config(extraction_root: Path):
     return ExtractionConfig(
         extract_root=extraction_root,
-        entropy_depth=0,
+        randomness_depth=0,
         handlers=(handlers.archive.zip.ZIPHandler, DummyTestHandler),
         dir_handlers=(SplitDirHandler,),
     )

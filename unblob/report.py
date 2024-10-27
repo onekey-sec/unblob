@@ -191,7 +191,7 @@ class FileMagicReport(Report):
 
 
 @attr.define(kw_only=True, frozen=True)
-class EntropyReport(Report):
+class RandomnessMeasurements:
     percentages: List[float]
     block_size: int
     mean: float
@@ -203,6 +203,12 @@ class EntropyReport(Report):
     @property
     def lowest(self):
         return min(self.percentages)
+
+
+@attr.define(kw_only=True, frozen=True)
+class RandomnessReport(Report):
+    shannon: RandomnessMeasurements
+    chi_square: RandomnessMeasurements
 
 
 @final
@@ -224,7 +230,7 @@ class UnknownChunkReport(Report):
     start_offset: int
     end_offset: int
     size: int
-    entropy: Optional[EntropyReport]
+    randomness: Optional[RandomnessReport]
 
 
 @final

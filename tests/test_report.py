@@ -40,7 +40,7 @@ def test_process_file_report_output_is_valid_json(
 ):
     assert not report_file.exists()
 
-    config = ExtractionConfig(extract_root=extract_root, entropy_depth=0)
+    config = ExtractionConfig(extract_root=extract_root, randomness_depth=0)
     process_file(config, input_file, report_file)
 
     # output must be a valid json file, that is not empty
@@ -125,14 +125,14 @@ def hello_kitty_task_results(
                     start_offset=0,
                     end_offset=6,
                     size=6,
-                    entropy=None,
+                    randomness=None,
                 ),
                 UnknownChunkReport(
                     id=ANY,
                     start_offset=131,
                     end_offset=138,
                     size=7,
-                    entropy=None,
+                    randomness=None,
                 ),
                 ChunkReport(
                     id=padding_id,
@@ -284,7 +284,7 @@ def hello_kitty_task_results(
 
 
 def test_flat_report_structure(hello_kitty: Path, extract_root):
-    config = ExtractionConfig(extract_root=extract_root, entropy_depth=0)
+    config = ExtractionConfig(extract_root=extract_root, randomness_depth=0)
     process_result = process_file(config, hello_kitty)
     task_results = get_normalized_task_results(process_result)
 
@@ -408,7 +408,7 @@ def hello_kitty_container(tmp_path: Path, hello_kitty: Path) -> Path:
 
 
 def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_root):
-    config = ExtractionConfig(extract_root=extract_root, entropy_depth=0)
+    config = ExtractionConfig(extract_root=extract_root, randomness_depth=0)
 
     process_result = process_file(config, hello_kitty_container)
     task_results = get_normalized_task_results(process_result)

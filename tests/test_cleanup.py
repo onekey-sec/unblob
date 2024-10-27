@@ -50,7 +50,7 @@ def test_remove_extracted_chunks(input_file: Path, output_dir: Path):
     input_file.write_bytes(ZIP_BYTES)
     config = ExtractionConfig(
         extract_root=output_dir,
-        entropy_depth=0,
+        randomness_depth=0,
     )
 
     all_reports = process_file(config, input_file)
@@ -62,7 +62,7 @@ def test_keep_all_problematic_chunks(input_file: Path, output_dir: Path):
     input_file.write_bytes(DAMAGED_ZIP_BYTES)
     config = ExtractionConfig(
         extract_root=output_dir,
-        entropy_depth=0,
+        randomness_depth=0,
     )
 
     all_reports = process_file(config, input_file)
@@ -75,7 +75,7 @@ def test_keep_all_unknown_chunks(input_file: Path, output_dir: Path):
     input_file.write_bytes(b"unknown1" + ZIP_BYTES + b"unknown2")
     config = ExtractionConfig(
         extract_root=output_dir,
-        entropy_depth=0,
+        randomness_depth=0,
     )
 
     all_reports = process_file(config, input_file)
@@ -97,7 +97,7 @@ def test_keep_chunks_with_null_extractor(input_file: Path, output_dir: Path):
     input_file.write_bytes(b"some text")
     config = ExtractionConfig(
         extract_root=output_dir,
-        entropy_depth=0,
+        randomness_depth=0,
         handlers=(_HandlerWithNullExtractor,),
     )
     all_reports = process_file(config, input_file)
