@@ -81,8 +81,6 @@ pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
     use super::*;
 
     mod shannon {
@@ -92,7 +90,7 @@ mod tests {
         fn test_shannon_entropy() {
             let input = b"000111"; // 50% entropy distribution ~ 1 bit information
 
-            assert_relative_eq!(shannon_entropy(input), 1.0);
+            assert_eq!(shannon_entropy(input), 1.0);
         }
     }
 
