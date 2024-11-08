@@ -150,12 +150,12 @@ class UnblobContext(click.Context):
 )
 @click.option(
     "-n",
-    "--entropy-depth",
+    "--randomness-depth",
     type=click.IntRange(0),
     default=1,
     show_default=True,
     help=(
-        "Entropy calculation depth. How deep should we calculate entropy for unknown files? "
+        "Entropy calculation depth. How deep should we calculate randomness for unknown files? "
         "1 means input files only, 0 turns it off."
     ),
 )
@@ -257,7 +257,7 @@ def cli(
     force: bool,  # noqa: FBT001
     process_num: int,
     depth: int,
-    entropy_depth: int,
+    randomness_depth: int,
     skip_magic: Iterable[str],
     skip_extension: Iterable[str],
     clear_skip_magics: bool,  # noqa: FBT001
@@ -285,8 +285,8 @@ def cli(
         extract_root=extract_root,
         force_extract=force,
         max_depth=depth,
-        entropy_depth=entropy_depth,
-        entropy_plot=bool(verbose >= 3),
+        randomness_depth=randomness_depth,
+        randomness_plot=bool(verbose >= 3),
         skip_extraction=skip_extraction,
         skip_magic=skip_magic,
         skip_extension=skip_extension,

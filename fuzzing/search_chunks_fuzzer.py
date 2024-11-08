@@ -40,8 +40,8 @@ def test_search_chunks(data):
     config = ExtractionConfig(
         extract_root=Path("/dev/shm"),  # noqa: S108
         force_extract=True,
-        entropy_depth=0,
-        entropy_plot=False,
+        randomness_depth=0,
+        randomness_plot=False,
         skip_magic=[],
         skip_extension=[],
         skip_extraction=False,

@@ -34,11 +34,12 @@ from .models import (
 from .pool import make_pool
 from .report import (
     CalculateMultiFileExceptionReport,
-    EntropyReport,
     ExtractDirectoryExistsReport,
     FileMagicReport,
     HashReport,
     MultiFileCollisionReport,
+    RandomnessMeasurements,
+    RandomnessReport,
     Report,
     StatReport,
     UnknownError,
@@ -85,8 +86,8 @@ DEFAULT_SKIP_EXTENSION = (".rlib",)
 class ExtractionConfig:
     extract_root: Path = attr.field(converter=lambda value: value.resolve())
     force_extract: bool = False
-    entropy_depth: int
-    entropy_plot: bool = False
+    randomness_depth: int
+    randomness_plot: bool = False
     max_depth: int = DEFAULT_DEPTH
     skip_magic: Iterable[str] = DEFAULT_SKIP_MAGIC
     skip_extension: Iterable[str] = DEFAULT_SKIP_EXTENSION
@@ -527,10 +528,10 @@ class _FileTask:
                 self._process_chunks(file, outer_chunks, unknown_chunks)
             else:
                 # we don't consider whole files as unknown chunks, but we still want to
-                # calculate entropy for whole files which produced no valid chunks
-                entropy = self._calculate_entropy(self.task.path)
-                if entropy:
-                    self.result.add_report(entropy)
+                # calculate randomness for whole files which produced no valid chunks
+                randomness = self._calculate_randomness(self.task.path)
+                if randomness:
+                    self.result.add_report(randomness)
 
     def _process_chunks(
         self,
@@ -543,28 +544,27 @@ class _FileTask:
 
         if self.config.skip_extraction:
             for chunk in unknown_chunks:
-                self.result.add_report(chunk.as_report(entropy=None))
+                self.result.add_report(chunk.as_report(randomness=None))
             for chunk in outer_chunks:
                 self.result.add_report(chunk.as_report(extraction_reports=[]))
             return
 
         for chunk in unknown_chunks:
             carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
-            entropy = self._calculate_entropy(carved_unknown_path)
-            self.result.add_report(chunk.as_report(entropy=entropy))
+            randomness = self._calculate_randomness(carved_unknown_path)
+            self.result.add_report(chunk.as_report(randomness=randomness))
 
         for chunk in outer_chunks:
             self._extract_chunk(file, chunk)
 
-    def _calculate_entropy(self, path: Path) -> Optional[EntropyReport]:
-        if self.task.depth < self.config.entropy_depth:
-            report = calculate_entropy(path)
-            if self.config.entropy_plot:
+    def _calculate_randomness(self, path: Path) -> Optional[RandomnessReport]:
+        if self.task.depth < self.config.randomness_depth:
+            report = calculate_randomness(path)
+            if self.config.randomness_plot:
                 logger.debug(
-                    "Entropy chart",
+                    "Randomness chart",
                     # New line so that chart title will be aligned correctly in the next line
-                    chart="\n"
-                    + format_entropy_plot(report.percentages, report.block_size),
+                    chart="\n" + format_randomness_plot(report),
                     path=path,
                     _verbosity=3,
                 )
@@ -701,15 +701,20 @@ def calculate_unknown_chunks(
     return unknown_chunks
 
 
-def calculate_entropy(path: Path) -> EntropyReport:
+def calculate_randomness(path: Path) -> RandomnessReport:
     """Calculate and log shannon entropy divided by 8 for the file in chunks.
 
     Shannon entropy returns the amount of information (in bits) of some numeric
     sequence. We calculate the average entropy of byte chunks, which in theory
     can contain 0-8 bits of entropy. We normalize it for visualization to a
     0-100% scale, to make it easier to interpret the graph.
+
+    The chi square distribution is calculated for the stream of bytes in the
+    chunk and expressed as an absolute number and a percentage which indicates
+    how frequently a truly random sequence would exceed the value calculated.
     """
-    percentages = []
+    shannon_percentages = []
+    chi_square_percentages = []
 
     # We could use the chunk size instead of another syscall,
     # but we rely on the actual file size written to the disk
@@ -725,28 +730,50 @@ def calculate_entropy(path: Path) -> EntropyReport:
         max_limit=1024 * 1024,
     )
 
-    entropy_sum = 0.0
+    shannon_entropy_sum = 0.0
+    chisquare_probability_sum = 0.0
     with File.from_path(path) as file:
         for chunk in iterate_file(file, 0, file_size, buffer_size=block_size):
-            entropy = mt.shannon_entropy(chunk)
-            entropy_percentage = round(entropy / 8 * 100, 2)
-            percentages.append(entropy_percentage)
-            entropy_sum += entropy * len(chunk)
+            shannon_entropy = mt.shannon_entropy(chunk)
+            shannon_entropy_percentage = round(shannon_entropy / 8 * 100, 2)
+            shannon_percentages.append(shannon_entropy_percentage)
+            shannon_entropy_sum += shannon_entropy * len(chunk)
 
-    report = EntropyReport(
-        percentages=percentages,
-        block_size=block_size,
-        mean=entropy_sum / file_size / 8 * 100,
+            chi_square_probability = mt.chi_square_probability(chunk)
+            chisquare_probability_percentage = round(chi_square_probability * 100, 2)
+            chi_square_percentages.append(chisquare_probability_percentage)
+            chisquare_probability_sum += chi_square_probability * len(chunk)
+
+    report = RandomnessReport(
+        shannon=RandomnessMeasurements(
+            percentages=shannon_percentages,
+            block_size=block_size,
+            mean=shannon_entropy_sum / file_size / 8 * 100,
+        ),
+        chi_square=RandomnessMeasurements(
+            percentages=chi_square_percentages,
+            block_size=block_size,
+            mean=chisquare_probability_sum / file_size * 100,
+        ),
     )
 
     logger.debug(
-        "Entropy calculated",
+        "Shannon entropy calculated",
         path=path,
         size=file_size,
-        block_size=report.block_size,
-        mean=round(report.mean, 2),
-        highest=round(report.highest, 2),
-        lowest=round(report.lowest, 2),
+        block_size=report.shannon.block_size,
+        mean=round(report.shannon.mean, 2),
+        highest=round(report.shannon.highest, 2),
+        lowest=round(report.shannon.lowest, 2),
+    )
+    logger.debug(
+        "Chi square probability calculated",
+        path=path,
+        size=file_size,
+        block_size=report.chi_square.block_size,
+        mean=round(report.chi_square.mean, 2),
+        highest=round(report.chi_square.highest, 2),
+        lowest=round(report.chi_square.lowest, 2),
     )
 
     return report
@@ -763,22 +790,25 @@ def calculate_block_size(
     return block_size  # noqa: RET504
 
 
-def format_entropy_plot(percentages: List[float], block_size: int):
+def format_randomness_plot(report: RandomnessReport):
     # start from scratch
     plt.clear_figure()
     # go colorless
     plt.clear_color()
     plt.title("Entropy distribution")
-    # plt.xlabel(humanize.naturalsize(block_size))
-    plt.xlabel(f"{block_size} bytes")
-    plt.ylabel("entropy %")
+    plt.xlabel(f"{report.shannon.block_size} bytes")
 
-    plt.scatter(percentages, marker="dot")
+    plt.plot(report.shannon.percentages, label="Shannon entropy (%)", marker="dot")
+    plt.plot(
+        report.chi_square.percentages,
+        label="Chi square probability (%)",
+        marker="cross",
+    )
     # 16 height leaves no gaps between the lines
     plt.plot_size(100, 16)
     plt.ylim(0, 100)
     # Draw ticks every 1Mb on the x axis.
-    plt.xticks(range(len(percentages) + 1))
+    plt.xticks(range(len(report.shannon.percentages) + 1))
     # Always show 0% and 100%
     plt.yticks(range(0, 101, 10))
 

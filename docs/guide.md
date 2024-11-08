@@ -114,10 +114,10 @@ $ cat alpine-report.json
 ]
 ```
 
-### Entropy calculation
+### Randomness calculation
 
 If you are analyzing an unknown file format, it might be useful to know the
-entropy of the contained files, so you can quickly see for example whether the
+randomness of the contained files, so you can quickly see for example whether the
 file is **encrypted** or contains some random content.
 
 Let's make a file with fully random content at the start and end:
@@ -128,59 +128,61 @@ $ dd if=/dev/random of=random2.bin bs=10M count=1
 $ cat random1.bin alpine-minirootfs-3.16.1-x86_64.tar.gz random2.bin > unknown-file
 ```
 
-A nice ASCII entropy plot is drawn on verbose level 3:
+A nice ASCII randomness plot is drawn on verbose level 3:
 
 ```console
 $ unblob -vvv unknown-file | grep -C 15 "Entropy distribution"
 
-2022-07-30 07:58.16 [debug    ] Ended searching for chunks     all_chunks=[0xa00000-0xc96196] pid=19803
-2022-07-30 07:58.16 [debug    ] Removed inner chunks           outer_chunk_count=1 pid=19803 removed_inner_chunk_count=0
-2022-07-30 07:58.16 [warning  ] Found unknown Chunks           chunks=[0x0-0xa00000, 0xc96196-0x1696196] pid=19803
-2022-07-30 07:58.16 [info     ] Extracting unknown chunk       chunk=0x0-0xa00000 path=unknown-file_extract/0-10485760.unknown pid=19803
-2022-07-30 07:58.16 [debug    ] Carving chunk                  path=unknown-file_extract/0-10485760.unknown pid=19803
-2022-07-30 07:58.16 [debug    ] Calculating entropy for file   path=unknown-file_extract/0-10485760.unknown pid=19803 size=0xa00000
-2022-07-30 07:58.16 [debug    ] Entropy calculated             highest=99.99 lowest=99.98 mean=99.98 pid=19803
-2022-07-30 07:58.16 [warning  ] Drawing plot                   pid=19803
-2022-07-30 07:58.16 [debug    ] Entropy chart                  chart=
-                              Entropy distribution
-   ┌---------------------------------------------------------------------------┐
-100┤•••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••│
- 90┤                                                                           │
- 80┤                                                                           │
- 70┤                                                                           │
- 60┤                                                                           │
- 50┤                                                                           │
- 40┤                                                                           │
- 30┤                                                                           │
- 20┤                                                                           │
- 10┤                                                                           │
-  0┤                                                                           │
-   └┬---┬---┬---─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬┘
-    1  4  7  12  16  20  24  29  33  37  41  46  50  54  59  63  67  71  76  80
-[y] entropy %                        [x] mB
- pid=19803
-2022-07-30 07:58.16 [info     ] Extracting unknown chunk       chunk=0xc96196-0x1696196 path=unknown-file_extract/13197718-23683478.unknown pid=19803
-2022-07-30 07:58.16 [debug    ] Carving chunk                  path=unknown-file_extract/13197718-23683478.unknown pid=19803
-2022-07-30 07:58.16 [debug    ] Calculating entropy for file   path=unknown-file_extract/13197718-23683478.unknown pid=19803 size=0xa00000
-2022-07-30 07:58.16 [debug    ] Entropy calculated             highest=99.99 lowest=99.98 mean=99.98 pid=19803
-2022-07-30 07:58.16 [warning  ] Drawing plot                   pid=19803
-2022-07-30 07:58.16 [debug    ] Entropy chart                  chart=
-                              Entropy distribution
-   ┌---------------------------------------------------------------------------┐
-100┤•••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••│
- 90┤                                                                           │
- 80┤                                                                           │
- 70┤                                                                           │
- 60┤                                                                           │
- 50┤                                                                           │
- 40┤                                                                           │
- 30┤                                                                           │
- 20┤                                                                           │
- 10┤                                                                           │
-  0┤                                                                           │
-   └┬---┬---┬---─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬--─┬┘
-    1  4  7  12  16  20  24  29  33  37  41  46  50  54  59  63  67  71  76  80
-[y] entropy %                        [x] mB
+2024-10-30 10:52.03 [debug    ] Calculating chunk for pattern match handler=arc pid=1963719 real_offset=0x1685f5b start_offset=0x1685f5b
+2024-10-30 10:52.03 [debug    ] Header parsed                  header=<arc_head archive_marker=0x1a, header_type=0x1, name=b'8\xa7i&po\xc77\xd5h\x9a\x9d\xf1', size=0x26d171fa, date=0x1bfd, time=0xe03f, crc=-0x3b95, length=0x349997d5> pid=1963719
+2024-10-30 10:52.03 [debug    ] Ended searching for chunks     all_chunks=[0xa00000-0xc96196] pid=1963719
+2024-10-30 10:52.03 [debug    ] Removed inner chunks           outer_chunk_count=1 pid=1963719 removed_inner_chunk_count=0
+2024-10-30 10:52.03 [warning  ] Found unknown Chunks           chunks=[0x0-0xa00000, 0xc96196-0x1696196] pid=1963719
+2024-10-30 10:52.03 [info     ] Extracting unknown chunk       chunk=0x0-0xa00000 path=unknown-file_extract/0-10485760.unknown pid=1963719
+2024-10-30 10:52.03 [debug    ] Carving chunk                  path=unknown-file_extract/0-10485760.unknown pid=1963719
+2024-10-30 10:52.03 [debug    ] Calculating randomness for file path=unknown-file_extract/0-10485760.unknown pid=1963719 size=0xa00000
+2024-10-30 10:52.03 [debug    ] Shannon entropy calculated     block_size=0x20000 highest=99.99 lowest=99.98 mean=99.98 path=unknown-file_extract/0-10485760.unknown pid=1963719 size=0xa00000
+2024-10-30 10:52.03 [debug    ] Chi square probability calculated block_size=0x20000 highest=97.88 lowest=3.17 mean=52.76 path=unknown-file_extract/0-10485760.unknown pid=1963719 size=0xa00000
+2024-10-30 10:52.03 [debug    ] Entropy chart                  chart=
+                              Randomness distribution                           
+   ┌───────────────────────────────────────────────────────────────────────────┐
+100┤ •• Shannon entropy (%)        •••••••••♰••••••••••••••••••••••••••••••••••│
+ 90┤ ♰♰ Chi square probability (%)   ♰ ♰ ♰♰♰♰                    ♰    ♰  ♰     │
+ 80┤♰ ♰ ♰♰  ♰♰       ♰♰       ♰ ♰   ♰♰♰♰♰♰♰♰♰   ♰           ♰♰♰♰♰♰   ♰♰ ♰♰     │
+ 70┤♰♰♰♰  ♰ ♰ ♰ ♰   ♰♰♰  ♰ ♰  ♰ ♰   ♰♰♰♰♰♰♰♰♰  ♰♰      ♰ ♰ ♰   ♰♰♰  ♰♰♰♰♰♰     │
+ 60┤♰♰♰♰  ♰♰  ♰♰ ♰ ♰♰♰♰ ♰ ♰♰ ♰  ♰ ♰ ♰♰♰♰♰♰ ♰♰ ♰ ♰     ♰♰♰♰ ♰   ♰♰♰ ♰♰♰♰♰♰♰     │
+ 50┤ ♰♰♰  ♰♰  ♰♰ ♰♰ ♰♰♰♰  ♰♰ ♰  ♰♰♰ ♰♰♰♰♰♰  ♰ ♰ ♰    ♰♰♰♰♰ ♰   ♰♰♰ ♰ ♰♰♰♰♰  ♰  │
+ 40┤  ♰♰  ♰♰   ♰ ♰♰ ♰♰♰♰  ♰♰ ♰  ♰♰♰ ♰♰♰♰♰♰   ♰♰  ♰♰ ♰♰♰♰♰♰ ♰   ♰♰♰ ♰  ♰♰♰♰ ♰♰ ♰│
+ 30┤   ♰  ♰♰     ♰♰ ♰♰♰♰  ♰ ♰♰  ♰♰ ♰♰ ♰ ♰♰    ♰   ♰ ♰♰♰ ♰ ♰     ♰♰ ♰  ♰♰♰ ♰♰ ♰ │
+ 20┤      ♰♰     ♰♰  ♰♰♰  ♰ ♰♰   ♰ ♰♰    ♰        ♰ ♰ ♰ ♰         ♰    ♰♰      │
+ 10┤       ♰      ♰    ♰  ♰  ♰     ♰♰    ♰         ♰                   ♰♰      │
+  0┤                                ♰                                   ♰      │
+   └─┬──┬─┬──┬────┬───┬──┬──┬──┬───┬───┬──┬────┬───┬────┬──┬──┬────┬──┬───┬──┬─┘
+   0 2  5 7 11   16  20 23 27 30  34  38 42   47  51   56 60 63   68 71  76 79  
+                                   131072 bytes                                 
+ path=unknown-file_extract/0-10485760.unknown pid=1963719
+2024-10-30 10:52.03 [info     ] Extracting unknown chunk       chunk=0xc96196-0x1696196 path=unknown-file_extract/13197718-23683478.unknown pid=1963719
+2024-10-30 10:52.03 [debug    ] Carving chunk                  path=unknown-file_extract/13197718-23683478.unknown pid=1963719
+2024-10-30 10:52.03 [debug    ] Calculating randomness for file path=unknown-file_extract/13197718-23683478.unknown pid=1963719 size=0xa00000
+2024-10-30 10:52.03 [debug    ] Shannon entropy calculated     block_size=0x20000 highest=99.99 lowest=99.98 mean=99.98 path=unknown-file_extract/13197718-23683478.unknown pid=1963719 size=0xa00000
+2024-10-30 10:52.03 [debug    ] Chi square probability calculated block_size=0x20000 highest=99.03 lowest=0.23 mean=42.62 path=unknown-file_extract/13197718-23683478.unknown pid=1963719 size=0xa00000
+2024-10-30 10:52.03 [debug    ] Entropy chart                  chart=
+                              Randomness distribution                           
+   ┌───────────────────────────────────────────────────────────────────────────┐
+100┤ •• Shannon entropy (%)        •••••••••••••••••••••♰••••••••••••••••••••••│
+ 90┤ ♰♰ Chi square probability (%)         ♰           ♰♰            ♰         │
+ 80┤♰♰        ♰♰    ♰♰    ♰               ♰♰       ♰   ♰♰        ♰  ♰♰         │
+ 70┤♰ ♰   ♰  ♰  ♰  ♰ ♰    ♰ ♰    ♰        ♰♰      ♰♰   ♰♰♰   ♰  ♰♰  ♰♰         │
+ 60┤  ♰  ♰♰ ♰   ♰ ♰  ♰  ♰♰♰♰♰   ♰♰        ♰♰ ♰♰   ♰ ♰  ♰♰♰  ♰♰ ♰ ♰  ♰♰   ♰     │
+ 50┤  ♰ ♰♰♰ ♰   ♰ ♰  ♰ ♰ ♰♰♰♰ ♰ ♰♰      ♰ ♰♰♰ ♰   ♰ ♰  ♰♰♰  ♰♰ ♰ ♰  ♰♰  ♰♰   ♰ │
+ 40┤  ♰♰♰♰ ♰♰    ♰♰  ♰ ♰ ♰♰  ♰♰♰  ♰♰♰  ♰♰♰ ♰♰ ♰   ♰  ♰ ♰♰ ♰ ♰♰ ♰ ♰ ♰ ♰ ♰♰♰  ♰♰ │
+ 30┤  ♰♰♰♰ ♰♰    ♰♰   ♰♰ ♰♰   ♰♰     ♰♰♰♰♰ ♰♰ ♰   ♰  ♰ ♰♰  ♰♰♰ ♰ ♰ ♰ ♰ ♰ ♰  ♰ ♰│
+ 20┤   ♰♰♰  ♰     ♰      ♰♰   ♰♰      ♰♰♰♰ ♰♰ ♰   ♰  ♰ ♰♰   ♰♰ ♰ ♰♰  ♰♰  ♰  ♰  │
+ 10┤     ♰                ♰    ♰       ♰ ♰  ♰ ♰ ♰♰   ♰ ♰♰     ♰♰ ♰♰   ♰  ♰ ♰   │
+  0┤                                           ♰ ♰    ♰♰          ♰       ♰♰   │
+   └─┬──┬─┬──┬────┬───┬──┬──┬──┬───┬───┬──┬────┬───┬────┬──┬──┬────┬──┬───┬──┬─┘
+   0 2  5 7 11   16  20 23 27 30  34  38 42   47  51   56 60 63   68 71  76 79  
+                                   131072 bytes 
 ```
 
 ### Skip extraction with file magic

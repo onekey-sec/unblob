@@ -184,7 +184,7 @@ def test_dir_for_file(tmp_path: Path):
 
 
 @pytest.mark.parametrize(
-    "params, expected_depth, expected_entropy_depth, expected_process_num, expected_verbosity, expected_progress_reporter",
+    "params, expected_depth, expected_randomness_depth, expected_process_num, expected_verbosity, expected_progress_reporter",
     [
         pytest.param(
             [],
@@ -233,7 +233,7 @@ def test_dir_for_file(tmp_path: Path):
 def test_archive_success(
     params,
     expected_depth: int,
-    expected_entropy_depth: int,
+    expected_randomness_depth: int,
     expected_process_num: int,
     expected_verbosity: int,
     expected_progress_reporter: Type[ProgressReporter],
@@ -263,8 +263,8 @@ def test_archive_success(
     config = ExtractionConfig(
         extract_root=tmp_path,
         max_depth=expected_depth,
-        entropy_depth=expected_entropy_depth,
-        entropy_plot=bool(expected_verbosity >= 3),
+        randomness_depth=expected_randomness_depth,
+        randomness_plot=bool(expected_verbosity >= 3),
         process_num=expected_process_num,
         handlers=BUILTIN_HANDLERS,
         verbose=expected_verbosity,
