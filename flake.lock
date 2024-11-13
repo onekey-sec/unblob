@@ -182,11 +182,11 @@
         "pre-commit-hooks": "pre-commit-hooks_2"
       },
       "locked": {
-        "lastModified": 1730287473,
-        "narHash": "sha256-6bMC/lXMcC4Cl2JrPC934h5/E6cBMQJExv4dK9/Oga8=",
+        "lastModified": 1731404779,
+        "narHash": "sha256-FXt/Quz1W9Uae6JhKAVEqM306H4dQk6wSINGBwRaW7g=",
         "owner": "vlaci",
         "repo": "devenv",
-        "rev": "385d38cfb6872e7f95cae30d94f7fc4afd23fd76",
+        "rev": "4caf75b37c5d633fde612cd52bb794bcbf75d24a",
         "type": "github"
       },
       "original": {
