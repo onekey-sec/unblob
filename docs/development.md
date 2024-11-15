@@ -26,7 +26,7 @@ where the exciting stuff is.
 
 ### Required tools
 
-- **Python**: unblob requires **Python 3.8** or above. Make sure that
+- **Python**: unblob requires **Python 3.9** or above. Make sure that
   [Python is installed](https://www.python.org/downloads/) on your system.
 
 - **git**: You need it for cloning the repository.
@@ -48,7 +48,7 @@ where the exciting stuff is.
 - **pyenv** (_Recommended_): When you are working with multiple versions of Python,
   pyenv makes it very easy to install and use different versions and make virtualenvs.
   Follow the [instructions on GitHub](https://github.com/pyenv/pyenv) for the installation.
-  If your system already has at least Python 3.8 installed, you don't need it.
+  If your system already has at least Python 3.9 installed, you don't need it.
 
 ### Cloning the Git repository
 
@@ -85,7 +85,7 @@ Or instead of Poetry you can use `pyenv`. You can set the Python interpreter
 version for the local folder only with:
 
 ```
-pyenv local 3.8.12
+pyenv local 3.12.7
 ```
 
 ### Installing Python dependencies

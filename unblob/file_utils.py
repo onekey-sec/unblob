@@ -9,8 +9,9 @@ import re
 import shutil
 import struct
 import unicodedata
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Iterable, Iterator, List, Literal, Optional, Tuple, Union
+from typing import Literal, Optional, Union
 
 from dissect.cstruct import cstruct
 from structlog import get_logger
@@ -193,7 +194,7 @@ def decode_int(value, base: int) -> int:
         raise InvalidInputFormat from exc
 
 
-def decode_multibyte_integer(data: Union[bytes, bytearray]) -> Tuple[int, int]:
+def decode_multibyte_integer(data: Union[bytes, bytearray]) -> tuple[int, int]:
     """Decode multi-bytes integer into integer size and integer value.
 
     Multibyte integers of static length are stored in little endian byte order.
@@ -355,7 +356,7 @@ def get_endian(file: File, big_endian_magic: int) -> Endian:
     return Endian.BIG if magic == big_endian_magic else Endian.LITTLE
 
 
-def get_endian_multi(file: File, big_endian_magics: List[int]) -> Endian:
+def get_endian_multi(file: File, big_endian_magics: list[int]) -> Endian:
     """Read a four bytes magic and derive endianness from it.
 
     It compares the read data with the big endian magic.  It reads
@@ -457,7 +458,7 @@ class FileSystem:
     this is how symlinks work.
     """
 
-    problems: List[Report]
+    problems: list[Report]
 
     def __init__(self, root: Path):
         self.root = root.resolve()

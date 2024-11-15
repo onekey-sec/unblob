@@ -1,7 +1,8 @@
 import binascii
 import io
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional, cast
+from typing import Optional, cast
 
 from structlog import get_logger
 

@@ -3,7 +3,7 @@ import itertools
 import sys
 from pathlib import Path
 from types import ModuleType
-from typing import List, Optional, Tuple, Type
+from typing import Optional
 
 import pluggy
 from structlog import get_logger
@@ -68,8 +68,8 @@ class UnblobPluginManager(pluggy.PluginManager):
 
     @classmethod
     def _import_modules(
-        cls, modules_to_import: List[Tuple[str, Path]]
-    ) -> List[ModuleType]:
+        cls, modules_to_import: list[tuple[str, Path]]
+    ) -> list[ModuleType]:
         modules = []
         for module_name, path in modules_to_import:
             spec = importlib.util.spec_from_file_location(module_name, path)
@@ -99,7 +99,7 @@ class UnblobPluginManager(pluggy.PluginManager):
 
     def load_handlers_from_plugins(
         self,
-    ) -> List[Type[Handler]]:
+    ) -> list[type[Handler]]:
         extra_handlers = list(itertools.chain(*self.hook.unblob_register_handlers()))  # type: ignore
         if extra_handlers:
             logger.debug("Loaded handlers from plugins", handlers=extra_handlers)
@@ -108,7 +108,7 @@ class UnblobPluginManager(pluggy.PluginManager):
 
     def load_dir_handlers_from_plugins(
         self,
-    ) -> List[Type[DirectoryHandler]]:
+    ) -> list[type[DirectoryHandler]]:
         extra_handlers = list(
             itertools.chain(*self.hook.unblob_register_dir_handlers())
         )  # type: ignore

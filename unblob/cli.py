@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import atexit
 import sys
+from collections.abc import Iterable
 from importlib.metadata import version
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Optional
 
 import click
 from rich.console import Console
@@ -358,7 +359,7 @@ def human_size(size: float):
     return f"{size:.2f} {units[i]}"
 
 
-def get_chunks_distribution(task_results: List) -> Dict:
+def get_chunks_distribution(task_results: list) -> dict:
     chunks_distribution = {"unknown": 0}
     for task_result in task_results:
         chunk_reports = [
@@ -378,7 +379,7 @@ def get_chunks_distribution(task_results: List) -> Dict:
     return chunks_distribution
 
 
-def get_size_report(task_results: List) -> Tuple[int, int, int, int]:
+def get_size_report(task_results: list) -> tuple[int, int, int, int]:
     total_files = 0
     total_dirs = 0
     total_links = 0

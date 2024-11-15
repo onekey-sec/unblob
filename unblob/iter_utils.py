@@ -1,5 +1,4 @@
 import itertools
-from typing import List
 
 
 def pairwise(iterable):
@@ -10,7 +9,7 @@ def pairwise(iterable):
     return zip(a, b)
 
 
-def get_intervals(values: List[int]) -> List[int]:
+def get_intervals(values: list[int]) -> list[int]:
     """Get all the intervals between numbers.
 
     It's similar to numpy.diff function.

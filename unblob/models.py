@@ -1,9 +1,10 @@
 import abc
 import itertools
 import json
+from collections.abc import Iterable
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Optional, TypeVar
 
 import attr
 import attrs
@@ -118,7 +119,7 @@ class ValidChunk(Chunk):
 
         return self.handler.extract(inpath, outdir)
 
-    def as_report(self, extraction_reports: List[Report]) -> ChunkReport:
+    def as_report(self, extraction_reports: list[Report]) -> ChunkReport:
         return ChunkReport(
             id=self.id,
             start_offset=self.start_offset,
@@ -177,14 +178,14 @@ class PaddingChunk(Chunk):
 @attrs.define
 class MultiFile(Blob):
     name: str = attr.field(kw_only=True)
-    paths: List[Path] = attr.field(kw_only=True)
+    paths: list[Path] = attr.field(kw_only=True)
 
     handler: "DirectoryHandler" = attr.ib(init=False, eq=False)
 
     def extract(self, outdir: Path) -> Optional["ExtractResult"]:
         return self.handler.extract(self.paths, outdir)
 
-    def as_report(self, extraction_reports: List[Report]) -> MultiFileReport:
+    def as_report(self, extraction_reports: list[Report]) -> MultiFileReport:
         return MultiFileReport(
             id=self.id,
             name=self.name,
@@ -200,8 +201,8 @@ ReportType = TypeVar("ReportType", bound=Report)
 @attr.define
 class TaskResult:
     task: Task
-    reports: List[Report] = attr.field(factory=list)
-    subtasks: List[Task] = attr.field(factory=list)
+    reports: list[Report] = attr.field(factory=list)
+    subtasks: list[Task] = attr.field(factory=list)
 
     def add_report(self, report: Report):
         self.reports.append(report)
@@ -209,16 +210,16 @@ class TaskResult:
     def add_subtask(self, task: Task):
         self.subtasks.append(task)
 
-    def filter_reports(self, report_class: Type[ReportType]) -> List[ReportType]:
+    def filter_reports(self, report_class: type[ReportType]) -> list[ReportType]:
         return [report for report in self.reports if isinstance(report, report_class)]
 
 
 @attr.define
 class ProcessResult:
-    results: List[TaskResult] = attr.field(factory=list)
+    results: list[TaskResult] = attr.field(factory=list)
 
     @property
-    def errors(self) -> List[ErrorReport]:
+    def errors(self) -> list[ErrorReport]:
         reports = itertools.chain.from_iterable(r.reports for r in self.results)
         interesting_reports = (
             r for r in reports if isinstance(r, (ErrorReport, ChunkReport))
@@ -291,16 +292,16 @@ class ExtractError(Exception):
 
     def __init__(self, *reports: Report):
         super().__init__()
-        self.reports: Tuple[Report, ...] = reports
+        self.reports: tuple[Report, ...] = reports
 
 
 @attr.define(kw_only=True)
 class ExtractResult:
-    reports: List[Report]
+    reports: list[Report]
 
 
 class Extractor(abc.ABC):
-    def get_dependencies(self) -> List[str]:
+    def get_dependencies(self) -> list[str]:
         """Return the external command dependencies."""
         return []
 
@@ -313,12 +314,12 @@ class Extractor(abc.ABC):
 
 
 class DirectoryExtractor(abc.ABC):
-    def get_dependencies(self) -> List[str]:
+    def get_dependencies(self) -> list[str]:
         """Return the external command dependencies."""
         return []
 
     @abc.abstractmethod
-    def extract(self, paths: List[Path], outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, paths: list[Path], outdir: Path) -> Optional[ExtractResult]:
         """Extract from a multi file path list.
 
         Raises ExtractError on failure.
@@ -427,7 +428,7 @@ class DirectoryHandler(abc.ABC):
     def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
         """Calculate the MultiFile in a directory, using a file matched by the pattern as a starting point."""
 
-    def extract(self, paths: List[Path], outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, paths: list[Path], outdir: Path) -> Optional[ExtractResult]:
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", paths=paths)
             raise ExtractError
@@ -442,7 +443,7 @@ class Handler(abc.ABC):
     """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
 
     NAME: str
-    PATTERNS: List[Pattern]
+    PATTERNS: list[Pattern]
     # We need this, because not every match reflects the actual start
     # (e.g. tar magic is in the middle of the header)
     PATTERN_MATCH_OFFSET: int = 0
@@ -493,5 +494,5 @@ class StructHandler(Handler):
         return header
 
 
-Handlers = Tuple[Type[Handler], ...]
-DirectoryHandlers = Tuple[Type[DirectoryHandler], ...]
+Handlers = tuple[type[Handler], ...]
+DirectoryHandlers = tuple[type[DirectoryHandler], ...]

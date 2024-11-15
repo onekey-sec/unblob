@@ -1,7 +1,6 @@
 import io
 import json
 from pathlib import Path
-from typing import List
 from unittest.mock import ANY
 from zipfile import ZipFile, ZipInfo
 
@@ -304,7 +303,7 @@ def test_flat_report_structure(hello_kitty: Path, extract_root):
 
 def container_task_results(
     container: Path, extract_root: Path, chunk_id: str
-) -> List[TaskResult]:
+) -> list[TaskResult]:
     """Return expected partial task results for processing the `hello_kitty_container` fixture.
 
     Note, that for some values the `unittest.mock.ANY` is substituted.
@@ -442,11 +441,11 @@ def test_chunk_in_chunk_report_structure(hello_kitty_container: Path, extract_ro
     assert task_results == expected_results
 
 
-def get_normalized_task_results(process_result: ProcessResult) -> List[TaskResult]:
+def get_normalized_task_results(process_result: ProcessResult) -> list[TaskResult]:
     """Normalize away per-run and platform differences."""
     # sort the results - they can potentially have different orders due to multiprocessing
     return sorted(process_result.results, key=lambda tr: (tr.task.depth, tr.task.path))
 
 
-def get_chunk_ids(task_result) -> List[str]:
+def get_chunk_ids(task_result) -> list[str]:
     return [chunk_report.id for chunk_report in task_result.filter_reports(ChunkReport)]
