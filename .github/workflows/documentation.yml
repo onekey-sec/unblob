@@ -16,18 +16,18 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Restore pip cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-3.8
+          key: pip-3.9
 
       - name: Upgrade pip and install poetry
         run: python -m pip install --upgrade pip poetry
@@ -39,13 +39,13 @@ jobs:
           path: |
             ~/.cache/pypoetry/cache
             ~/.cache/pypoetry/artifacts
-          key: poetry-cache-and-artifacts-3.8
+          key: poetry-cache-and-artifacts-3.9
 
       - name: Restore virtualenvs
         uses: actions/cache@v4
         with:
           path: ~/.cache/pypoetry/virtualenvs
-          key: venv-${{ hashFiles('poetry.lock') }}-3.8
+          key: venv-${{ hashFiles('poetry.lock') }}-3.9
 
       - name: Poetry install
         run: poetry install --only docs

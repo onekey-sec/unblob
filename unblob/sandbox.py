@@ -1,8 +1,9 @@
 import ctypes
 import sys
 import threading
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Type, TypeVar
+from typing import Callable, Optional, TypeVar
 
 from structlog import get_logger
 from unblob_native.sandbox import (
@@ -95,7 +96,7 @@ class Sandbox:
             )
 
 
-def raise_in_thread(thread: threading.Thread, exctype: Type) -> None:
+def raise_in_thread(thread: threading.Thread, exctype: type) -> None:
     if thread.ident is None:
         raise RuntimeError("Thread is not started")
 

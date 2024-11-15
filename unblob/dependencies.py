@@ -1,5 +1,4 @@
 import shutil
-from typing import List
 
 import attr
 
@@ -18,7 +17,7 @@ NOT_INSTALLED = "✗"
 
 def get_dependencies(
     handlers: Handlers, dir_handlers: DirectoryHandlers
-) -> List[Dependency]:
+) -> list[Dependency]:
     all_commands = set()
     for handler in handlers:
         commands = handler.get_dependencies()
@@ -33,7 +32,7 @@ def get_dependencies(
     return rv
 
 
-def pretty_format_dependencies(dependencies: List[Dependency]) -> str:
+def pretty_format_dependencies(dependencies: list[Dependency]) -> str:
     longest_key_length = max(len(dep.command) for dep in dependencies)
     lines = ["The following executables found installed, which are needed by unblob:"]
     for dependency in dependencies:
