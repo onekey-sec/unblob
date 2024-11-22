@@ -533,13 +533,13 @@ files = [
 
 [[package]]
 name = "dissect-cstruct"
-version = "2.0"
-description = "Structure parsing in Python made easy."
+version = "4.3"
+description = "A Dissect module implementing a parser for C-like structures: structure parsing in Python made easy"
 optional = false
-python-versions = "*"
+python-versions = "~=3.9"
 files = [
-    {file = "dissect.cstruct-2.0-py3-none-any.whl", hash = "sha256:e150abcc7500a279126ebf1a0f87c34d857e126ac3d65a980844bfb3296a5492"},
-    {file = "dissect.cstruct-2.0.tar.gz", hash = "sha256:4f1d3911da99270213feed0a0b22e70670b04fe53b16d95d2e04bafcd338f547"},
+    {file = "dissect.cstruct-4.3-py3-none-any.whl", hash = "sha256:237f6dc9705ffb5111f970967f7db9d1f8e5f6ea58d344a36734c985700e0a09"},
+    {file = "dissect_cstruct-4.3.tar.gz", hash = "sha256:97692f18e17756b46e87e4ebaaeba24ce8f8cb5b6557ed2461d0bff5997edf0f"},
 ]
 
 [[package]]
@@ -2021,4 +2021,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "e972a07f62f2677e217d7f9b43d811d658efdf275daa806e732e8dc40de2166e"
+content-hash = "448f9ce8d833437e856dfc3da42e33cf5c5d5cdc618f966f7e4d2210d1249e9e"
