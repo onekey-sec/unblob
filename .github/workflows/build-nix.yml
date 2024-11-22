@@ -13,7 +13,7 @@ jobs:
             arch: x86_64-linux
           - os: ubuntu-latest
             arch: aarch64-linux
-          - os: macos-12
+          - os: macos-14
             arch: x86_64-darwin
           - os: macos-14
             arch: aarch64-darwin
