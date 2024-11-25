@@ -35,10 +35,10 @@ from .pool import make_pool
 from .report import (
     CalculateMultiFileExceptionReport,
     CarveDirectoryReport,
-    ExtractDirectoryExistsReport,
     FileMagicReport,
     HashReport,
     MultiFileCollisionReport,
+    OutputDirectoryExistsReport,
     RandomnessMeasurements,
     RandomnessReport,
     Report,
@@ -426,7 +426,7 @@ class _DirectoryTask:
             raise DirectoryProcessingError(
                 "Skipped: extraction directory exists",
                 report=multi_file.as_report(
-                    [ExtractDirectoryExistsReport(path=extract_dir)]
+                    [OutputDirectoryExistsReport(path=extract_dir)]
                 ),
             )
 
@@ -507,23 +507,8 @@ class _FileTask:
         self.size = size
         self.result = result
 
-        self.carve_dir = config.get_extract_dir_for(self.task.path)
-
     def process(self):
         logger.debug("Processing file", path=self.task.path, size=self.size)
-
-        if self.carve_dir.exists() and not self.config.skip_extraction:
-            # Extraction directory is not supposed to exist, it is usually a simple mistake of running
-            # unblob again without cleaning up or using --force.
-            # It would cause problems continuing, as it would mix up original and extracted files,
-            # and it would just introduce weird, non-deterministic problems due to interference on paths
-            # by multiple workers (parallel processing, modifying content (fix_symlink),
-            # and `mmap` + open for write with O_TRUNC).
-            logger.error(
-                "Skipped: extraction directory exists", extract_dir=self.carve_dir
-            )
-            self.result.add_report(ExtractDirectoryExistsReport(path=self.carve_dir))
-            return
 
         with File.from_path(self.task.path) as file:
             all_chunks = search_chunks(
@@ -576,10 +561,23 @@ class _FileTask:
             self._carve_then_extract_chunks(file, outer_chunks, unknown_chunks)
 
     def _carve_then_extract_chunks(self, file, outer_chunks, unknown_chunks):
+        assert not self.config.skip_extraction
+
         carve_dir = self.config.get_carve_dir_for(self.task.path)
 
         # report the technical carve directory explicitly
         self.result.add_report(CarveDirectoryReport(carve_dir=carve_dir))
+
+        if carve_dir.exists():
+            # Carve directory is not supposed to exist, it is usually a simple mistake of running
+            # unblob again without cleaning up or using --force.
+            # It would cause problems continuing, as it would mix up original and extracted files,
+            # and it would just introduce weird, non-deterministic problems due to interference on paths
+            # by multiple workers (parallel processing, modifying content (fix_symlink),
+            # and `mmap` + open for write with O_TRUNC).
+            logger.error("Skipped: carve directory exists", carve_dir=carve_dir)
+            self.result.add_report(OutputDirectoryExistsReport(path=carve_dir))
+            return
 
         for chunk in unknown_chunks:
             carved_unknown_path = carve_unknown_chunk(carve_dir, file, chunk)
@@ -633,7 +631,7 @@ class _FileTask:
                 chunk=chunk,
             )
             self.result.add_report(
-                chunk.as_report([ExtractDirectoryExistsReport(path=extract_dir)])
+                chunk.as_report([OutputDirectoryExistsReport(path=extract_dir)])
             )
             return
 

@@ -34,11 +34,11 @@ from unblob.processing import (
 )
 from unblob.report import (
     ChunkReport,
-    ExtractDirectoryExistsReport,
     FileMagicReport,
     HashReport,
     MultiFileCollisionReport,
     MultiFileReport,
+    OutputDirectoryExistsReport,
     RandomnessMeasurements,
     RandomnessReport,
     StatReport,
@@ -350,7 +350,7 @@ def test_process_file_prevents_double_extracts(tmp_path: Path, fw: Path):
 
     # we expect exactly 1 problem reported, related to the extraction of "internal.zip"
     [report] = process_result.errors
-    assert isinstance(report, ExtractDirectoryExistsReport)
+    assert isinstance(report, OutputDirectoryExistsReport)
     assert report.path.name == "internal.zip_extract"
 
     # the rest should be the same, except that the extraction is shifted with one extra directory
@@ -819,7 +819,7 @@ def test_multi_file_extract_dir(
     multi_file_reports = task_result_by_path[directory].filter_reports(MultiFileReport)
     assert multi_file_reports
     assert any(
-        isinstance(report, ExtractDirectoryExistsReport)
+        isinstance(report, OutputDirectoryExistsReport)
         for report in multi_file_reports[0].extraction_reports
     )
 

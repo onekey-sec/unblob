@@ -90,7 +90,7 @@ class ExtractCommandFailedReport(ErrorReport):
 
 
 @attr.define(kw_only=True, frozen=True)
-class ExtractDirectoryExistsReport(ErrorReport):
+class OutputDirectoryExistsReport(ErrorReport):
     severity: Severity = Severity.ERROR
     path: Path
 
