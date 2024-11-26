@@ -220,6 +220,7 @@ class ChunkReport(Report):
     end_offset: int
     size: int
     is_encrypted: bool
+    metadata: dict = attr.ib(factory=dict)
     extraction_reports: List[Report]
 
 
