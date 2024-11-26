@@ -234,6 +234,21 @@ class UnblobContext(click.Context):
     show_default=True,
     help="Keep extracted chunks",
 )
+@click.option(
+    "--carve-suffix",
+    "carve_suffix",
+    default="_extract",
+    show_default=True,
+    help="""Carve directory name is source file + this suffix.
+    NOTE: carving is skipped when the whole file is of a known type""",
+)
+@click.option(
+    "--extract-suffix",
+    "extract_suffix",
+    default="_extract",
+    show_default=True,
+    help="Extraction directory name is source file + this suffix",
+)
 @verbosity_option
 @click.option(
     "--show-external-dependencies",
@@ -263,6 +278,8 @@ def cli(
     clear_skip_magics: bool,  # noqa: FBT001
     skip_extraction: bool,  # noqa: FBT001
     keep_extracted_chunks: bool,  # noqa: FBT001
+    carve_suffix: str,
+    extract_suffix: str,
     handlers: Handlers,
     dir_handlers: DirectoryHandlers,
     plugins_path: Optional[Path],
@@ -294,6 +311,8 @@ def cli(
         handlers=handlers,
         dir_handlers=dir_handlers,
         keep_extracted_chunks=keep_extracted_chunks,
+        extract_suffix=extract_suffix,
+        carve_suffix=carve_suffix,
         verbose=verbose,
         progress_reporter=NullProgressReporter
         if verbose
