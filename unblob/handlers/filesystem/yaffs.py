@@ -408,8 +408,7 @@ class YAFFSParser:
         # Sanity check the spare size, make sure it looks legit
         if config.spare_size not in VALID_SPARE_SIZES:
             raise InvalidInputFormat(
-                "Auto-detection failed: Detected an unlikely spare size: %d"
-                % config.spare_size
+                f"Auto-detection failed: Detected an unlikely spare size: {config.spare_size}"
             )
 
         return config

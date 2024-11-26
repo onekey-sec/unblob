@@ -1,5 +1,19 @@
 from ..models import DirectoryHandlers, Handlers
-from .archive import ar, arc, arj, cab, cpio, dmg, rar, sevenzip, stuffit, tar, zip
+from .archive import (
+    ar,
+    arc,
+    arj,
+    cab,
+    cpio,
+    dmg,
+    rar,
+    sevenzip,
+    stuffit,
+    tar,
+)
+from .archive import (
+    zip as ziparchive,
+)
 from .archive.autel import ecc
 from .archive.dlink import encrpted_img, shrs
 from .archive.engeniustech import engenius
@@ -80,7 +94,7 @@ BUILTIN_HANDLERS: Handlers = (
     cpio.BinaryHandler,
     sevenzip.SevenZipHandler,
     rar.RarHandler,
-    zip.ZIPHandler,
+    ziparchive.ZIPHandler,
     dmg.DMGHandler,
     iso9660.ISO9660FSHandler,
     stuffit.StuffItSITHandler,

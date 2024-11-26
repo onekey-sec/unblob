@@ -19,7 +19,7 @@ from unblob.report import ExtractCommandFailedReport
 
 
 @pytest.fixture(scope="session", autouse=True)
-def configure_logging(tmp_path_factory):  # noqa: PT004
+def configure_logging(tmp_path_factory):
     extract_root = tmp_path_factory.mktemp("extract")
     log_path = tmp_path_factory.mktemp("logs") / "unblob.log"
     configure_logger(verbosity_level=3, extract_root=extract_root, log_path=log_path)
