@@ -101,16 +101,20 @@ class ExtractionConfig:
     verbose: int = 1
     progress_reporter: Type[ProgressReporter] = NullProgressReporter
 
-    def get_extract_dir_for(self, path: Path) -> Path:
-        """Return extraction dir under root with the name of path."""
+    def _get_output_path(self, path: Path) -> Path:
+        """Return path under extract root."""
         try:
             relative_path = path.relative_to(self.extract_root)
         except ValueError:
             # path is not inside root, i.e. it is an input file
             relative_path = Path(path.name)
-        extract_name = path.name + self.extract_suffix
-        extract_dir = self.extract_root / relative_path.with_name(extract_name)
-        return extract_dir.expanduser().resolve()
+        return (self.extract_root / relative_path).expanduser().resolve()
+
+    def get_extract_dir_for(self, path: Path) -> Path:
+        return self._get_output_path(path.with_name(path.name + self.extract_suffix))
+
+    def get_carve_dir_for(self, path: Path) -> Path:
+        return self._get_output_path(path.with_name(path.name + self.carve_suffix))
 
 
 @terminate_gracefully
@@ -131,6 +135,11 @@ def process_file(
         logger.info("Removing extract dir", path=extract_dir)
         shutil.rmtree(extract_dir)
 
+    carve_dir = config.get_carve_dir_for(input_path)
+    if config.force_extract and carve_dir.exists():
+        logger.info("Removing carve dir", path=carve_dir)
+        shutil.rmtree(carve_dir)
+
     if not prepare_report_file(config, report_file):
         logger.error(
             "File not processed, as report could not be written", file=input_path
@@ -139,7 +148,7 @@ def process_file(
 
     process_result = _process_task(config, task)
 
-    if not config.skip_extraction:
+    if not config.skip_extraction and not carve_dir.exists():
         # ensure that the root extraction directory is created even for empty extractions
         extract_dir.mkdir(parents=True, exist_ok=True)
 
