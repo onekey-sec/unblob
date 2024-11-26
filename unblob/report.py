@@ -233,6 +233,11 @@ class UnknownChunkReport(Report):
     randomness: Optional[RandomnessReport]
 
 
+@attr.define(kw_only=True, frozen=True)
+class CarveDirectoryReport(Report):
+    carve_dir: Path
+
+
 @final
 @attr.define(kw_only=True, frozen=True)
 class MultiFileReport(Report):

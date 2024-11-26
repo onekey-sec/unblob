@@ -34,6 +34,7 @@ from .models import (
 from .pool import make_pool
 from .report import (
     CalculateMultiFileExceptionReport,
+    CarveDirectoryReport,
     ExtractDirectoryExistsReport,
     FileMagicReport,
     HashReport,
@@ -576,6 +577,9 @@ class _FileTask:
 
     def _carve_then_extract_chunks(self, file, outer_chunks, unknown_chunks):
         carve_dir = self.config.get_carve_dir_for(self.task.path)
+
+        # report the technical carve directory explicitly
+        self.result.add_report(CarveDirectoryReport(carve_dir=carve_dir))
 
         for chunk in unknown_chunks:
             carved_unknown_path = carve_unknown_chunk(carve_dir, file, chunk)

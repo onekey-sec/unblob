@@ -10,6 +10,7 @@ import pytest
 from unblob.models import ProcessResult, Task, TaskResult
 from unblob.processing import ExtractionConfig, process_file
 from unblob.report import (
+    CarveDirectoryReport,
     ChunkReport,
     FileMagicReport,
     HashReport,
@@ -120,6 +121,7 @@ def hello_kitty_task_results(
                     sha1="febca6ed75dc02e0def065e7b08f1cca87b57c74",
                     sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
                 ),
+                CarveDirectoryReport(carve_dir=extract_root / "hello_kitty_extract"),
                 UnknownChunkReport(
                     id=ANY,
                     start_offset=0,
