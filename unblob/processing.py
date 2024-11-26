@@ -149,10 +149,6 @@ def process_file(
 
     process_result = _process_task(config, task)
 
-    if not config.skip_extraction and not carve_dir.exists():
-        # ensure that the root extraction directory is created even for empty extractions
-        extract_dir.mkdir(parents=True, exist_ok=True)
-
     if report_file:
         write_json_report(report_file, process_result)
 
