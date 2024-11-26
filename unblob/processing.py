@@ -559,13 +559,42 @@ class _FileTask:
                 self.result.add_report(chunk.as_report(extraction_reports=[]))
             return
 
+        is_whole_file_chunk = len(outer_chunks) + len(unknown_chunks) == 1
+        if is_whole_file_chunk:
+            # skip carving, extract directly the whole file (chunk)
+            carved_path = self.task.path
+            for chunk in outer_chunks:
+                self._extract_chunk(
+                    carved_path,
+                    chunk,
+                    self.config.get_extract_dir_for(carved_path),
+                    # since we do not carve, we want to keep the input around
+                    remove_extracted_input=False,
+                )
+        else:
+            self._carve_then_extract_chunks(file, outer_chunks, unknown_chunks)
+
+    def _carve_then_extract_chunks(self, file, outer_chunks, unknown_chunks):
+        carve_dir = self.config.get_carve_dir_for(self.task.path)
+
         for chunk in unknown_chunks:
-            carved_unknown_path = carve_unknown_chunk(self.carve_dir, file, chunk)
+            carved_unknown_path = carve_unknown_chunk(carve_dir, file, chunk)
             randomness = self._calculate_randomness(carved_unknown_path)
             self.result.add_report(chunk.as_report(randomness=randomness))
 
         for chunk in outer_chunks:
-            self._extract_chunk(file, chunk)
+            carved_path = carve_valid_chunk(carve_dir, file, chunk)
+
+            self._extract_chunk(
+                carved_path,
+                chunk,
+                self.config.get_extract_dir_for(carved_path),
+                # when a carved chunk is successfully extracted, usually
+                # we want to get rid of it, as its data is available in
+                # extracted format, and the raw data is still part of
+                # the file the chunk belongs to
+                remove_extracted_input=not self.config.keep_extracted_chunks,
+            )
 
     def _calculate_randomness(self, path: Path) -> Optional[RandomnessReport]:
         if self.task.depth < self.config.randomness_depth:
@@ -581,17 +610,14 @@ class _FileTask:
             return report
         return None
 
-    def _extract_chunk(self, file, chunk: ValidChunk):  # noqa: C901
-        skip_carving = chunk.is_whole_file
-        if skip_carving:
-            inpath = self.task.path
-            extract_dir = self.carve_dir
-            carved_path = None
-        else:
-            inpath = carve_valid_chunk(self.carve_dir, file, chunk)
-            extract_dir = self.carve_dir / (inpath.name + self.config.carve_suffix)
-            carved_path = inpath
-
+    def _extract_chunk(
+        self,
+        carved_path: Path,
+        chunk: ValidChunk,
+        extract_dir: Path,
+        *,
+        remove_extracted_input: bool,
+    ):
         if extract_dir.exists():
             # Extraction directory is not supposed to exist, it mixes up original and extracted files,
             # and it would just introduce weird, non-deterministic problems due to interference on paths
@@ -613,10 +639,10 @@ class _FileTask:
 
         extraction_reports = []
         try:
-            if result := chunk.extract(inpath, extract_dir):
+            if result := chunk.extract(carved_path, extract_dir):
                 extraction_reports.extend(result.reports)
 
-            if carved_path and not self.config.keep_extracted_chunks:
+            if remove_extracted_input:
                 logger.debug("Removing extracted chunk", path=carved_path)
                 carved_path.unlink()
 
