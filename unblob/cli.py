@@ -446,7 +446,9 @@ def print_report(reports: ProcessResult):
     )
 
     summary = Panel(
-        f"""Extracted files: [#00FFC8]{total_files}[/#00FFC8]
+        f"""\
+Output path: [#00FFC8]{reports.get_output_dir()}[/#00FFC8]
+Extracted files: [#00FFC8]{total_files}[/#00FFC8]
 Extracted directories: [#00FFC8]{total_dirs}[/#00FFC8]
 Extracted links: [#00FFC8]{total_links}[/#00FFC8]
 Extraction directory size: [#00FFC8]{human_size(extracted_size)}[/#00FFC8]""",
