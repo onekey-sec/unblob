@@ -1,1 +1,2 @@
 tests/integration/** filter=lfs diff=lfs merge=lfs -text
+tests/files/** filter=lfs diff=lfs merge=lfs -text
