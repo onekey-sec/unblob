@@ -314,7 +314,7 @@ def test_keep_extracted_chunks(
     [
         pytest.param([], 5, id="skip-extension-empty"),
         pytest.param([""], 5, id="skip-zip-extension-empty-suffix"),
-        pytest.param([".zip"], 1, id="skip-extension-zip"),
+        pytest.param([".zip"], 0, id="skip-extension-zip"),
         pytest.param([".rlib"], 5, id="skip-extension-rlib"),
     ],
 )

@@ -90,7 +90,7 @@ class ExtractCommandFailedReport(ErrorReport):
 
 
 @attr.define(kw_only=True, frozen=True)
-class ExtractDirectoryExistsReport(ErrorReport):
+class OutputDirectoryExistsReport(ErrorReport):
     severity: Severity = Severity.ERROR
     path: Path
 
@@ -231,6 +231,11 @@ class UnknownChunkReport(Report):
     end_offset: int
     size: int
     randomness: Optional[RandomnessReport]
+
+
+@attr.define(kw_only=True, frozen=True)
+class CarveDirectoryReport(Report):
+    carve_dir: Path
 
 
 @final

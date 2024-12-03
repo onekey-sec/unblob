@@ -13,6 +13,7 @@ from .file_utils import Endian, File, InvalidInputFormat, StructParser
 from .identifiers import new_id
 from .parser import hexstring2regex
 from .report import (
+    CarveDirectoryReport,
     ChunkReport,
     ErrorReport,
     MultiFileReport,
@@ -237,6 +238,20 @@ class ProcessResult:
 
     def to_json(self, indent="  "):
         return to_json(self.results, indent=indent)
+
+    def get_output_dir(self) -> Optional[Path]:
+        try:
+            top_result = self.results[0]
+            if carves := top_result.filter_reports(CarveDirectoryReport):
+                # we have a top level carve
+                return carves[0].carve_dir
+
+            # we either have an extraction,
+            # and the extract directory registered as subtask
+            return top_result.subtasks[0].path
+        except IndexError:
+            # or no extraction
+            return None
 
 
 class _JSONEncoder(json.JSONEncoder):

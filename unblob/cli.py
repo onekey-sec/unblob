@@ -234,6 +234,21 @@ class UnblobContext(click.Context):
     show_default=True,
     help="Keep extracted chunks",
 )
+@click.option(
+    "--carve-suffix",
+    "carve_suffix",
+    default="_extract",
+    show_default=True,
+    help="""Carve directory name is source file + this suffix.
+    NOTE: carving is skipped when the whole file is of a known type""",
+)
+@click.option(
+    "--extract-suffix",
+    "extract_suffix",
+    default="_extract",
+    show_default=True,
+    help="Extraction directory name is source file + this suffix",
+)
 @verbosity_option
 @click.option(
     "--show-external-dependencies",
@@ -250,19 +265,22 @@ class UnblobContext(click.Context):
     expose_value=False,
 )
 def cli(
+    *,
     file: Path,
     extract_root: Path,
     report_file: Optional[Path],
     log_path: Path,
-    force: bool,  # noqa: FBT001
+    force: bool,
     process_num: int,
     depth: int,
     randomness_depth: int,
     skip_magic: Iterable[str],
     skip_extension: Iterable[str],
-    clear_skip_magics: bool,  # noqa: FBT001
-    skip_extraction: bool,  # noqa: FBT001
-    keep_extracted_chunks: bool,  # noqa: FBT001
+    clear_skip_magics: bool,
+    skip_extraction: bool,
+    keep_extracted_chunks: bool,
+    carve_suffix: str,
+    extract_suffix: str,
     handlers: Handlers,
     dir_handlers: DirectoryHandlers,
     plugins_path: Optional[Path],
@@ -294,6 +312,8 @@ def cli(
         handlers=handlers,
         dir_handlers=dir_handlers,
         keep_extracted_chunks=keep_extracted_chunks,
+        extract_suffix=extract_suffix,
+        carve_suffix=carve_suffix,
         verbose=verbose,
         progress_reporter=NullProgressReporter
         if verbose
@@ -424,6 +444,21 @@ def print_report(reports: ProcessResult):
     total_files, total_dirs, total_links, extracted_size = get_size_report(
         reports.results
     )
+
+    summary = Panel(
+        f"""\
+Output path: [#00FFC8]{reports.get_output_dir()}[/#00FFC8]
+Extracted files: [#00FFC8]{total_files}[/#00FFC8]
+Extracted directories: [#00FFC8]{total_dirs}[/#00FFC8]
+Extracted links: [#00FFC8]{total_links}[/#00FFC8]
+Extraction directory size: [#00FFC8]{human_size(extracted_size)}[/#00FFC8]""",
+        subtitle="Summary",
+        title=f"unblob ({get_version()})",
+    )
+
+    console = Console()
+    console.print(summary)
+
     chunks_distribution = get_chunks_distribution(reports.results)
 
     valid_size = 0
@@ -433,35 +468,23 @@ def print_report(reports: ProcessResult):
             valid_size += size
         total_size += size
 
-    if total_size == 0:
-        return
-
-    summary = Panel(
-        f"""Extracted files: [#00FFC8]{total_files}[/#00FFC8]
-Extracted directories: [#00FFC8]{total_dirs}[/#00FFC8]
-Extracted links: [#00FFC8]{total_links}[/#00FFC8]
-Extraction directory size: [#00FFC8]{human_size(extracted_size)}[/#00FFC8]
-Chunks identification ratio: [#00FFC8]{(valid_size/total_size) * 100:0.2f}%[/#00FFC8]""",
-        subtitle="Summary",
-        title=f"unblob ({get_version()})",
-    )
-
-    console = Console()
-    console.print(summary)
-
     chunks_table = Table(title="Chunks distribution")
     chunks_table.add_column("Chunk type", justify="left", style="#00FFC8", no_wrap=True)
     chunks_table.add_column("Size", justify="center", style="#00FFC8", no_wrap=True)
     chunks_table.add_column("Ratio", justify="center", style="#00FFC8", no_wrap=True)
 
-    for handler, size in sorted(
-        chunks_distribution.items(), key=lambda item: item[1], reverse=True
-    ):
-        chunks_table.add_row(
-            handler.upper(), human_size(size), f"{(size/total_size) * 100:0.2f}%"
-        )
+    if total_size:
+        for handler, size in sorted(
+            chunks_distribution.items(), key=lambda item: item[1], reverse=True
+        ):
+            chunks_table.add_row(
+                handler.upper(), human_size(size), f"{(size/total_size) * 100:0.2f}%"
+            )
 
-    console.print(chunks_table)
+        console.print(chunks_table)
+        console.print(
+            f"Chunk identification ratio: [#00FFC8]{(valid_size/total_size) * 100:0.2f}%[/#00FFC8]"
+        )
 
     if len(reports.errors):
         errors_table = Table(title="Encountered errors")
