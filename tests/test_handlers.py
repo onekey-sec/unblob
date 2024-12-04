@@ -9,7 +9,6 @@ Each of the test folders should contain 2 things:
 
 import inspect
 from pathlib import Path
-from typing import Type
 
 import pytest
 
@@ -43,7 +42,7 @@ def test_all_handlers(
     "handler",
     (pytest.param(handler, id=handler.NAME) for handler in handlers.BUILTIN_HANDLERS),
 )
-def test_missing_handlers_integrations_tests(handler: Type[Handler]):
+def test_missing_handlers_integrations_tests(handler: type[Handler]):
     handler_module_path = Path(inspect.getfile(handler))
     handler_test_path = handler_module_path.relative_to(
         HANDLERS_PACKAGE_PATH

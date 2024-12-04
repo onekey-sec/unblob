@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
@@ -42,7 +42,7 @@ class SquashFSExtractor(Extractor):
         extractor = Command(self.EXECUTABLE, *commands_args)
         extractor.extract(inpath, outdir)
 
-    def get_dependencies(self) -> List[str]:
+    def get_dependencies(self) -> list[str]:
         return [self.EXECUTABLE]
 
 
@@ -348,7 +348,7 @@ class SquashFSv4BEExtractor(Extractor):
         extractor = Command(self.EXECUTABLE, *commands_args)
         extractor.extract(inpath, outdir)
 
-    def get_dependencies(self) -> List[str]:
+    def get_dependencies(self) -> list[str]:
         return [self.EXECUTABLE]
 
 

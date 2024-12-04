@@ -1,9 +1,10 @@
 import platform
 import sys
 import zipfile
+from collections.abc import Collection
 from pathlib import Path
 from statistics import mean
-from typing import Collection, List, Optional, Tuple, Type, TypeVar
+from typing import Optional, TypeVar
 
 import attr
 import pytest
@@ -120,7 +121,7 @@ def assert_same_chunks(expected, actual, explanation=None):
     ],
 )
 def test_remove_inner_chunks(
-    chunks: List[ValidChunk], expected: List[ValidChunk], explanation: str
+    chunks: list[ValidChunk], expected: list[ValidChunk], explanation: str
 ):
     assert_same_chunks(expected, remove_inner_chunks(chunks), explanation)
 
@@ -175,7 +176,7 @@ def test_remove_inner_chunks(
     ],
 )
 def test_calculate_unknown_chunks(
-    chunks: List[ValidChunk], file_size: int, expected: List[UnknownChunk]
+    chunks: list[ValidChunk], file_size: int, expected: list[UnknownChunk]
 ):
     assert_same_chunks(expected, calculate_unknown_chunks(chunks, file_size))
 
@@ -222,7 +223,7 @@ def test_format_randomness_plot_error():
         pytest.param([100.0] * 100, "None", id="block_size-can-be-anything3"),
     ],
 )
-def test_format_randomness_plot_no_exception(percentages: List[float], block_size: int):
+def test_format_randomness_plot_no_exception(percentages: list[float], block_size: int):
     assert str(block_size) in format_randomness_plot(
         RandomnessReport(
             shannon=RandomnessMeasurements(
@@ -297,7 +298,7 @@ def fw(tmp_path: Path):
     return base / "fw.zip"
 
 
-def sort_paths(paths: Collection[Path], base: Path) -> Tuple[List[Path], List[Path]]:
+def sort_paths(paths: Collection[Path], base: Path) -> tuple[list[Path], list[Path]]:
     """Sorts paths into two bins, the first one will contain subpaths of base, the second are not.
 
     The first bin will also be converted to relative paths.
@@ -436,7 +437,7 @@ def test_randomness_calculation(tmp_path: Path):
 
     task_result_by_name = {r.task.path.name: r for r in process_result.results}
 
-    def get_all(file_name, report_type: Type[ReportType]) -> List[ReportType]:
+    def get_all(file_name, report_type: type[ReportType]) -> list[ReportType]:
         return task_result_by_name[file_name].filter_reports(report_type)
 
     # ** verification
@@ -505,7 +506,7 @@ def test_skip_extraction(
 
 
 class ConcatenateExtractor(DirectoryExtractor):
-    def extract(self, paths: List[Path], outdir: Path):
+    def extract(self, paths: list[Path], outdir: Path):
         outfile = outdir / "data"
         with outfile.open("wb") as f:
             for path in paths:
@@ -514,7 +515,7 @@ class ConcatenateExtractor(DirectoryExtractor):
 
 
 class FailDirExtractor(DirectoryExtractor):
-    def extract(self, paths: List[Path], outdir: Path):
+    def extract(self, paths: list[Path], outdir: Path):
         del paths
         del outdir
         raise ValueError

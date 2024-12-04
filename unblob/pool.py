@@ -7,7 +7,7 @@ import signal
 import sys
 import threading
 from multiprocessing.queues import JoinableQueue
-from typing import Any, Callable, Set, Union
+from typing import Any, Callable, Union
 
 from .logging import multiprocessing_breakpoint
 
@@ -43,7 +43,7 @@ class PoolBase(abc.ABC):
 
 
 pools_lock = threading.Lock()
-pools: Set[PoolBase] = set()
+pools: set[PoolBase] = set()
 
 
 class Queue(JoinableQueue):
@@ -131,8 +131,7 @@ class MultiPool(PoolBase):
             proc.terminate()
 
         self._input.close()
-        if sys.version_info >= (3, 9):
-            self._output.close()
+        self._output.close()
 
     def _clear_input_queue(self):
         try:
