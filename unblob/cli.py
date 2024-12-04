@@ -33,6 +33,7 @@ from .processing import (
     ExtractionConfig,
     process_file,
 )
+from .sandbox import Sandbox
 from .ui import NullProgressReporter, RichConsoleProgressReporter
 
 logger = get_logger()
@@ -321,7 +322,8 @@ def cli(
     )
 
     logger.info("Start processing file", file=file)
-    process_results = process_file(config, file, report_file)
+    sandbox = Sandbox(config, log_path, report_file)
+    process_results = sandbox.run(process_file, config, file, report_file)
     if verbose == 0:
         if skip_extraction:
             print_scan_report(process_results)

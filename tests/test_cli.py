@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, List, Optional, Type
+from typing import Iterable, List, Optional, Tuple, Type
 from unittest import mock
 
 import pytest
@@ -13,9 +13,11 @@ from unblob.models import DirectoryHandler, Glob, Handler, HexString, MultiFile
 from unblob.processing import (
     DEFAULT_DEPTH,
     DEFAULT_PROCESS_NUM,
+    DEFAULT_SKIP_EXTENSION,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
 )
+from unblob.testing import is_sandbox_available
 from unblob.ui import (
     NullProgressReporter,
     ProgressReporter,
@@ -310,16 +312,16 @@ def test_keep_extracted_chunks(
 
 
 @pytest.mark.parametrize(
-    "skip_extension, extracted_files_count",
+    "skip_extension, expected_skip_extensions",
     [
-        pytest.param([], 5, id="skip-extension-empty"),
-        pytest.param([""], 5, id="skip-zip-extension-empty-suffix"),
-        pytest.param([".zip"], 0, id="skip-extension-zip"),
-        pytest.param([".rlib"], 5, id="skip-extension-rlib"),
+        pytest.param((), DEFAULT_SKIP_EXTENSION, id="skip-extension-empty"),
+        pytest.param(("",), ("",), id="skip-zip-extension-empty-suffix"),
+        pytest.param((".zip",), (".zip",), id="skip-extension-zip"),
+        pytest.param((".rlib",), (".rlib",), id="skip-extension-rlib"),
     ],
 )
 def test_skip_extension(
-    skip_extension: List[str], extracted_files_count: int, tmp_path: Path
+    skip_extension: List[str], expected_skip_extensions: Tuple[str, ...], tmp_path: Path
 ):
     runner = CliRunner()
     in_path = (
@@ -335,8 +337,12 @@ def test_skip_extension(
     for suffix in skip_extension:
         args += ["--skip-extension", suffix]
     params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
-    result = runner.invoke(unblob.cli.cli, params)
-    assert extracted_files_count == len(list(tmp_path.rglob("*")))
+    process_file_mock = mock.MagicMock()
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
+        result = runner.invoke(unblob.cli.cli, params)
+    assert (
+        process_file_mock.call_args.args[0].skip_extension == expected_skip_extensions
+    )
     assert result.exit_code == 0
 
 
@@ -420,3 +426,29 @@ def test_clear_skip_magics(
     assert sorted(process_file_mock.call_args.args[0].skip_magic) == sorted(
         skip_magic
     ), fail_message
+
+
+@pytest.mark.skipif(
+    not is_sandbox_available(), reason="Sandboxing is only available on Linux"
+)
+def test_sandbox_escape(tmp_path: Path):
+    runner = CliRunner()
+
+    in_path = tmp_path / "input"
+    in_path.touch()
+    extract_dir = tmp_path / "extract-dir"
+    params = ["--extract-dir", str(extract_dir), str(in_path)]
+
+    unrelated_file = tmp_path / "unrelated"
+
+    process_file_mock = mock.MagicMock(
+        side_effect=lambda *_args, **_kwargs: unrelated_file.write_text(
+            "sandbox escape"
+        )
+    )
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
+        result = runner.invoke(unblob.cli.cli, params)
+
+    assert result.exit_code != 0
+    assert isinstance(result.exception, PermissionError)
+    process_file_mock.assert_called_once()

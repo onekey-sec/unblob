@@ -1,6 +1,7 @@
 import binascii
 import glob
 import io
+import platform
 import shlex
 import subprocess
 from pathlib import Path
@@ -10,6 +11,7 @@ from attr import dataclass
 from lark.lark import Lark
 from lark.visitors import Discard, Transformer
 from pytest_cov.embed import cleanup_on_sigterm
+from unblob_native.sandbox import AccessFS, SandboxError, restrict_access
 
 from unblob.finder import build_hyperscan_database
 from unblob.logging import configure_logger
@@ -217,3 +219,17 @@ class _HexDumpToBin(Transformer):
             rv.write(line.data)
 
         return rv.getvalue()
+
+
+def is_sandbox_available():
+    is_sandbox_available = True
+
+    try:
+        restrict_access(AccessFS.read_write("/"))
+    except SandboxError:
+        is_sandbox_available = False
+
+    if platform.architecture == "x86_64" and platform.system == "linux":
+        assert is_sandbox_available, "Sandboxing should work at least on Linux-x86_64"
+
+    return is_sandbox_available
