@@ -1,5 +1,5 @@
 import io
-from typing import Optional, Tuple
+from typing import Optional
 
 import attr
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
@@ -69,7 +69,7 @@ class XZSearchContext:
     stream_flag: int
 
 
-def read_multibyte_int(file: File) -> Tuple[int, int]:
+def read_multibyte_int(file: File) -> tuple[int, int]:
     """Read a multibyte integer and return the number of bytes read and the integer itself."""
     data = bytearray(file.read(MAX_MBI_LEN))
     file.seek(-MAX_MBI_LEN, io.SEEK_CUR)

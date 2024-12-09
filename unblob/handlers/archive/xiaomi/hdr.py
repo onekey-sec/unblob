@@ -1,7 +1,8 @@
 import binascii
 import io
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, cast
+from typing import Optional, cast
 
 from structlog import get_logger
 
@@ -105,7 +106,7 @@ class HDRExtractor(Extractor):
                 fs.carve(output_path, file, start_offset, size)
         return ExtractResult(reports=fs.problems)
 
-    def parse(self, file: File) -> Iterable[Tuple[Path, int, int]]:
+    def parse(self, file: File) -> Iterable[tuple[Path, int, int]]:
         header = self._struct_parser.parse(self.header_struct, file, Endian.LITTLE)
         for offset in cast(Iterable, header.blob_offsets):
             if not offset:

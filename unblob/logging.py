@@ -7,14 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import structlog
-from dissect.cstruct import dumpstruct
-
-try:
-    # dissect.cstruct >= 4.0
-    from dissect.cstruct import Structure
-except ImportError:
-    # dissect.cstruct == 2.0
-    from dissect.cstruct import Instance as Structure
+from dissect.cstruct import Structure, dumpstruct
 
 
 def format_hex(value: int):

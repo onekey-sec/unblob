@@ -2,7 +2,7 @@ import io
 import os
 import stat
 from pathlib import Path
-from typing import Optional, Type
+from typing import Optional
 
 import attr
 from structlog import get_logger
@@ -376,7 +376,7 @@ class PortableASCIIWithCRCParser(PortableASCIIParser):
 
 
 class _CPIOExtractorBase(Extractor):
-    PARSER: Type[CPIOParserBase]
+    PARSER: type[CPIOParserBase]
 
     def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
         fs = FileSystem(outdir)

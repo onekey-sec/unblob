@@ -1,7 +1,7 @@
 import shlex
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from structlog import get_logger
 
@@ -98,12 +98,12 @@ class Command(Extractor):
                 raise InvalidCommandTemplate("The template is malformed", t) from v
         return args
 
-    def get_dependencies(self) -> List[str]:
+    def get_dependencies(self) -> list[str]:
         return [self._executable]
 
 
 class MultiFileCommand(Command, DirectoryExtractor):
-    def extract(self, paths: List[Path], outdir: Path):
+    def extract(self, paths: list[Path], outdir: Path):
         return super().extract(paths[0], outdir)
 
 
