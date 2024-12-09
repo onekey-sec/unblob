@@ -24,11 +24,14 @@ buildPythonApplication {
   dontBuild = true;
   dontInstall = true;
 
-  nativeCheckInputs = [
-    pytestCheckHook
-    pytest-cov
-    unblob
-  ] ++ unblob.runtimeDeps ++ unblob.propagatedBuildInputs;
+  nativeCheckInputs =
+    [
+      pytestCheckHook
+      pytest-cov
+      unblob
+    ]
+    ++ unblob.runtimeDeps
+    ++ unblob.propagatedBuildInputs;
   pytestFlagsArray = [
     "--no-cov"
   ];
