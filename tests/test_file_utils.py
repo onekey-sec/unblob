@@ -1,7 +1,6 @@
 import io
 import os
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -296,7 +295,7 @@ class TestMultibytesInteger:
         (b"abcdef abcdef", b"not-found", []),
     ],
 )
-def test_iterate_patterns(content: bytes, pattern: bytes, expected: List[int]):
+def test_iterate_patterns(content: bytes, pattern: bytes, expected: list[int]):
     file = File.from_bytes(content)
     assert list(iterate_patterns(file, pattern)) == expected
 
@@ -320,7 +319,7 @@ def test_iterate_file(
     start_offset: int,
     size: int,
     buffer_size: int,
-    expected: List[bytes],
+    expected: list[bytes],
 ):
     file = File.from_bytes(content)
     assert list(iterate_file(file, start_offset, size, buffer_size)) == expected
@@ -512,7 +511,7 @@ class TestFileSystem:
 
         output_path = sandbox.root / "symlink"
         assert not output_path.exists()
-        assert os.readlink(output_path) == "target file"
+        assert output_path.readlink() == Path("target file")
         assert sandbox.problems == []
 
     def test_create_symlink_target_inside_sandbox(self, sandbox: FileSystem):
@@ -525,7 +524,7 @@ class TestFileSystem:
         output_path = sandbox.root / "sbin/shell"
         assert output_path.read_bytes() == b"posix shell"
         assert output_path.exists()
-        assert os.readlink(output_path) == "../bin/sh"
+        assert output_path.readlink() == Path("../bin/sh")
         assert sandbox.problems == []
 
     def test_create_symlink_target_outside_sandbox(self, sandbox: FileSystem):
@@ -545,7 +544,7 @@ class TestFileSystem:
 
         output_path = sandbox.root / "symlink"
         assert output_path.exists()
-        assert os.readlink(output_path) == "target file"
+        assert output_path.readlink() == Path("target file")
         assert sandbox.problems == []
 
     def test_create_symlink_absolute_paths_self_referenced(self, sandbox: FileSystem):
@@ -554,7 +553,7 @@ class TestFileSystem:
 
         output_path = sandbox.root / "etc/passwd"
         assert not output_path.exists()
-        assert os.readlink(output_path) == "../etc/passwd"
+        assert output_path.readlink() == Path("../etc/passwd")
         assert sandbox.problems == []
 
     def test_create_symlink_outside_sandbox(self, sandbox: FileSystem):

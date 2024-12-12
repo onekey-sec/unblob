@@ -1,10 +1,9 @@
 import hashlib
-import os
 import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Set, Union, final
+from typing import Optional, Union, final
 
 import attr
 
@@ -100,7 +99,7 @@ class ExtractorDependencyNotFoundReport(ErrorReport):
     """Describes an error when the dependency of an extractor doesn't exist."""
 
     severity: Severity = Severity.ERROR
-    dependencies: List[str]
+    dependencies: list[str]
 
 
 @attr.define(kw_only=True, frozen=True)
@@ -126,7 +125,7 @@ class MultiFileCollisionReport(ErrorReport):
     """Describes an error when MultiFiles collide on the same file."""
 
     severity: Severity = Severity.ERROR
-    paths: Set[Path]
+    paths: set[Path]
     handler: str
 
 
@@ -144,7 +143,7 @@ class StatReport(Report):
         st = path.lstat()
         mode = st.st_mode
         try:
-            link_target = Path(os.readlink(path))
+            link_target = Path.readlink(path)
         except OSError:
             link_target = None
 
@@ -192,7 +191,7 @@ class FileMagicReport(Report):
 
 @attr.define(kw_only=True, frozen=True)
 class RandomnessMeasurements:
-    percentages: List[float]
+    percentages: list[float]
     block_size: int
     mean: float
 
@@ -220,7 +219,7 @@ class ChunkReport(Report):
     end_offset: int
     size: int
     is_encrypted: bool
-    extraction_reports: List[Report]
+    extraction_reports: list[Report]
 
 
 @final
@@ -244,8 +243,8 @@ class MultiFileReport(Report):
     id: str
     handler_name: str
     name: str
-    paths: List[Path]
-    extraction_reports: List[Report]
+    paths: list[Path]
+    extraction_reports: list[Report]
 
 
 @attr.define(kw_only=True, frozen=True)

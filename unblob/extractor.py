@@ -59,20 +59,19 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
     if is_recursive_link(path):
         logger.error("Symlink loop identified, removing", path=path)
         error_report = MaliciousSymlinkRemoved(
-            link=path.as_posix(), target=os.readlink(path)
+            link=path.as_posix(), target=path.readlink().as_posix()
         )
         task_result.add_report(error_report)
         path.unlink()
         return path
 
-    raw_target = os.readlink(path)
+    raw_target = os.readlink(path)  # noqa: PTH115
     if not raw_target:
         logger.error("Symlink with empty target, removing.")
         path.unlink()
         return path
 
     target = Path(raw_target)
-
     if target.is_absolute():
         target = Path(target.as_posix().lstrip("/"))
     else:

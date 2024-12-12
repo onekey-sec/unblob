@@ -33,7 +33,7 @@ which helps identifying the exact end offset.
 """
 
 import io
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
@@ -99,7 +99,7 @@ class UnixCompressHandler(StructHandler):
         """
         file.seek(start_offset)
 
-        prefix: List[int] = [0] * 65536  # index to LZW prefix string
+        prefix: list[int] = [0] * 65536  # index to LZW prefix string
 
         header = self.parse_header(file, Endian.LITTLE)
 

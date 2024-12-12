@@ -4,7 +4,7 @@ The main "entry point" is search_chunks_by_priority.
 """
 
 from functools import lru_cache
-from typing import List, Optional
+from typing import Optional
 
 import attr
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
@@ -23,7 +23,7 @@ logger = get_logger()
 class HyperscanMatchContext:
     file: File
     file_size: int
-    all_chunks: List
+    all_chunks: list
     task_result: TaskResult
     start_offset: int
 
@@ -131,7 +131,7 @@ def search_chunks(
     file_size: int,
     handlers: Handlers,
     task_result: TaskResult,
-) -> List[ValidChunk]:
+) -> list[ValidChunk]:
     """Search all ValidChunks within the file.
 
     Search for patterns and run Handler.calculate_chunk() on the found

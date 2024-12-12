@@ -1,8 +1,9 @@
 import multiprocessing
 import shutil
+from collections.abc import Iterable, Sequence
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type, Union
+from typing import Optional, Union
 
 import attr
 import magic
@@ -99,7 +100,7 @@ class ExtractionConfig:
     handlers: Handlers = BUILTIN_HANDLERS
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
-    progress_reporter: Type[ProgressReporter] = NullProgressReporter
+    progress_reporter: type[ProgressReporter] = NullProgressReporter
 
     def _get_output_path(self, path: Path) -> Path:
         """Return path under extract root."""
@@ -342,9 +343,9 @@ class _DirectoryTask:
 
         self._iterate_processed_files(processed_paths)
 
-    def _process_directory(self) -> Tuple[Set[Path], Set[Path]]:
-        processed_paths: Set[Path] = set()
-        extract_dirs: Set[Path] = set()
+    def _process_directory(self) -> tuple[set[Path], set[Path]]:
+        processed_paths: set[Path] = set()
+        extract_dirs: set[Path] = set()
         for dir_handler_class in self.config.dir_handlers:
             dir_handler = dir_handler_class()
 
@@ -401,7 +402,7 @@ class _DirectoryTask:
             )
 
     def _check_conflicting_files(
-        self, multi_file: MultiFile, processed_paths: Set[Path]
+        self, multi_file: MultiFile, processed_paths: set[Path]
     ):
         conflicting_paths = processed_paths.intersection(set(multi_file.paths))
         if conflicting_paths:
@@ -470,8 +471,8 @@ def is_padding(file: File, chunk: UnknownChunk):
 
 
 def process_patterns(
-    unknown_chunks: List[UnknownChunk], file: File
-) -> List[Union[UnknownChunk, PaddingChunk]]:
+    unknown_chunks: list[UnknownChunk], file: File
+) -> list[Union[UnknownChunk, PaddingChunk]]:
     processed_chunks = []
     for unknown_chunk in unknown_chunks:
         if is_padding(file, unknown_chunk):
@@ -526,8 +527,8 @@ class _FileTask:
     def _process_chunks(
         self,
         file: File,
-        outer_chunks: List[ValidChunk],
-        unknown_chunks: List[Union[UnknownChunk, PaddingChunk]],
+        outer_chunks: list[ValidChunk],
+        unknown_chunks: list[Union[UnknownChunk, PaddingChunk]],
     ):
         if unknown_chunks:
             logger.warning("Found unknown Chunks", chunks=unknown_chunks)
@@ -675,7 +676,7 @@ def delete_empty_extract_dir(extract_dir: Path):
         extract_dir.rmdir()
 
 
-def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
+def remove_inner_chunks(chunks: list[ValidChunk]) -> list[ValidChunk]:
     """Remove all chunks from the list which are within another bigger chunks."""
     if not chunks:
         return []
@@ -698,8 +699,8 @@ def remove_inner_chunks(chunks: List[ValidChunk]) -> List[ValidChunk]:
 
 
 def calculate_unknown_chunks(
-    chunks: List[ValidChunk], file_size: int
-) -> List[UnknownChunk]:
+    chunks: list[ValidChunk], file_size: int
+) -> list[UnknownChunk]:
     """Calculate the empty gaps between chunks."""
     if not chunks or file_size == 0:
         return []

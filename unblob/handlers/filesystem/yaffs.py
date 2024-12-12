@@ -1,9 +1,10 @@
 import io
 import itertools
 from collections import defaultdict
+from collections.abc import Iterable
 from enum import IntEnum
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
+from typing import Optional
 
 import attr
 from structlog import get_logger
@@ -211,11 +212,11 @@ class YAFFSEntry:
 class YAFFS2Entry(YAFFSEntry):
     chksum: int = attr.ib(default=0)
     st_rdev: int = attr.ib(default=0)
-    win_ctime: List[int] = attr.ib(default=[])
-    win_mtime: List[int] = attr.ib(default=[])
+    win_ctime: list[int] = attr.ib(default=[])
+    win_mtime: list[int] = attr.ib(default=[])
     inband_shadowed_obj_id: int = attr.ib(default=0)
     inband_is_shrink: int = attr.ib(default=0)
-    reserved: List[int] = attr.ib(default=[])
+    reserved: list[int] = attr.ib(default=[])
     shadows_obj: int = attr.ib(default=0)
     is_shrink: int = attr.ib(default=0)
     filehead: YAFFSFileVar = attr.ib(default=None)
@@ -223,7 +224,7 @@ class YAFFS2Entry(YAFFSEntry):
 
 def iterate_over_file(
     file: File, config: YAFFSConfig
-) -> Iterable[Tuple[int, bytes, bytes]]:
+) -> Iterable[tuple[int, bytes, bytes]]:
     start_offset = file.tell()
     page = file.read(config.page_size)
     spare = file.read(config.spare_size)

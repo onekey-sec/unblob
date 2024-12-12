@@ -2,7 +2,7 @@ inputs:
   python-version:
     description: "Python version to setup"
     required: false
-    default: "3.8"
+    default: "3.9"
 
 name: "Setup dependencies"
 description: "Install all required dependencies for worflows to run."

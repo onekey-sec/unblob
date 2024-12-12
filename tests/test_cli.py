@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, Type
+from typing import Optional
 from unittest import mock
 
 import pytest
@@ -157,7 +158,7 @@ def test_help(params):
         ),
     ],
 )
-def test_without_file(params: List[str]):
+def test_without_file(params: list[str]):
     runner = CliRunner()
     result = runner.invoke(unblob.cli.cli, params)
     assert result.exit_code == 2
@@ -238,7 +239,7 @@ def test_archive_success(
     expected_randomness_depth: int,
     expected_process_num: int,
     expected_verbosity: int,
-    expected_progress_reporter: Type[ProgressReporter],
+    expected_progress_reporter: type[ProgressReporter],
     tmp_path: Path,
 ):
     runner = CliRunner()
@@ -254,9 +255,10 @@ def test_archive_success(
     process_file_mock = mock.MagicMock()
     logger_config_mock = mock.MagicMock()
     new_params = [*params, "--extract-dir", str(tmp_path), str(in_path)]
-    with mock.patch.object(
-        unblob.cli, "process_file", process_file_mock
-    ), mock.patch.object(unblob.cli, "configure_logger", logger_config_mock):
+    with (
+        mock.patch.object(unblob.cli, "process_file", process_file_mock),
+        mock.patch.object(unblob.cli, "configure_logger", logger_config_mock),
+    ):
         result = runner.invoke(unblob.cli.cli, new_params)
     assert result.exit_code == 0
     assert "error" not in result.output
@@ -285,7 +287,7 @@ def test_archive_success(
     ],
 )
 def test_keep_extracted_chunks(
-    args: List[str], keep_extracted_chunks: bool, fail_message: str, tmp_path: Path
+    args: list[str], keep_extracted_chunks: bool, fail_message: str, tmp_path: Path
 ):
     runner = CliRunner()
     in_path = (
@@ -321,7 +323,7 @@ def test_keep_extracted_chunks(
     ],
 )
 def test_skip_extension(
-    skip_extension: List[str], expected_skip_extensions: Tuple[str, ...], tmp_path: Path
+    skip_extension: list[str], expected_skip_extensions: tuple[str, ...], tmp_path: Path
 ):
     runner = CliRunner()
     in_path = (
@@ -355,7 +357,7 @@ def test_skip_extension(
     ],
 )
 def test_skip_extraction(
-    args: List[str], skip_extraction: bool, fail_message: str, tmp_path: Path
+    args: list[str], skip_extraction: bool, fail_message: str, tmp_path: Path
 ):
     runner = CliRunner()
     in_path = (
@@ -403,7 +405,7 @@ def test_skip_extraction(
     ],
 )
 def test_clear_skip_magics(
-    args: List[str], skip_magic: Iterable[str], fail_message: str, tmp_path: Path
+    args: list[str], skip_magic: Iterable[str], fail_message: str, tmp_path: Path
 ):
     runner = CliRunner()
     in_path = (

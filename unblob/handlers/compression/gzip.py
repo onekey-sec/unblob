@@ -20,7 +20,7 @@ import io
 import struct
 import zlib
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from structlog import get_logger
 
@@ -80,7 +80,7 @@ def get_gzip_embedded_name(path: Path) -> str:
 
 
 class GZIPExtractor(Extractor):
-    def get_dependencies(self) -> List[str]:
+    def get_dependencies(self) -> list[str]:
         return ["7z"]
 
     def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
@@ -90,10 +90,10 @@ class GZIPExtractor(Extractor):
 
 
 class MultiGZIPExtractor(DirectoryExtractor):
-    def get_dependencies(self) -> List[str]:
+    def get_dependencies(self) -> list[str]:
         return ["7z"]
 
-    def extract(self, paths: List[Path], outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, paths: list[Path], outdir: Path) -> Optional[ExtractResult]:
         name = get_gzip_embedded_name(paths[0]) or "gzip.uncompressed"
         extractor = MultiFileCommand(
             "7z", "x", "-p", "-y", "{inpath}", "-so", stdout=name

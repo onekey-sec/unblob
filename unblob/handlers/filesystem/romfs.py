@@ -4,7 +4,7 @@ import stat
 import struct
 from enum import IntEnum, unique
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 from structlog import get_logger
 
@@ -174,7 +174,7 @@ class RomFSHeader:
     eof: int
     file: File
     end_offset: int
-    inodes: Dict[int, "FileHeader"]
+    inodes: dict[int, "FileHeader"]
     fs: FileSystem
 
     def __init__(
