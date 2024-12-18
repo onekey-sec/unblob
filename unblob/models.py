@@ -4,10 +4,11 @@ import json
 from collections.abc import Iterable
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Union
 
 import attr
 import attrs
+from dissect.cstruct import Instance
 from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
@@ -29,6 +30,24 @@ logger = get_logger()
 #
 # file ──► pattern match ──► ValidChunk
 #
+
+
+def metadata_converter(obj: Union[dict, Instance]) -> dict:
+    if isinstance(obj, dict):
+        return obj
+    if isinstance(obj, Instance):
+        result = {}
+        for k, v in obj._values.items():  # noqa: SLF001
+            result[k] = v
+        return result
+    raise ValueError("Can only convert dict or Instance")
+
+
+def metadata_validator(instance, attribute, value):
+    if attribute.name == "metadata" and isinstance(instance, Chunk):
+        for k, _ in value.items():
+            if not isinstance(k, str):
+                raise TypeError("metadata keys must be string")
 
 
 @attr.define(frozen=True)
@@ -107,6 +126,9 @@ class ValidChunk(Chunk):
 
     handler: "Handler" = attr.ib(init=False, eq=False)
     is_encrypted: bool = attr.ib(default=False)
+    metadata: dict = attr.ib(
+        factory=dict, converter=metadata_converter, validator=metadata_validator
+    )
 
     def extract(self, inpath: Path, outdir: Path) -> Optional["ExtractResult"]:
         if self.is_encrypted:
@@ -127,6 +149,7 @@ class ValidChunk(Chunk):
             size=self.size,
             handler_name=self.handler.NAME,
             is_encrypted=self.is_encrypted,
+            metadata=self.metadata,
             extraction_reports=extraction_reports,
         )
 
@@ -270,10 +293,7 @@ class _JSONEncoder(json.JSONEncoder):
             return str(obj)
 
         if isinstance(obj, bytes):
-            try:
-                return obj.decode()
-            except UnicodeDecodeError:
-                return str(obj)
+            return obj.decode("utf-8", errors="surrogateescape")
 
         logger.error("JSONEncoder met a non-JSON encodable value", obj=obj)
         # the usual fail path of custom JSONEncoders is to call the parent and let it fail

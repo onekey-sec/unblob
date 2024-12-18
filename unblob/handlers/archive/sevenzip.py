@@ -22,6 +22,7 @@ import binascii
 from pathlib import Path
 from typing import Optional
 
+from dissect.cstruct import Instance
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -90,6 +91,9 @@ class SevenZipHandler(StructHandler):
     HEADER_STRUCT = HEADER_STRUCT
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
+    def get_metadata(self, header: Instance) -> dict:
+        return {"version_maj": header.version_maj, "version_min": header.version_min}
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file)
 
@@ -97,7 +101,11 @@ class SevenZipHandler(StructHandler):
 
         size = calculate_sevenzip_size(header)
 
-        return ValidChunk(start_offset=start_offset, end_offset=start_offset + size)
+        metadata = self.get_metadata(header)
+
+        return ValidChunk(
+            start_offset=start_offset, end_offset=start_offset + size, metadata=metadata
+        )
 
 
 class MultiVolumeSevenZipHandler(DirectoryHandler):
