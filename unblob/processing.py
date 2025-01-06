@@ -194,12 +194,12 @@ def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -
 
     if report_file.exists():
         if config.force_extract:
-            logger.warning("Removing existing report file", path=report_file)
+            logger.warning("Overwriting existing report file", path=report_file)
             try:
-                report_file.unlink()
+                report_file.write_text("")
             except OSError as e:
                 logger.error(
-                    "Can not remove existing report file",
+                    "Can not overwrite existing report file",
                     path=report_file,
                     msg=str(e),
                 )
@@ -209,15 +209,6 @@ def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -
                 "Report file exists and --force not specified", path=report_file
             )
             return False
-
-    # check that the report directory can be written to
-    try:
-        report_file.write_text("")
-        report_file.unlink()
-    except OSError as e:
-        logger.error("Can not create report file", path=report_file, msg=str(e))
-        return False
-
     return True
 
 
