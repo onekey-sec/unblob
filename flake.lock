@@ -3,11 +3,11 @@
     "advisory-db": {
       "flake": false,
       "locked": {
-        "lastModified": 1717596017,
-        "narHash": "sha256-LHjTqlOLgtv43GVkeM7Hb5HcZG5i/vNHnWgYaUzu+Jg=",
+        "lastModified": 1735928634,
+        "narHash": "sha256-Qg1vJOuEohAbdRmTTOLrbbGsyK9KRB54r3+aBuOMctM=",
         "owner": "rustsec",
         "repo": "advisory-db",
-        "rev": "af76d4423761499f954411bb3071dcc72e6b0450",
+        "rev": "63a2f39924f66ca89cf5761f299a8a244fe02543",
         "type": "github"
       },
       "original": {
@@ -115,18 +115,12 @@
       }
     },
     "crane": {
-      "inputs": {
-        "nixpkgs": [
-          "lzallright",
-          "nixpkgs"
-        ]
-      },
       "locked": {
-        "lastModified": 1717535930,
-        "narHash": "sha256-1hZ/txnbd/RmiBPNUs7i8UQw2N89uAK3UzrGAWdnFfU=",
+        "lastModified": 1736101677,
+        "narHash": "sha256-iKOPq86AOWCohuzxwFy/MtC8PcSVGnrxBOvxpjpzrAY=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "55e7754ec31dac78980c8be45f8a28e80e370946",
+        "rev": "61ba163d85e5adeddc7b3a69bb174034965965b2",
         "type": "github"
       },
       "original": {
@@ -140,11 +134,11 @@
         "flake-parts": "flake-parts_2"
       },
       "locked": {
-        "lastModified": 1731867206,
-        "narHash": "sha256-oYqdCsj92vREEmFlv6yey57Is6ir09JNvD1HWxMJMMY=",
+        "lastModified": 1736168783,
+        "narHash": "sha256-jG9cjwEJTTfoQ2Sie7aJXkL4cuCVvBcgtKWaJLDyOXg=",
         "owner": "vlaci",
         "repo": "crane-maturin",
-        "rev": "78df1690ebcbe3a7f3da7018213d94cabad7f908",
+        "rev": "f60ad248c1ad9dbb27bbbd634f42ecc575f70dc4",
         "type": "github"
       },
       "original": {
@@ -176,11 +170,11 @@
     },
     "crane_3": {
       "locked": {
-        "lastModified": 1733688869,
-        "narHash": "sha256-KrhxxFj1CjESDrL5+u/zsVH0K+Ik9tvoac/oFPoxSB8=",
+        "lastModified": 1734808813,
+        "narHash": "sha256-3aH/0Y6ajIlfy7j52FGZ+s4icVX0oHhqBzRdlOeztqg=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "604637106e420ad99907cae401e13ab6b452e7d9",
+        "rev": "72e2d02dbac80c8c86bf6bf3e785536acf8ee926",
         "type": "github"
       },
       "original": {
@@ -448,11 +442,11 @@
         "systems": "systems_2"
       },
       "locked": {
-        "lastModified": 1710146030,
-        "narHash": "sha256-SZ5L6eA7HJ/nmkzGG7/ISclqe6oZdOZTNoesiInkXPQ=",
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "b1d9ab70662946ef0850d488da1c9019f3a9752a",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
         "type": "github"
       },
       "original": {
@@ -528,11 +522,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1731971518,
-        "narHash": "sha256-E4Eaah58JCbxXfmpqFS2Emi1/eo2L3qyJP+vWH3PHPg=",
+        "lastModified": 1736171725,
+        "narHash": "sha256-SgbwO35Lcc+4kQoeYvAS5nFYzzg+lty2VtkH1abX8IY=",
         "owner": "vlaci",
         "repo": "lzallright",
-        "rev": "cfa42fa23c6cb4f6ba792685874978d47fbd7720",
+        "rev": "2ed26c61efbe91ca25a48689c4f41fcac648911e",
         "type": "github"
       },
       "original": {
@@ -795,11 +789,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1734435836,
-        "narHash": "sha256-kMBQ5PRiFLagltK0sH+08aiNt3zGERC2297iB6vrvlU=",
+        "lastModified": 1735915915,
+        "narHash": "sha256-Q4HuFAvoKAIiTRZTUxJ0ZXeTC7lLfC9/dggGHNXNlCw=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "4989a246d7a390a859852baddb1013f825435cee",
+        "rev": "a27871180d30ebee8aa6b11bf7fef8a52f024733",
         "type": "github"
       },
       "original": {
@@ -989,11 +983,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1734346823,
-        "narHash": "sha256-MhVCZO2qdwuXR0DL8NN6UhBjErt/RcnJ97FAR4OukLo=",
+        "lastModified": 1734946646,
+        "narHash": "sha256-Qc2jorfXCqkfN1W9SEJFUto/qtkpzs+S2FTPhdTLe9w=",
         "owner": "onekey-sec",
         "repo": "unblob-native",
-        "rev": "79cc0a49d93274cbfa4af3121429b0036efadb30",
+        "rev": "db53aa81e2e2f116980f546c0b7cf3f5231acaa9",
         "type": "github"
       },
       "original": {
