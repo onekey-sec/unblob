@@ -143,7 +143,7 @@ class _ELFBase(StructHandler):
             lief.ELF.Header.FILE_TYPE(header.e_type)
             lief.ELF.ARCH(header.e_machine)
             lief.ELF.Header.VERSION(header.e_version)
-        except RuntimeError:
+        except ValueError:
             return False
         return True
 
@@ -170,7 +170,7 @@ class _ELFBase(StructHandler):
                     == lief.ELF.Section.TYPE.NOBITS
                 ):
                     continue
-            except RuntimeError:
+            except ValueError:
                 continue
 
             section_end = section_header.sh_offset + section_header.sh_size
