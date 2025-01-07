@@ -22,6 +22,7 @@
     with pkgs;
     [
       nvfetcher
+      nodejs # for pyright and renovate
     ]
     ++ unblob.runtimeDeps;
 

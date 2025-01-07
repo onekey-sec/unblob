@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "autoApprove": true,
+      "automerge": true
+    }
+  ],
+  "nix": {
+    "enabled": true,
+    "description": "opt-in support for nix https://docs.renovatebot.com/modules/manager/nix/#enabling",
+    "lockFileMaintenance": {
+      "enabled": true,
+      "branchTopic": "update-flake-lock",
+      "commitMessageAction": "Update flake.lock",
+      "extends": ["schedule:earlyMondays"]
+    }
+  },
+  "poetry": {
+    "lockFileMaintenance": {
+      "enabled": true,
+      "branchTopic": "update-poetry-lock",
+      "commitMessageAction": "Update poetry.lock",
+      "extends": ["schedule:monthly"]
+    }
+  },
+  "pre-commit": {
+    "enabled": true,
+    "description": "opt-in support for pre-commit  https://docs.renovatebot.com/modules/manager/nix/#enabling"
+  }
+}
