@@ -42,7 +42,7 @@ repos:
           - fmt
 
   - repo: https://github.com/jendrikseipp/vulture
-    rev: v2.7
+    rev: v2.14
     hooks:
       - id: vulture
         name: Check vulture
