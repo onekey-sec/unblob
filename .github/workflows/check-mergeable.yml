@@ -2,8 +2,7 @@ name: Check branch status
 
 on:
   pull_request:
-    branches:
-      - "**"
+  merge_group:
 
 jobs:
   check_branch_history:
