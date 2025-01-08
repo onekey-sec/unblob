@@ -6,6 +6,10 @@ on:
 
 jobs:
   check_branch_history:
+    # We need this job to be scheduled for merge groups as well, as it
+    # is a required status check for merging, but we can safely skip
+    # it...
+    if: ${{ github.event_name == 'pull_request' }}
     name: Check - Linear history
     runs-on: ubuntu-latest
     steps:
