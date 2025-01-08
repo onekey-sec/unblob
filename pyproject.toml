@@ -1,3 +1,5 @@
+#:schema https://json.schemastore.org/pyproject.json
+
 [tool.poetry]
 authors = ["ONEKEY <support@onekey.com>"]
 description = "Extract files from any kind of container formats"
@@ -87,7 +89,7 @@ select = [
   "SLF",    # flake8-self
   "T10",    # flake8-debugger
   "T20",    # flake8-print
-  "TCH",    # flake8-type-checking
+  "TC",     # flake8-type-checking
   "TRY",    # tryceratops
   "UP",     # pyupgrade
   "W",      # pycodestyle (warnings)
