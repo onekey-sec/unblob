@@ -1,58 +1,58 @@
 [tool.poetry]
-name = "unblob"
-version = "25.1.8"
-description = "Extract files from any kind of container formats"
 authors = ["ONEKEY <support@onekey.com>"]
+description = "Extract files from any kind of container formats"
 license = "MIT"
+name = "unblob"
 packages = [
-    { include = "unblob" },
+  { include = "unblob" },
 ]
+version = "25.1.8"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-click = "^8.1.7"
-"dissect.cstruct" = ">=4.0,<5.0"
-attrs = ">=23.1.0"
-structlog = ">=24.1.0"
 arpy = "^2.3.0"
-rarfile = "^4.1"
-ubi-reader = "^0.8.9"
+attrs = ">=23.1.0"
+click = "^8.1.7"
+cryptography = ">=41.0"
+"dissect.cstruct" = ">=4.0,<5.0"
+jefferson = "^0.4.5"
+lark = "^1.1.8"
+lief = "^0.16.1"
+lz4 = "^4.3.2"
 plotext = ">=4.2.0,<6.0"
 pluggy = "^1.3.0"
-python-magic = "^0.4.27"
-pyperscan = "^0.3.0"
-lark = "^1.1.8"
-lz4 = "^4.3.2"
-lief = "^0.16.1"
-cryptography = ">=41.0"
-treelib = "^1.7.0"
-unblob-native = "^0.1.5"
-jefferson = "^0.4.5"
-rich = "^13.3.5"
 pyfatfs = "^1.0.5"
+pyperscan = "^0.3.0"
+python = "^3.9"
+python-magic = "^0.4.27"
+rarfile = "^4.1"
+rich = "^13.3.5"
+structlog = ">=24.1.0"
+treelib = "^1.7.0"
+ubi-reader = "^0.8.9"
+unblob-native = "^0.1.5"
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.0.0"
-pyright = "^1.1.349"
-pre-commit = ">=3.5,<5.0"
-pytest-cov = ">=3,<7"
-ruff = "0.8.6"
-pyyaml = "^6.0.1"
 atheris = { version = "^2.3.0", python = "<3.12" }
+pre-commit = ">=3.5,<5.0"
+pyright = "^1.1.349"
+pytest = "^8.0.0"
+pytest-cov = ">=3,<7"
+pyyaml = "^6.0.1"
+ruff = "0.8.6"
 taplo = "^0.9.3"
 
 [tool.poetry.group.docs]
 optional = true
 
 [tool.poetry.group.docs.dependencies]
+cairosvg = "^2.7.1"
 mkdocs-material = "9.5.49"
 mkdocstrings = ">=0.24,<0.28"
-pillow = ">=10.2.0,<12.0"
-cairosvg = "^2.7.1"
 mkdocstrings-python = "^1.8.0"
+pillow = ">=10.2.0,<12.0"
 
 [tool.poetry.scripts]
 unblob = "unblob.cli:main"
@@ -65,8 +65,8 @@ select = [
   "A",      # flake8-builtins
   "ARG",    # flake8-unused-arguments
   "B",      # flake8-bugbear
-  "C90",    # mccabe
   "C4",     # flake8-comprehensions
+  "C90",    # mccabe
   "COM818", # flake8-commas; trailing-comma-on-bare-tuple
   "D",      # pydocstyle
   "E",      # pycodestyle (errors)
@@ -80,8 +80,8 @@ select = [
   "PT",     # flake8-pytest-style
   "PTH",    # flake8-use-pathlib
   "RET",    # flake8-return
-  "RUF",    # ruff's own lints
   "RSE",    # flake8-raise
+  "RUF",    # ruff's own lints
   "S",      # flake8-bandit
   "SIM",    # flake8-simplify
   "SLF",    # flake8-self
@@ -116,15 +116,15 @@ ignore-init-module-imports = true
 
 [tool.ruff.lint.per-file-ignores]
 ".github/*" = [
-  "T201"  # print
+  "T201", # print
 ]
 "tests/*" = [
-  "FBT001",  # boolean-positional-arg-in-function-definition: allowed in `pytest.param()`
-  "FBT003",  # boolean-positional-value-in-function-call:     allowed test parameters
+  "FBT001", # boolean-positional-arg-in-function-definition: allowed in `pytest.param()`
+  "FBT003", # boolean-positional-value-in-function-call:     allowed test parameters
 ]
 
 [tool.ruff.lint.flake8-comprehensions]
-allow-dict-calls-with-keyword-arguments = true  # code like `dict(a=1, b=2)` is allowed
+allow-dict-calls-with-keyword-arguments = true # code like `dict(a=1, b=2)` is allowed
 
 [tool.ruff.lint.mccabe]
 max-complexity = 8
@@ -154,27 +154,27 @@ norecursedirs = """
 """
 
 [tool.coverage.paths]
-source = ["unblob", "tests"]
+source = ["tests", "unblob"]
 
 [tool.coverage.run]
 branch = true
+concurrency = ["multiprocessing"]
 parallel = true
 sigterm = true
-concurrency = ["multiprocessing"]
-source = ["unblob", "tests"]
+source = ["tests", "unblob"]
 
 [tool.coverage.report]
-skip_covered = true
 fail_under = 90
+skip_covered = true
 
 [tool.vulture]
-paths = ["unblob/", "vulture_whitelist.py" ]
 exclude = ["unblob/testing.py"]
+paths = ["unblob/", "vulture_whitelist.py"]
 
 [tool.pyright]
 exclude = ["build"]
 typeCheckingMode = "basic"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]

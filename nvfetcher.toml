@@ -1,19 +1,19 @@
 [jefferson]
-src.pypi = "jefferson"
 fetch.pypi = "jefferson"
+src.pypi = "jefferson"
 
 [ubi_reader]
-src.pypi = "ubi_reader"
 fetch.pypi = "ubi_reader"
+src.pypi = "ubi_reader"
 
 [treelib]
-src.pypi = "treelib"
 fetch.pypi = "treelib"
+src.pypi = "treelib"
 
 [pyfatfs]
-src.pypi = "pyfatfs"
 fetch.pypi = "pyfatfs"
+src.pypi = "pyfatfs"
 
 [e2fsprogs]
+fetch.github = "onekey-sec/e2fsprogs"
 src.github_tag = "onekey-sec/e2fsprogs"
-fetch.github =  "onekey-sec/e2fsprogs"
