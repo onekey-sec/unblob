@@ -40,6 +40,18 @@ repos:
           - nix-command flakes
           - --accept-flake-config
           - fmt
+      - id: taplo-format
+        name: Format TOML (taplo)
+        language: system
+        types: [toml]
+        entry: poetry run taplo format
+      - id: taplo-lint
+        name: Lint TOML (taplo)
+        language: system
+        types: [toml]
+        entry: poetry run taplo lint
+        args:
+          - --default-schema-catalogs
 
   - repo: https://github.com/jendrikseipp/vulture
     rev: v2.14

@@ -28,7 +28,11 @@
 
   tasks = {
     "venv:patchelf" = {
-      exec = "${lib.getExe pkgs.patchelf} --set-interpreter ${pkgs.stdenv.cc.bintools.dynamicLinker} $VIRTUAL_ENV/bin/ruff";
+      exec = ''
+        for exe in taplo ruff; do
+          ${lib.getExe pkgs.patchelf} --set-interpreter ${pkgs.stdenv.cc.bintools.dynamicLinker} $VIRTUAL_ENV/bin/$exe
+        done
+      '';
       after = [ "devenv:python:poetry" ];
       before = [ "devenv:enterShell" ];
     };
