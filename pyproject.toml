@@ -90,6 +90,7 @@ select = [
   "T10",    # flake8-debugger
   "T20",    # flake8-print
   "TC",     # flake8-type-checking
+  "TID251", # flake8-tidy-imports; banned-api
   "TRY",    # tryceratops
   "UP",     # pyupgrade
   "W",      # pycodestyle (warnings)
@@ -143,6 +144,9 @@ allow-magic-value-types = [
 fixture-parentheses = false
 mark-parentheses = false
 parametrize-names-type = "csv"
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"attr".msg = "Use `attrs` (with an 's') instead"
 
 [tool.pytest.ini_options]
 addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"

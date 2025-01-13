@@ -6,8 +6,8 @@ import shlex
 import subprocess
 from pathlib import Path
 
+import attrs
 import pytest
-from attr import dataclass
 from lark.lark import Lark
 from lark.visitors import Discard, Transformer
 from pytest_cov.embed import cleanup_on_sigterm
@@ -163,7 +163,7 @@ _hexdump_parser = Lark(
 )
 
 
-@dataclass
+@attrs.define
 class _HexdumpLine:
     offset: int
     data: bytes
