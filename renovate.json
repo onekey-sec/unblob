@@ -18,11 +18,11 @@
       "commitMessageAction": "Update flake.lock"
     }
   },
-  "poetry": {
+  "pep621": {
     "lockFileMaintenance": {
       "enabled": true,
-      "branchTopic": "update-poetry-lock",
-      "commitMessageAction": "Update poetry.lock",
+      "branchTopic": "update-uv-lock",
+      "commitMessageAction": "Update uv.lock",
       "extends": ["schedule:monthly"]
     }
   },
