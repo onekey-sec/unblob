@@ -96,6 +96,7 @@ select = [
 ]
 
 ignore = [
+  "A005",    # stdlib-module-shadowing:                 E.g. `unblog.logging` collides with stdlib `logging`. It's okay for us
   "B027",    # empty-method-without-abstract-decorator: It is okay to have empty methods in abstract classes
   "D1",      # undocumented-*:                          We are not documenting every public symbol
   "D203",    # one-blank-line-before-class:             D211 (no-blank-line-before-class) is used instead
