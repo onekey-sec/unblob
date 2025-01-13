@@ -7,14 +7,6 @@
     url = "github:onekey-sec/unblob-native";
     inputs.nixpkgs.follows = "nixpkgs";
   };
-  inputs.lzallright = {
-    url = "github:vlaci/lzallright";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
-  inputs.pyperscan = {
-    url = "github:vlaci/pyperscan";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
   inputs.flake-compat = {
     url = "github:edolstra/flake-compat";
     flake = false;
@@ -38,8 +30,6 @@
       devenv,
       filter,
       unblob-native,
-      lzallright,
-      pyperscan,
       ...
     }@inputs:
     let
@@ -69,8 +59,6 @@
       overlays.default = nixpkgs.lib.composeManyExtensions [
         filter.overlays.default
         unblob-native.overlays.default
-        lzallright.overlays.default
-        pyperscan.overlays.default
         (import ./overlay.nix)
       ];
       packages = forAllSystems (
@@ -89,7 +77,13 @@
         }
       );
 
-      checks = forAllSystems (system: nixpkgsFor.${system}.unblob.tests // self.devShells.${system});
+      checks = forAllSystems (
+        system:
+        {
+          inherit (nixpkgsFor.${system}) unblob;
+        }
+        // self.devShells.${system}
+      );
 
       devShells = forAllSystems (system: {
         default = devenv.lib.mkShell {

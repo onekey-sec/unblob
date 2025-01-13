@@ -87,12 +87,84 @@ docker run \
 ghcr.io/onekey-sec/unblob:latest /data/input/path/to/file
 ```
 
-## nix package
+## Nix package
 
-unblob can be built and run using the [Nix](https://nixos.org) package manager.
-The Nix derivation installs all 3rd party dependencies.
+You can install stable releases of unblob directly from nixpkgs using your preferred package installation method, e.g:
 
-1.  [Install and configure Nix](https://nixos.org/download.html).
+For a system-wide installation on [NixOS](https://nixos.org):
+
+```nix
+# configuration.nix
+
+{ pkgs, ...}:
+
+{
+  environment.systemPackages = [ pkgs.unblob ];
+}
+```
+
+For [home-manager](https://nix-community.github.io/home-manager/):
+
+```nix
+# home.nix
+
+{ pkgs, ...}:
+
+{
+  home.packages = [ pkgs.unblob ];
+}
+```
+
+Using `nix-env`:
+
+```console
+$ nix-env -iA nixpkgs.unblob
+```
+
+Or `nix profile`:
+```console
+$ nix profile install nixpkgs#unblob
+```
+
+Alternatively you can also install the latest version from git:
+
+Using the provided overlay:
+
+```nix
+{
+  nixpkgs.overlays = [
+    (let
+      unblob = import (builtins.fetchTarball {
+        url = "https://github.com/onekey-sec/unblob/archive/main.tar.gz";
+      });
+    in
+      "{unblob}/overlay.nix")
+  ];
+
+  environment.systemPackages = [ pkgs.unblob ]; # or `home.packages` for home-manager
+}
+```
+
+You can use the provided flake as well:
+
+```nix
+{
+  inputs.nixpkgs.url = "...";
+  inputs.unblob.url = "github:onekey-sec/unblob";
+
+  outputs = { nixpkgs, unblob, ...}: {
+    nixosConfiguration.<my-host> = nixpkgs.lib.nixosSystem {
+      modules = [
+        ({ pkgs, ... }: {
+          environment.systemPackages = [ unblob.packages.${pkgs.system}.default ];
+        })
+      ];
+    };
+  };
+}
+```
+
+For imperative package installation, follow these steps:
 
 1.  _Optional_: enable the experimental features so that you don't need to pass  
     `--extra-experimental-features "nix-command flakes"` to `nix` command invocations:
