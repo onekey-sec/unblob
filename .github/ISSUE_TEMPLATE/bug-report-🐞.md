@@ -46,14 +46,14 @@ A clear and concise description of what you expected to happen.
 
 **Environment information (please complete the following information):**
  - OS: [e.g. Ubuntu Linux]
- - Software versions (Docker, Python, Nix, Poetry, if applicable)
+ - Software versions (Docker, Python, Nix, Uv, if applicable)
 
 We recommend you execute and paste the results of those commands in this issue so we can get a sense of your environment:
 
 - Linux/Darwin kernel version with `uname -avr`
 - Linux distribution with `cat /etc/lsb-release`
 - MacOS distribution with `sw_vers`
-- Poetry version with `poetry env info`
+- Uv version with `uv version`
 - Nix install info with `nix flake info`
 - Pip install info `pip freeze`
 - Unblob dependencies info with `unblob --show-external-dependencies`

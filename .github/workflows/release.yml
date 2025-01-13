@@ -15,6 +15,7 @@ jobs:
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
 
-      - run: poetry publish --build
+      - run: uv build
+      - run: uv publish
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{secrets.POETRY_PYPI_TOKEN_PYPI}}
+          UV_PUBLISH_TOKEN: ${{secrets.POETRY_PYPI_TOKEN_PYPI}}

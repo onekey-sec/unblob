@@ -34,8 +34,8 @@ jobs:
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
 
-      - name: Poetry build
-        run: poetry build --format wheel
+      - name: uv build
+        run: uv build --wheel
 
       - name: Docker meta
         id: meta
