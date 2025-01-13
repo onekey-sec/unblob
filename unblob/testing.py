@@ -48,9 +48,9 @@ def gather_integration_tests(test_data_path: Path):
     for input_dir, output_dir, test_id in zip(
         test_input_dirs, test_output_dirs, test_ids
     ):
-        assert (
-            list(input_dir.iterdir()) != []
-        ), f"Integration test input dir should contain at least 1 file: {input_dir}"
+        assert list(input_dir.iterdir()) != [], (
+            f"Integration test input dir should contain at least 1 file: {input_dir}"
+        )
 
         yield pytest.param(input_dir, output_dir, id=test_id)
 
