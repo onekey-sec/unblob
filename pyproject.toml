@@ -177,7 +177,7 @@ exclude = [
   ".venv",
   "build",
 ]
-typeCheckingMode = "basic"
+typeCheckingMode = "standard"
 
 [build-system]
 build-backend = "hatchling.build"
