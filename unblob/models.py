@@ -255,7 +255,8 @@ class ProcessResult:
 
 
 class _JSONEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, o):
+        obj = o
         if attrs.has(type(obj)):
             extend_attr_output = True
             attr_output = attrs.asdict(obj, recurse=not extend_attr_output)
