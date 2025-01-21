@@ -102,9 +102,15 @@ class Command(Extractor):
         return [self._executable]
 
 
-class MultiFileCommand(Command, DirectoryExtractor):
+class MultiFileCommand(DirectoryExtractor):
+    def __init__(self, *args, **kwargs):
+        self._command = Command(*args, **kwargs)
+
     def extract(self, paths: list[Path], outdir: Path):
-        return super().extract(paths[0], outdir)
+        return self._command.extract(paths[0], outdir)
+
+    def get_dependencies(self) -> list[str]:
+        return self._command.get_dependencies()
 
 
 class InvalidCommandTemplate(ValueError):
