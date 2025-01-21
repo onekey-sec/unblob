@@ -4,7 +4,7 @@ import json
 from collections.abc import Iterable
 from enum import Enum
 from pathlib import Path
-from typing import Optional, TypeVar
+from typing import Generic, Optional, TypeVar, Union
 
 import attrs
 from structlog import get_logger
@@ -439,7 +439,10 @@ class DirectoryHandler(abc.ABC):
         return self.EXTRACTOR.extract(paths, outdir)
 
 
-class Handler(abc.ABC):
+TExtractor = TypeVar("TExtractor", bound=Union[None, Extractor])
+
+
+class Handler(abc.ABC, Generic[TExtractor]):
     """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
 
     NAME: str
@@ -448,12 +451,12 @@ class Handler(abc.ABC):
     # (e.g. tar magic is in the middle of the header)
     PATTERN_MATCH_OFFSET: int = 0
 
-    EXTRACTOR: Optional[Extractor]
+    EXTRACTOR: TExtractor
 
     @classmethod
     def get_dependencies(cls):
         """Return external command dependencies needed for this handler to work."""
-        if cls.EXTRACTOR:
+        if cls.EXTRACTOR is not None:
             return cls.EXTRACTOR.get_dependencies()
         return []
 
