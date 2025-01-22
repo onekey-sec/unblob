@@ -53,7 +53,7 @@ jobs:
         if: ${{ matrix.arch == 'aarch64-linux' }}
         run: |
           sudo apt update
-          sudo apt install -q -y qemu-system-aarch64 qemu-efi binfmt-support qemu-user-static
+          sudo apt install -q -y qemu-system-aarch64 qemu-efi-aarch64 binfmt-support qemu-user-static
           mkdir -p ~/.config/nix
           echo "system-features = aarch64-linux arm-linux" | sudo tee -a /etc/nix/nix.conf
       - name: Nix Flake checks
@@ -148,7 +148,7 @@ jobs:
         if: ${{ matrix.cross }}
         run: |
           sudo apt update
-          sudo apt install -q -y qemu-system-${{ matrix.target }} qemu-efi binfmt-support qemu-user-static
+          sudo apt install -q -y qemu-system-${{ matrix.target }} qemu-efi-aarch64 binfmt-support qemu-user-static
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
