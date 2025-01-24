@@ -1,7 +1,11 @@
 import itertools
+from collections.abc import Iterable, Iterator
+from typing import TypeVar
+
+T = TypeVar("T")
 
 
-def pairwise(iterable):
+def pairwise(iterable: Iterable[T]) -> Iterator[tuple[T, T]]:
     # Copied from Python 3.10
     # pairwise('ABCDEFG') --> AB BC CD DE EF FG
     a, b = itertools.tee(iterable)
