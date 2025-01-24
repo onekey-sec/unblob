@@ -12,6 +12,8 @@ pub enum AccessFS {
     ReadWrite(PathBuf),
     MakeReg(PathBuf),
     MakeDir(PathBuf),
+    RemoveDir(PathBuf),
+    RemoveFile(PathBuf),
 }
 
 #[derive(Debug, Error)]
@@ -91,6 +93,16 @@ impl PyAccessFS {
     #[staticmethod]
     fn make_dir(dir: PathBuf) -> Self {
         Self::new(AccessFS::MakeDir(dir))
+    }
+
+    #[staticmethod]
+    fn remove_dir(dir: PathBuf) -> Self {
+        Self::new(AccessFS::RemoveDir(dir))
+    }
+
+    #[staticmethod]
+    fn remove_file(dir: PathBuf) -> Self {
+        Self::new(AccessFS::RemoveFile(dir))
     }
 }
 

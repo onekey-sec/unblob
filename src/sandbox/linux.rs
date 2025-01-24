@@ -40,6 +40,22 @@ impl AccessFS {
             None
         }
     }
+
+    fn remove_dir(&self) -> Option<&Path> {
+        if let Self::RemoveDir(path) = self {
+            Some(path)
+        } else {
+            None
+        }
+    }
+
+    fn remove_file(&self) -> Option<&Path> {
+        if let Self::RemoveFile(path) = self {
+            Some(path)
+        } else {
+            None
+        }
+    }
 }
 
 pub fn restrict_access(access_rules: &[AccessFS]) -> Result<(), SandboxError> {
@@ -56,6 +72,16 @@ pub fn restrict_access(access_rules: &[AccessFS]) -> Result<(), SandboxError> {
 
     let create_directory: Vec<&Path> = access_rules.iter().filter_map(AccessFS::make_dir).collect();
 
+    let remove_directory: Vec<&Path> = access_rules
+        .iter()
+        .filter_map(AccessFS::remove_dir)
+        .collect();
+
+    let remove_file: Vec<&Path> = access_rules
+        .iter()
+        .filter_map(AccessFS::remove_file)
+        .collect();
+
     let status = Ruleset::default()
         .handle_access(AccessFs::from_all(abi))?
         .create()?
@@ -63,6 +89,8 @@ pub fn restrict_access(access_rules: &[AccessFS]) -> Result<(), SandboxError> {
         .add_rules(path_beneath_rules(create_file, AccessFs::MakeReg))?
         .add_rules(path_beneath_rules(create_directory, AccessFs::MakeDir))?
         .add_rules(path_beneath_rules(read_only, AccessFs::from_read(abi)))?
+        .add_rules(path_beneath_rules(remove_directory, AccessFs::RemoveDir))?
+        .add_rules(path_beneath_rules(remove_file, AccessFs::RemoveFile))?
         .restrict_self()?;
 
     if status.ruleset == RulesetStatus::NotEnforced {
