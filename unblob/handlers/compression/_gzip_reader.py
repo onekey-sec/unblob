@@ -15,7 +15,7 @@ class SingleMemberGzipReader(gzip._GzipReader):  # noqa: SLF001
         self._crc = zlib.crc32(data, self._crc)
         self._stream_size = self._stream_size + len(data)
 
-    def read(self):
+    def read_all(self):
         uncompress = b""
 
         while True:
@@ -39,7 +39,7 @@ class SingleMemberGzipReader(gzip._GzipReader):  # noqa: SLF001
 
     def read_until_eof(self):
         while not self._decompressor.eof:
-            self.read()
+            self.read_all()
 
     @property
     def unused_data(self):

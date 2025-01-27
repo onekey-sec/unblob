@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import struct
+import sys
 import unicodedata
 from collections.abc import Iterable, Iterator
 from pathlib import Path
@@ -67,7 +68,7 @@ class File(mmap.mmap):
             m.access = access
             return m
 
-    def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:
+    def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:  # pyright: ignore[reportIncompatibleMethodOverride]
         try:
             super().seek(pos, whence)
         except ValueError as e:
@@ -91,7 +92,7 @@ class File(mmap.mmap):
     def __enter__(self):
         return self
 
-    def __exit__(self, _exc_type, _exc_val, _exc_tb):
+    def __exit__(self, *args):
         self.close()
 
     def readable(self) -> bool:
@@ -100,8 +101,10 @@ class File(mmap.mmap):
     def writable(self) -> bool:
         return self.access in (mmap.ACCESS_WRITE, mmap.ACCESS_COPY)
 
-    def seekable(self) -> bool:
-        return True  # Memory-mapped files are always seekable
+    if sys.version_info < (3, 13):
+
+        def seekable(self) -> Literal[True]:
+            return True  # Memory-mapped files are always seekable
 
 
 class OffsetFile:
