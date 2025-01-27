@@ -9,7 +9,7 @@ WORKDIR /data/output
 COPY unblob/install-deps.sh /
 RUN sh -xeu /install-deps.sh
 
-# You MUST do a poetry build before to have the wheel to copy & install here (CI action will do this when building)
+# You MUST do an uv build before to have the wheel to copy & install here (CI action will do this when building)
 COPY dist/*.whl /tmp/
 RUN pip --disable-pip-version-check install --upgrade pip
 RUN pip install /tmp/unblob*.whl --prefix /usr/local
