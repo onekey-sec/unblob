@@ -43,7 +43,7 @@ pyright = "^1.1.349"
 pytest = "^8.0.0"
 pytest-cov = ">=3,<7"
 pyyaml = "^6.0.1"
-ruff = "0.9.1"
+ruff = "0.9.3"
 taplo = "^0.9.3"
 
 [tool.poetry.group.docs]
