@@ -2,6 +2,8 @@
 
 [project]
 authors = [{ name = "ONEKEY", email = "support@onekey.com" }]
+
+# Operators supported: https://packaging.python.org/en/latest/specifications/version-specifiers/#id5
 dependencies = [
   "arpy>=2.3.0",
   "attrs>=23.1.0",
@@ -11,7 +13,7 @@ dependencies = [
   "jefferson>=0.4.5",
   "lark>=1.1.8",
   "lief>=0.16.1",
-  "lz4>=4.3.2",
+  "lz4>=4.3.2,!=4.4.3",        # 4.4.3 doesn't have aarch64 wheels https://github.com/python-lz4/python-lz4/pull/298
   "plotext>=4.2.0,<6.0",
   "pluggy>=1.3.0",
   "pyfatfs>=1.0.5",
