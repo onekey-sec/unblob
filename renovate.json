@@ -15,7 +15,8 @@
     "lockFileMaintenance": {
       "enabled": true,
       "branchTopic": "update-flake-lock",
-      "commitMessageAction": "Update flake.lock"
+      "commitMessageAction": "Update flake.lock",
+      "extends": ["schedule:weekly"]
     }
   },
   "pep621": {
