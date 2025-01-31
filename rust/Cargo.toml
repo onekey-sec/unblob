@@ -1,0 +1,31 @@
+[package]
+name = "unblob-native"
+version = "0.1.6"
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "unblob_native"
+crate-type = [
+    "cdylib",  # for Python extension
+    "rlib",  # for benchmarking
+]
+
+[dependencies]
+log = "0.4.22"
+pyo3 = "0.22.4"
+pyo3-log = "0.11.0"
+statrs = "0.17.1"
+thiserror = "1.0.64"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+landlock = "0.4.1"
+
+[dev-dependencies]
+approx = "0.5.0"
+criterion = "0.5.1"
+rand = "0.8.4"
+
+[[bench]]
+name = "benches_main"
+harness = false
