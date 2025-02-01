@@ -5,6 +5,7 @@ queries:
 
 paths:
   - 'python'
+  - 'rust'
   - 'tests'
 
 paths-ignore:
