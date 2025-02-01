@@ -22,6 +22,10 @@ permissions:
 env:
   DOCKER_IMAGE: ghcr.io/onekey-sec/unblob
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check_pre_commit:
     name: Check - pre-commit
