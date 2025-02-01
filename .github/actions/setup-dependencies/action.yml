@@ -39,3 +39,7 @@ runs:
     - name: Install the project
       run: uv sync
       shell: bash
+
+    - name: Setup pip # some tools need it, and uv virtualenvs doesn't contain it
+      run: uv pip install pip
+      shell: bash

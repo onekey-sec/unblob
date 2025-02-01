@@ -34,9 +34,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
         with:
@@ -129,9 +126,10 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup 3rd party dependencies
+        uses: ./.github/actions/setup-dependencies
         with:
-          python-version: 3.x
+          install-test-deps: "false"
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -221,9 +219,10 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup 3rd party dependencies
+        uses: ./.github/actions/setup-dependencies
         with:
-          python-version: 3.x
+          install-test-deps: "false"
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
