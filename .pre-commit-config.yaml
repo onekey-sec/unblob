@@ -52,6 +52,18 @@ repos:
         entry: uv run taplo lint
         args:
           - --default-schema-catalogs
+      - id: cargo-fmt # rustup component add rustfmt
+        name: Check rust (cargo fmt)
+        entry: cargo fmt --all --
+        language: system
+        types: [rust]
+        pass_filenames: false
+      - id: cargo-clippy # rustup component add clippy
+        name: Check rust (cargo clippy)
+        entry: cargo clippy --tests --all-features -- -D warnings
+        language: system
+        pass_filenames: false
+        types: [rust]
 
   - repo: https://github.com/jendrikseipp/vulture
     rev: v2.14
