@@ -1,15 +1,17 @@
 [package]
-name = "unblob-native"
-version = "0.1.6"
-edition = "2021"
-license = "MIT"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+name = "unblob-rust"
+rust-version.workspace = true
+version.workspace = true
 
 [lib]
-name = "unblob_native"
 crate-type = [
-    "cdylib",  # for Python extension
-    "rlib",  # for benchmarking
+  "cdylib", # for Python extension
+  "rlib",   # for benchmarking
 ]
+name = "unblob_rust"
 
 [dependencies]
 log = "0.4.22"
@@ -27,5 +29,5 @@ criterion = "0.5.1"
 rand = "0.8.4"
 
 [[bench]]
-name = "benches_main"
 harness = false
+name = "benches_main"
