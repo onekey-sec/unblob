@@ -31,3 +31,7 @@ rand = "0.8.4"
 [[bench]]
 harness = false
 name = "benches_main"
+
+[lints.rust]
+# Required for Rust >= 1.84 && pyo3 < 0.23
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(addr_of)'] }
