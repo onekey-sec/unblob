@@ -1513,7 +1513,6 @@ dependencies = [
     { name = "structlog" },
     { name = "treelib" },
     { name = "ubi-reader" },
-    { name = "unblob-native" },
 ]
 
 [package.dev-dependencies]
@@ -1556,7 +1555,6 @@ requires-dist = [
     { name = "structlog", specifier = ">=24.1.0" },
     { name = "treelib", specifier = ">=1.7.0" },
     { name = "ubi-reader", specifier = ">=0.8.9" },
-    { name = "unblob-native", specifier = ">=0.1.5" },
 ]
 
 [package.metadata.requires-dev]
@@ -1576,20 +1574,6 @@ docs = [
     { name = "mkdocstrings", specifier = ">=0.24,<0.28" },
     { name = "mkdocstrings-python", specifier = ">=1.8.0" },
     { name = "pillow", specifier = ">=10.2.0,<12.0" },
-]
-
-[[package]]
-name = "unblob-native"
-version = "0.1.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/93/b1/29b5b72365e0831cf29d06de619067d48f2468a2f36d27afadb2b7d6cf5f/unblob_native-0.1.5.tar.gz", hash = "sha256:1d092f2836e5ae6a4e8cf1ff88d6a9623b610aaeb33691f36c8efc169121c67e", size = 35186 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f6/57/eb1c87045ca95d71bd6eaacd551d25f403826e4ba17c662cd21ba4821a4c/unblob_native-0.1.5-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:ce1b88c4115848cea243b3787b9d94d0db6c940a846b9fba70d81a3795a5d99c", size = 276023 },
-    { url = "https://files.pythonhosted.org/packages/8a/3f/9cb99a7373ac1b46c4cf0826e6108a79a8e602ffaf6395454c26ff6e590c/unblob_native-0.1.5-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:d8313ac34dc5a918855883133b31abe371775f7a591be3eb8a30c2b49b557413", size = 270894 },
-    { url = "https://files.pythonhosted.org/packages/5e/12/638830aed0b5406dc0a6fe7c6dcbd94862cd848facf013892819ab0565a8/unblob_native-0.1.5-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:494ce29ef2739b2a809d26ca7f7d304842aac882aa49d1bd473c26906bac4a61", size = 316909 },
-    { url = "https://files.pythonhosted.org/packages/46/9a/397011566a8c1224d5e0c3ba6866016a8a19697baf6bb9e0eee5ac6e9449/unblob_native-0.1.5-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ed91269171aecb39f423054c1b68d28b034f1be1e5aeab9c5f7c4bb1a9c1630c", size = 319330 },
-    { url = "https://files.pythonhosted.org/packages/d8/3c/a1cb249d4f011fa78052dde47566a9214691815a1ab022f77586bd62c331/unblob_native-0.1.5-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:8a3f5d11a3e8c28e03d046d22095386352e6252bc9f941bac6a9145ea9c4e4de", size = 351780 },
-    { url = "https://files.pythonhosted.org/packages/0e/55/33d8a8925441e36935063ab6d80a0c23984ba9a11169a0bd32ba9e1184d8/unblob_native-0.1.5-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:20f94274822ea7b26ece88fd886fcd6ec98508f492aed12d046e4f84ef3855cb", size = 351350 },
 ]
 
 [[package]]
