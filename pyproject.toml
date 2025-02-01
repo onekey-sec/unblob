@@ -180,6 +180,19 @@ exclude = [
 ]
 typeCheckingMode = "standard"
 
+
+[tool.maturin]
+locked = true
+manifest-path = "rust/Cargo.toml"
+module-name = "unblob._rust"
+python-packages = ["unblob"]
+python-source = "."
+
+features = [
+  "pyo3/abi3-py39",        # https://docs.python.org/3/c-api/stable.html
+  "pyo3/extension-module", # This is an extension module
+]
+
 [build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
+build-backend = "maturin"
+requires = ["maturin>=1.0,<2.0"]
