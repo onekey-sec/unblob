@@ -125,6 +125,9 @@ ignore-init-module-imports = true
 [tool.ruff.lint.flake8-comprehensions]
 allow-dict-calls-with-keyword-arguments = true # code like `dict(a=1, b=2)` is allowed
 
+[tool.ruff.lint.isort]
+known-first-party = ["unblob"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 8
 
@@ -170,8 +173,8 @@ fail_under = 90
 skip_covered = true
 
 [tool.vulture]
-exclude = ["unblob/testing.py"]
-paths = ["unblob/", "vulture_whitelist.py"]
+exclude = ["python/unblob/testing.py"]
+paths = ["python/", "vulture_whitelist.py"]
 
 [tool.pyright]
 exclude = [
@@ -186,7 +189,7 @@ locked = true
 manifest-path = "rust/Cargo.toml"
 module-name = "unblob._rust"
 python-packages = ["unblob"]
-python-source = "."
+python-source = "python"
 
 features = [
   "pyo3/abi3-py39",        # https://docs.python.org/3/c-api/stable.html

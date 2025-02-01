@@ -22,7 +22,7 @@ final: prev:
           "Cargo.lock"
           "Cargo.toml"
           "pyproject.toml"
-          "unblob"
+          "python"
           "rust"
           "tests"
           "README.md"
