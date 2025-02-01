@@ -3,10 +3,6 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.filter.url = "github:numtide/nix-filter";
-  inputs.unblob-native = {
-    url = "github:onekey-sec/unblob-native";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
   inputs.flake-compat = {
     url = "github:edolstra/flake-compat";
     flake = false;
@@ -29,7 +25,6 @@
       nixpkgs,
       devenv,
       filter,
-      unblob-native,
       ...
     }@inputs:
     let
@@ -58,7 +53,6 @@
     {
       overlays.default = nixpkgs.lib.composeManyExtensions [
         filter.overlays.default
-        unblob-native.overlays.default
         (import ./overlay.nix)
       ];
       packages = forAllSystems (
