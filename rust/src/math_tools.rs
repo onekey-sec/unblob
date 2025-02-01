@@ -74,7 +74,7 @@ pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
         .py()
         .import_bound("sys")?
         .getattr("modules")?
-        .set_item("unblob_native.math", module)?;
+        .set_item("unblob._rust.math", module)?;
 
     Ok(())
 }
