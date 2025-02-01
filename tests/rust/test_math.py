@@ -1,6 +1,6 @@
 import pytest
 
-from unblob_native import math_tools
+from unblob._rust import math_tools
 
 UNIFORM_DISTRIBUTION = bytes(x for x in range(256))
 NON_UNIFORM_DISTRIBUTION = bytes([0] * 256)

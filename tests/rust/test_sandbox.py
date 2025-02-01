@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from unblob_native.sandbox import AccessFS, SandboxError, restrict_access
+from unblob._rust.sandbox import AccessFS, SandboxError, restrict_access
 
 FILE_CONTENT = b"HELLO"
 
