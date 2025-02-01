@@ -9,8 +9,8 @@ import attrs
 import magic
 import plotext as plt
 from structlog import get_logger
-from unblob_native import math_tools as mt
 
+from unblob._rust import math_tools as mt
 from unblob.handlers import BUILTIN_DIR_HANDLERS, BUILTIN_HANDLERS, Handlers
 
 from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
