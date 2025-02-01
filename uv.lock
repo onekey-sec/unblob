@@ -1517,7 +1517,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "atheris", marker = "python_full_version < '3.12'" },
+    { name = "atheris", marker = "python_full_version < '3.12' and sys_platform == 'linux'" },
     { name = "pre-commit" },
     { name = "pyright" },
     { name = "pytest" },
@@ -1559,7 +1559,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "atheris", marker = "python_full_version < '3.12'", specifier = ">=2.3,<3.0" },
+    { name = "atheris", marker = "python_full_version < '3.12' and sys_platform == 'linux'", specifier = ">=2.3,<3.0" },
     { name = "pre-commit", specifier = ">=3.5,<5.0" },
     { name = "pyright", specifier = ">=1.1.349" },
     { name = "pytest", specifier = ">=8.0.0" },
