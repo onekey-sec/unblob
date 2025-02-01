@@ -6,7 +6,7 @@ RUN chown -R unblob /data
 
 WORKDIR /data/output
 
-COPY unblob/install-deps.sh /
+COPY install-deps.sh /
 RUN sh -xeu /install-deps.sh
 
 # You MUST do an uv build before to have the wheel to copy & install here (CI action will do this when building)

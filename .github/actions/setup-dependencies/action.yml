@@ -10,7 +10,7 @@ runs:
   using: "composite"
   steps:
     - name: Install 3rd party dependencies
-      run: sudo unblob/install-deps.sh
+      run: sudo ./install-deps.sh
       shell: bash
 
     - name: Install uv & Python
