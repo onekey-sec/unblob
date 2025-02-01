@@ -24,6 +24,7 @@
       ];
     };
   };
+  languages.rust.enable = true;
 
   env.UV_LINK_MODE = "copy";
 
