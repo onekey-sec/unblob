@@ -1,9 +1,8 @@
 import os
-import typing
 
 import typing_extensions
 
-_Path: typing_extensions.TypeAlias = typing.Union[os.PathLike, str]
+_Path: typing_extensions.TypeAlias = os.PathLike | str
 
 class AccessFS:
     @staticmethod
