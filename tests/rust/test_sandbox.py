@@ -2,7 +2,7 @@ import ctypes
 import errno
 import os
 import platform
-from ctypes import c_uint32
+import threading
 from pathlib import Path
 
 import pytest
@@ -54,7 +54,7 @@ def landlock_supported() -> int:
         __NR_landlock_create_ruleset,
         None,
         ctypes.c_size_t(0),
-        c_uint32(LANDLOCK_CREATE_RULESET_VERSION),
+        ctypes.c_uint32(LANDLOCK_CREATE_RULESET_VERSION),
     )
     if max_abi_version > 0:
         return max_abi_version
@@ -72,31 +72,60 @@ def landlock_supported() -> int:
 @pytest.mark.skipif(
     not landlock_supported(), reason="Landlock support is not available on this system"
 )
-def test_read_sandboxing(request: pytest.FixtureRequest, sandbox_path: Path):
-    restrict_access(
-        AccessFS.read("/"),
-        AccessFS.read(sandbox_path),
-        # allow pytest caching, coverage, etc...
-        AccessFS.read_write(request.config.rootpath),
-    )
+def test_read_sandboxing(request: pytest.FixtureRequest, sandbox_path: Path):  # noqa: C901
+    exception = None
 
-    with pytest.raises(PermissionError):
-        (sandbox_path / "some-dir").mkdir()
+    def _run_catching_exceptions(fn):
+        def wrapper():
+            __tracebackhide__ = True
+            nonlocal exception
+            try:
+                fn()
+            except BaseException as exc:
+                exception = exc
 
-    with pytest.raises(PermissionError):
-        (sandbox_path / "some-file").touch()
+        return wrapper
 
-    with pytest.raises(PermissionError):
-        (sandbox_path / "some-link").symlink_to("file.txt")
+    # Sandbox applies to the current thread and future threads spawned
+    # from it.
+    #
+    # Running the test on a new thread keeps the main-thread
+    # clean, so sandboxing won't interfere with other tests executed
+    # after this one.
 
-    for path in sandbox_path.rglob("**/*"):
-        if path.is_file() or path.is_symlink():
-            with path.open("rb") as f:
-                assert f.read() == FILE_CONTENT
-            with pytest.raises(PermissionError):
-                assert path.open("r+")
-            with pytest.raises(PermissionError):
-                assert path.unlink()
-        elif path.is_dir():
-            with pytest.raises(PermissionError):
-                path.rmdir()
+    @_run_catching_exceptions
+    def _run_in_thread():
+        restrict_access(
+            AccessFS.read("/"),
+            AccessFS.read(sandbox_path),
+            # allow pytest caching, coverage, etc...
+            AccessFS.read_write(request.config.rootpath),
+        )
+
+        with pytest.raises(PermissionError):
+            (sandbox_path / "some-dir").mkdir()
+
+        with pytest.raises(PermissionError):
+            (sandbox_path / "some-file").touch()
+
+        with pytest.raises(PermissionError):
+            (sandbox_path / "some-link").symlink_to("file.txt")
+
+        for path in sandbox_path.rglob("**/*"):
+            if path.is_file() or path.is_symlink():
+                with path.open("rb") as f:
+                    assert f.read() == FILE_CONTENT
+                with pytest.raises(PermissionError):
+                    assert path.open("r+")
+                with pytest.raises(PermissionError):
+                    assert path.unlink()
+            elif path.is_dir():
+                with pytest.raises(PermissionError):
+                    path.rmdir()
+
+    t = threading.Thread(target=_run_in_thread)
+    t.start()
+    t.join()
+    __tracebackhide__ = True
+    if exception:
+        raise exception
