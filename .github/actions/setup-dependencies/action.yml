@@ -13,6 +13,17 @@ runs:
       run: sudo ./install-deps.sh
       shell: bash
 
+    - name: Setup sccache # for speeding up Rust builds
+      uses: mozilla-actions/sccache-action@v0.0.7
+      with:
+        disable_annotations: true # it is very spammy, but useful for diagnostics
+
+    - name: Enable sccache
+      run: |
+        echo SCCACHE_GHA_ENABLED=true >> $GITHUB_ENV
+        echo RUSTC_WRAPPER=sccache >> $GITHUB_ENV
+      shell: bash
+
     - name: Install uv & Python
       uses: astral-sh/setup-uv@v5
       with:

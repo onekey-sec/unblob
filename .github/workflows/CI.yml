@@ -92,7 +92,13 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.7
+
       - name: Run cargo test
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
         run: cargo test
 
   build_linux_wheels:
