@@ -79,6 +79,22 @@ jobs:
       - name: Run pytest
         run: uv run pytest -vvv
 
+  run_rust_tests:
+    name: Run tests (Rust)
+    needs: [check_pre_commit]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Run cargo test
+        run: cargo test
+
   build_linux_wheels:
     name: Build wheels (linux)
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.*.labels.*.name, 'dependencies')
@@ -392,6 +408,7 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     needs:
       - run_python_tests
+      - run_rust_tests
       - build_linux_wheels
       - build_macos_wheels
       - build_sdist
