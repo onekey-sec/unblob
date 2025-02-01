@@ -41,9 +41,9 @@ where the exciting stuff is.
 - **Git LFS**: We have big integration test files, and we are using Git LFS to track them.
   [Install `git-lfs`](https://git-lfs.github.com/) from the website.
 
-- **Rust** (_for unblob-native_): unblob has a [Rust extension](https://github.com/onekey-sec/unblob-native) for
-  performance intensive processing. Building it is entirely optional and requires [`rustup`](https://rustup.rs/) to be
-  installed on the host system. Follow the instructions on the [rustup website](https://rustup.rs/) to install it.
+- **Rust** some functionality of unblob is implemented in Rust. Building it requires a Rust toolchain
+  (e.g. via [`rustup`](https://rustup.rs/)) to be installed on the host system. Follow the
+  instructions on the [rustup website](https://rustup.rs/) to install it.
 
 - **pyenv** (_Recommended_): When you are working with multiple versions of Python,
   pyenv makes it very easy to install and use different versions and make virtualenvs.
