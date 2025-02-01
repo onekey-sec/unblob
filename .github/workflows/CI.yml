@@ -39,6 +39,8 @@ jobs:
 
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
+        with:
+          install-test-deps: "false"
 
       - name: Setup Nix
         uses: cachix/install-nix-action@v30
@@ -256,6 +258,8 @@ jobs:
 
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
+        with:
+          install-test-deps: "false"
 
       - name: Build sdist
         uses: PyO3/maturin-action@v1
