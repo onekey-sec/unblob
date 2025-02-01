@@ -18,7 +18,7 @@ runs:
       with:
         enable-cache: true
         cache-dependency-glob: "uv.lock"
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ inputs.python-version }}
 
     - name: Install the project
       run: uv sync
