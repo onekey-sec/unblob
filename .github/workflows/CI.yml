@@ -276,6 +276,11 @@ jobs:
     name: Build Docker image
     if: github.event_name == 'push' || contains(github.event.*.labels.*.name, 'dependencies')
     needs: [build_linux_wheels]
+    permissions:
+      # needed for sarif report upload
+      security-events: write
+      # needed for pushing to registry
+      packages: write
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -377,6 +382,9 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build-image
+    permissions:
+      # needed for pushing to registry
+      packages: write
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
