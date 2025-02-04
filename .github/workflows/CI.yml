@@ -453,7 +453,7 @@ jobs:
           subject-path: dist/*
 
       - name: Publish to PyPI
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') }} || (github.event_name == 'workflow_dispatch' && github.event.inputs.test_release)
         uses: PyO3/maturin-action@v1
         env:
           MATURIN_PYPI_TOKEN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && secrets.TEST_PYPI_API_TOKEN || secrets.POETRY_PYPI_TOKEN_PYPI }}
