@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Callable, Optional, TypeVar
 
 from structlog import get_logger
-from unblob_native.sandbox import (
+
+from unblob._rust.sandbox import (
     AccessFS,
     SandboxError,
     restrict_access,

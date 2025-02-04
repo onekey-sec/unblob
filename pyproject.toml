@@ -24,7 +24,6 @@ dependencies = [
   "structlog>=24.1.0",
   "treelib>=1.7.0",
   "ubi-reader>=0.8.9",
-  "unblob-native>=0.1.5",
 ]
 description = "Extract files from any kind of container formats"
 license = { text = "MIT" }
@@ -38,7 +37,7 @@ unblob = "unblob.cli:main"
 
 [dependency-groups]
 dev = [
-  "atheris>=2.3,<3.0; python_version < '3.12'",
+  "atheris>=2.3,<3.0; sys_platform == 'linux' and python_version < '3.12'",
   "pre-commit>=3.5,<5.0",
   "pyright>=1.1.349",
   "pytest-cov>=3,<7",
@@ -126,6 +125,9 @@ ignore-init-module-imports = true
 [tool.ruff.lint.flake8-comprehensions]
 allow-dict-calls-with-keyword-arguments = true # code like `dict(a=1, b=2)` is allowed
 
+[tool.ruff.lint.isort]
+known-first-party = ["unblob"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 8
 
@@ -171,8 +173,8 @@ fail_under = 90
 skip_covered = true
 
 [tool.vulture]
-exclude = ["unblob/testing.py"]
-paths = ["unblob/", "vulture_whitelist.py"]
+exclude = ["python/unblob/testing.py"]
+paths = ["python/", "vulture_whitelist.py"]
 
 [tool.pyright]
 exclude = [
@@ -181,6 +183,19 @@ exclude = [
 ]
 typeCheckingMode = "standard"
 
+
+[tool.maturin]
+locked = true
+manifest-path = "rust/Cargo.toml"
+module-name = "unblob._rust"
+python-packages = ["unblob"]
+python-source = "python"
+
+features = [
+  "pyo3/abi3-py39",        # https://docs.python.org/3/c-api/stable.html
+  "pyo3/extension-module", # This is an extension module
+]
+
 [build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
+build-backend = "maturin"
+requires = ["maturin>=1.0,<2.0"]

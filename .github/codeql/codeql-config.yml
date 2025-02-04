@@ -4,7 +4,8 @@ queries:
   - uses: security-and-quality
 
 paths:
-  - 'unblob'
+  - 'python'
+  - 'rust'
   - 'tests'
 
 paths-ignore:

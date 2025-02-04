@@ -74,10 +74,10 @@ unblob has been developed with the following objectives in mind:
 
 - **Speed** - we want unblob to be blazing fast, that's why we use
   multi-processing by default, make sure to write efficient code, use
-  memory-mapped files, and use [Hyperscan](https://github.com/intel/hyperscan)
-  as a high-performance matching library. Computation-intensive functions are
-  written in [Rust](https://github.com/onekey-sec/unblob-native) and
-  called from Python using specific bindings.
+  memory-mapped files, and use
+  [Hyperscan](https://github.com/intel/hyperscan) as a
+  high-performance matching library. Computation-intensive functions
+  are written in Rust and called from Python using specific bindings.
 
 ## How does it work?
 

@@ -3,14 +3,30 @@ inputs:
     description: "Python version to setup"
     required: false
     default: "3.9"
+  install-test-deps:
+    description: "Wether to install 3rd Party dependencies (for tests)"
+    required: false
+    default: "true" # unfortunately boolean variables are not supported
 
 name: "Setup dependencies"
 description: "Install all required dependencies for worflows to run."
 runs:
   using: "composite"
   steps:
-    - name: Install 3rd party dependencies
-      run: sudo unblob/install-deps.sh
+    - if: inputs.install-test-deps == 'true'
+      name: Install 3rd party dependencies
+      run: sudo ./install-deps.sh
+      shell: bash
+
+    - name: Setup sccache # for speeding up Rust builds
+      uses: mozilla-actions/sccache-action@v0.0.7
+      with:
+        disable_annotations: true # it is very spammy, but useful for diagnostics
+
+    - name: Enable sccache
+      run: |
+        echo SCCACHE_GHA_ENABLED=true >> $GITHUB_ENV
+        echo RUSTC_WRAPPER=sccache >> $GITHUB_ENV
       shell: bash
 
     - name: Install uv & Python
@@ -18,8 +34,12 @@ runs:
       with:
         enable-cache: true
         cache-dependency-glob: "uv.lock"
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ inputs.python-version }}
 
     - name: Install the project
       run: uv sync
+      shell: bash
+
+    - name: Setup pip # some tools need it, and uv virtualenvs doesn't contain it
+      run: uv pip install pip
       shell: bash

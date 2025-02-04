@@ -23,7 +23,7 @@ def extract(inpath: Path, outpath: Path):  # noqa: ARG001
 
 
 with atheris.import_hook.instrument_imports(
-    include=["unblob"], exclude=["unblob_native"]
+    include=["unblob"], exclude=["unblob._rust"]
 ):
     from unblob.extractors.command import Command
     from unblob.file_utils import File

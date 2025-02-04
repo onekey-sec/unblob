@@ -11,8 +11,8 @@ import pytest
 from lark.lark import Lark
 from lark.visitors import Discard, Transformer
 from pytest_cov.embed import cleanup_on_sigterm
-from unblob_native.sandbox import AccessFS, SandboxError, restrict_access
 
+from unblob._rust.sandbox import AccessFS, SandboxError, restrict_access
 from unblob.finder import build_hyperscan_database
 from unblob.logging import configure_logger
 from unblob.models import ProcessResult
