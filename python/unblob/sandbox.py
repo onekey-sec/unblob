@@ -7,17 +7,20 @@ from typing import Callable, Optional, TypeVar
 
 from structlog import get_logger
 
-from unblob._rust.sandbox import (
-    AccessFS,
-    SandboxError,
-    restrict_access,
-)
-
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
 else:
     from typing_extensions import ParamSpec
 
+from unblob._rust.sandbox import (
+    AccessFS as AccessFS,
+)
+from unblob._rust.sandbox import (
+    SandboxError as SandboxError,
+)
+from unblob._rust.sandbox import (
+    restrict_access as restrict_access,
+)
 from unblob.processing import ExtractionConfig
 
 logger = get_logger()

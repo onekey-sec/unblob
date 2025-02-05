@@ -12,12 +12,12 @@ from lark.lark import Lark
 from lark.visitors import Discard, Transformer
 from pytest_cov.embed import cleanup_on_sigterm
 
-from unblob._rust.sandbox import AccessFS, SandboxError, restrict_access
 from unblob.finder import build_hyperscan_database
 from unblob.logging import configure_logger
 from unblob.models import ProcessResult
 from unblob.processing import ExtractionConfig
 from unblob.report import ExtractCommandFailedReport
+from unblob.sandbox import AccessFS, SandboxError, restrict_access
 
 
 @pytest.fixture(scope="session", autouse=True)
