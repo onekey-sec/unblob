@@ -8,7 +8,9 @@ from typing import Callable, Optional, TypeVar
 from structlog import get_logger
 
 from unblob._rust.sandbox import (
-    AccessFS,
+    AccessFS as AccessFS,
+)
+from unblob._rust.sandbox import (
     SandboxError,
     restrict_access,
 )
