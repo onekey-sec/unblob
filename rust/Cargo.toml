@@ -11,7 +11,7 @@ crate-type = [
   "cdylib", # for Python extension
   "rlib",   # for benchmarking
 ]
-name = "unblob_rust"
+name = "unblob"
 
 [dependencies]
 log = "0.4.22"
