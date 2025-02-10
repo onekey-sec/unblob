@@ -19,7 +19,7 @@ fn shannon_entropy(c: &mut Criterion) {
             BenchmarkId::from_parameter(sample_size),
             &sample_size,
             |b, &size| {
-                b.iter(|| unblob_native::math_tools::shannon_entropy(&sample[0..size]));
+                b.iter(|| unblob::math_tools::shannon_entropy(&sample[0..size]));
             },
         );
     }
@@ -38,7 +38,7 @@ fn chi_square_probability(c: &mut Criterion) {
             BenchmarkId::from_parameter(sample_size),
             &sample_size,
             |b, &size| {
-                b.iter(|| unblob_native::math_tools::chi_square_probability(&sample[0..size]));
+                b.iter(|| unblob::math_tools::chi_square_probability(&sample[0..size]));
             },
         );
     }

@@ -11,7 +11,10 @@ crate-type = [
   "cdylib", # for Python extension
   "rlib",   # for benchmarking
 ]
-name = "unblob_rust"
+name = "unblob"
+# disable Rust nightly benchmark feature. We use criterion
+# https://bheisler.github.io/criterion.rs/book/faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options
+bench = false
 
 [dependencies]
 log = "0.4.22"
