@@ -18,7 +18,7 @@
     "enabled": true,
     "branchTopic": "lock-file-maintenance-{{packageFile}}",
     "commitMessageExtra": "({{packageFile}})",
-    "extends": ["scedule:monthly"]
+    "extends": ["schedule:monthly"]
   },
   "nix": {
     "enabled": true,
