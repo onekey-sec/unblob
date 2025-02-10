@@ -7,6 +7,11 @@
       "matchUpdateTypes": ["minor", "patch"],
       "autoApprove": true,
       "automerge": true
+    },
+    {
+      "groupName": "PyO3",
+      "matchCategories": ["rust"],
+      "matchPackageNames": ["pyo3*"]
     }
   ],
   "nix": {
