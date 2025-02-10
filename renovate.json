@@ -14,23 +14,15 @@
       "matchPackageNames": ["pyo3*"]
     }
   ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "branchTopic": "lock-file-maintenance-{{packageFile}}",
+    "commitMessageExtra": "({{packageFile}})",
+    "extends": ["scedule:monthly"]
+  },
   "nix": {
     "enabled": true,
-    "description": "opt-in support for nix https://docs.renovatebot.com/modules/manager/nix/#enabling",
-    "lockFileMaintenance": {
-      "enabled": true,
-      "branchTopic": "update-flake-lock",
-      "commitMessageAction": "Update flake.lock",
-      "extends": ["schedule:weekly"]
-    }
-  },
-  "pep621": {
-    "lockFileMaintenance": {
-      "enabled": true,
-      "branchTopic": "update-uv-lock",
-      "commitMessageAction": "Update uv.lock",
-      "extends": ["schedule:monthly"]
-    }
+    "description": "opt-in support for nix https://docs.renovatebot.com/modules/manager/nix/#enabling"
   },
   "pre-commit": {
     "enabled": true,
