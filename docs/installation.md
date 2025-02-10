@@ -221,7 +221,7 @@ There is a handy `install-deps.sh` script included in the repository and PyPI pa
 
 2.  If you need **squashfs support**, install sasquatch:
 
-        curl -L -o sasquatch_1.0.deb "https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-4/sasquatch_1.0_$(dpkg --print-architecture).deb"
+        curl -L -o sasquatch_1.0.deb "https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-5/sasquatch_1.0_$(dpkg --print-architecture).deb"
         sudo dpkg -i sasquatch_1.0.deb
         rm sasquatch_1.0.deb
 
