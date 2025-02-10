@@ -103,6 +103,21 @@ jobs:
           SCCACHE_GHA_ENABLED: "true"
           RUSTC_WRAPPER: "sccache"
         run: cargo test
+      - name: Run benchmark
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
+        run: cargo bench -- --output-format bencher | tee bench.txt
+      - name: Store benchmark result
+        if: matrix.os == 'ubuntu-latest'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: "cargo"
+          output-file-path: bench.txt
+          summary-always: true
+          comment-on-alert: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   build_linux_wheels:
     name: Build wheels (linux)
