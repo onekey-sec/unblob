@@ -107,18 +107,18 @@ impl PyAccessFS {
 }
 
 pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let module = PyModule::new_bound(root_module.py(), "sandbox")?;
+    let module = PyModule::new(root_module.py(), "sandbox")?;
     module.add_function(wrap_pyfunction!(py_restrict_access, &module)?)?;
     module.add_class::<PyAccessFS>()?;
     module.add(
         "SandboxError",
-        root_module.py().get_type_bound::<PySandboxError>(),
+        root_module.py().get_type::<PySandboxError>(),
     )?;
 
     root_module.add_submodule(&module)?;
     root_module
         .py()
-        .import_bound("sys")?
+        .import("sys")?
         .getattr("modules")?
         .set_item("unblob._rust.sandbox", module)?;
 

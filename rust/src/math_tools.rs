@@ -64,7 +64,7 @@ pub fn py_chi_square_probability(py: Python, data: &[u8]) -> PyResult<f64> {
 }
 
 pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let module = PyModule::new_bound(root_module.py(), "math_tools")?;
+    let module = PyModule::new(root_module.py(), "math_tools")?;
     module.add_function(wrap_pyfunction!(py_shannon_entropy, &module)?)?;
     module.add_function(wrap_pyfunction!(py_chi_square_probability, &module)?)?;
 
@@ -72,7 +72,7 @@ pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
 
     root_module
         .py()
-        .import_bound("sys")?
+        .import("sys")?
         .getattr("modules")?
         .set_item("unblob._rust.math", module)?;
 
