@@ -209,6 +209,11 @@ def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -
                 "Report file exists and --force not specified", path=report_file
             )
             return False
+    if not report_file.parent.exists():
+        logger.error(
+            "Trying to write report file to a non-existent directory", path=report_file
+        )
+        return False
     return True
 
 

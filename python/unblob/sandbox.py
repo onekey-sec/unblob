@@ -58,8 +58,7 @@ class Sandbox:
 
         if report_file:
             self.passthrough += [
-                AccessFS.read_write(report_file),
-                AccessFS.make_reg(report_file.parent),
+                AccessFS.read_write(report_file.parent),
             ]
 
     def run(self, callback: Callable[P, R], *args: P.args, **kwargs: P.kwargs) -> R:
