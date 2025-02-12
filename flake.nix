@@ -8,9 +8,11 @@
     flake = false;
   };
   inputs.devenv = {
-    url = "github:vlaci/devenv/python-wrapper";
+    url = "github:cachix/devenv";
     inputs.nixpkgs.follows = "nixpkgs";
   };
+
+  inputs.devenv-extras.url = "github:vlaci/devenv-extras";
 
   nixConfig = {
     extra-substituters = [ "https://unblob.cachix.org" ];
@@ -24,6 +26,7 @@
       self,
       nixpkgs,
       devenv,
+      devenv-extras,
       filter,
       ...
     }@inputs:
@@ -109,6 +112,7 @@
           pkgs = nixpkgsFor.${system};
           modules = [
             ./devenv.nix
+            devenv-extras.devenvModules.default
           ];
         };
       });
