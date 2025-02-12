@@ -178,6 +178,7 @@ paths = ["python/", "vulture_whitelist.py"]
 
 [tool.pyright]
 exclude = [
+  ".devenv",
   ".venv",
   "build",
 ]
