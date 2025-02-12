@@ -36,18 +36,42 @@
         "aarch64-darwin"
       ];
 
+      # Temporary patches for nixpkgs required for current unblob
+      nixpkgsPatches = [
+        # ubi_reader: 0.8.9 -> 0.8.10
+        {
+          url = "https://github.com/NixOS/nixpkgs/commit/a3b3188908f87f3c2bafd6b66ab2c0df2c059fa9.patch";
+          hash = "sha256-MYP5q7KwbGzx01GYxvb4YwkLPV/aSzbI4Cbp+olw9a0=";
+        }
+      ];
+
       # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
       # Nixpkgs instantiated for supported system types.
       nixpkgsFor = forAllSystems (
         system:
-        import nixpkgs {
-          inherit system;
-          overlays = [
-            self.overlays.default
-          ];
-        }
+        let
+          importPkgs =
+            nixpkgs:
+            import nixpkgs {
+              inherit system;
+              overlays = [
+                self.overlays.default
+              ];
+            };
+
+          bootstrapPkgs = importPkgs nixpkgs;
+
+          patchedNixpkgs = bootstrapPkgs.applyPatches {
+            name = "nixpkgs-patched";
+            src = nixpkgs;
+            patches = map bootstrapPkgs.fetchpatch nixpkgsPatches;
+          };
+
+          finalPkgs = importPkgs patchedNixpkgs;
+        in
+        if builtins.length nixpkgsPatches != 0 then finalPkgs else bootstrapPkgs
       );
     in
     {
