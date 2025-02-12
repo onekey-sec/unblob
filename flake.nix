@@ -36,18 +36,36 @@
         "aarch64-darwin"
       ];
 
+      # Temporary patches for nixpkgs required for current unblob
+      nixpkgsPatches = [ ];
+
       # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
       # Nixpkgs instantiated for supported system types.
       nixpkgsFor = forAllSystems (
         system:
-        import nixpkgs {
-          inherit system;
-          overlays = [
-            self.overlays.default
-          ];
-        }
+        let
+          importPkgs =
+            nixpkgs:
+            import nixpkgs {
+              inherit system;
+              overlays = [
+                self.overlays.default
+              ];
+            };
+
+          bootstrapPkgs = importPkgs nixpkgs;
+
+          patchedNixpkgs = bootstrapPkgs.applyPatches {
+            name = "nixpkgs-patched";
+            src = nixpkgs;
+            patches = map bootstrapPkgs.fetchpatch nixpkgsPatches;
+          };
+
+          finalPkgs = importPkgs patchedNixpkgs;
+        in
+        if builtins.length nixpkgsPatches != 0 then finalPkgs else bootstrapPkgs
       );
     in
     {
