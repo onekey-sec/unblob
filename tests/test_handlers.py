@@ -15,6 +15,7 @@ import pytest
 from unblob import handlers
 from unblob.models import Handler
 from unblob.processing import ExtractionConfig, process_file
+from unblob.sandbox import AccessFS, Sandbox
 from unblob.testing import (
     check_output_is_the_same,
     check_result,
@@ -29,10 +30,28 @@ HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
     "input_dir, output_dir", gather_integration_tests(TEST_DATA_PATH)
 )
 def test_all_handlers(
-    input_dir: Path, output_dir: Path, extraction_config: ExtractionConfig
+    input_dir: Path,
+    output_dir: Path,
+    extraction_config: ExtractionConfig,
+    request: pytest.FixtureRequest,
 ):
+    log_path = Path("/dev/null")  # no logging
+    report_file = None  # no reporting
+
+    passthrough = [
+        # .pytest_cache
+        AccessFS.read_write(request.config.rootpath),
+    ]
+    junit_xmlpath = request.config.getvalue("xmlpath")
+    if junit_xmlpath:
+        passthrough += [
+            # junit reports are written to the argument of --junit-xml
+            AccessFS.read_write(junit_xmlpath)  # type: ignore
+        ]
+
+    sandbox = Sandbox(extraction_config, log_path, report_file, passthrough)
     for input_file in input_dir.iterdir():
-        reports = process_file(extraction_config, input_file)
+        reports = sandbox.run(process_file, extraction_config, input_file)
         check_result(reports)
 
     check_output_is_the_same(output_dir, extraction_config.extract_root)

@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
+from rust.test_sandbox import landlock_supported
 from unblob.processing import ExtractionConfig
 from unblob.sandbox import Sandbox
-from unblob.testing import is_sandbox_available
 
 pytestmark = pytest.mark.skipif(
-    not is_sandbox_available(), reason="Sandboxing only works on Linux"
+    not landlock_supported(), reason="Sandboxing only works on Linux"
 )
 
 
