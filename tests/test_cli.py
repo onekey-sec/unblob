@@ -7,6 +7,7 @@ import pytest
 from click.testing import CliRunner
 
 import unblob.cli
+from rust.test_sandbox import landlock_supported
 from unblob.extractors import Command
 from unblob.extractors.command import MultiFileCommand
 from unblob.handlers import BUILTIN_HANDLERS
@@ -18,7 +19,6 @@ from unblob.processing import (
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
 )
-from unblob.testing import is_sandbox_available
 from unblob.ui import (
     NullProgressReporter,
     ProgressReporter,
@@ -431,7 +431,7 @@ def test_clear_skip_magics(
 
 
 @pytest.mark.skipif(
-    not is_sandbox_available(), reason="Sandboxing is only available on Linux"
+    not landlock_supported(), reason="Sandboxing is only available on Linux"
 )
 def test_sandbox_escape(tmp_path: Path):
     runner = CliRunner()

@@ -1,7 +1,6 @@
 import binascii
 import glob
 import io
-import platform
 import shlex
 import subprocess
 from pathlib import Path
@@ -17,7 +16,6 @@ from unblob.logging import configure_logger
 from unblob.models import ProcessResult
 from unblob.processing import ExtractionConfig
 from unblob.report import ExtractCommandFailedReport
-from unblob.sandbox import AccessFS, SandboxError, restrict_access
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -219,17 +217,3 @@ class _HexDumpToBin(Transformer):
             rv.write(line.data)
 
         return rv.getvalue()
-
-
-def is_sandbox_available():
-    is_sandbox_available = True
-
-    try:
-        restrict_access(AccessFS.read_write("/"))
-    except SandboxError:
-        is_sandbox_available = False
-
-    if platform.architecture == "x86_64" and platform.system == "linux":
-        assert is_sandbox_available, "Sandboxing should work at least on Linux-x86_64"
-
-    return is_sandbox_available
