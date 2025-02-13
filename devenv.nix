@@ -1,6 +1,5 @@
 {
   config,
-  lib,
   pkgs,
   ...
 }:
@@ -22,6 +21,11 @@
         "--group"
         "dev"
       ];
+    };
+    # https://github.com/vlaci/devenv-extras
+    extras = {
+      auto-patchelf.enable = true;
+      clear-ldpath.enable = true;
     };
   };
   languages.rust.enable = true;
@@ -45,15 +49,6 @@
           exit 1
         fi
         ln -snf "${config.devenv.state}/venv" "${config.devenv.root}/.venv"
-      '';
-      after = [ "devenv:python:uv" ];
-      before = [ "devenv:enterShell" ];
-    };
-    "venv:patchelf" = {
-      exec = ''
-        for exe in taplo ruff; do
-          ${lib.getExe pkgs.patchelf} --set-interpreter ${pkgs.stdenv.cc.bintools.dynamicLinker} "${config.devenv.state}/venv/bin/$exe"
-        done
       '';
       after = [ "devenv:python:uv" ];
       before = [ "devenv:enterShell" ];
