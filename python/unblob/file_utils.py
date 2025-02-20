@@ -12,7 +12,7 @@ import sys
 import unicodedata
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Protocol, Union, overload
 
 from dissect.cstruct import cstruct
 from structlog import get_logger
@@ -269,8 +269,18 @@ def iterate_patterns(
         file.seek(initial_position)
 
 
+class RandomReader(Protocol):
+    # File implements this interface
+
+    @overload
+    def read(self) -> bytes: ...
+    @overload
+    def read(self, n: int, /) -> bytes: ...
+    def seek(self, pos: int, /, whence: int = io.SEEK_SET) -> int: ...
+
+
 def iterate_file(
-    file: File,
+    file: RandomReader,
     start_offset: int,
     size: int,
     # default buffer size in shutil for unix based systems
@@ -297,7 +307,7 @@ def iterate_file(
         yield data
 
 
-def carve(carve_path: Path, file: File, start_offset: int, size: int):
+def carve(carve_path: Path, file: RandomReader, start_offset: int, size: int):
     """Extract part of a file."""
     carve_path.parent.mkdir(parents=True, exist_ok=True)
 
