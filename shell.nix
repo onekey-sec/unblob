@@ -5,8 +5,6 @@ let
     ./flake.nix
     ./overlay.nix
     ./nix
-    ./devenv.nix
-    ".devenv"
   ];
 
   lock = builtins.fromJSON (builtins.readFile ./flake.lock);
