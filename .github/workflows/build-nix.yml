@@ -42,6 +42,4 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           extraPullNames: pyperscan
       - run: |
-          nix build -L --option system ${{ matrix.arch }} --extra-platforms ${{ matrix.arch }} .#packages.${{ matrix.arch }}.devenv
-      - run: |
-          nix flake check -L --impure --option system ${{ matrix.arch }} --extra-platforms ${{ matrix.arch }}
+          nix flake check -L --option system ${{ matrix.arch }} --extra-platforms ${{ matrix.arch }}

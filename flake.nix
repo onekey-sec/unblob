@@ -7,12 +7,8 @@
     url = "github:edolstra/flake-compat";
     flake = false;
   };
-  inputs.devenv = {
-    url = "github:cachix/devenv";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
 
-  inputs.devenv-extras.url = "github:vlaci/devenv-extras";
+  inputs.shell-hooks.url = "github:vlaci/nix-shell-hooks";
 
   nixConfig = {
     extra-substituters = [ "https://unblob.cachix.org" ];
@@ -25,11 +21,10 @@
     {
       self,
       nixpkgs,
-      devenv,
-      devenv-extras,
+      shell-hooks,
       filter,
       ...
-    }@inputs:
+    }:
     let
       # System types to support.
       supportedSystems = [
@@ -61,6 +56,7 @@
               inherit system;
               overlays = [
                 self.overlays.default
+                shell-hooks.overlays.default
               ];
             };
 
@@ -90,11 +86,6 @@
         {
           inherit unblob;
           default = unblob;
-          devenv = devenv.packages.${system}.devenv.overrideAttrs (_: {
-            checkFlags = [
-              "--skip=test::test_nonexistent_script"
-            ];
-          });
         }
       );
 
@@ -107,14 +98,33 @@
       );
 
       devShells = forAllSystems (system: {
-        default = devenv.lib.mkShell {
-          inherit inputs;
-          pkgs = nixpkgsFor.${system};
-          modules = [
-            ./devenv.nix
-            devenv-extras.devenvModules.default
-          ];
-        };
+        default =
+          let
+            pkgs = nixpkgsFor.${system};
+          in
+          with pkgs;
+          mkShell {
+            packages = [
+              python3Packages.uvVenvShellHook
+              python3Packages.patchVenvShellHook
+              python3Packages.autoPatchelfVenvShellHook
+
+              cargo
+              rustc
+
+              nodejs # for pyright
+            ] ++ unblob.runtimeDeps;
+
+            venvPatches = [
+              (
+                # https://github.com/NixOS/nixpkgs/blob/70f6d2ad78eee1617f0871878e509b6d78a8b13b/pkgs/development/python-modules/python-magic/default.nix#L25-L27
+                replaceVars "${path}/pkgs/development/python-modules/python-magic/libmagic-path.patch" {
+                  libmagic = "${file}/lib/libmagic${stdenv.hostPlatform.extensions.sharedLibrary}";
+                }
+              )
+            ];
+          };
+
       });
 
       legacyPackages = forAllSystems (system: nixpkgsFor.${system});
