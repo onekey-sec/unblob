@@ -1,18 +1,53 @@
 import os
+from pathlib import Path
 from typing import Optional
 
 import arpy
 from structlog import get_logger
 
-from ...extractors import Command
-from ...file_utils import OffsetFile
-from ...models import File, Handler, HexString, ValidChunk
+from ...file_utils import FileSystem, OffsetFile, iterate_file
+from ...models import Extractor, ExtractResult, File, Handler, HexString, ValidChunk
+from ...report import ExtractionProblem
 
 logger = get_logger()
 
 
 HEADER_LENGTH = 0x44
 SIGNATURE_LENGTH = 0x8
+
+
+class ArExtractor(Extractor):
+    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
+        fs = FileSystem(outdir)
+
+        with arpy.Archive(inpath.as_posix()) as archive:
+            archive.read_all_headers()
+
+            for name in sorted(archive.archived_files):
+                archived_file = archive.archived_files[name]
+
+                try:
+                    path = Path(name.decode())
+                except UnicodeDecodeError:
+                    path = Path(name.decode(errors="replace"))
+                    fs.record_problem(
+                        ExtractionProblem(
+                            path=repr(name),
+                            problem="Path is not a valid UTF/8 string",
+                            resolution=f"Converted to {path}",
+                        )
+                    )
+
+                fs.write_chunks(
+                    path,
+                    chunks=iterate_file(
+                        archived_file,
+                        0,
+                        archived_file.header.size,
+                    ),
+                )
+
+        return ExtractResult(reports=fs.problems)
 
 
 class ARHandler(Handler):
@@ -27,7 +62,7 @@ class ARHandler(Handler):
         )
     ]
 
-    EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
+    EXTRACTOR = ArExtractor()
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         offset_file = OffsetFile(file, start_offset)
