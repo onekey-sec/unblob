@@ -25,6 +25,7 @@ from .archive.xiaomi import hdr
 from .compression import (
     bzip2,
     compress,
+    geom,
     gzip,
     lz4,
     lzh,
@@ -116,6 +117,7 @@ BUILTIN_HANDLERS: Handlers = (
     zlib.ZlibHandler,
     engenius.EngeniusHandler,
     ecc.AutelECCHandler,
+    geom.GEOMHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
