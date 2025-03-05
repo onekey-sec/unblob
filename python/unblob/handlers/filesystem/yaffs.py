@@ -8,8 +8,8 @@ from typing import Optional
 
 import attrs
 from structlog import get_logger
-from treelib import Tree
 from treelib.exceptions import NodeIDAbsentError
+from treelib.tree import Tree
 
 from unblob.file_utils import (
     Endian,
@@ -422,13 +422,13 @@ class YAFFSParser:
             # or the file got truncated / rewritten.
             # Given that YAFFS is a log filesystem, whichever chunk comes
             # last takes precendence.
-            self.file_entries.update_node(entry.object_id, data=entry)
+            self.file_entries.update_node(str(entry.object_id), data=entry)
             return
 
         if entry.object_id == entry.parent_obj_id:
             self.file_entries.create_node(
-                entry.object_id,
-                entry.object_id,
+                str(entry.object_id),
+                str(entry.object_id),
                 data=entry,
             )
         else:
@@ -442,15 +442,15 @@ class YAFFSParser:
                 )
                 return
             self.file_entries.create_node(
-                entry.object_id,
-                entry.object_id,
+                str(entry.object_id),
+                str(entry.object_id),
                 data=entry,
-                parent=entry.parent_obj_id,
+                parent=str(entry.parent_obj_id),
             )
 
     def get_entry(self, object_id: int) -> Optional[YAFFSEntry]:
         try:
-            entry = self.file_entries.get_node(object_id)
+            entry = self.file_entries.get_node(str(object_id))
             if entry:
                 return entry.data
         except NodeIDAbsentError:
@@ -462,8 +462,8 @@ class YAFFSParser:
 
     def resolve_path(self, entry: YAFFSEntry) -> Path:
         resolved_path = Path(entry.name)
-        if self.file_entries.parent(entry.object_id) is not None:
-            parent_entry = self.file_entries[entry.parent_obj_id].data
+        if self.file_entries.parent(str(entry.object_id)) is not None:
+            parent_entry = self.file_entries[str(entry.parent_obj_id)].data
             return self.resolve_path(parent_entry).joinpath(resolved_path)
         return resolved_path
 
@@ -500,7 +500,7 @@ class YAFFSParser:
         elif entry.object_type == YaffsObjectType.SYMLINK:
             fs.create_symlink(src=Path(entry.alias), dst=out_path)
         elif entry.object_type == YaffsObjectType.HARDLINK:
-            dst_entry = self.file_entries[entry.equiv_id].data
+            dst_entry = self.file_entries[str(entry.equiv_id)].data
             dst_path = self.resolve_path(dst_entry)
             fs.create_hardlink(src=dst_path, dst=out_path)
 
