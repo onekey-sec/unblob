@@ -59,7 +59,6 @@ DEFAULT_SKIP_MAGIC = (
     "GIF",
     "GNU message catalog",
     "HP Printer Job Language",
-    "Intel serial flash for PCH ROM",
     "JPEG",
     "Java module image",
     "MPEG",
