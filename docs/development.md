@@ -399,6 +399,47 @@ We've implemented integration tests this way:
     ./fruits.new.le.nocomp.jffs2
     ```
 
+### Importing handlers through plugins
+
+unblob uses [pluggy](https://pluggy.readthedocs.io/en/latest/) to provide a
+plugin interface for users. As a developer, this interface streamlines the
+process of implementing and distributing new handlers and extractors.
+
+To export a new handler via the plugin management system, you must add a hook
+for either `unblob_register_handlers` or `unblob_register_dir_handlers`:
+
+* Create a hook for `unblob_register_dir_handlers` if you are creating a new
+  `DirectoryHandler` implementation.
+* Otherwise, register a hook for the `unblob_register_handlers` function.
+
+Let's consider our earlier `MyformatHandler` example. Suppose we wished to
+implement this handler as a plugin in a directory called `myplugins/`. Then we
+would create a file `myplugins/myformat.py` with the following content:
+
+```python hl_lines="8-10"
+from unblob.models import Handler, StructHandler
+from unblob.plugins import hookimpl
+
+class MyformatHandler(StructHandler):
+    # Format-handling code would go here
+    ...
+
+@hookimpl
+def unblob_register_handlers() -> list[type[Handler]]:
+    return [MyformatHandler]
+```
+
+Since `MyformatHandler` is a `StructHandler`, we hook the
+`unblob_register_handlers` function. We then return a list of all of the handler
+classes that we wish to register.
+
+To use this plugin, we would run unblob with the `-P` / `--plugins-path`
+pointing to the directory containing our plugin, e.g.
+
+```
+unblob -P ./myplugins/ ...
+```
+
 ### Utilities Functions
 
 We developed a bunch of utility functions which helped us during the development of
