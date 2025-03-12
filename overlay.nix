@@ -29,6 +29,8 @@ final: prev:
         ];
       };
 
+      dependencies = (super.dependencies or [ ]) ++ [ final.python3.pkgs.pyzstd ];
+
       # remove this when packaging changes are upstreamed
       cargoDeps = final.rustPlatform.importCargoLock {
         lockFile = ./Cargo.lock;
