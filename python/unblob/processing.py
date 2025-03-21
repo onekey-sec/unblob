@@ -462,7 +462,18 @@ class _DirectoryTask:
 
 
 def is_padding(file: File, chunk: UnknownChunk):
-    return len(set(file[chunk.start_offset : chunk.end_offset])) == 1
+    chunk_bytes = set()
+
+    for small_chunk in iterate_file(
+        file, chunk.start_offset, chunk.end_offset - chunk.start_offset
+    ):
+        chunk_bytes.update(small_chunk)
+
+        # early return optimization
+        if len(chunk_bytes) > 1:
+            return False
+
+    return len(chunk_bytes) == 1
 
 
 def process_patterns(
