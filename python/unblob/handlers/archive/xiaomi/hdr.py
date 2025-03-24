@@ -108,7 +108,7 @@ class HDRExtractor(Extractor):
 
     def parse(self, file: File) -> Iterable[tuple[Path, int, int]]:
         header = self._struct_parser.parse(self.header_struct, file, Endian.LITTLE)
-        for offset in cast(Iterable, header.blob_offsets):
+        for offset in cast("Iterable", header.blob_offsets):
             if not offset:
                 break
 

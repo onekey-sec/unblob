@@ -1,14 +1,16 @@
 import binascii
 import io
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Optional, cast
+from typing import TYPE_CHECKING, Optional, cast
 
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
 from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
 from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 logger = get_logger()
 CRC_CONTENT_OFFSET = 12
@@ -48,7 +50,7 @@ class TRXExtractor(Extractor):
             offsets = sorted(
                 [
                     offset
-                    for offset in [*cast(Iterable, header.offsets), eof]
+                    for offset in [*cast("Iterable", header.offsets), eof]
                     if offset > 0
                 ]
             )
