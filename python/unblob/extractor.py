@@ -97,7 +97,7 @@ def fix_extracted_directory(outdir: Path, task_result: TaskResult):
     def _fix_extracted_directory(directory: Path):
         if not directory.exists():
             return
-        for path in (directory / p for p in os.listdir(directory)):
+        for path in directory.iterdir():
             try:
                 fix_permission(path)
                 if path.is_symlink():
