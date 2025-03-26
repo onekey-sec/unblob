@@ -10,6 +10,7 @@ apt-get install --no-install-recommends -y \
     lziprecover \
     lzop \
     p7zip-full \
+    partclone \
     unar \
     xz-utils \
     libmagic1 \

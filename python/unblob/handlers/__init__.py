@@ -6,6 +6,7 @@ from .archive import (
     cab,
     cpio,
     dmg,
+    partclone,
     rar,
     sevenzip,
     stuffit,
@@ -119,6 +120,7 @@ BUILTIN_HANDLERS: Handlers = (
     ecc.AutelECCHandler,
     uzip.UZIPHandler,
     erofs.EROFSHandler,
+    partclone.PartcloneHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
