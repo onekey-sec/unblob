@@ -6,6 +6,7 @@ from .archive import (
     cab,
     cpio,
     dmg,
+    partclone,
     rar,
     sevenzip,
     stuffit,
@@ -116,6 +117,7 @@ BUILTIN_HANDLERS: Handlers = (
     zlib.ZlibHandler,
     engenius.EngeniusHandler,
     ecc.AutelECCHandler,
+    partclone.PartcloneHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (

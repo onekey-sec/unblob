@@ -9,6 +9,7 @@
   lziprecover,
   lzop,
   p7zip,
+  partclone,
   nix-filter,
   sasquatch,
   sasquatch-v4be,
@@ -28,6 +29,7 @@ let
     lziprecover
     lzop
     p7zip
+    partclone
     sasquatch
     sasquatch-v4be
     ubi_reader
