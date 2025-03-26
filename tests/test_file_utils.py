@@ -17,6 +17,7 @@ from unblob.file_utils import (
     convert_int64,
     decode_multibyte_integer,
     get_endian,
+    get_endian_short,
     is_safe_path,
     iterate_file,
     iterate_patterns,
@@ -345,7 +346,10 @@ class TestGetEndian:
         "content, big_endian_magic, expected",
         [
             pytest.param(
-                b"\xff\x00\x00\x10", 0x100000FF, Endian.LITTLE, id="valid_little_endian"
+                b"\xff\x00\x00\x10",
+                0x100000FF,
+                Endian.LITTLE,
+                id="valid_little_endian",
             ),
             pytest.param(
                 b"\x10\x00\x00\xff", 0x100000FF, Endian.BIG, id="valid_big_endian"
@@ -357,9 +361,26 @@ class TestGetEndian:
         assert get_endian(file, big_endian_magic) == expected
 
     @pytest.mark.parametrize(
+        "content, big_endian_magic, expected",
+        [
+            pytest.param(b"\xff\x00", 0x00FF, Endian.LITTLE, id="valid_little_endian"),
+            pytest.param(b"\x10\x00", 0x1000, Endian.BIG, id="valid_big_endian"),
+        ],
+    )
+    def test_get_endian_short(
+        self, content: bytes, big_endian_magic: int, expected: Endian
+    ):
+        file = File.from_bytes(content)
+        assert get_endian_short(file, big_endian_magic) == expected
+
+    @pytest.mark.parametrize(
         "content, big_endian_magic",
         [
-            pytest.param(b"\x00\x00\x00\x01", 0xFF_FF_FF_FF_FF, id="larger_than_32bit"),
+            pytest.param(
+                b"\x00\x00\x00\x01",
+                0xFF_FF_FF_FF_FF,
+                id="larger_than_32bit",
+            ),
         ],
     )
     def test_get_endian_errors(self, content: bytes, big_endian_magic: int):
@@ -369,12 +390,37 @@ class TestGetEndian:
         ):
             get_endian(file, big_endian_magic)
 
+    @pytest.mark.parametrize(
+        "content, big_endian_magic",
+        [
+            pytest.param(
+                b"\x00\x00\x00\x01",
+                0xFF_FF_FF,
+                id="larger_than_16bit",
+            ),
+        ],
+    )
+    def test_get_endian_short_errors(self, content: bytes, big_endian_magic: int):
+        file = File.from_bytes(content)
+        with pytest.raises(
+            ValueError, match="big_endian_magic is larger than a 16 bit integer"
+        ):
+            get_endian_short(file, big_endian_magic)
+
     def test_get_endian_resets_the_file_pointer(self):
         file = File.from_bytes(bytes.fromhex("FFFF 0000"))
         file.seek(-1, io.SEEK_END)
         pos = file.tell()
         with pytest.raises(InvalidInputFormat):
             get_endian(file, 0xFFFF_0000)
+        assert file.tell() == pos
+
+    def test_get_endian_short_resets_the_file_pointer(self):
+        file = File.from_bytes(bytes.fromhex("FFFF"))
+        file.seek(-1, io.SEEK_END)
+        pos = file.tell()
+        with pytest.raises(InvalidInputFormat):
+            get_endian_short(file, 0xFFFF)
         assert file.tell() == pos
 
 
