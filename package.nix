@@ -1,15 +1,16 @@
 {
   lib,
+  stdenv,
   python3,
   makeWrapper,
   e2fsprogs-nofortify,
   erofs-utils,
-  fetchFromGitHub,
   jefferson,
   lz4,
   lziprecover,
   lzop,
   p7zip16,
+  partclone,
   nix-filter,
   sasquatch,
   sasquatch-v4be,
@@ -23,7 +24,7 @@
 
 let
   # These dependencies are only added to PATH
-  runtimeDeps = [
+  runtimeDeps = lib.optional stdenv.isLinux partclone ++ [
     e2fsprogs-nofortify
     erofs-utils
     jefferson
