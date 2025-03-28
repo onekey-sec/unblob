@@ -4,6 +4,7 @@
   makeWrapper,
   e2fsprogs-nofortify,
   erofs-utils,
+  fetchFromGitHub,
   jefferson,
   lz4,
   lziprecover,
