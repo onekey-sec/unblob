@@ -31,6 +31,7 @@ from .compression import (
     lzip,
     lzma,
     lzo,
+    uzip,
     xz,
     zlib,
     zstd,
@@ -116,6 +117,7 @@ BUILTIN_HANDLERS: Handlers = (
     zlib.ZlibHandler,
     engenius.EngeniusHandler,
     ecc.AutelECCHandler,
+    uzip.UZIPHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (

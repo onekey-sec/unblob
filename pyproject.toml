@@ -19,6 +19,7 @@ dependencies = [
   "pyfatfs>=1.0.5",
   "pyperscan>=0.3.0",
   "python-magic>=0.4.27",
+  "pyzstd",
   "rarfile>=4.1",
   "rich>=13.3.5",
   "structlog>=24.1.0",
