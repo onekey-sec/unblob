@@ -4,6 +4,7 @@
   fetchFromGitHub,
   makeWrapper,
   e2fsprogs-nofortify,
+  erofs-utils,
   jefferson,
   lz4,
   lziprecover,
@@ -24,6 +25,7 @@ let
   # These dependencies are only added to PATH
   runtimeDeps = [
     e2fsprogs-nofortify
+    erofs-utils
     jefferson
     lziprecover
     lzop
