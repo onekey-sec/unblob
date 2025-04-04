@@ -4,7 +4,7 @@ let
     ./flake.lock
     ./flake.nix
     ./overlay.nix
-    ./nix
+    ./package.nix
   ];
 
   lock = builtins.fromJSON (builtins.readFile ./flake.lock);
