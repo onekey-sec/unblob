@@ -97,6 +97,7 @@ For compression formats, metadata cannot be preserved, as this information in mo
 | ---------------------- | ---------------------------------- | ----------------------------------------------- | ----------------------------------------------- |
 | Android sparse image   | ❌                                 | [filesystem/android/sparse.py][android-handler] | [`simg2img`][android-extractor]                 |
 | CRAMFS                 | ✅                                 | [filesystem/cramfs.py][cramfs-handler]          | [`7z`][cramfs-extractor]                        |
+| EROFS                  | ✅                                 | [filesystem/android/erofs.py][erofs-handler]    | [`fsck.erfos`][erofs-extractor]                 | 
 | ExtFS                  | ✅                                 | [filesystem/extfs.py][extfs-handler]            | [`debugfs`][extfs-extractor]                    |
 | FAT                    | ✅                                 | [filesystem/fat.py][fat-handler]                | [`7z`][fat-extractor]                           |
 | ISO9660                | ✅                                 | [filesystem/iso9660.py][iso9660-handler]        | [`7z`][iso9660-extractor]                       |
@@ -107,12 +108,14 @@ For compression formats, metadata cannot be preserved, as this information in mo
 | SquashFS v4 Big Endian | ✅                                 | [filesystem/squashfs.py][squashfs-handler]      | [`sasquatch-v4-be`][squashfs-v4-be-extractor]   |
 | UBI                    | ✅                                 | [filesystem/ubi.py][ubi-handler]                | [`ubireader_extract_images`][ubi-extractor]     |
 | UBIFS                  | ✅                                 | [filesystem/ubi.py][ubi-handler]                | [`ubireader_extract_files`][ubifs-extractor]    |
-| YAFFS (1, 2)           | ✅                                 | [filesystem/yaffs.py][yaffs-handler]            | [`YAFFSExtractor` custom code][yaffs-extractor]                   |
+| YAFFS (1, 2)           | ✅                                 | [filesystem/yaffs.py][yaffs-handler]            | [`YAFFSExtractor` custom code][yaffs-extractor] |
 
 [android-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/android/sparse.py
 [android-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/android/sparse.py#L61
 [cramfs-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/cramfs.py
 [cramfs-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/cramfs.py#L45
+[erofs-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/android/erfos.py
+[erofs-extractor]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/android/erfos.py#L45
 [extfs-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/extfs.py
 [extfs-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/extfs.py#L68
 [fat-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/filesystem/fat.py

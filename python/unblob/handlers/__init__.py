@@ -49,7 +49,7 @@ from .filesystem import (
     ubi,
     yaffs,
 )
-from .filesystem.android import sparse
+from .filesystem.android import erofs, sparse
 
 BUILTIN_HANDLERS: Handlers = (
     cramfs.CramFSHandler,
@@ -118,6 +118,7 @@ BUILTIN_HANDLERS: Handlers = (
     engenius.EngeniusHandler,
     ecc.AutelECCHandler,
     uzip.UZIPHandler,
+    erofs.EROFSHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
