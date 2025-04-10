@@ -45,6 +45,7 @@
     | [`NETGEAR TRX V1`](#netgear-trx-v1) | ARCHIVE | :octicons-check-16: |
     | [`NETGEAR TRX V2`](#netgear-trx-v2) | ARCHIVE | :octicons-check-16: |
     | [`NTFS`](#ntfs) | FILESYSTEM | :octicons-check-16: |
+    | [`PAR2 (MULTI-VOLUME)`](#par2-multi-volume) | ARCHIVE | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
@@ -793,6 +794,22 @@
     === "References"
 
         - [NTFS Wikipedia](https://en.wikipedia.org/wiki/NTFS){ target="_blank" }
+## PAR2 (multi-volume)
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Parchive or PAR2, is a format for creating redundant data that helps detect and repair corrupted files. These archives typically accompany split-file sets (like multi-volume RAR or ZIP archives). Each PAR2 file is composed of multiple 'packets'.
+
+        ---
+
+        - **Handler type:** Archive
+        
+
+    === "References"
+
+        - [Parchive Documentation](https://parchive.github.io/){ target="_blank" }
 ## Partclone
 
 !!! success "Fully supported"
