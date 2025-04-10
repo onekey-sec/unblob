@@ -408,12 +408,15 @@ class SingleFile(DirectoryPattern):
         return [path] if path.exists() else []
 
 
-class DirectoryHandler(abc.ABC):
+TExtractor = TypeVar("TExtractor", bound=Union[None, Extractor])
+
+
+class DirectoryHandler(abc.ABC, Generic[TExtractor]):
     """A directory type handler is responsible for searching, validating and "unblobbing" files from multiple files in a directory."""
 
     NAME: str
 
-    EXTRACTOR: DirectoryExtractor
+    EXTRACTOR: TExtractor
 
     PATTERN: DirectoryPattern
 
@@ -437,9 +440,6 @@ class DirectoryHandler(abc.ABC):
         outdir.mkdir(parents=True, exist_ok=False)
 
         return self.EXTRACTOR.extract(paths, outdir)
-
-
-TExtractor = TypeVar("TExtractor", bound=Union[None, Extractor])
 
 
 class Handler(abc.ABC, Generic[TExtractor]):
