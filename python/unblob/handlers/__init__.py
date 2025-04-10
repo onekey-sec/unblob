@@ -6,6 +6,7 @@ from .archive import (
     cab,
     cpio,
     dmg,
+    par2,
     rar,
     sevenzip,
     stuffit,
@@ -124,4 +125,5 @@ BUILTIN_HANDLERS: Handlers = (
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
     sevenzip.MultiVolumeSevenZipHandler,
     gzip.MultiVolumeGzipHandler,
+    par2.MultiVolumePAR2Handler,
 )
