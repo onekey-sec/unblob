@@ -109,6 +109,9 @@
               python3Packages.patchVenvShellHook
               python3Packages.autoPatchelfVenvShellHook
 
+              deadnix
+              statix
+
               cargo
               rustc
 

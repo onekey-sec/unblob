@@ -1,7 +1,6 @@
 {
   lib,
   python3,
-  fetchFromGitHub,
   makeWrapper,
   e2fsprogs-nofortify,
   erofs-utils,
@@ -38,10 +37,10 @@ let
     zstd
     lz4
   ];
-  pyproject_toml = (builtins.fromTOML (builtins.readFile ./pyproject.toml));
-  version = pyproject_toml.project.version;
+  pyproject_toml = builtins.fromTOML (builtins.readFile ./pyproject.toml);
+  inherit (pyproject_toml.project) version;
 in
-python3.pkgs.buildPythonApplication rec {
+python3.pkgs.buildPythonApplication {
   pname = "unblob";
   pyproject = true;
   disabled = python3.pkgs.pythonOlder "3.9";
