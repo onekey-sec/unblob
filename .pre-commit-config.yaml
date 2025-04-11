@@ -40,6 +40,17 @@ repos:
           - nix-command flakes
           - --accept-flake-config
           - fmt
+      - id: statix
+        name: Lint Nix (statix)
+        types: [nix]
+        pass_filenames: false
+        language: system
+        entry: bash -c 'command -v nix && statix fix "$@" || echo "skipping statix"'
+      - id: deadnix
+        name: Lint Nix (deadnix)
+        types: [nix]
+        language: system
+        entry: bash -c 'command -v nix && deadnix --edit "$@" || echo "skipping deadnix"'
       - id: taplo-format
         name: Format TOML (taplo)
         language: system
