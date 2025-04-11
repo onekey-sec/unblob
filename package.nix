@@ -9,7 +9,7 @@
   lz4,
   lziprecover,
   lzop,
-  p7zip,
+  p7zip16,
   nix-filter,
   sasquatch,
   sasquatch-v4be,
@@ -29,7 +29,7 @@ let
     jefferson
     lziprecover
     lzop
-    p7zip
+    p7zip16
     sasquatch
     sasquatch-v4be
     ubi_reader
