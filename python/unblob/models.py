@@ -408,19 +408,22 @@ class SingleFile(DirectoryPattern):
         return [path] if path.exists() else []
 
 
-class DirectoryHandler(abc.ABC):
+DExtractor = TypeVar("DExtractor", bound=Union[None, DirectoryExtractor])
+
+
+class DirectoryHandler(abc.ABC, Generic[DExtractor]):
     """A directory type handler is responsible for searching, validating and "unblobbing" files from multiple files in a directory."""
 
     NAME: str
 
-    EXTRACTOR: DirectoryExtractor
+    EXTRACTOR: DExtractor
 
     PATTERN: DirectoryPattern
 
     @classmethod
     def get_dependencies(cls):
         """Return external command dependencies needed for this handler to work."""
-        if cls.EXTRACTOR:
+        if cls.EXTRACTOR is not None:
             return cls.EXTRACTOR.get_dependencies()
         return []
 
