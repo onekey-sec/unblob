@@ -21,7 +21,7 @@ log = "0.4.22"
 pyo3 = "0.24.0"
 pyo3-log = "0.12.0"
 statrs = "0.18.0"
-thiserror = "1.0.64"
+thiserror = "2.0.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 landlock = "0.4.1"
