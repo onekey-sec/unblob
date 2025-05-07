@@ -101,6 +101,8 @@ python3.pkgs.buildPythonApplication {
     "ubi-reader"
   ];
 
+  pythonRelaxDeps = [ "lz4" ];
+
   pythonImportsCheck = [ "unblob" ];
 
   makeWrapperArgs = [
