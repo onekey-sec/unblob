@@ -1,5 +1,6 @@
 import io
 import shutil
+import zlib
 from pathlib import Path
 from typing import Optional
 
@@ -8,10 +9,14 @@ import lief
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
+from unblob.extractors import Command
 from unblob.file_utils import (
     Endian,
     File,
+    InvalidInputFormat,
+    SeekError,
     convert_int8,
+    convert_int16,
     convert_int32,
     convert_int64,
     iterate_patterns,
@@ -31,6 +36,48 @@ KERNEL_INIT_DATA_SECTION = ".init.data"
 
 @attrs.define(repr=False)
 class ElfChunk(ValidChunk):
+    def upx_get_loader(self, file: File) -> int:
+        file.seek(-4, io.SEEK_END)  # last 4 bytes indicates where linfo ends
+        return convert_int32(file.read(4), Endian.LITTLE) - 12
+
+    def upx_calc_checksum(self, file: File, l_info: int, elf) -> bool:
+        file.seek(l_info, io.SEEK_SET)
+        l_checksum = convert_int32(file.read(4), Endian.LITTLE)
+        file.seek(l_info + 8, io.SEEK_SET)
+        l_lsize = convert_int16(file.read(2), Endian.LITTLE)
+        size_pack2 = elf.last_offset_segment - l_lsize
+        size_aligment = size_pack2  # Calc size before alignment
+        while size_aligment % 4 != 0:  # Forces to be mod 4 because of alignment
+            size_aligment += 1
+        xct_off = False  # For shared android library -> .so
+        for section in elf.sections:
+            if section.name == ".init":
+                xct_off = True
+                break
+        size_aligment += (
+            0 if xct_off else (4 & size_aligment) ^ (int(bool(xct_off)) << 2)
+        )  # 0 or 4
+        size_aligment += 8  # Added 2 times 4 byte (size of disp)
+        if xct_off:
+            size_aligment += 12
+        alignment = size_aligment - size_pack2
+        checksum_offset = elf.last_offset_segment - (l_lsize - alignment)
+        file.seek(checksum_offset, io.SEEK_SET)
+        return zlib.adler32(bytearray(file.read(l_lsize - alignment)), 1) == l_checksum
+
+    def is_valid_upx(self, inpath: Path, elf) -> bool:
+        file = File.from_path(inpath)
+        try:
+            upx_loader = self.upx_get_loader(file)
+            file.seek(upx_loader + 4, io.SEEK_SET)  # first 4 bytes is checksum
+            if file.read(4) != b"UPX!":  # Magic
+                return False
+            if not self.upx_calc_checksum(file, upx_loader, elf):
+                raise InvalidInputFormat("Invalid UPX checksum")
+            return True  # noqa: TRY300
+        except SeekError:
+            return False
+
     def extract(self, inpath: Path, outdir: Path):
         # ELF file extraction is special in that in the general case no new files are extracted, thus
         # when we want to clean up all carves to save place, carved ELF files would be deleted as well,
@@ -50,6 +97,10 @@ class ElfChunk(ValidChunk):
         if is_kernel:
             with File.from_path(inpath) as file:
                 extract_initramfs(elf, file, outdir)
+
+        elif self.is_valid_upx(inpath=inpath, elf=elf):
+            extract_upx(inpath, outdir)
+
         elif not self.is_whole_file:
             # make a copy, and let the carved chunk be deleted
             outdir.mkdir(parents=True, exist_ok=False)
@@ -60,6 +111,11 @@ class ElfChunk(ValidChunk):
             # Even though the second chunk search one is short-circuited,
             # because the ELF handler will recognize it as a whole file
             # other handlers might burn some cycles on the file as well.
+
+
+def extract_upx(inpath: Path, outdir: Path):
+    extractor = Command("upx", "-d", "{inpath}", "-o{outdir}/upx.uncompressed")
+    extractor.extract(inpath, outdir)
 
 
 def extract_initramfs(elf, file: File, outdir):
