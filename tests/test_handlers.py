@@ -8,6 +8,7 @@ Each of the test folders should contain 2 things:
 """
 
 import inspect
+import sys
 from pathlib import Path
 
 import pytest
@@ -35,6 +36,12 @@ def test_all_handlers(
     extraction_config: ExtractionConfig,
     request: pytest.FixtureRequest,
 ):
+    handler_name = input_dir.parent.name
+    if (sys.platform, handler_name) == ("darwin", "partclone"):
+        pytest.skip(
+            f"Handler '{handler_name}' not supported on platform '{sys.platform}'"
+        )
+
     log_path = Path("/dev/null")  # no logging
     report_file = None  # no reporting
 
