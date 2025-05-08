@@ -1,5 +1,6 @@
 import io
 import shutil
+import zlib
 from pathlib import Path
 from typing import Optional
 
@@ -8,13 +9,18 @@ import lief
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
+from unblob.extractors import Command
 from unblob.file_utils import (
     Endian,
     File,
+    InvalidInputFormat,
+    StructParser,
     convert_int8,
     convert_int32,
     convert_int64,
+    iterate_file,
     iterate_patterns,
+    read_until_past,
     round_up,
 )
 from unblob.models import (
@@ -36,8 +42,77 @@ KERNEL_MODULE_SIGNATURE_FOOTER = b"~Module signature appended~\n"
 KERNEL_INIT_DATA_SECTION = ".init.data"
 
 
+# [Ref] https://github.com/upx/upx/blob/devel/src/stub/src/include/linux.h
+UPX_C_DEFINITIONS = r"""
+typedef struct packhead{
+    char magic[4];
+    uint8_t version;
+    uint8_t format;
+    uint8_t level;
+    uint8_t method;
+    uint64_t unknown1;
+    uint32_t u_filesize1;
+    uint32_t c_filesize;
+    uint32_t u_filesize2;
+    uint32_t unknown2;
+    uint32_t l_info_offset;
+} packhead_t;
+
+typedef struct l_info{
+    uint32_t l_checksum;
+    char l_magic[4];
+    uint16_t l_lsize;
+    uint8_t l_version;
+    uint8_t l_format;
+} l_info_t;
+"""
+upx_parser = StructParser(UPX_C_DEFINITIONS)
+
+
+def parse_upx_packhead(file: File):
+    return upx_parser.parse("packhead_t", file, Endian.LITTLE)
+
+
+def parse_upx_l_info(file: File):
+    return upx_parser.parse("l_info_t", file, Endian.LITTLE)
+
+
 @attrs.define(repr=False)
 class ElfChunk(ValidChunk):
+    @staticmethod
+    def upx_checksum_validates(file: File, l_info, elf) -> bool:
+        size_pack2 = elf.last_offset_segment - l_info.l_lsize
+        size_aligment = round_up(size_pack2, 4)  # Forces to be mod 4
+        xct_off = any(section.name == "init" for section in elf.sections)
+        size_aligment += (4 & size_aligment) ^ (int(bool(xct_off)) << 2)  # 4 or 0
+        size_aligment += 8  # Added 2 times 4 byte (size of disp)
+        if xct_off:
+            size_aligment += 12
+        alignment = size_aligment - size_pack2
+        checksum_offset = elf.last_offset_segment - (l_info.l_lsize - alignment)
+        file.seek(checksum_offset, io.SEEK_SET)
+        adler32_checksum = 1
+        for chunk in iterate_file(file, checksum_offset, l_info.l_lsize - alignment):
+            adler32_checksum = zlib.adler32(chunk, adler32_checksum)
+        return adler32_checksum == l_info.l_checksum
+
+    def is_valid_upx(self, inpath: Path, elf) -> bool:
+        file = File.from_path(inpath)
+        file.seek(-4, io.SEEK_END)  # last 4 bytes indicates where linfo ends
+        l_info_start_offset = abs(
+            convert_int32(file.read(4), Endian.LITTLE)
+            - upx_parser.cparser_le.l_info_t.size
+        )
+        if l_info_start_offset > file.size():
+            return False
+        file.seek(l_info_start_offset, io.SEEK_SET)
+        upx_header = parse_upx_l_info(file)
+        if upx_header.l_magic != b"UPX!":  # Magic
+            return False
+        if not self.upx_checksum_validates(file, upx_header, elf):
+            raise InvalidInputFormat("Invalid UPX checksum")
+        return True
+
     def extract(self, inpath: Path, outdir: Path):
         # ELF file extraction is special in that in the general case no new files are extracted, thus
         # when we want to clean up all carves to save place, carved ELF files would be deleted as well,
@@ -57,6 +132,10 @@ class ElfChunk(ValidChunk):
         if is_kernel:
             with File.from_path(inpath) as file:
                 extract_initramfs(elf, file, outdir)
+
+        elif self.is_valid_upx(inpath=inpath, elf=elf):
+            extract_upx(inpath, outdir)
+
         elif not self.is_whole_file:
             # make a copy, and let the carved chunk be deleted
             outdir.mkdir(parents=True, exist_ok=False)
@@ -67,6 +146,12 @@ class ElfChunk(ValidChunk):
             # Even though the second chunk search one is short-circuited,
             # because the ELF handler will recognize it as a whole file
             # other handlers might burn some cycles on the file as well.
+
+
+def extract_upx(inpath: Path, outdir: Path):
+    extractor = Command("upx", "-d", "{inpath}", "-o{outdir}/{inpath.stem}.elf")
+    outdir.mkdir(parents=True, exist_ok=False)
+    extractor.extract(inpath, outdir)
 
 
 def extract_initramfs(elf, file: File, outdir):
@@ -257,6 +342,35 @@ class _ELFBase(StructHandler):
 
         return end_offset
 
+    def is_upx(self, file: File, start_offset: int, end_offset: int) -> bool:
+        """Check if UPX magic is present after ELF header."""
+        return b"UPX!" in file[start_offset : min(end_offset, start_offset + 4096)]
+
+    def get_upx_end_offset(self, file: File, start_offset: int, end_offset: int) -> int:
+        """Locate UPX footer in ELF file and returns UPX end offset or original end offset."""
+        upx_footer = b"\xff\x00\x00\x00\x00UPX!\x00\x00\x00\x00"
+        for packhead_offset in iterate_patterns(file=file, pattern=upx_footer):
+            file.seek(
+                packhead_offset + len(upx_footer), io.SEEK_SET
+            )  # seek to end of footer
+            file.seek(
+                read_until_past(file=file, pattern=b"\x00")
+            )  # sometimes more NULL bytes are added
+            packheader = parse_upx_packhead(file)
+            file_size_compressed = packheader.c_filesize + packheader.size
+            packhead_is_valid = (
+                (
+                    packheader.magic == b"UPX!"
+                    and packheader.u_filesize1 == packheader.u_filesize2
+                )
+                and (file_size_compressed == file.tell() - start_offset)
+                and (file_size_compressed % 4 == 0)
+            )
+            if packhead_is_valid:
+                return start_offset + file_size_compressed
+        # no matching UPX footer found
+        return end_offset
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ElfChunk]:
         endian = self.get_endianness(file, start_offset)
         file.seek(start_offset, io.SEEK_SET)
@@ -268,6 +382,9 @@ class _ELFBase(StructHandler):
         # kernel modules are always relocatable
         if header.e_type == lief.ELF.Header.FILE_TYPE.REL.value:
             end_offset = self.get_signed_kernel_module_end_offset(file, end_offset)
+
+        if self.is_upx(file=file, start_offset=start_offset, end_offset=end_offset):
+            end_offset = self.get_upx_end_offset(file, start_offset, end_offset)
 
         # do a special extraction of ELF files with ElfChunk
         return ElfChunk(
