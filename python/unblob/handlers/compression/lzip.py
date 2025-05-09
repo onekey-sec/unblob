@@ -6,7 +6,15 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int64
-from ...models import File, Handler, HexString, ValidChunk
+from ...models import (
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -20,6 +28,28 @@ class LZipHandler(Handler):
     NAME = "lzip"
 
     PATTERNS = [HexString("4C 5A 49 50 01")]
+
+    EXTRACTOR = Command(
+        "lziprecover", "-k", "-D0", "-i", "{inpath}", "-o", "{outdir}/lz.uncompressed"
+    )
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Lzip is a lossless compressed file format based on the LZMA algorithm. It features a simple header, CRC-checked integrity, and efficient compression for large files.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="Lzip File Format Documentation",
+                url="https://www.nongnu.org/lzip/manual/lzip_manual.html",
+            ),
+            Reference(
+                title="Lzip Wikipedia",
+                url="https://en.wikipedia.org/wiki/Lzip",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         file.seek(HEADER_LEN, io.SEEK_CUR)
@@ -38,7 +68,3 @@ class LZipHandler(Handler):
             file.seek(-8, io.SEEK_CUR)
 
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
-
-    EXTRACTOR = Command(
-        "lziprecover", "-k", "-D0", "-i", "{inpath}", "-o", "{outdir}/lz.uncompressed"
-    )

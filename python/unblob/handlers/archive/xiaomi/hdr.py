@@ -17,6 +17,8 @@ from unblob.models import (
     Endian,
     Extractor,
     ExtractResult,
+    HandlerDoc,
+    HandlerType,
     HexString,
     StructHandler,
     StructParser,
@@ -170,8 +172,16 @@ class HDR1Handler(HDRHandlerBase):
     ]
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "hdr1_header_t"
-
     EXTRACTOR = HDRExtractor("hdr1_header_t")
+
+    DOC = HandlerDoc(
+        name="Xiaomi HDR1",
+        description="Xiaomi HDR1 firmware files feature a custom header containing metadata, CRC32 checksum, and blob offsets for embedded data. These files are used in Xiaomi devices for firmware updates.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Xiaomi",
+        references=[],
+        limitations=[],
+    )
 
 
 class HDR2Handler(HDRHandlerBase):
@@ -188,3 +198,12 @@ class HDR2Handler(HDRHandlerBase):
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "hdr2_header_t"
     EXTRACTOR = HDRExtractor("hdr2_header_t")
+
+    DOC = HandlerDoc(
+        name="Xiaomi HDR2",
+        description="Xiaomi HDR2 firmware files feature a custom header with metadata, CRC32 checksum, and blob offsets for embedded data. These files also include additional fields for device ID and region information.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Xiaomi",
+        references=[],
+        limitations=[],
+    )

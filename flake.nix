@@ -118,12 +118,25 @@
               nodejs # for pyright
             ] ++ unblob.runtimeDeps;
 
+            uvExtraArgs = [
+              "--group"
+              "docs"
+            ];
+
             venvPatches = [
               (
                 # https://github.com/NixOS/nixpkgs/blob/70f6d2ad78eee1617f0871878e509b6d78a8b13b/pkgs/development/python-modules/python-magic/default.nix#L25-L27
                 replaceVars "${path}/pkgs/development/python-modules/python-magic/libmagic-path.patch" {
                   libmagic = "${file}/lib/libmagic${stdenv.hostPlatform.extensions.sharedLibrary}";
                 }
+              )
+              (
+                (replaceVars "${path}/pkgs/development/python-modules/cairocffi/dlopen-paths.patch" {
+                  ext = stdenv.hostPlatform.extensions.sharedLibrary;
+                  cairo = cairo.out;
+                  glib = glib.out;
+                  gdk_pixbuf = gdk-pixbuf.out;
+                })
               )
             ];
           };

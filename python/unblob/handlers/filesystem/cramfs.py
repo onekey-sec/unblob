@@ -5,7 +5,15 @@ from typing import Optional
 from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int32, get_endian
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 CRAMFS_FLAG_FSID_VERSION_2 = 0x00000001
 BIG_ENDIAN_MAGIC = 0x28_CD_3D_45
@@ -40,6 +48,24 @@ class CramFSHandler(StructHandler):
     HEADER_STRUCT = "cramfs_header_t"
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="CramFS is a lightweight, read-only file system format designed for simplicity and efficiency in embedded systems. It uses zlib compression for file data and stores metadata in a compact, contiguous structure.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="CramFS Documentation",
+                url="https://web.archive.org/web/20160304053532/http://sourceforge.net/projects/cramfs/",
+            ),
+            Reference(
+                title="CramFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/Cramfs",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         endian = get_endian(file, BIG_ENDIAN_MAGIC)

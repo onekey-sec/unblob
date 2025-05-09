@@ -12,7 +12,15 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int32
-from ...models import File, Handler, HexString, ValidChunk
+from ...models import (
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -76,6 +84,24 @@ class LegacyFrameHandler(_LZ4HandlerBase):
     NAME = "lz4_legacy"
     PATTERNS = [HexString("02 21 4C 18")]
 
+    DOC = HandlerDoc(
+        name="LZ4 Legacy",
+        description="LZ4 legacy format is an older framing format used prior to the LZ4 Frame specification, featuring a simpler structure and no support for skippable frames or extensive metadata. Unlike the default LZ4 Frame format, it lacks built-in checksums, versioning, or block independence flags, making it less robust and primarily used for backward compatibility.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="LZ4 Frame Format Documentation",
+                url="https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md",
+            ),
+            Reference(
+                title="LZ4 Wikipedia",
+                url="https://en.wikipedia.org/wiki/LZ4_(compression_algorithm)",
+            ),
+        ],
+        limitations=[],
+    )
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         self._skip_magic_bytes(file)
 
@@ -112,6 +138,24 @@ class SkippableFrameHandler(_LZ4HandlerBase):
     NAME = "lz4_skippable"
     PATTERNS = [HexString("5? 2A 4D 18")]
 
+    DOC = HandlerDoc(
+        name="LZ4 Skippable",
+        description="LZ4 skippable format is designed to encapsulate arbitrary data within an LZ4 stream allowing compliant parsers to skip over it safely. This format does not contain compressed data itself but is often used for embedding metadata or non-LZ4 content alongside standard frames.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="LZ4 Frame Format Documentation",
+                url="https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md",
+            ),
+            Reference(
+                title="LZ4 Wikipedia",
+                url="https://en.wikipedia.org/wiki/LZ4_(compression_algorithm)",
+            ),
+        ],
+        limitations=[],
+    )
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         self._skip_magic_bytes(file)
         frame_size = convert_int32(file.read(FRAME_SIZE_LEN), Endian.LITTLE)
@@ -126,6 +170,24 @@ class DefaultFrameHandler(_LZ4HandlerBase):
     NAME = "lz4_default"
 
     PATTERNS = [HexString("04 22 4D 18")]
+
+    DOC = HandlerDoc(
+        name="LZ4",
+        description="LZ4 is a high-speed lossless compression algorithm designed for real-time data compression with minimal memory usage.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="LZ4 Frame Format Documentation",
+                url="https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md",
+            ),
+            Reference(
+                title="LZ4 Wikipedia",
+                url="https://en.wikipedia.org/wiki/LZ4_(compression_algorithm)",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         self._skip_magic_bytes(file)

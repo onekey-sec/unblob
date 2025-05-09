@@ -6,7 +6,15 @@ from structlog import get_logger
 
 from ...extractors import Command
 from ...file_utils import InvalidInputFormat, iterate_patterns
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -79,6 +87,24 @@ class ZIPHandler(StructHandler):
 
     # empty password with -p will make sure the command will not hang
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="ZIP is a widely used archive file format that supports multiple compression methods, file spanning, and optional encryption. It includes metadata such as file names, sizes, and timestamps, and supports both standard and ZIP64 extensions for large files.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="ZIP File Format Specification",
+                url="https://pkware.com/documents/casestudies/APPNOTE.TXT",
+            ),
+            Reference(
+                title="ZIP64 Format Specification",
+                url="https://pkware.cachefly.net/webdocs/APPNOTE/APPNOTE-6.3.1.TXT",
+            ),
+        ],
+        limitations=["Does not support encrypted ZIP files."],
+    )
 
     ENCRYPTED_FLAG = 0b0001
     EOCD_RECORD_HEADER = 0x6054B50

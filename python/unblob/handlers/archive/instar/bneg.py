@@ -5,7 +5,15 @@ from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
 from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
-from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
+from unblob.models import (
+    Chunk,
+    Extractor,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -68,6 +76,15 @@ class BNEGHandler(StructHandler):
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "bneg_header_t"
     EXTRACTOR = BNEGExtractor()
+
+    DOC = HandlerDoc(
+        name="Instar BNEG",
+        description="BNEG firmware files consist of a custom header followed by two partitions containing firmware components. The header specifies metadata such as magic value, version, and partition sizes.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Instar",
+        references=[],
+        limitations=[],
+    )
 
     def is_valid_header(self, header) -> bool:
         if header.partition_1_size == 0:

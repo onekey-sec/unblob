@@ -11,6 +11,8 @@ from unblob.models import (
     Endian,
     Extractor,
     Handler,
+    HandlerDoc,
+    HandlerType,
     HexString,
     StructParser,
     ValidChunk,
@@ -110,6 +112,15 @@ class QnapHandler(Handler):
         HexString("F5 7B 47 03"),
     ]
     EXTRACTOR = QnapExtractor()
+
+    DOC = HandlerDoc(
+        name="QNAP NAS",
+        description="QNAP NAS firmware files consist of a custom header, encrypted data sections, and a footer marking the end of the encrypted stream. The header contains metadata such as device ID, firmware version, and encryption details.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="QNAP",
+        references=[],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         context = QTSSearchContext(start_offset=start_offset, file=file, end_offset=-1)

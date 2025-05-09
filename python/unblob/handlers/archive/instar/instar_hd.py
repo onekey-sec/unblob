@@ -6,7 +6,7 @@ from structlog import get_logger
 
 from unblob.file_utils import File
 from unblob.handlers.archive.zip import ZIPHandler
-from unblob.models import Extractor, HexString
+from unblob.models import Extractor, HandlerDoc, HandlerType, HexString
 
 logger = get_logger()
 
@@ -45,3 +45,12 @@ class InstarHDHandler(ZIPHandler):
     EXTRACTOR = InstarHDExtractor()
 
     EOCD_RECORD_HEADER = 0x9054B50
+
+    DOC = HandlerDoc(
+        name="Instar HD",
+        description="Instar HD firmware files are modified ZIP archives with non-standard local file headers, central directory headers, and end-of-central-directory records. These modifications include custom magic bytes to differentiate them from standard ZIP files.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Instar",
+        references=[],
+        limitations=[],
+    )

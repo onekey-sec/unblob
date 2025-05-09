@@ -8,7 +8,15 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, convert_int32
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -79,6 +87,24 @@ class LZOHandler(StructHandler):
     HEADER_STRUCT = "lzo_header"
 
     EXTRACTOR = Command("lzop", "-d", "-f", "-f", "-N", "-p{outdir}", "{inpath}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="LZO is a data compression format featuring a simple header structure and optional checksum verification. It is optimized for fast decompression and supports various compression levels and flags for additional metadata.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="LZO File Format Documentation",
+                url="http://www.lzop.org/",
+            ),
+            Reference(
+                title="LZO Wikipedia",
+                url="https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Oberhumer",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.cparser_be.lzo_header_no_filter_t(file)

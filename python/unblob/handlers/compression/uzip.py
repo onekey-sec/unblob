@@ -17,6 +17,9 @@ from unblob.models import (
     Extractor,
     ExtractResult,
     File,
+    HandlerDoc,
+    HandlerType,
+    Reference,
     Regex,
     StructHandler,
     ValidChunk,
@@ -110,6 +113,20 @@ class UZIPHandler(StructHandler):
     HEADER_STRUCT = HEADER_STRUCT
     C_DEFINITIONS = C_DEFINITIONS
     EXTRACTOR = UZIPExtractor()
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="FreeBSD UZIP is a block-based compressed disk image format. It uses a table of contents (TOC) to index compressed blocks, supporting ZLIB, LZMA, and ZSTD compression algorithms.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor="FreeBSD",
+        references=[
+            Reference(
+                title="FreeBSD UZIP Documentation",
+                url="https://github.com/freebsd/freebsd-src/tree/master/sys/geom/uzip",
+            ),
+        ],
+        limitations=[],
+    )
 
     def is_valid_header(self, header) -> bool:
         return (

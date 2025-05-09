@@ -24,7 +24,15 @@ from structlog import get_logger
 
 from ...extractors import Command
 from ...file_utils import Endian
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -66,6 +74,22 @@ class StuffItSITHandler(_StuffItHandlerBase):
     """
     HEADER_STRUCT = "sit_header_t"
 
+    EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="StuffIt SIT archives is a legacy compressed archive format commonly used on macOS and earlier Apple systems.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="StuffIt Technologies",
+        references=[
+            Reference(
+                title="StuffIt SIT File Format Documentation",
+                url="https://en.wikipedia.org/wiki/StuffIt",
+            )
+        ],
+        limitations=[],
+    )
+
 
 class StuffIt5Handler(_StuffItHandlerBase):
     NAME = "stuffit5"
@@ -75,7 +99,7 @@ class StuffIt5Handler(_StuffItHandlerBase):
             """
             // "StuffIt (c)1997-"
             53 74 75 66 66 49 74 20 28 63 29 31 39 39 37 2D
-    """
+        """
         )
     ]
 
@@ -91,3 +115,19 @@ class StuffIt5Handler(_StuffItHandlerBase):
         } stuffit5_header_t;
     """
     HEADER_STRUCT = "stuffit5_header_t"
+
+    EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="StuffIt SIT archives is a legacy compressed archive format commonly used on macOS and earlier Apple systems.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="StuffIt Technologies",
+        references=[
+            Reference(
+                title="StuffIt SIT File Format Documentation",
+                url="https://en.wikipedia.org/wiki/StuffIt",
+            )
+        ],
+        limitations=[],
+    )

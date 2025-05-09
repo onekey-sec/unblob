@@ -4,7 +4,15 @@ from typing import Optional
 from structlog import get_logger
 
 from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
-from unblob.models import Extractor, HexString, StructHandler, ValidChunk
+from unblob.models import (
+    Extractor,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -79,6 +87,20 @@ class EngeniusHandler(StructHandler):
     HEADER_STRUCT = "engenius_header_t"
     EXTRACTOR = EngeniusExtractor()
     PATTERN_MATCH_OFFSET = -0x5C
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Engenius firmware files contain a custom header with metadata, followed by encrypted data using an XOR cipher. The header includes fields like version, model, and length, which are essential for decryption and extraction.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Engenius",
+        references=[
+            Reference(
+                title="enfringement - Tools for working with EnGenius WiFi hardware.",
+                url="https://github.com/ryancdotorg/enfringement",  # Replace with actual reference if available
+            )
+        ],
+        limitations=["Does not support all firmware versions."],
+    )
 
     def is_valid_header(self, header) -> bool:
         if header.length <= len(header):

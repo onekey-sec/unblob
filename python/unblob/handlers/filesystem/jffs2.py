@@ -13,7 +13,15 @@ from unblob.file_utils import (
 )
 
 from ...extractors import Command
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -155,6 +163,24 @@ class JFFS2OldHandler(_JFFS2Base):
 
     BIG_ENDIAN_MAGIC = 0x19_84
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="JFFS2 (Journaling Flash File System version 2) is a log-structured file system for flash memory devices, using an older magic number to identify its nodes. It organizes data into nodes with headers containing metadata and CRC checks for integrity.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="JFFS2 Documentation",
+                url="https://sourceware.org/jffs2/",
+            ),
+            Reference(
+                title="JFFS2 Wikipedia",
+                url="https://en.wikipedia.org/wiki/JFFS2",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class JFFS2NewHandler(_JFFS2Base):
     NAME = "jffs2_new"
@@ -165,3 +191,21 @@ class JFFS2NewHandler(_JFFS2Base):
     ]
 
     BIG_ENDIAN_MAGIC = 0x19_85
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="JFFS2 (Journaling Flash File System version 2) is a log-structured file system for flash memory devices, using an older magic number to identify its nodes. It organizes data into nodes with headers containing metadata and CRC checks for integrity.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="JFFS2 Documentation",
+                url="https://sourceware.org/jffs2/",
+            ),
+            Reference(
+                title="JFFS2 Wikipedia",
+                url="https://en.wikipedia.org/wiki/JFFS2",
+            ),
+        ],
+        limitations=[],
+    )

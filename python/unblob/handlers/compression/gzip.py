@@ -36,8 +36,11 @@ from ...models import (
     File,
     Glob,
     Handler,
+    HandlerDoc,
+    HandlerType,
     HexString,
     MultiFile,
+    Reference,
     ValidChunk,
 )
 from ._gzip_reader import SingleMemberGzipReader
@@ -131,6 +134,24 @@ class GZIPHandler(Handler):
         """
         )
     ]
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="GZIP is a compressed file format that uses the DEFLATE algorithm and includes metadata such as original file name and modification time. It is commonly used for efficient file storage and transfer.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="GZIP File Format Specification",
+                url="https://datatracker.ietf.org/doc/html/rfc1952",
+            ),
+            Reference(
+                title="GZIP Wikipedia",
+                url="https://en.wikipedia.org/wiki/Gzip",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         fp = SingleMemberGzipReader(file)

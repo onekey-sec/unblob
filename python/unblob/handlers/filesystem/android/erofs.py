@@ -9,7 +9,10 @@ from unblob.file_utils import (
 )
 from unblob.models import (
     File,
+    HandlerDoc,
+    HandlerType,
     HexString,
+    Reference,
     StructHandler,
     ValidChunk,
 )
@@ -50,6 +53,24 @@ class EROFSHandler(StructHandler):
         "{inpath}",
     )
     PATTERN_MATCH_OFFSET = -SUPERBLOCK_OFFSET
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="EROFS (Enhanced Read-Only File System) is a lightweight, high-performance file system designed for read-only use cases, commonly used in Android and Linux. It features compression support, metadata efficiency, and a fixed superblock structure starting at offset 0x400.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor="Google",
+        references=[
+            Reference(
+                title="EROFS Documentation",
+                url="https://www.kernel.org/doc/html/latest/filesystems/erofs.html",
+            ),
+            Reference(
+                title="EROFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/Enhanced_Read-Only_File_System",
+            ),
+        ],
+        limitations=[],
+    )
 
     def is_valid_header(self, header) -> bool:
         try:

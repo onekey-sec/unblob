@@ -17,7 +17,16 @@ from ...file_utils import (
     round_up,
     stream_scan,
 )
-from ...models import File, Handler, HexString, InvalidInputFormat, ValidChunk
+from ...models import (
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    InvalidInputFormat,
+    Reference,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -167,6 +176,24 @@ class XZHandler(Handler):
     PATTERNS = [HexString("FD 37 7A 58 5A 00")]
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="xz.uncompressed")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="XZ is a compressed file format that uses the LZMA2 algorithm for high compression efficiency. It is designed for general-purpose data compression with support for integrity checks and padding for alignment.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="XZ File Format Specification",
+                url="https://tukaani.org/xz/xz-file-format-1.0.4.txt",
+            ),
+            Reference(
+                title="XZ Wikipedia",
+                url="https://en.wikipedia.org/wiki/XZ_Utils",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         file.seek(start_offset + len(STREAM_START_MAGIC), io.SEEK_SET)

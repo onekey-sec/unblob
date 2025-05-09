@@ -11,6 +11,7 @@ repos:
       - id: check-json
       - id: check-toml
       - id: check-yaml
+        args: ['--unsafe']
       - id: check-added-large-files
 
   - repo: local

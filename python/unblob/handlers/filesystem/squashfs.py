@@ -6,7 +6,16 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, StructParser, get_endian, round_up
-from ...models import Extractor, File, HexString, StructHandler, ValidChunk
+from ...models import (
+    Extractor,
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -113,6 +122,24 @@ class SquashFSv1Handler(_SquashFSBase):
     """
     HEADER_STRUCT = "squashfs_super_block_t"
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="SquashFS version 1 is a compressed, read-only file system format designed for minimal storage usage. It is commonly used in embedded systems and early Linux distributions.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class SquashFSv2Handler(SquashFSv1Handler):
     NAME = "squashfs_v2"
@@ -136,6 +163,24 @@ class SquashFSv2Handler(SquashFSv1Handler):
         ),
     ]
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="SquashFS version 2 is a compressed, read-only file system format designed for minimal storage usage. It builds upon version 1 with additional features and improvements for embedded systems and Linux distributions.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class SquashFSv3Handler(_SquashFSBase):
     NAME = "squashfs_v3"
@@ -158,6 +203,24 @@ class SquashFSv3Handler(_SquashFSBase):
         """
         ),
     ]
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="SquashFS version 3 is a compressed, read-only file system format designed for minimal storage usage. It is widely used in embedded systems and Linux distributions for efficient storage and fast access.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
 
     C_DEFINITIONS = r"""
         typedef struct squashfs3_super_block
@@ -219,6 +282,24 @@ class SquashFSv3DDWRTHandler(SquashFSv3Handler):
         ),
     ]
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="SquashFS version 3 DD-WRT is a variant of the SquashFS v3 format used in DD-WRT firmware. It features a unique magic number and may include specific optimizations for embedded systems.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor="DDWRT",
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class SquashFSv3BroadcomHandler(SquashFSv3Handler):
     NAME = "squashfs_v3_broadcom"
@@ -247,6 +328,24 @@ class SquashFSv3BroadcomHandler(SquashFSv3Handler):
         ),
     ]
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="SquashFS version 3 Broadcom is a variant of the SquashFS v3 format used in Broadcom firmware. It features a unique magic number and may include specific optimizations for Broadcom devices.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor="Broadcom",
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class SquashFSv3NSHandler(SquashFSv3Handler):
     NAME = "squashfs_v3_nonstandard"
@@ -273,6 +372,24 @@ class SquashFSv3NSHandler(SquashFSv3Handler):
         """
         ),
     ]
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="SquashFS version 3 is a compressed, read-only file system format designed for minimal storage usage. It is widely used in embedded systems and Linux distributions for efficient storage and fast access.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor="unknown",
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
 
 
 class SquashFSv4LEHandler(_SquashFSBase):
@@ -314,6 +431,24 @@ class SquashFSv4LEHandler(_SquashFSBase):
         } squashfs4_super_block_t;
     """
     HEADER_STRUCT = "squashfs4_super_block_t"
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="SquashFS version 4 is a compressed, read-only file system format designed for minimal storage usage and fast access. It is widely used in embedded systems and Linux distributions for efficient storage management.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
 
 
 class SquashFSv4BEExtractor(Extractor):
@@ -367,3 +502,21 @@ class SquashFSv4BEHandler(SquashFSv4LEHandler):
     ]
 
     EXTRACTOR = SquashFSv4BEExtractor()
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="SquashFS version 4 is a compressed, read-only file system format designed for minimal storage usage and fast access. It supports both big-endian and little-endian formats and is widely used in embedded systems and Linux distributions.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )

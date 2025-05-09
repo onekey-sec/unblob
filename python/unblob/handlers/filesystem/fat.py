@@ -7,7 +7,15 @@ from structlog import get_logger
 from unblob.extractors.command import Command
 from unblob.file_utils import InvalidInputFormat
 
-from ...models import File, Handler, HexString, ValidChunk
+from ...models import (
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -45,6 +53,20 @@ class FATHandler(Handler):
     ]
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="FAT (File Allocation Table) is a file system format used for organizing and managing files on storage devices, supporting FAT12, FAT16, and FAT32 variants. It uses a table to map file clusters, enabling efficient file storage and retrieval.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="FAT Wikipedia",
+                url="https://en.wikipedia.org/wiki/File_Allocation_Table",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         pyfat_fs = PyFatNoClose(offset=start_offset)

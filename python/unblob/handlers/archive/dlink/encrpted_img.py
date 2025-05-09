@@ -6,7 +6,16 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from structlog import get_logger
 
 from unblob.file_utils import File, InvalidInputFormat
-from unblob.models import Endian, Extractor, Regex, StructHandler, ValidChunk
+from unblob.models import (
+    Endian,
+    Extractor,
+    HandlerDoc,
+    HandlerType,
+    Reference,
+    Regex,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -51,6 +60,20 @@ class EncrptedHandler(StructHandler):
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "dlink_header_t"
     EXTRACTOR = EncrptedExtractor()
+
+    DOC = HandlerDoc(
+        name="D-Link encrpted_img",
+        description="A binary format used by D-Link to store encrypted firmware or data. It consists of a custom 12-byte magic header followed by the encrypted payload.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="D-Link",
+        references=[
+            Reference(
+                title="How-To: Extracting Decryption Keys for D-Link",
+                url="https://www.onekey.com/resource/extracting-decryption-keys-dlink",  # Replace with actual reference if available
+            )
+        ],
+        limitations=[],
+    )
 
     def is_valid_header(self, header) -> bool:
         return header.size >= len(header)

@@ -4,7 +4,15 @@ from structlog import get_logger
 
 from unblob.extractors.command import Command
 
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -19,7 +27,7 @@ class ARCHandler(StructHandler):
             """
             // Each entry in an archive begins with a one byte archive marker set to 0x1A.
             // The marker is followed by a one byte header type code, from 0x0 to 0x7.
-            // Then a null-byte or unitialized-byte terminated filename string of 13 bytes, the
+            // Then a null-byte or uninitialized-byte terminated filename string of 13 bytes, the
             // uninitialized byte is always set between 0xf0 and 0xff.
             1A (01 | 02 | 03 | 04 | 05 | 06 | 07) [12] (00 | F0 | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | F9 | FA | FB | FC | FD | FE | FF)
             """
@@ -41,6 +49,20 @@ class ARCHandler(StructHandler):
 
     HEADER_STRUCT = "arc_head_t"
     EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Handles ARC archive files, which are legacy archive formats used to store multiple files with metadata such as file size, creation date, and CRC.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="ARC File Format Documentation",
+                url="https://en.wikipedia.org/wiki/ARC_(file_format)",
+            )
+        ],
+        limitations=[],
+    )
 
     def valid_name(self, name: bytes) -> bool:
         try:

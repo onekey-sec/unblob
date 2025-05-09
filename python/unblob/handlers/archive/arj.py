@@ -6,7 +6,15 @@ from structlog import get_logger
 
 from ...extractors import Command
 from ...file_utils import Endian, convert_int32
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -100,6 +108,24 @@ class ARJHandler(StructHandler):
     HEADER_STRUCT = "arj_header_t"
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Handles ARJ archive files, which are legacy compressed archive formats used to store multiple files with metadata such as file size, creation date, and CRC.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="ARJ File Format Documentation",
+                url="https://docs.fileformat.com/compression/arj/",
+            ),
+            Reference(
+                title="ARJ Technical Information",
+                url="https://github.com/tripsin/unarj/blob/master/UNARJ.H#L203",
+            ),
+        ],
+        limitations=[],
+    )
 
     def _read_arj_main_header(self, file: File, start_offset: int) -> int:
         file.seek(start_offset)
