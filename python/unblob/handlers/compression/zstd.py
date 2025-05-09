@@ -6,7 +6,15 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, InvalidInputFormat, convert_int8
-from ...models import File, Handler, HexString, ValidChunk
+from ...models import (
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -25,6 +33,24 @@ class ZSTDHandler(Handler):
     PATTERNS = [HexString("28 B5 2F FD")]
 
     EXTRACTOR = Command("zstd", "-d", "{inpath}", "-o", "{outdir}/zstd.uncompressed")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Zstandard (ZSTD) is a fast lossless compression algorithm with high compression ratios, designed for modern data storage and transfer. Its file format includes a frame structure with optional dictionary support and checksums for data integrity.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="Zstandard File Format Specification",
+                url="https://facebook.github.io/zstd/zstd_manual.html",
+            ),
+            Reference(
+                title="Zstandard Wikipedia",
+                url="https://en.wikipedia.org/wiki/Zstandard",
+            ),
+        ],
+        limitations=[],
+    )
 
     def get_frame_header_size(self, frame_header_descriptor: int) -> int:
         single_segment = (frame_header_descriptor >> 5 & 1) & 0b1

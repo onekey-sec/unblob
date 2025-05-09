@@ -17,7 +17,14 @@ from unblob.file_utils import (
     iterate_patterns,
     round_up,
 )
-from unblob.models import HexString, StructHandler, ValidChunk
+from unblob.models import (
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 lief.logging.disable()
 
@@ -347,6 +354,24 @@ class ELF32Handler(_ELFBase):
     """
     HEADER_STRUCT = "elf_header_32_t"
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="The 32-bit ELF (Executable and Linkable Format) is a binary file format used for executables, object code, shared libraries, and core dumps. It supports 32-bit addressing and includes headers for program and section information.",
+        handler_type=HandlerType.EXECUTABLE,
+        vendor=None,
+        references=[
+            Reference(
+                title="ELF File Format Specification",
+                url="https://refspecs.linuxfoundation.org/elf/elf.pdf",
+            ),
+            Reference(
+                title="ELF Wikipedia",
+                url="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class ELF64Handler(_ELFBase):
     NAME = "elf64"
@@ -425,3 +450,21 @@ class ELF64Handler(_ELFBase):
         } module_signature_t;
     """
     HEADER_STRUCT = "elf_header_64_t"
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="The 64-bit ELF (Executable and Linkable Format) is a binary file format used for executables, shared libraries, and core dumps. It supports 64-bit addressing and includes headers for program and section information.",
+        handler_type=HandlerType.EXECUTABLE,
+        vendor=None,
+        references=[
+            Reference(
+                title="ELF File Format Specification",
+                url="https://refspecs.linuxfoundation.org/elf/elf.pdf",
+            ),
+            Reference(
+                title="ELF Wikipedia",
+                url="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format",
+            ),
+        ],
+        limitations=[],
+    )

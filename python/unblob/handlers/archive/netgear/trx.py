@@ -7,7 +7,15 @@ from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
 from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
-from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
+from unblob.models import (
+    Chunk,
+    Extractor,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    StructHandler,
+    ValidChunk,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -99,6 +107,15 @@ class NetgearTRXv1Handler(NetgearTRXBase):
     C_DEFINITIONS = TRX_V1_C_DEFINITION
     EXTRACTOR = TRXExtractor(TRX_V1_C_DEFINITION)
 
+    DOC = HandlerDoc(
+        name="Netgear TRX v1",
+        description="Netgear TRX v1 firmware format includes a custom header with partition offsets and a CRC32 checksum for integrity verification. It supports up to three partitions defined in the header.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Netgear",
+        references=[],
+        limitations=[],
+    )
+
 
 class NetgearTRXv2Handler(NetgearTRXBase):
     NAME = "trx_v2"
@@ -113,3 +130,12 @@ class NetgearTRXv2Handler(NetgearTRXBase):
     ]
     C_DEFINITIONS = TRX_V2_C_DEFINITION
     EXTRACTOR = TRXExtractor(TRX_V2_C_DEFINITION)
+
+    DOC = HandlerDoc(
+        name="Netgear TRX v2",
+        description="Netgear TRX v2 firmware format includes a custom header with partition offsets and a CRC32 checksum for integrity verification. It supports up to four partitions defined in the header.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Netgear",
+        references=[],
+        limitations=[],
+    )

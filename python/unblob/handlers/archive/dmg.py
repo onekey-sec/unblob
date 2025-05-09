@@ -5,7 +5,15 @@ from structlog import get_logger
 from unblob.extractors.command import Command
 
 from ...file_utils import Endian
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -66,6 +74,20 @@ class DMGHandler(StructHandler):
     # See more about this problem: https://newbedev.com/hfs-private-directory-data
     EXTRACTOR = Command(
         "7z", "x", "-xr!*HFS+ Private Data*", "-y", "{inpath}", "-o{outdir}"
+    )
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Apple Disk Image (DMG) files are commonly used on macOS for software distribution and disk image storage.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Apple",
+        references=[
+            Reference(
+                title="Apple Disk Image Format Documentation",
+                url="http://newosxbook.com/DMG.html",
+            ),
+        ],
+        limitations=[],
     )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:

@@ -8,7 +8,16 @@ from structlog import get_logger
 from unblob.handlers.archive.dmg import DMGHandler
 
 from ...file_utils import DEFAULT_BUFSIZE, InvalidInputFormat
-from ...models import Extractor, File, Handler, Regex, ValidChunk
+from ...models import (
+    Extractor,
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    Reference,
+    Regex,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -35,6 +44,24 @@ class ZlibHandler(Handler):
     ]
 
     EXTRACTOR = ZlibExtractor()
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="The zlib format is a compressed data format based on the DEFLATE algorithm, often used for data compression in various applications. It includes a lightweight header and checksum for data integrity.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="zlib File Format Specification",
+                url="https://www.zlib.net/manual.html",
+            ),
+            Reference(
+                title="zlib Wikipedia",
+                url="https://en.wikipedia.org/wiki/Zlib",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         for pattern in DMGHandler.PATTERNS:

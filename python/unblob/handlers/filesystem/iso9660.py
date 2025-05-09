@@ -5,7 +5,15 @@ from structlog import get_logger
 from unblob.extractors import Command
 from unblob.file_utils import Endian
 
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -111,11 +119,29 @@ class ISO9660FSHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="ISO 9660 is a file system standard for optical disc media, defining a volume descriptor structure and directory hierarchy. It is widely used for CD-ROMs and supports cross-platform compatibility.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="ISO 9660 Specification",
+                url="https://wiki.osdev.org/ISO_9660",
+            ),
+            Reference(
+                title="ISO 9660 Wikipedia",
+                url="https://en.wikipedia.org/wiki/ISO_9660",
+            ),
+        ],
+        limitations=[],
+    )
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, Endian.LITTLE)
         size = from_733(header.volume_space_size) * from_723(header.logical_block_size)
 
-        # We need to substract the system area given that we matched on volume descriptor,
+        # We need to subtract the system area given that we matched on volume descriptor,
         # which is the first struct afterward.
         real_start_offset = start_offset - SYSTEM_AREA_SIZE
         if real_start_offset < 0:

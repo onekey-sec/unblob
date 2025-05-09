@@ -3,7 +3,15 @@ from typing import Optional
 from structlog import get_logger
 
 from ...extractors import Command
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -41,6 +49,24 @@ class CABHandler(StructHandler):
     HEADER_STRUCT = "cab_header_t"
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Handles Microsoft Cabinet (CAB) archive files, which are used for compressed file storage and software installation.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Microsoft",
+        references=[
+            Reference(
+                title="Microsoft Cabinet File Format Documentation",
+                url="https://en.wikipedia.org/wiki/Cabinet_(file_format)",
+            ),
+            Reference(
+                title="Ubuntu Manual - cabextract",
+                url="https://manpages.ubuntu.com/manpages/focal/man1/cabextract.1.html",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file)

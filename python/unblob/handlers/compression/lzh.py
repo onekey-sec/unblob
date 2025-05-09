@@ -3,7 +3,15 @@ from typing import Optional
 
 from ...extractors import Command
 from ...file_utils import Endian
-from ...models import File, Regex, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    Reference,
+    Regex,
+    StructHandler,
+    ValidChunk,
+)
 
 PADDING_LEN = 2
 # CPP/7zip/Archive/LzhHandler.cpp
@@ -55,6 +63,20 @@ class LZHHandler(StructHandler):
     HEADER_STRUCT = "lzh_default_header_t"
 
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="LZH is a legacy archive format that uses various compression methods such as '-lh0-' and '-lh5-'. It was widely used in Japan and on older systems for compressing and archiving files.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="LZH Compression Format",
+                url="https://en.wikipedia.org/wiki/LHA_(file_format)",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, Endian.LITTLE)

@@ -9,7 +9,16 @@ from unblob.extractors import Command
 
 from ...file_utils import InvalidInputFormat, SeekError, get_endian, iterate_patterns
 from ...iter_utils import get_intervals
-from ...models import File, Handler, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -83,6 +92,24 @@ class UBIFSHandler(StructHandler):
 
     EXTRACTOR = Command("ubireader_extract_files", "{inpath}", "-w", "-o", "{outdir}")
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="UBIFS (Unsorted Block Image File System) is a flash file system designed for raw flash memory, providing wear leveling, error correction, and power failure resilience. It operates on top of UBI volumes, which manage flash blocks on raw NAND or NOR flash devices.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="UBIFS Documentation",
+                url="https://www.kernel.org/doc/html/latest/filesystems/ubifs.html",
+            ),
+            Reference(
+                title="UBIFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/UBIFS",
+            ),
+        ],
+        limitations=[],
+    )
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         endian = get_endian(file, self._BIG_ENDIAN_MAGIC)
         sb_header = self.parse_header(file, endian)
@@ -117,6 +144,24 @@ class UBIHandler(Handler):
     PATTERNS = [HexString("55 42 49 23 01  // UBI# and version 1")]
 
     EXTRACTOR = UBIExtractor("ubireader_extract_images", "{inpath}", "-o", "{outdir}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="UBI (Unsorted Block Image) is a volume management system for raw flash devices, providing wear leveling and bad block management. It operates as a layer between the MTD subsystem and higher-level filesystems like UBIFS.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="UBI Documentation",
+                url="https://www.kernel.org/doc/html/latest/driver-api/ubi.html",
+            ),
+            Reference(
+                title="UBI Wikipedia",
+                url="https://en.wikipedia.org/wiki/UBIFS#UBI",
+            ),
+        ],
+        limitations=[],
+    )
 
     def _guess_peb_size(self, file: File) -> int:
         # Since we don't know the PEB size, we need to guess it. At the moment we just find the

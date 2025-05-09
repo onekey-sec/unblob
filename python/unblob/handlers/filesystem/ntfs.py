@@ -5,7 +5,15 @@ from structlog import get_logger
 from unblob.file_utils import InvalidInputFormat
 
 from ...extractors import Command
-from ...models import File, Regex, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    Reference,
+    Regex,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -60,6 +68,20 @@ class NTFSHandler(StructHandler):
     HEADER_STRUCT = "ntfs_boot_t"
 
     EXTRACTOR = Command("7z", "x", "-x![SYSTEM]", "-y", "{inpath}", "-o{outdir}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="NTFS (New Technology File System) is a proprietary file system developed by Microsoft, featuring metadata support, advanced data structures, and journaling for reliability. It is commonly used in Windows operating systems for efficient storage and retrieval of files.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor="Microsoft",
+        references=[
+            Reference(
+                title="NTFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/NTFS",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file)

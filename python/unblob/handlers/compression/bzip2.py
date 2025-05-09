@@ -7,7 +7,16 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import InvalidInputFormat, SeekError, StructParser, stream_scan
-from ...models import File, Handler, HexString, Regex, ValidChunk
+from ...models import (
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    Regex,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -127,6 +136,24 @@ class BZip2Handler(Handler):
     PATTERNS = [Regex(r"\x42\x5a\x68[\x31-\x39]\x31\x41\x59\x26\x53\x59")]
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="bzip2.uncompressed")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="The bzip2 format is a block-based compression format that uses the Burrows-Wheeler transform and Huffman coding for high compression efficiency. Each stream starts with a header and consists of one or more compressed blocks, ending with a footer containing a checksum.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="bzip2 File Format Documentation",
+                url="https://sourceware.org/bzip2/manual/manual.html",
+            ),
+            Reference(
+                title="bzip2 Technical Specification",
+                url="https://en.wikipedia.org/wiki/Bzip2",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         if not _validate_stream_header(file):

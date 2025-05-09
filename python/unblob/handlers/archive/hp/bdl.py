@@ -6,7 +6,16 @@ from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
 from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser, snull
-from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
+from unblob.models import (
+    Chunk,
+    Extractor,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -87,6 +96,20 @@ class HPBDLHandler(StructHandler):
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "bdl_header_t"
     EXTRACTOR = HPBDLExtractor()
+
+    DOC = HandlerDoc(
+        name="HP BDL",
+        description="The HP BDL format is a firmware archive containing a custom header and a table of contents that specifies offsets and sizes of embedded firmware components. It includes metadata such as release, brand, device ID, version, and revision.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="HP",
+        references=[
+            Reference(
+                title="hpbdl",
+                url="https://github.com/tylerwhall/hpbdl",
+            )
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, endian=Endian.LITTLE)

@@ -40,7 +40,15 @@ from structlog import get_logger
 from unblob.extractors import Command
 
 from ...file_utils import Endian, InvalidInputFormat, convert_int8, convert_int16
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -63,6 +71,24 @@ class UnixCompressHandler(StructHandler):
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="lzw.uncompressed")
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Unix compress files use the Lempel-Ziv-Welch (LZW) algorithm for data compression and are identified by a 2-byte magic number (0x1F 0x9D). This format supports optional block compression and variable bit lengths ranging from 9 to 16 bits.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="Unix Compress File Format Documentation",
+                url="https://fuchsia.googlesource.com/third_party/wuffs/+/HEAD/std/lzw/README.md",
+            ),
+            Reference(
+                title="LZW Compression Algorithm",
+                url="https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch",
+            ),
+        ],
+        limitations=[],
+    )
+
     def unlzw(self, file: File, start_offset: int, max_len: int) -> int:  # noqa: C901
         """Calculate the end of a unix compress stream.
 
@@ -78,7 +104,7 @@ class UnixCompressHandler(StructHandler):
         Copyright (C) 2014, 2015 Mark Adler This software is provided
         'as-is', without any express or implied warranty.  In no event
         will the authors be held liable for any damages arising from
-        the use of this software.  Permission is granted to anyone to
+        the use of this software. Permission is granted to anyone to
         use this software for any purpose, including commercial
         applications, and to alter it and redistribute it freely,
         subject to the following restrictions:

@@ -22,7 +22,10 @@ from ...models import (
     ExtractResult,
     File,
     Handler,
+    HandlerDoc,
+    HandlerType,
     HexString,
+    Reference,
     ValidChunk,
 )
 
@@ -427,6 +430,20 @@ class BinaryHandler(_CPIOHandlerBase):
 
     EXTRACTOR = BinaryCPIOExtractor()
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="CPIO (Copy In, Copy Out) is an archive file format used for bundling files and directories along with their metadata. It is commonly used in Unix-like systems for creating backups or transferring files, and supports various encoding formats including binary and ASCII.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="GNU CPIO Manual",
+                url="https://www.gnu.org/software/cpio/manual/cpio.html",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class PortableOldASCIIHandler(_CPIOHandlerBase):
     NAME = "cpio_portable_old_ascii"
@@ -435,6 +452,20 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
 
     EXTRACTOR = PortableOldASCIIExtractor()
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="CPIO (Copy In, Copy Out) is an archive file format used for bundling files and directories along with their metadata. It is commonly used in Unix-like systems for creating backups or transferring files, and supports various encoding formats including binary and ASCII.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="GNU CPIO Manual",
+                url="https://www.gnu.org/software/cpio/manual/cpio.html",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class PortableASCIIHandler(_CPIOHandlerBase):
     NAME = "cpio_portable_ascii"
@@ -442,9 +473,37 @@ class PortableASCIIHandler(_CPIOHandlerBase):
 
     EXTRACTOR = PortableASCIIExtractor()
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="CPIO (Copy In, Copy Out) is an archive file format used for bundling files and directories along with their metadata. It is commonly used in Unix-like systems for creating backups or transferring files, and supports various encoding formats including binary and ASCII.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="GNU CPIO Manual",
+                url="https://www.gnu.org/software/cpio/manual/cpio.html",
+            ),
+        ],
+        limitations=[],
+    )
+
 
 class PortableASCIIWithCRCHandler(_CPIOHandlerBase):
     NAME = "cpio_portable_ascii_crc"
     PATTERNS = [HexString("30 37 30 37 30 32 // 07 07 02")]
 
     EXTRACTOR = PortableASCIIWithCRCExtractor()
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="CPIO (Copy In, Copy Out) is an archive file format used for bundling files and directories along with their metadata. It is commonly used in Unix-like systems for creating backups or transferring files, and supports various encoding formats including binary and ASCII.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="GNU CPIO Manual",
+                url="https://www.gnu.org/software/cpio/manual/cpio.html",
+            ),
+        ],
+        limitations=[],
+    )
