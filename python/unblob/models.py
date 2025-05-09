@@ -1,4 +1,5 @@
 import abc
+import dataclasses
 import itertools
 import json
 from collections.abc import Iterable
@@ -28,6 +29,33 @@ logger = get_logger()
 #
 # file ──► pattern match ──► ValidChunk
 #
+
+
+class HandlerType(Enum):
+    ARCHIVE = "Archive"
+    COMPRESSION = "Compression"
+    FILESYSTEM = "FileSystem"
+    EXECUTABLE = "Executable"
+
+
+@dataclasses.dataclass(frozen=True)
+class Reference:
+    title: str
+    url: str
+
+
+@dataclasses.dataclass
+class HandlerDoc:
+    name: str
+    description: Union[str, None]
+    vendor: Union[str, None]
+    references: list[Reference]
+    limitations: list[str]
+    handler_type: HandlerType
+    fully_supported: bool = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        self.fully_supported = len(self.limitations) == 0
 
 
 @attrs.define(frozen=True)
@@ -417,6 +445,8 @@ class DirectoryHandler(abc.ABC):
 
     PATTERN: DirectoryPattern
 
+    DOC: HandlerDoc
+
     @classmethod
     def get_dependencies(cls):
         """Return external command dependencies needed for this handler to work."""
@@ -452,6 +482,8 @@ class Handler(abc.ABC, Generic[TExtractor]):
     PATTERN_MATCH_OFFSET: int = 0
 
     EXTRACTOR: TExtractor
+
+    DOC: HandlerDoc
 
     @classmethod
     def get_dependencies(cls):
