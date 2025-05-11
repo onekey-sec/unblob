@@ -13,7 +13,15 @@ from ...file_utils import (
     convert_int32,
     convert_int64,
 )
-from ...models import File, Handler, HexString, ValidChunk
+from ...models import (
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -45,6 +53,24 @@ class LZMAHandler(Handler):
     ]
 
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="lzma.uncompressed")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="LZMA is a compression format based on the Lempel-Ziv-Markov chain algorithm, offering high compression ratios and efficient decompression. It is commonly used in standalone .lzma files and embedded in other formats like 7z.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="LZMA File Format Documentation",
+                url="https://tukaani.org/xz/lzma.txt",
+            ),
+            Reference(
+                title="LZMA Wikipedia",
+                url="https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Markov_chain_algorithm",
+            ),
+        ],
+        limitations=[],
+    )
 
     def is_valid_stream(self, dictionary_size: int, uncompressed_size: int) -> bool:
         # dictionary size is non-zero (section 1.1.2 of format definition)

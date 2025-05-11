@@ -6,7 +6,16 @@ from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
 from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
-from unblob.models import Chunk, Extractor, HexString, StructHandler, ValidChunk
+from unblob.models import (
+    Chunk,
+    Extractor,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -57,6 +66,20 @@ class NetgearCHKHandler(StructHandler):
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "chk_header_t"
     EXTRACTOR = CHKExtractor()
+
+    DOC = HandlerDoc(
+        name="Netgear CHK",
+        description="Netgear CHK firmware files consist of a custom header containing metadata and checksums, followed by kernel and root filesystem partitions. The header includes fields for partition sizes, checksums, and a board identifier.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Netgear",
+        references=[
+            Reference(
+                title="CHK Image Format Image Builder Tool for the R7800 Series",
+                url="https://github.com/Getnear/R7800/blob/master/tools/firmware-utils/src/mkchkimg.c",
+            )
+        ],
+        limitations=[],
+    )
 
     def is_valid_header(self, header) -> bool:
         if header.header_len != len(header):

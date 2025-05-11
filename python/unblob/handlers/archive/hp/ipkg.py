@@ -15,7 +15,10 @@ from unblob.file_utils import (
 from unblob.models import (
     Extractor,
     ExtractResult,
+    HandlerDoc,
+    HandlerType,
     HexString,
+    Reference,
     StructHandler,
     ValidChunk,
 )
@@ -98,6 +101,20 @@ class HPIPKGHandler(StructHandler):
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "ipkg_header_t"
     EXTRACTOR = HPIPKGExtractor()
+
+    DOC = HandlerDoc(
+        name="HP IPKG",
+        description="HP IPKG firmware archives consist of a custom header, followed by a table of contents and file entries. Each entry specifies metadata such as file name, offset, size, and CRC32 checksum.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="HP",
+        references=[
+            Reference(
+                title="hpbdl",
+                url="https://github.com/tylerwhall/hpbdl",
+            )
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, endian=Endian.LITTLE)

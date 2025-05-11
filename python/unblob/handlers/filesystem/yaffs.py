@@ -21,7 +21,16 @@ from unblob.file_utils import (
     read_until_past,
     snull,
 )
-from unblob.models import Extractor, ExtractResult, Handler, HexString, ValidChunk
+from unblob.models import (
+    Extractor,
+    ExtractResult,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -744,6 +753,24 @@ class YAFFSHandler(Handler):
     ]
 
     EXTRACTOR = YAFFSExtractor()
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="YAFFS (Yet Another Flash File System) is a log-structured file system designed for NAND flash memory, storing data in fixed-size chunks with associated metadata. It supports features like wear leveling, error correction, and efficient handling of power loss scenarios.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="YAFFS Documentation",
+                url="https://yaffs.net/",
+            ),
+            Reference(
+                title="YAFFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/YAFFS",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         parser = instantiate_parser(file, start_offset)

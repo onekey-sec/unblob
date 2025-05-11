@@ -6,7 +6,15 @@ from structlog import get_logger
 from unblob.extractors.command import Command
 
 from ....file_utils import Endian
-from ....models import File, Regex, StructHandler, ValidChunk
+from ....models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    Reference,
+    Regex,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -58,6 +66,24 @@ class SparseHandler(StructHandler):
     HEADER_STRUCT = "sparse_header_t"
 
     EXTRACTOR = Command("simg2img", "{inpath}", "{outdir}/raw.image")
+
+    DOC = HandlerDoc(
+        name="Android Sparse Image",
+        description="Android sparse images are a file format used to efficiently store disk images by representing sequences of zero blocks compactly. The format includes a file header, followed by chunk headers and data, with support for raw, fill, and 'don't care' chunks.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor="Google",
+        references=[
+            Reference(
+                title="Android Sparse Image Format Documentation",
+                url="https://formats.kaitai.io/android_sparse/",
+            ),
+            Reference(
+                title="simg2img Tool",
+                url="https://github.com/anestisb/android-simg2img",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file, Endian.LITTLE)

@@ -5,9 +5,17 @@ import sys
 
 import unblob.plugins
 from unblob import cli
+from unblob.doc import generate_markdown
 from unblob.file_utils import File, FileSystem, iterbits, round_down
 from unblob.handlers.compression.lzo import HeaderFlags as LZOHeaderFlags
-from unblob.models import SingleFile, TaskResult, _JSONEncoder
+from unblob.models import (
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    SingleFile,
+    TaskResult,
+    _JSONEncoder,
+)
 from unblob.parser import _HexStringToRegex
 from unblob.report import ChunkReport, FileMagicReport, StatReport
 
@@ -48,3 +56,13 @@ LZOHeaderFlags.MULTIPART
 LZOHeaderFlags.NAME_DEFAULT
 LZOHeaderFlags.STDIN
 LZOHeaderFlags.STDOUT
+
+HandlerType.ARCHIVE
+HandlerType.EXECUTABLE
+HandlerType.COMPRESSION
+HandlerType.FILESYSTEM
+
+HandlerDoc
+generate_markdown
+
+Handler.DOC

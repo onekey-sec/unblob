@@ -32,8 +32,11 @@ from ...models import (
     DirectoryHandler,
     File,
     Glob,
+    HandlerDoc,
+    HandlerType,
     HexString,
     MultiFile,
+    Reference,
     StructHandler,
     ValidChunk,
 )
@@ -90,6 +93,20 @@ class SevenZipHandler(StructHandler):
     HEADER_STRUCT = HEADER_STRUCT
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
+    DOC = HandlerDoc(
+        name=NAME,
+        description="The 7-Zip file format is a compressed archive format with high compression ratios, supporting multiple algorithms, CRC checks, and multi-volume archives.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="7-Zip Technical Documentation",
+                url="https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zFormat.txt",
+            ),
+        ],
+        limitations=[],
+    )
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         header = self.parse_header(file)
 
@@ -105,6 +122,20 @@ class MultiVolumeSevenZipHandler(DirectoryHandler):
     EXTRACTOR = MultiFileCommand("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
     PATTERN = Glob("*.7z.001")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="The 7-Zip file format is a compressed archive format with high compression ratios, supporting multiple algorithms, CRC checks, and multi-volume archives.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="7-Zip Technical Documentation",
+                url="https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zFormat.txt",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
         paths = sorted(

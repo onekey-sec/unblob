@@ -5,7 +5,15 @@ from structlog import get_logger
 from unblob.file_utils import InvalidInputFormat
 
 from ...extractors import Command
-from ...models import File, HexString, StructHandler, ValidChunk
+from ...models import (
+    File,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
 
 logger = get_logger()
 
@@ -65,6 +73,24 @@ class EXTHandler(StructHandler):
     PATTERN_MATCH_OFFSET = -MAGIC_OFFSET
 
     EXTRACTOR = Command("debugfs", "-R", 'rdump / "{outdir}"', "{inpath}")
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="ExtFS (Ext2/Ext3/Ext4) is a family of journaling file systems commonly used in Linux-based operating systems. It supports features like large file sizes, extended attributes, and journaling for improved reliability.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="Ext4 Documentation",
+                url="https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html",
+            ),
+            Reference(
+                title="ExtFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/Ext4",
+            ),
+        ],
+        limitations=[],
+    )
 
     def valid_header(self, header) -> bool:
         if header.s_state not in [0x0, 0x1, 0x2]:

@@ -10,7 +10,10 @@ from unblob.file_utils import File, InvalidInputFormat
 from unblob.models import (
     Endian,
     Extractor,
+    HandlerDoc,
+    HandlerType,
     HexString,
+    Reference,
     StructHandler,
     StructParser,
     ValidChunk,
@@ -68,6 +71,20 @@ class SHRSHandler(StructHandler):
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "dlink_header_t"
     EXTRACTOR = SHRSExtractor()
+
+    DOC = HandlerDoc(
+        name="D-Link SHRS",
+        description="SHRS is a D-Link firmware format with a custom header containing metadata, SHA-512 digests, and AES-CBC encryption parameters. The firmware data is encrypted using a fixed key and IV stored in the header.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="D-Link",
+        references=[
+            Reference(
+                title="Breaking the D-Link DIR3060 Firmware Encryption - Recon - Part 1",
+                url="https://0x00sec.org/t/breaking-the-d-link-dir3060-firmware-encryption-recon-part-1/21943",  # Replace with actual reference if available
+            )
+        ],
+        limitations=[],
+    )
 
     def is_valid_header(self, header, file: File) -> bool:
         if header.file_size < len(header):

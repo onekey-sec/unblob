@@ -6,7 +6,17 @@ import arpy
 from structlog import get_logger
 
 from ...file_utils import FileSystem, OffsetFile, iterate_file
-from ...models import Extractor, ExtractResult, File, Handler, HexString, ValidChunk
+from ...models import (
+    Extractor,
+    ExtractResult,
+    File,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    ValidChunk,
+)
 from ...report import ExtractionProblem
 
 logger = get_logger()
@@ -58,11 +68,25 @@ class ARHandler(Handler):
             """
             // "!<arch>\\n", 58 chars of whatever, then the ARFMAG
             21 3C 61 72 63 68 3E 0A [58] 60 0A
-    """
+            """
         )
     ]
 
     EXTRACTOR = ArExtractor()
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="Handles Unix AR (archive) files, which are used to store multiple files in a single archive with a simple header format.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="Unix AR File Format Documentation",
+                url="https://en.wikipedia.org/wiki/Ar_(Unix)",
+            )
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         offset_file = OffsetFile(file, start_offset)

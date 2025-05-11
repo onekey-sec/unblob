@@ -19,7 +19,10 @@ from ...models import (
     Extractor,
     ExtractResult,
     File,
+    HandlerDoc,
+    HandlerType,
     HexString,
+    Reference,
     StructHandler,
     ValidChunk,
 )
@@ -328,6 +331,24 @@ class RomFSFSHandler(StructHandler):
     """
     HEADER_STRUCT = "romfs_header"
     EXTRACTOR = RomfsExtractor()
+
+    DOC = HandlerDoc(
+        name=NAME,
+        description="RomFS is a simple, space-efficient, read-only file system format designed for embedded systems. It features 16-byte alignment, minimal metadata overhead, and supports basic file types like directories, files, symlinks, and devices.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="RomFS Documentation",
+                url="https://www.kernel.org/doc/html/latest/filesystems/romfs.html",
+            ),
+            Reference(
+                title="RomFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/Romfs",
+            ),
+        ],
+        limitations=[],
+    )
 
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         if not valid_checksum(file.read(512)):

@@ -7,7 +7,10 @@ from unblob.file_utils import File, InvalidInputFormat, iterate_file
 from unblob.models import (
     Endian,
     Extractor,
+    HandlerDoc,
+    HandlerType,
     HexString,
+    Reference,
     StructHandler,
     StructParser,
     ValidChunk,
@@ -318,6 +321,20 @@ class AutelECCHandler(StructHandler):
     C_DEFINITIONS = C_DEFINITIONS
     HEADER_STRUCT = "autel_header_t"
     EXTRACTOR = ECCExtractor()
+
+    DOC = HandlerDoc(
+        name="Autel ECC",
+        description="Autel ECC files consist of a custom header followed by encrypted data blocks. The header includes metadata such as magic bytes, file size, and copyright information.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor="Autel",
+        references=[
+            Reference(
+                title="Autel ECC Decryption Script (Sector7)",
+                url="https://gist.github.com/sector7-nl/3fc815cd2497817ad461bfbd393294cb",  # Replace with actual reference if available
+            )
+        ],
+        limitations=[],
+    )
 
     def is_valid_header(self, header) -> bool:
         return header.header_size == 0x20
