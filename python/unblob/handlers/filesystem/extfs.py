@@ -75,7 +75,7 @@ class EXTHandler(StructHandler):
     EXTRACTOR = Command("debugfs", "-R", 'rdump / "{outdir}"', "{inpath}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="ExtFS",
         description="ExtFS (Ext2/Ext3/Ext4) is a family of journaling file systems commonly used in Linux-based operating systems. It supports features like large file sizes, extended attributes, and journaling for improved reliability.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

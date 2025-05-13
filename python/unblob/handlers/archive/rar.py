@@ -41,7 +41,7 @@ class RarHandler(Handler):
     EXTRACTOR = Command("unar", "-no-directory", "-p", "", "{inpath}", "-o", "{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="RAR",
         description="RAR archive files are commonly used for compressed data storage. They can contain multiple files and directories, and support various compression methods.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,

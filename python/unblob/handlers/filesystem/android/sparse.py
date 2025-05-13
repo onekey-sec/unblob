@@ -68,7 +68,7 @@ class SparseHandler(StructHandler):
     EXTRACTOR = Command("simg2img", "{inpath}", "{outdir}/raw.image")
 
     DOC = HandlerDoc(
-        name="Android Sparse Image",
+        name="Android Sparse",
         description="Android sparse images are a file format used to efficiently store disk images by representing sequences of zero blocks compactly. The format includes a file header, followed by chunk headers and data, with support for raw, fill, and 'don't care' chunks.",
         handler_type=HandlerType.FILESYSTEM,
         vendor="Google",

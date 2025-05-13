@@ -110,8 +110,8 @@ class ARJHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="Handles ARJ archive files, which are legacy compressed archive formats used to store multiple files with metadata such as file size, creation date, and CRC.",
+        name="ARJ",
+        description="ARJ is a legacy compressed archive formats used to store multiple files with metadata such as file size, creation date, and CRC.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
         references=[

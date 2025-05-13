@@ -75,8 +75,8 @@ class ARHandler(Handler):
     EXTRACTOR = ArExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="Handles Unix AR (archive) files, which are used to store multiple files in a single archive with a simple header format.",
+        name="AR",
+        description="Unix AR (archive) files are used to store multiple files in a single archive with a simple header format.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
         references=[

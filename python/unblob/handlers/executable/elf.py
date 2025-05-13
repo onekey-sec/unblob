@@ -355,7 +355,7 @@ class ELF32Handler(_ELFBase):
     HEADER_STRUCT = "elf_header_32_t"
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="ELF (32-bit)",
         description="The 32-bit ELF (Executable and Linkable Format) is a binary file format used for executables, object code, shared libraries, and core dumps. It supports 32-bit addressing and includes headers for program and section information.",
         handler_type=HandlerType.EXECUTABLE,
         vendor=None,
@@ -452,8 +452,8 @@ class ELF64Handler(_ELFBase):
     HEADER_STRUCT = "elf_header_64_t"
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="The 64-bit ELF (Executable and Linkable Format) is a binary file format used for executables, shared libraries, and core dumps. It supports 64-bit addressing and includes headers for program and section information.",
+        name="ELF (64-bit)",
+        description="The 64-bit ELF (Executable and Linkable Format) is a binary file format used for executables, object code, shared libraries, and core dumps. It supports 64-bit addressing and includes headers for program and section information.",
         handler_type=HandlerType.EXECUTABLE,
         vendor=None,
         references=[

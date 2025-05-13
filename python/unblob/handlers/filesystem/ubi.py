@@ -93,7 +93,7 @@ class UBIFSHandler(StructHandler):
     EXTRACTOR = Command("ubireader_extract_files", "{inpath}", "-w", "-o", "{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="UBIFS",
         description="UBIFS (Unsorted Block Image File System) is a flash file system designed for raw flash memory, providing wear leveling, error correction, and power failure resilience. It operates on top of UBI volumes, which manage flash blocks on raw NAND or NOR flash devices.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,
@@ -146,7 +146,7 @@ class UBIHandler(Handler):
     EXTRACTOR = UBIExtractor("ubireader_extract_images", "{inpath}", "-o", "{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="UBI",
         description="UBI (Unsorted Block Image) is a volume management system for raw flash devices, providing wear leveling and bad block management. It operates as a layer between the MTD subsystem and higher-level filesystems like UBIFS.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

@@ -123,7 +123,7 @@ class SquashFSv1Handler(_SquashFSBase):
     HEADER_STRUCT = "squashfs_super_block_t"
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="SquashFS (v1)",
         description="SquashFS version 1 is a compressed, read-only file system format designed for minimal storage usage. It is commonly used in embedded systems and early Linux distributions.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,
@@ -164,7 +164,7 @@ class SquashFSv2Handler(SquashFSv1Handler):
     ]
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="SquashFS (v2)",
         description="SquashFS version 2 is a compressed, read-only file system format designed for minimal storage usage. It builds upon version 1 with additional features and improvements for embedded systems and Linux distributions.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,
@@ -205,7 +205,7 @@ class SquashFSv3Handler(_SquashFSBase):
     ]
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="SquashFS (v3)",
         description="SquashFS version 3 is a compressed, read-only file system format designed for minimal storage usage. It is widely used in embedded systems and Linux distributions for efficient storage and fast access.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,
@@ -283,7 +283,7 @@ class SquashFSv3DDWRTHandler(SquashFSv3Handler):
     ]
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="SquashFS (v3 - DDWRT)",
         description="SquashFS version 3 DD-WRT is a variant of the SquashFS v3 format used in DD-WRT firmware. It features a unique magic number and may include specific optimizations for embedded systems.",
         handler_type=HandlerType.FILESYSTEM,
         vendor="DDWRT",
@@ -329,7 +329,7 @@ class SquashFSv3BroadcomHandler(SquashFSv3Handler):
     ]
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="SquashFS (v3 - Broadcom)",
         description="SquashFS version 3 Broadcom is a variant of the SquashFS v3 format used in Broadcom firmware. It features a unique magic number and may include specific optimizations for Broadcom devices.",
         handler_type=HandlerType.FILESYSTEM,
         vendor="Broadcom",
@@ -374,7 +374,7 @@ class SquashFSv3NSHandler(SquashFSv3Handler):
     ]
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="SquashFS (v3 - non-standard)",
         description="SquashFS version 3 is a compressed, read-only file system format designed for minimal storage usage. It is widely used in embedded systems and Linux distributions for efficient storage and fast access.",
         handler_type=HandlerType.FILESYSTEM,
         vendor="unknown",
@@ -433,7 +433,7 @@ class SquashFSv4LEHandler(_SquashFSBase):
     HEADER_STRUCT = "squashfs4_super_block_t"
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="SquashFS (v4 - LE)",
         description="SquashFS version 4 is a compressed, read-only file system format designed for minimal storage usage and fast access. It is widely used in embedded systems and Linux distributions for efficient storage management.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,
@@ -504,7 +504,7 @@ class SquashFSv4BEHandler(SquashFSv4LEHandler):
     EXTRACTOR = SquashFSv4BEExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="SquashFS (v4 - BE)",
         description="SquashFS version 4 is a compressed, read-only file system format designed for minimal storage usage and fast access. It supports both big-endian and little-endian formats and is widely used in embedded systems and Linux distributions.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

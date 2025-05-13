@@ -55,8 +55,8 @@ class LZMAHandler(Handler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="lzma.uncompressed")
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="LZMA is a compression format based on the Lempel-Ziv-Markov chain algorithm, offering high compression ratios and efficient decompression. It is commonly used in standalone .lzma files and embedded in other formats like 7z.",
+        name="LZMA",
+        description="LZMA is a compression format based on the Lempel-Ziv-Markov chain algorithm, offering high compression ratios and efficient decompression. It is commonly used in standalone `.lzma` files and embedded in other formats like 7z.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,
         references=[

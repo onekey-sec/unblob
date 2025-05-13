@@ -178,7 +178,7 @@ class XZHandler(Handler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-so", stdout="xz.uncompressed")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="XZ",
         description="XZ is a compressed file format that uses the LZMA2 algorithm for high compression efficiency. It is designed for general-purpose data compression with support for integrity checks and padding for alignment.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,

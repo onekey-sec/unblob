@@ -34,7 +34,7 @@ class LZipHandler(Handler):
     )
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="Lzip",
         description="Lzip is a lossless compressed file format based on the LZMA algorithm. It features a simple header, CRC-checked integrity, and efficient compression for large files.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,

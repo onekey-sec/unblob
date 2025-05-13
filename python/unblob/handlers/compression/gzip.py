@@ -136,7 +136,7 @@ class GZIPHandler(Handler):
     ]
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="GZIP",
         description="GZIP is a compressed file format that uses the DEFLATE algorithm and includes metadata such as original file name and modification time. It is commonly used for efficient file storage and transfer.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,

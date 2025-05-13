@@ -77,7 +77,7 @@ class DMGHandler(StructHandler):
     )
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="DMG",
         description="Apple Disk Image (DMG) files are commonly used on macOS for software distribution and disk image storage.",
         handler_type=HandlerType.ARCHIVE,
         vendor="Apple",

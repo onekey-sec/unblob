@@ -89,7 +89,7 @@ class ZIPHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="ZIP",
         description="ZIP is a widely used archive file format that supports multiple compression methods, file spanning, and optional encryption. It includes metadata such as file names, sizes, and timestamps, and supports both standard and ZIP64 extensions for large files.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
