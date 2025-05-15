@@ -11,7 +11,7 @@ nav:
   - About: index.md
   - User Guide: guide.md
   - installation.md
-  - Supported Formats: formats.md
+  - formats.md
   - extractors.md
   - development.md
   - API: api.md
