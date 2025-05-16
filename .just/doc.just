@@ -58,4 +58,6 @@ generate-handlers-doc:
 
         for handler_class in sorted_handlers:
             content = generate_markdown(handler_class.DOC)
-            f.write("\n" + content)
+            f.write("\n" + content.rstrip("\n"))
+
+        f.write("\n")

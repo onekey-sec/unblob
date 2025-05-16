@@ -20,7 +20,6 @@ _HANDLER_DOC_MARKDOWN_TEMPLATE = """## {name}
 {references}
 
 {limitations}
-
 """
 
 
