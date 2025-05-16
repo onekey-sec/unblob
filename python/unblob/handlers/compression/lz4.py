@@ -85,7 +85,7 @@ class LegacyFrameHandler(_LZ4HandlerBase):
     PATTERNS = [HexString("02 21 4C 18")]
 
     DOC = HandlerDoc(
-        name="LZ4 Legacy",
+        name="LZ4 (legacy)",
         description="LZ4 legacy format is an older framing format used prior to the LZ4 Frame specification, featuring a simpler structure and no support for skippable frames or extensive metadata. Unlike the default LZ4 Frame format, it lacks built-in checksums, versioning, or block independence flags, making it less robust and primarily used for backward compatibility.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,
@@ -139,7 +139,7 @@ class SkippableFrameHandler(_LZ4HandlerBase):
     PATTERNS = [HexString("5? 2A 4D 18")]
 
     DOC = HandlerDoc(
-        name="LZ4 Skippable",
+        name="LZ4 (skippable)",
         description="LZ4 skippable format is designed to encapsulate arbitrary data within an LZ4 stream allowing compliant parsers to skip over it safely. This format does not contain compressed data itself but is often used for embedding metadata or non-LZ4 content alongside standard frames.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,

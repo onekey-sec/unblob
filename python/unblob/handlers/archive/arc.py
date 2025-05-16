@@ -51,8 +51,8 @@ class ARCHandler(StructHandler):
     EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="Handles ARC archive files, which are legacy archive formats used to store multiple files with metadata such as file size, creation date, and CRC.",
+        name="ARC",
+        description="ARC is a legacy archive format used to store multiple files with metadata such as file size, creation date, and CRC.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
         references=[

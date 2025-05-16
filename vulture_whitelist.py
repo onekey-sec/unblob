@@ -61,6 +61,9 @@ HandlerType.ARCHIVE
 HandlerType.EXECUTABLE
 HandlerType.COMPRESSION
 HandlerType.FILESYSTEM
+HandlerType.BAREMETAL
+HandlerType.BOOTLOADER
+HandlerType.ENCRYPTION
 
 HandlerDoc
 generate_markdown

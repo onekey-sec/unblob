@@ -5,7 +5,14 @@ from typing import Optional
 
 from unblob.extractors import Command
 from unblob.file_utils import File, InvalidInputFormat, get_endian_short
-from unblob.models import Regex, StructHandler, ValidChunk
+from unblob.models import (
+    HandlerDoc,
+    HandlerType,
+    Reference,
+    Regex,
+    StructHandler,
+    ValidChunk,
+)
 
 C_DEFINITIONS = r"""
     typedef struct partclone_header{
@@ -50,6 +57,23 @@ class PartcloneHandler(StructHandler):
         "{outdir}/partclone.restored",
         "-L",
         "/dev/stdout",
+    )
+    DOC = HandlerDoc(
+        name="Partclone",
+        description="Partclone is a utility used for backing up and restoring partitions. Many cloning tools (such as Clonezilla) rely on it to create block-level images that include filesystem metadata.",
+        handler_type=HandlerType.ARCHIVE,
+        vendor=None,
+        references=[
+            Reference(
+                title="Partclone GitHub Repository",
+                url="https://github.com/Thomas-Tsai/partclone",
+            ),
+            Reference(
+                title="Clonezilla Official Documentation",
+                url="https://clonezilla.org/",
+            ),
+        ],
+        limitations=[],
     )
 
     def is_valid_header(self, header) -> bool:

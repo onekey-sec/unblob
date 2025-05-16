@@ -115,8 +115,8 @@ class UZIPHandler(StructHandler):
     EXTRACTOR = UZIPExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="FreeBSD UZIP is a block-based compressed disk image format. It uses a table of contents (TOC) to index compressed blocks, supporting ZLIB, LZMA, and ZSTD compression algorithms.",
+        name="UZIP",
+        description="FreeBSD UZIP is a block-based compressed disk image format. It uses a table of contents to index compressed blocks, supporting ZLIB, LZMA, and ZSTD compression algorithms.",
         handler_type=HandlerType.COMPRESSION,
         vendor="FreeBSD",
         references=[

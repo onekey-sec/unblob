@@ -120,7 +120,7 @@ class ISO9660FSHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="ISO 9660",
         description="ISO 9660 is a file system standard for optical disc media, defining a volume descriptor structure and directory hierarchy. It is widely used for CD-ROMs and supports cross-platform compatibility.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

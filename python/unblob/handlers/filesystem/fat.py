@@ -55,7 +55,7 @@ class FATHandler(Handler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="FAT",
         description="FAT (File Allocation Table) is a file system format used for organizing and managing files on storage devices, supporting FAT12, FAT16, and FAT32 variants. It uses a table to map file clusters, enabling efficient file storage and retrieval.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

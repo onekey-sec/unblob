@@ -65,7 +65,7 @@ class LZHHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="LZH",
         description="LZH is a legacy archive format that uses various compression methods such as '-lh0-' and '-lh5-'. It was widely used in Japan and on older systems for compressing and archiving files.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,

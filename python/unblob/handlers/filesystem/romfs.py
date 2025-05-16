@@ -333,7 +333,7 @@ class RomFSFSHandler(StructHandler):
     EXTRACTOR = RomfsExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="RomFS",
         description="RomFS is a simple, space-efficient, read-only file system format designed for embedded systems. It features 16-byte alignment, minimal metadata overhead, and supports basic file types like directories, files, symlinks, and devices.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

@@ -51,8 +51,8 @@ class CABHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="Handles Microsoft Cabinet (CAB) archive files, which are used for compressed file storage and software installation.",
+        name="CAB",
+        description="Microsoft Cabinet (CAB) archive files are used for compressed file storage and software installation.",
         handler_type=HandlerType.ARCHIVE,
         vendor="Microsoft",
         references=[

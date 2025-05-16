@@ -187,8 +187,8 @@ class TarUstarHandler(_TarHandler):
     PATTERN_MATCH_OFFSET = -MAGIC_OFFSET
 
     DOC = HandlerDoc(
-        name="tar_ustar",
-        description="USTAR (Uniform Standard Tape Archive) tar files is an extension of the original tar format with additional metadata fields.",
+        name="TAR (USTAR)",
+        description="USTAR (Uniform Standard Tape Archive) tar files are extensions of the original tar format with additional metadata fields.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
         references=[
@@ -257,7 +257,7 @@ class TarUnixHandler(_TarHandler):
     PATTERN_MATCH_OFFSET = -100  # go back to beginning of skipped name
 
     DOC = HandlerDoc(
-        name="tar_unix",
+        name="TAR (Unix)",
         description="Unix tar files are a widely used archive format for storing files and directories with metadata.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,

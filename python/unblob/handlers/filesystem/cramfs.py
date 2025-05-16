@@ -50,7 +50,7 @@ class CramFSHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="CramFS",
         description="CramFS is a lightweight, read-only file system format designed for simplicity and efficiency in embedded systems. It uses zlib compression for file data and stores metadata in a compact, contiguous structure.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

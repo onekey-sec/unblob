@@ -36,6 +36,9 @@ class HandlerType(Enum):
     COMPRESSION = "Compression"
     FILESYSTEM = "FileSystem"
     EXECUTABLE = "Executable"
+    BAREMETAL = "Baremetal"
+    BOOTLOADER = "Bootloader"
+    ENCRYPTION = "Encryption"
 
 
 @dataclasses.dataclass(frozen=True)

@@ -55,8 +55,8 @@ class EROFSHandler(StructHandler):
     PATTERN_MATCH_OFFSET = -SUPERBLOCK_OFFSET
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="EROFS (Enhanced Read-Only File System) is a lightweight, high-performance file system designed for read-only use cases, commonly used in Android and Linux. It features compression support, metadata efficiency, and a fixed superblock structure starting at offset 0x400.",
+        name="Android EROFS",
+        description="EROFS (Enhanced Read-Only File System) is a lightweight, high-performance file system designed for read-only use cases, commonly used in Android and Linux. It features compression support, metadata efficiency, and a fixed superblock structure.",
         handler_type=HandlerType.FILESYSTEM,
         vendor="Google",
         references=[

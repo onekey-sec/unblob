@@ -77,7 +77,7 @@ class StuffItSITHandler(_StuffItHandlerBase):
     EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="Stuffit SIT",
         description="StuffIt SIT archives is a legacy compressed archive format commonly used on macOS and earlier Apple systems.",
         handler_type=HandlerType.ARCHIVE,
         vendor="StuffIt Technologies",
@@ -119,7 +119,7 @@ class StuffIt5Handler(_StuffItHandlerBase):
     EXTRACTOR = Command("unar", "-no-directory", "-o", "{outdir}", "{inpath}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="Stuffit SIT (v5)",
         description="StuffIt SIT archives is a legacy compressed archive format commonly used on macOS and earlier Apple systems.",
         handler_type=HandlerType.ARCHIVE,
         vendor="StuffIt Technologies",

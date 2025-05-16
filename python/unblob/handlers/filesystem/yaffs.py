@@ -755,7 +755,7 @@ class YAFFSHandler(Handler):
     EXTRACTOR = YAFFSExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="YAFFS",
         description="YAFFS (Yet Another Flash File System) is a log-structured file system designed for NAND flash memory, storing data in fixed-size chunks with associated metadata. It supports features like wear leveling, error correction, and efficient handling of power loss scenarios.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

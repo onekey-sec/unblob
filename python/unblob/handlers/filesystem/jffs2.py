@@ -164,7 +164,7 @@ class JFFS2OldHandler(_JFFS2Base):
     BIG_ENDIAN_MAGIC = 0x19_84
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="JFFS2 (old)",
         description="JFFS2 (Journaling Flash File System version 2) is a log-structured file system for flash memory devices, using an older magic number to identify its nodes. It organizes data into nodes with headers containing metadata and CRC checks for integrity.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,
@@ -193,7 +193,7 @@ class JFFS2NewHandler(_JFFS2Base):
     BIG_ENDIAN_MAGIC = 0x19_85
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="JFFS2 (new)",
         description="JFFS2 (Journaling Flash File System version 2) is a log-structured file system for flash memory devices, using an older magic number to identify its nodes. It organizes data into nodes with headers containing metadata and CRC checks for integrity.",
         handler_type=HandlerType.FILESYSTEM,
         vendor=None,

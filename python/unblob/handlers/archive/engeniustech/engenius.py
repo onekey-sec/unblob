@@ -89,8 +89,8 @@ class EngeniusHandler(StructHandler):
     PATTERN_MATCH_OFFSET = -0x5C
 
     DOC = HandlerDoc(
-        name=NAME,
-        description="Engenius firmware files contain a custom header with metadata, followed by encrypted data using an XOR cipher. The header includes fields like version, model, and length, which are essential for decryption and extraction.",
+        name="Engenius",
+        description="Engenius firmware files contain a custom header with metadata, followed by encrypted data using an XOR cipher.",
         handler_type=HandlerType.ARCHIVE,
         vendor="Engenius",
         references=[

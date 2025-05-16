@@ -70,7 +70,7 @@ class NTFSHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-x![SYSTEM]", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="NTFS",
         description="NTFS (New Technology File System) is a proprietary file system developed by Microsoft, featuring metadata support, advanced data structures, and journaling for reliability. It is commonly used in Windows operating systems for efficient storage and retrieval of files.",
         handler_type=HandlerType.FILESYSTEM,
         vendor="Microsoft",

@@ -94,7 +94,7 @@ class SevenZipHandler(StructHandler):
     EXTRACTOR = Command("7z", "x", "-p", "-y", "{inpath}", "-o{outdir}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="7-Zip",
         description="The 7-Zip file format is a compressed archive format with high compression ratios, supporting multiple algorithms, CRC checks, and multi-volume archives.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,

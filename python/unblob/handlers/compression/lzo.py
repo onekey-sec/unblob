@@ -89,7 +89,7 @@ class LZOHandler(StructHandler):
     EXTRACTOR = Command("lzop", "-d", "-f", "-f", "-N", "-p{outdir}", "{inpath}")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="LZO",
         description="LZO is a data compression format featuring a simple header structure and optional checksum verification. It is optimized for fast decompression and supports various compression levels and flags for additional metadata.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,

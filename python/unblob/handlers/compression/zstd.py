@@ -35,7 +35,7 @@ class ZSTDHandler(Handler):
     EXTRACTOR = Command("zstd", "-d", "{inpath}", "-o", "{outdir}/zstd.uncompressed")
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="ZSTD",
         description="Zstandard (ZSTD) is a fast lossless compression algorithm with high compression ratios, designed for modern data storage and transfer. Its file format includes a frame structure with optional dictionary support and checksums for data integrity.",
         handler_type=HandlerType.COMPRESSION,
         vendor=None,

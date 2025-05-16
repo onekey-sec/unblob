@@ -431,7 +431,7 @@ class BinaryHandler(_CPIOHandlerBase):
     EXTRACTOR = BinaryCPIOExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="CPIO (binary)",
         description="CPIO (Copy In, Copy Out) is an archive file format used for bundling files and directories along with their metadata. It is commonly used in Unix-like systems for creating backups or transferring files, and supports various encoding formats including binary and ASCII.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
@@ -453,7 +453,7 @@ class PortableOldASCIIHandler(_CPIOHandlerBase):
     EXTRACTOR = PortableOldASCIIExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="CPIO (portable old ASCII)",
         description="CPIO (Copy In, Copy Out) is an archive file format used for bundling files and directories along with their metadata. It is commonly used in Unix-like systems for creating backups or transferring files, and supports various encoding formats including binary and ASCII.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
@@ -474,7 +474,7 @@ class PortableASCIIHandler(_CPIOHandlerBase):
     EXTRACTOR = PortableASCIIExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="CPIO (portable ASCII)",
         description="CPIO (Copy In, Copy Out) is an archive file format used for bundling files and directories along with their metadata. It is commonly used in Unix-like systems for creating backups or transferring files, and supports various encoding formats including binary and ASCII.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
@@ -495,7 +495,7 @@ class PortableASCIIWithCRCHandler(_CPIOHandlerBase):
     EXTRACTOR = PortableASCIIWithCRCExtractor()
 
     DOC = HandlerDoc(
-        name=NAME,
+        name="CPIO (portable ASCII CRC)",
         description="CPIO (Copy In, Copy Out) is an archive file format used for bundling files and directories along with their metadata. It is commonly used in Unix-like systems for creating backups or transferring files, and supports various encoding formats including binary and ASCII.",
         handler_type=HandlerType.ARCHIVE,
         vendor=None,
