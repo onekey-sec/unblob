@@ -37,21 +37,24 @@ open *mkdocs-args: _install_dependencies (_info "Running mkdocs server listening
 generate-handlers-doc:
     #!/usr/bin/env python
     from pathlib import Path
+    from pymdownx import slugs
 
     from unblob.doc import generate_markdown
     from unblob.handlers import BUILTIN_HANDLERS
 
-    FORMAT_TABLE_HEADERS = """| Format        | Type                                 | Fully supported?    |\n| :------------ | :----------------------------------- | :-----------------: |\n"""
+    slugifier = slugs.slugify(case="lower", percent_encode=True)
+    FORMAT_TABLE_HEADERS = """    | Format        | Type                                 | Fully supported?    |\n    | :------------ | :----------------------------------- | :-----------------: |\n"""
 
     sorted_handlers = sorted(BUILTIN_HANDLERS, key=lambda handler_class: handler_class.NAME)
     handlers_path = Path("docs/handlers.md")
     print(f"Generating: {handlers_path}")
     with handlers_path.open("w") as f:
+        f.write("??? example \"All supported formats\"\n")
         f.write(FORMAT_TABLE_HEADERS)
 
         for handler_class in sorted_handlers:
             support_icon = "octicons-check-16" if handler_class.DOC.fully_supported else "octicons-alert-fill-12"
-            f.write(f"""| [`{handler_class.DOC.name.upper()}`](#{handler_class.DOC.name.replace(" ", "-").lower()}) | {handler_class.DOC.handler_type.name} | :{support_icon}: |\n""")
+            f.write(f"""    | [`{handler_class.DOC.name.upper()}`](#{slugifier(handler_class.DOC.name, sep="-")}) | {handler_class.DOC.handler_type.name} | :{support_icon}: |\n""")
 
         for handler_class in sorted_handlers:
             content = generate_markdown(handler_class.DOC)
