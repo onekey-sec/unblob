@@ -8,7 +8,7 @@ hide:
 unblob supports more than 30 formats. You can see their code in
 [`unblob/handlers/`](https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/__init__.py).
 
-✅: Some or all metadata is preserved for the format.  
+✅: Some or all metadata is preserved for the format.
 ❌: Metadata is not preserved (limitation of the format).
 
 ## Archives
@@ -22,6 +22,7 @@ unblob supports more than 30 formats. You can see their code in
 | CAB     | ❌         | ❌                 | ❌        | [archive/cab.py][cab-handler]         | [`7z`][cab-extractor]       |
 | CPIO    | ✅         | ✅                 | ✅        | [archive/cpio.py][cpio-handler]       | unblob extractor            |
 | DMG     | ❌         | ❌                 | ❌        | [archive/dmg.py][dmg-handler]         | [`7z`][dmg-extractor]       |
+| PARTCLONE | ✅       | ❌                 | ❌        | [archive/partclone.py][partclone-handler] | [`partclone`][partclone-extractor] |
 | RAR     | ❌         | ❌                 | ❌        | [archive/rar.py][rar-handler]         | [`unar`][rar-extractor]     |
 | 7ZIP    | ❌         | ❌                 | ❌        | [archive/sevenzip.py][7zip-handler]   | [`7z`][7zip-extractor]      |
 | StuffIt | ❌         | ❌                 | ❌        | [archive/stuffit.py][stuffit-handler] | [`unar`][stuffit-extractor] |
@@ -39,6 +40,8 @@ unblob supports more than 30 formats. You can see their code in
 [cpio-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/cpio.py
 [dmg-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/dmg.py
 [dmg-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/archive/dmg.py#L67-L69
+[partclone-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/partclone.py
+[partclone-extractor]: https://github.com/onekey-sec/unblob/blob/b21b6dc291583af6b7ec9b7c3d63ee8302328841/python/unblob/handlers/archive/partclone.py#L44
 [rar-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/rar.py
 [rar-extractor]: https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/archive/rar.py#L32
 [7zip-handler]: https://github.com/onekey-sec/unblob/blob/main/unblob/handlers/archive/sevenzip.py
@@ -97,7 +100,7 @@ For compression formats, metadata cannot be preserved, as this information in mo
 | ---------------------- | ---------------------------------- | ----------------------------------------------- | ----------------------------------------------- |
 | Android sparse image   | ❌                                 | [filesystem/android/sparse.py][android-handler] | [`simg2img`][android-extractor]                 |
 | CRAMFS                 | ✅                                 | [filesystem/cramfs.py][cramfs-handler]          | [`7z`][cramfs-extractor]                        |
-| EROFS                  | ✅                                 | [filesystem/android/erofs.py][erofs-handler]    | [`fsck.erfos`][erofs-extractor]                 | 
+| EROFS                  | ✅                                 | [filesystem/android/erofs.py][erofs-handler]    | [`fsck.erfos`][erofs-extractor]                 |
 | ExtFS                  | ✅                                 | [filesystem/extfs.py][extfs-handler]            | [`debugfs`][extfs-extractor]                    |
 | FAT                    | ✅                                 | [filesystem/fat.py][fat-handler]                | [`7z`][fat-extractor]                           |
 | ISO9660                | ✅                                 | [filesystem/iso9660.py][iso9660-handler]        | [`7z`][iso9660-extractor]                       |
