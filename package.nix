@@ -17,6 +17,7 @@
   simg2img,
   ubi_reader,
   unar,
+  upx,
   zstd,
   versionCheckHook,
   rustPlatform,
@@ -36,6 +37,7 @@ let
     ubi_reader
     simg2img
     unar
+    upx
     zstd
     lz4
   ];
