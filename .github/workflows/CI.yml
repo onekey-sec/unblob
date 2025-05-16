@@ -60,6 +60,25 @@ jobs:
       - name: Check - pyright
         run: uv run pyright .
 
+  check_documentation:
+    name: Check - Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup 3rd party dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Setup just
+        uses: extractions/setup-just@v3
+
+      - name: Check - Documentation
+        run: |
+          uv sync --group docs
+          uv run just doc generate-handlers-doc
+          git diff --exit-code docs/handlers.md
+
   run_python_tests:
     name: Run tests (Python)
     needs: [check_pre_commit, check_pyright]
