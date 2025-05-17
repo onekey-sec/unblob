@@ -18,4 +18,6 @@ _Didn't find what you're looking for?_ (1)
      If you are interested in a custom format not supported by the open source version, check out our platform at
      [https://www.onekey.com](https://www.onekey.com) or you can [Contact Us](support.md).
 
+<div class="to_fit" markdown>
 --8<-- "handlers.md"
+</div>
