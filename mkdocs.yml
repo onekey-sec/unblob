@@ -25,6 +25,7 @@ markdown_extensions:
   - pymdownx.magiclink
   - def_list
   - attr_list
+  - md_in_html
   - admonition
   - pymdownx.details
   - pymdownx.superfences
