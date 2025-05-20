@@ -50,11 +50,11 @@
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2)`](#squashfs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V3)`](#squashfs-v3) | FILESYSTEM | :octicons-check-16: |
-    | [`SQUASHFS (V3 - BROADCOM)`](#squashfs-v3---broadcom) | FILESYSTEM | :octicons-check-16: |
-    | [`SQUASHFS (V3 - DDWRT)`](#squashfs-v3---ddwrt) | FILESYSTEM | :octicons-check-16: |
-    | [`SQUASHFS (V3 - NON-STANDARD)`](#squashfs-v3---non-standard) | FILESYSTEM | :octicons-check-16: |
-    | [`SQUASHFS (V4 - BE)`](#squashfs-v4---be) | FILESYSTEM | :octicons-check-16: |
-    | [`SQUASHFS (V4 - LE)`](#squashfs-v4---le) | FILESYSTEM | :octicons-check-16: |
+    | [`SQUASHFS (V3-BROADCOM)`](#squashfs-v3-broadcom) | FILESYSTEM | :octicons-check-16: |
+    | [`SQUASHFS (V3-DDWRT)`](#squashfs-v3-ddwrt) | FILESYSTEM | :octicons-check-16: |
+    | [`SQUASHFS (V3-NON-STANDARD)`](#squashfs-v3-non-standard) | FILESYSTEM | :octicons-check-16: |
+    | [`SQUASHFS (V4-BE)`](#squashfs-v4-be) | FILESYSTEM | :octicons-check-16: |
+    | [`SQUASHFS (V4-LE)`](#squashfs-v4-le) | FILESYSTEM | :octicons-check-16: |
     | [`STUFFIT SIT`](#stuffit-sit) | ARCHIVE | :octicons-check-16: |
     | [`STUFFIT SIT (V5)`](#stuffit-sit-v5) | ARCHIVE | :octicons-check-16: |
     | [`TAR (USTAR)`](#tar-ustar) | ARCHIVE | :octicons-check-16: |
@@ -878,7 +878,7 @@
 
         - [SquashFS Documentation](https://dr-emann.github.io/squashfs/){ target="_blank" }
         - [SquashFS Wikipedia](https://en.wikipedia.org/wiki/SquashFS){ target="_blank" }
-## SquashFS (v3 - Broadcom)
+## SquashFS (v3-Broadcom)
 
 !!! success "Fully supported"
 
@@ -895,7 +895,7 @@
 
         - [SquashFS Documentation](https://dr-emann.github.io/squashfs/){ target="_blank" }
         - [SquashFS Wikipedia](https://en.wikipedia.org/wiki/SquashFS){ target="_blank" }
-## SquashFS (v3 - DDWRT)
+## SquashFS (v3-DDWRT)
 
 !!! success "Fully supported"
 
@@ -912,7 +912,7 @@
 
         - [SquashFS Documentation](https://dr-emann.github.io/squashfs/){ target="_blank" }
         - [SquashFS Wikipedia](https://en.wikipedia.org/wiki/SquashFS){ target="_blank" }
-## SquashFS (v3 - non-standard)
+## SquashFS (v3-non-standard)
 
 !!! success "Fully supported"
 
@@ -929,7 +929,7 @@
 
         - [SquashFS Documentation](https://dr-emann.github.io/squashfs/){ target="_blank" }
         - [SquashFS Wikipedia](https://en.wikipedia.org/wiki/SquashFS){ target="_blank" }
-## SquashFS (v4 - BE)
+## SquashFS (v4-BE)
 
 !!! success "Fully supported"
 
@@ -946,7 +946,7 @@
 
         - [SquashFS Documentation](https://dr-emann.github.io/squashfs/){ target="_blank" }
         - [SquashFS Wikipedia](https://en.wikipedia.org/wiki/SquashFS){ target="_blank" }
-## SquashFS (v4 - LE)
+## SquashFS (v4-LE)
 
 !!! success "Fully supported"
 

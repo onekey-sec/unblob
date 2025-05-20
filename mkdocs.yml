@@ -11,7 +11,7 @@ nav:
   - About: index.md
   - User Guide: guide.md
   - installation.md
-  - Supported Formats: formats.md
+  - formats.md
   - extractors.md
   - development.md
   - API: api.md
@@ -25,13 +25,15 @@ markdown_extensions:
   - pymdownx.magiclink
   - def_list
   - attr_list
+  - md_in_html
   - admonition
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      base_path: docs
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:

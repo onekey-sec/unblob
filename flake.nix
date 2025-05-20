@@ -111,9 +111,10 @@
 
               deadnix
               statix
-
+              libz
               cargo
               rustc
+              just
 
               nodejs # for pyright
             ] ++ unblob.runtimeDeps;
