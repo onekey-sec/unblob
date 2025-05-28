@@ -1554,7 +1554,7 @@ wheels = [
 
 [[package]]
 name = "unblob"
-version = "25.4.14"
+version = "25.5.26"
 source = { editable = "." }
 dependencies = [
     { name = "arpy" },
