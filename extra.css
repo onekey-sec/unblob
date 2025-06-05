@@ -1,0 +1,33 @@
+@font-face {
+    font-family: "Artegra Sans";
+    src: url("ArtegraSans-Regular.ttf");
+}
+
+:root {
+    --md-text-font: "Artegra Sans";
+}
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:        #002060;
+  --md-typeset-a-color:         #008ed5;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        #002060;
+  --md-typeset-a-color:         #00FFC8;
+  --md-hue: 210;
+}
+
+.to_fit {
+
+  .md-typeset__table {
+    table-layout: auto;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+
+    table {
+      display: table;
+    }
+  }
+}
