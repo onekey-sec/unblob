@@ -126,14 +126,12 @@
                   libmagic = "${file}/lib/libmagic${stdenv.hostPlatform.extensions.sharedLibrary}";
                 }
               )
-              (
-                (replaceVars "${path}/pkgs/development/python-modules/cairocffi/dlopen-paths.patch" {
-                  ext = stdenv.hostPlatform.extensions.sharedLibrary;
-                  cairo = cairo.out;
-                  glib = glib.out;
-                  gdk_pixbuf = gdk-pixbuf.out;
-                })
-              )
+              (replaceVars "${path}/pkgs/development/python-modules/cairocffi/dlopen-paths.patch" {
+                ext = stdenv.hostPlatform.extensions.sharedLibrary;
+                cairo = cairo.out;
+                glib = glib.out;
+                gdk_pixbuf = gdk-pixbuf.out;
+              })
             ];
           };
 
