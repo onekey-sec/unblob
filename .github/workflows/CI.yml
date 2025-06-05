@@ -70,13 +70,9 @@ jobs:
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
 
-      - name: Setup just
-        uses: extractions/setup-just@v3
-
       - name: Check - Documentation
         run: |
-          uv sync --group docs
-          uv run just doc generate-handlers-doc
+          uv run unblob --build-handlers-doc docs/handlers.md
           git diff --exit-code docs/handlers.md
 
   run_python_tests:

@@ -177,6 +177,24 @@ class MultiVolumeGzipHandler(DirectoryHandler):
 
     PATTERN = Glob("*.gz.*")
 
+    DOC = HandlerDoc(
+        name="GZIP (multi-volume)",
+        description="GZIP is a compressed file format that uses the DEFLATE algorithm and includes metadata such as original file name and modification time. It is commonly used for efficient file storage and transfer.",
+        handler_type=HandlerType.COMPRESSION,
+        vendor=None,
+        references=[
+            Reference(
+                title="GZIP File Format Specification",
+                url="https://datatracker.ietf.org/doc/html/rfc1952",
+            ),
+            Reference(
+                title="GZIP Wikipedia",
+                url="https://en.wikipedia.org/wiki/Gzip",
+            ),
+        ],
+        limitations=[],
+    )
+
     def is_valid_gzip(self, path: Path) -> bool:
         try:
             file = File.from_path(path)

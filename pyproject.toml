@@ -17,6 +17,7 @@ dependencies = [
   "plotext>=4.2.0,<6.0",
   "pluggy>=1.3.0",
   "pyfatfs>=1.0.5",
+  "pymdown-extensions>=10.15",
   "pyperscan>=0.3.0",
   "python-magic>=0.4.27",
   "pyzstd",

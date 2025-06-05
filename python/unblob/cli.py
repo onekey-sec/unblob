@@ -7,12 +7,14 @@ from pathlib import Path
 from typing import Optional
 
 import click
+from pymdownx import slugs
 from rich.console import Console
 from rich.panel import Panel
 from rich.style import Style
 from rich.table import Table
 from structlog import get_logger
 
+from unblob.doc import generate_markdown
 from unblob.models import DirectoryHandlers, Handlers, ProcessResult
 from unblob.plugins import UnblobPluginManager
 from unblob.report import (
@@ -85,6 +87,57 @@ def show_external_dependencies(
 
     click.echo(text)
     ctx.exit(code=exit_code)
+
+
+def build_handlers_doc(
+    ctx: click.Context,
+    _param: click.Option,
+    value: str,
+) -> None:
+    if not value or ctx.resilient_parsing:
+        return
+
+    plugin_manager = ctx.params["plugin_manager"]
+    plugins_path = ctx.params.get("plugins_path")
+    plugin_manager.import_plugins(plugins_path)
+    extra_handlers = plugin_manager.load_handlers_from_plugins()
+    handlers = ctx.params["handlers"] + tuple(extra_handlers)
+
+    extra_dir_handlers = plugin_manager.load_dir_handlers_from_plugins()
+    dir_handlers = ctx.params["dir_handlers"] + tuple(extra_dir_handlers)
+
+    all_handlers = handlers + dir_handlers
+
+    slugifier = slugs.slugify(case="lower", percent_encode=True)
+    format_table_headers = """    | Format        | Type                                 | Fully supported?    |\n    | :------------ | :----------------------------------- | :-----------------: |\n"""
+
+    sorted_handlers = sorted(
+        all_handlers, key=lambda handler_class: handler_class.DOC.name.upper()
+    )
+    handlers_path = Path(value)
+    click.echo(f"Generating: {handlers_path}")
+
+    with handlers_path.open("w") as f:
+        f.write('??? example "All supported formats"\n')
+        f.write(format_table_headers)
+
+        for handler_class in sorted_handlers:
+            support_icon = (
+                "octicons-check-16"
+                if handler_class.DOC.fully_supported
+                else "octicons-alert-fill-12"
+            )
+            f.write(
+                f"""    | [`{handler_class.DOC.name.upper()}`](#{slugifier(handler_class.DOC.name, sep="-")}) | {handler_class.DOC.handler_type.name} | :{support_icon}: |\n"""
+            )
+
+        for handler_class in sorted_handlers:
+            content = generate_markdown(handler_class.DOC)
+            f.write("\n" + content.rstrip("\n"))
+
+        f.write("\n")
+
+    ctx.exit(code=0)
 
 
 def get_help_text():
@@ -257,6 +310,12 @@ class UnblobContext(click.Context):
     help="Shows commands needs to be available for unblob to work properly",
     is_flag=True,
     callback=show_external_dependencies,
+    expose_value=False,
+)
+@click.option(
+    "--build-handlers-doc",
+    help="Build handlers markdown documentation",
+    callback=build_handlers_doc,
     expose_value=False,
 )
 @click.option(

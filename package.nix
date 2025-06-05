@@ -86,6 +86,7 @@ python3.pkgs.buildPythonApplication {
     plotext
     pluggy
     pyfatfs
+    pymdown-extensions
     pyperscan
     python-magic
     pyzstd
@@ -108,7 +109,10 @@ python3.pkgs.buildPythonApplication {
     "ubi-reader"
   ];
 
-  pythonRelaxDeps = [ "lz4" ];
+  pythonRelaxDeps = [
+    "lz4"
+    "pymdown-extensions"
+  ];
 
   pythonImportsCheck = [ "unblob" ];
 

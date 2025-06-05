@@ -1,34 +1,35 @@
 ??? example "All supported formats"
     | Format        | Type                                 | Fully supported?    |
     | :------------ | :----------------------------------- | :-----------------: |
+    | [`7-ZIP`](#7-zip) | ARCHIVE | :octicons-check-16: |
+    | [`ANDROID EROFS`](#android-erofs) | FILESYSTEM | :octicons-check-16: |
+    | [`ANDROID SPARSE`](#android-sparse) | FILESYSTEM | :octicons-check-16: |
     | [`AR`](#ar) | ARCHIVE | :octicons-check-16: |
     | [`ARC`](#arc) | ARCHIVE | :octicons-check-16: |
     | [`ARJ`](#arj) | ARCHIVE | :octicons-check-16: |
-    | [`HP BDL`](#hp-bdl) | ARCHIVE | :octicons-check-16: |
-    | [`INSTAR BNEG`](#instar-bneg) | ARCHIVE | :octicons-check-16: |
+    | [`AUTEL ECC`](#autel-ecc) | ARCHIVE | :octicons-check-16: |
     | [`BZIP2`](#bzip2) | COMPRESSION | :octicons-check-16: |
     | [`CAB`](#cab) | ARCHIVE | :octicons-check-16: |
-    | [`NETGEAR CHK`](#netgear-chk) | ARCHIVE | :octicons-check-16: |
     | [`COMPRESS`](#compress) | COMPRESSION | :octicons-check-16: |
     | [`CPIO (BINARY)`](#cpio-binary) | ARCHIVE | :octicons-check-16: |
-    | [`CPIO (PORTABLE ASCII)`](#cpio-portable-ascii) | ARCHIVE | :octicons-check-16: |
     | [`CPIO (PORTABLE ASCII CRC)`](#cpio-portable-ascii-crc) | ARCHIVE | :octicons-check-16: |
+    | [`CPIO (PORTABLE ASCII)`](#cpio-portable-ascii) | ARCHIVE | :octicons-check-16: |
     | [`CPIO (PORTABLE OLD ASCII)`](#cpio-portable-old-ascii) | ARCHIVE | :octicons-check-16: |
     | [`CRAMFS`](#cramfs) | FILESYSTEM | :octicons-check-16: |
+    | [`D-LINK ENCRPTED_IMG`](#d-link-encrpted_img) | ARCHIVE | :octicons-check-16: |
+    | [`D-LINK SHRS`](#d-link-shrs) | ARCHIVE | :octicons-check-16: |
     | [`DMG`](#dmg) | ARCHIVE | :octicons-check-16: |
-    | [`AUTEL ECC`](#autel-ecc) | ARCHIVE | :octicons-check-16: |
     | [`ELF (32-BIT)`](#elf-32-bit) | EXECUTABLE | :octicons-check-16: |
     | [`ELF (64-BIT)`](#elf-64-bit) | EXECUTABLE | :octicons-check-16: |
-    | [`D-LINK ENCRPTED_IMG`](#d-link-encrpted_img) | ARCHIVE | :octicons-check-16: |
     | [`ENGENIUS`](#engenius) | ARCHIVE | :octicons-alert-fill-12: |
-    | [`ANDROID EROFS`](#android-erofs) | FILESYSTEM | :octicons-check-16: |
     | [`EXTFS`](#extfs) | FILESYSTEM | :octicons-check-16: |
     | [`FAT`](#fat) | FILESYSTEM | :octicons-check-16: |
     | [`GZIP`](#gzip) | COMPRESSION | :octicons-check-16: |
-    | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
-    | [`XIAOMI HDR2`](#xiaomi-hdr2) | ARCHIVE | :octicons-check-16: |
-    | [`INSTAR HD`](#instar-hd) | ARCHIVE | :octicons-check-16: |
+    | [`GZIP (MULTI-VOLUME)`](#gzip-multi-volume) | COMPRESSION | :octicons-check-16: |
+    | [`HP BDL`](#hp-bdl) | ARCHIVE | :octicons-check-16: |
     | [`HP IPKG`](#hp-ipkg) | ARCHIVE | :octicons-check-16: |
+    | [`INSTAR BNEG`](#instar-bneg) | ARCHIVE | :octicons-check-16: |
+    | [`INSTAR HD`](#instar-hd) | ARCHIVE | :octicons-check-16: |
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (NEW)`](#jffs2-new) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (OLD)`](#jffs2-old) | FILESYSTEM | :octicons-check-16: |
@@ -39,14 +40,15 @@
     | [`LZIP`](#lzip) | COMPRESSION | :octicons-check-16: |
     | [`LZMA`](#lzma) | COMPRESSION | :octicons-check-16: |
     | [`LZO`](#lzo) | COMPRESSION | :octicons-check-16: |
+    | [`MULTI-SEVENZIP`](#multi-sevenzip) | ARCHIVE | :octicons-check-16: |
+    | [`NETGEAR CHK`](#netgear-chk) | ARCHIVE | :octicons-check-16: |
+    | [`NETGEAR TRX V1`](#netgear-trx-v1) | ARCHIVE | :octicons-check-16: |
+    | [`NETGEAR TRX V2`](#netgear-trx-v2) | ARCHIVE | :octicons-check-16: |
     | [`NTFS`](#ntfs) | FILESYSTEM | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
-    | [`7-ZIP`](#7-zip) | ARCHIVE | :octicons-check-16: |
-    | [`D-LINK SHRS`](#d-link-shrs) | ARCHIVE | :octicons-check-16: |
-    | [`ANDROID SPARSE`](#android-sparse) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2)`](#squashfs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V3)`](#squashfs-v3) | FILESYSTEM | :octicons-check-16: |
@@ -57,19 +59,69 @@
     | [`SQUASHFS (V4-LE)`](#squashfs-v4-le) | FILESYSTEM | :octicons-check-16: |
     | [`STUFFIT SIT`](#stuffit-sit) | ARCHIVE | :octicons-check-16: |
     | [`STUFFIT SIT (V5)`](#stuffit-sit-v5) | ARCHIVE | :octicons-check-16: |
-    | [`TAR (USTAR)`](#tar-ustar) | ARCHIVE | :octicons-check-16: |
     | [`TAR (UNIX)`](#tar-unix) | ARCHIVE | :octicons-check-16: |
-    | [`NETGEAR TRX V1`](#netgear-trx-v1) | ARCHIVE | :octicons-check-16: |
-    | [`NETGEAR TRX V2`](#netgear-trx-v2) | ARCHIVE | :octicons-check-16: |
+    | [`TAR (USTAR)`](#tar-ustar) | ARCHIVE | :octicons-check-16: |
     | [`UBI`](#ubi) | FILESYSTEM | :octicons-check-16: |
     | [`UBIFS`](#ubifs) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
+    | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
+    | [`XIAOMI HDR2`](#xiaomi-hdr2) | ARCHIVE | :octicons-check-16: |
     | [`XZ`](#xz) | COMPRESSION | :octicons-check-16: |
     | [`YAFFS`](#yaffs) | FILESYSTEM | :octicons-check-16: |
     | [`ZIP`](#zip) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ZLIB`](#zlib) | COMPRESSION | :octicons-check-16: |
     | [`ZSTD`](#zstd) | COMPRESSION | :octicons-check-16: |
 
+## 7-Zip
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        The 7-Zip file format is a compressed archive format with high compression ratios, supporting multiple algorithms, CRC checks, and multi-volume archives.
+
+        ---
+
+        - **Handler type:** Archive
+        
+
+    === "References"
+
+        - [7-Zip Technical Documentation](https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zFormat.txt){ target="_blank" }
+## Android EROFS
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        EROFS (Enhanced Read-Only File System) is a lightweight, high-performance file system designed for read-only use cases, commonly used in Android and Linux. It features compression support, metadata efficiency, and a fixed superblock structure.
+
+        ---
+
+        - **Handler type:** FileSystem
+        - **Vendor:** Google
+
+    === "References"
+
+        - [EROFS Documentation](https://www.kernel.org/doc/html/latest/filesystems/erofs.html){ target="_blank" }
+        - [EROFS Wikipedia](https://en.wikipedia.org/wiki/Enhanced_Read-Only_File_System){ target="_blank" }
+## Android Sparse
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Android sparse images are a file format used to efficiently store disk images by representing sequences of zero blocks compactly. The format includes a file header, followed by chunk headers and data, with support for raw, fill, and 'don't care' chunks.
+
+        ---
+
+        - **Handler type:** FileSystem
+        - **Vendor:** Google
+
+    === "References"
+
+        - [Android Sparse Image Format Documentation](https://formats.kaitai.io/android_sparse/){ target="_blank" }
+        - [simg2img Tool](https://github.com/anestisb/android-simg2img){ target="_blank" }
 ## AR
 
 !!! success "Fully supported"
@@ -119,36 +171,22 @@
 
         - [ARJ File Format Documentation](https://docs.fileformat.com/compression/arj/){ target="_blank" }
         - [ARJ Technical Information](https://github.com/tripsin/unarj/blob/master/UNARJ.H#L203){ target="_blank" }
-## HP BDL
+## Autel ECC
 
 !!! success "Fully supported"
 
     === "Description"
 
-        The HP BDL format is a firmware archive containing a custom header and a table of contents that specifies offsets and sizes of embedded firmware components. It includes metadata such as release, brand, device ID, version, and revision.
+        Autel ECC files consist of a custom header followed by encrypted data blocks. The header includes metadata such as magic bytes, file size, and copyright information.
 
         ---
 
         - **Handler type:** Archive
-        - **Vendor:** HP
+        - **Vendor:** Autel
 
     === "References"
 
-        - [hpbdl](https://github.com/tylerwhall/hpbdl){ target="_blank" }
-## Instar BNEG
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        BNEG firmware files consist of a custom header followed by two partitions containing firmware components. The header specifies metadata such as magic value, version, and partition sizes.
-
-        ---
-
-        - **Handler type:** Archive
-        - **Vendor:** Instar
-
-    === "References"
+        - [Autel ECC Decryption Script (Sector7)](https://gist.github.com/sector7-nl/3fc815cd2497817ad461bfbd393294cb){ target="_blank" }
 ## bzip2
 
 !!! success "Fully supported"
@@ -183,22 +221,6 @@
 
         - [Microsoft Cabinet File Format Documentation](https://en.wikipedia.org/wiki/Cabinet_(file_format)){ target="_blank" }
         - [Ubuntu Manual - cabextract](https://manpages.ubuntu.com/manpages/focal/man1/cabextract.1.html){ target="_blank" }
-## Netgear CHK
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        Netgear CHK firmware files consist of a custom header containing metadata and checksums, followed by kernel and root filesystem partitions. The header includes fields for partition sizes, checksums, and a board identifier.
-
-        ---
-
-        - **Handler type:** Archive
-        - **Vendor:** Netgear
-
-    === "References"
-
-        - [CHK Image Format Image Builder Tool for the R7800 Series](https://github.com/Getnear/R7800/blob/master/tools/firmware-utils/src/mkchkimg.c){ target="_blank" }
 ## compress
 
 !!! success "Fully supported"
@@ -232,7 +254,7 @@
     === "References"
 
         - [GNU CPIO Manual](https://www.gnu.org/software/cpio/manual/cpio.html){ target="_blank" }
-## CPIO (portable ASCII)
+## CPIO (portable ASCII CRC)
 
 !!! success "Fully supported"
 
@@ -248,7 +270,7 @@
     === "References"
 
         - [GNU CPIO Manual](https://www.gnu.org/software/cpio/manual/cpio.html){ target="_blank" }
-## CPIO (portable ASCII CRC)
+## CPIO (portable ASCII)
 
 !!! success "Fully supported"
 
@@ -297,6 +319,38 @@
 
         - [CramFS Documentation](https://web.archive.org/web/20160304053532/http://sourceforge.net/projects/cramfs/){ target="_blank" }
         - [CramFS Wikipedia](https://en.wikipedia.org/wiki/Cramfs){ target="_blank" }
+## D-Link encrpted_img
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        A binary format used by D-Link to store encrypted firmware or data. It consists of a custom 12-byte magic header followed by the encrypted payload.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** D-Link
+
+    === "References"
+
+        - [How-To: Extracting Decryption Keys for D-Link](https://www.onekey.com/resource/extracting-decryption-keys-dlink){ target="_blank" }
+## D-Link SHRS
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        SHRS is a D-Link firmware format with a custom header containing metadata, SHA-512 digests, and AES-CBC encryption parameters. The firmware data is encrypted using a fixed key and IV stored in the header.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** D-Link
+
+    === "References"
+
+        - [Breaking the D-Link DIR3060 Firmware Encryption - Recon - Part 1](https://0x00sec.org/t/breaking-the-d-link-dir3060-firmware-encryption-recon-part-1/21943){ target="_blank" }
 ## DMG
 
 !!! success "Fully supported"
@@ -313,22 +367,6 @@
     === "References"
 
         - [Apple Disk Image Format Documentation](http://newosxbook.com/DMG.html){ target="_blank" }
-## Autel ECC
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        Autel ECC files consist of a custom header followed by encrypted data blocks. The header includes metadata such as magic bytes, file size, and copyright information.
-
-        ---
-
-        - **Handler type:** Archive
-        - **Vendor:** Autel
-
-    === "References"
-
-        - [Autel ECC Decryption Script (Sector7)](https://gist.github.com/sector7-nl/3fc815cd2497817ad461bfbd393294cb){ target="_blank" }
 ## ELF (32-bit)
 
 !!! success "Fully supported"
@@ -363,22 +401,6 @@
 
         - [ELF File Format Specification](https://refspecs.linuxfoundation.org/elf/elf.pdf){ target="_blank" }
         - [ELF Wikipedia](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format){ target="_blank" }
-## D-Link encrpted_img
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        A binary format used by D-Link to store encrypted firmware or data. It consists of a custom 12-byte magic header followed by the encrypted payload.
-
-        ---
-
-        - **Handler type:** Archive
-        - **Vendor:** D-Link
-
-    === "References"
-
-        - [How-To: Extracting Decryption Keys for D-Link](https://www.onekey.com/resource/extracting-decryption-keys-dlink){ target="_blank" }
 ## Engenius
 
 !!! warning "Partially supported"
@@ -399,23 +421,6 @@
     === "Limitations"
 
         - Does not support all firmware versions.
-## Android EROFS
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        EROFS (Enhanced Read-Only File System) is a lightweight, high-performance file system designed for read-only use cases, commonly used in Android and Linux. It features compression support, metadata efficiency, and a fixed superblock structure.
-
-        ---
-
-        - **Handler type:** FileSystem
-        - **Vendor:** Google
-
-    === "References"
-
-        - [EROFS Documentation](https://www.kernel.org/doc/html/latest/filesystems/erofs.html){ target="_blank" }
-        - [EROFS Wikipedia](https://en.wikipedia.org/wiki/Enhanced_Read-Only_File_System){ target="_blank" }
 ## ExtFS
 
 !!! success "Fully supported"
@@ -466,48 +471,39 @@
 
         - [GZIP File Format Specification](https://datatracker.ietf.org/doc/html/rfc1952){ target="_blank" }
         - [GZIP Wikipedia](https://en.wikipedia.org/wiki/Gzip){ target="_blank" }
-## Xiaomi HDR1
+## GZIP (multi-volume)
 
 !!! success "Fully supported"
 
     === "Description"
 
-        Xiaomi HDR1 firmware files feature a custom header containing metadata, CRC32 checksum, and blob offsets for embedded data. These files are used in Xiaomi devices for firmware updates.
+        GZIP is a compressed file format that uses the DEFLATE algorithm and includes metadata such as original file name and modification time. It is commonly used for efficient file storage and transfer.
 
         ---
 
-        - **Handler type:** Archive
-        - **Vendor:** Xiaomi
+        - **Handler type:** Compression
+        
 
     === "References"
-## Xiaomi HDR2
+
+        - [GZIP File Format Specification](https://datatracker.ietf.org/doc/html/rfc1952){ target="_blank" }
+        - [GZIP Wikipedia](https://en.wikipedia.org/wiki/Gzip){ target="_blank" }
+## HP BDL
 
 !!! success "Fully supported"
 
     === "Description"
 
-        Xiaomi HDR2 firmware files feature a custom header with metadata, CRC32 checksum, and blob offsets for embedded data. These files also include additional fields for device ID and region information.
+        The HP BDL format is a firmware archive containing a custom header and a table of contents that specifies offsets and sizes of embedded firmware components. It includes metadata such as release, brand, device ID, version, and revision.
 
         ---
 
         - **Handler type:** Archive
-        - **Vendor:** Xiaomi
+        - **Vendor:** HP
 
     === "References"
-## Instar HD
 
-!!! success "Fully supported"
-
-    === "Description"
-
-        Instar HD firmware files are modified ZIP archives with non-standard local file headers, central directory headers, and end-of-central-directory records. These modifications include custom magic bytes to differentiate them from standard ZIP files.
-
-        ---
-
-        - **Handler type:** Archive
-        - **Vendor:** Instar
-
-    === "References"
+        - [hpbdl](https://github.com/tylerwhall/hpbdl){ target="_blank" }
 ## HP IPKG
 
 !!! success "Fully supported"
@@ -524,6 +520,34 @@
     === "References"
 
         - [hpbdl](https://github.com/tylerwhall/hpbdl){ target="_blank" }
+## Instar BNEG
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        BNEG firmware files consist of a custom header followed by two partitions containing firmware components. The header specifies metadata such as magic value, version, and partition sizes.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Instar
+
+    === "References"
+## Instar HD
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Instar HD firmware files are modified ZIP archives with non-standard local file headers, central directory headers, and end-of-central-directory records. These modifications include custom magic bytes to differentiate them from standard ZIP files.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Instar
+
+    === "References"
 ## ISO 9660
 
 !!! success "Fully supported"
@@ -693,6 +717,66 @@
 
         - [LZO File Format Documentation](http://www.lzop.org/){ target="_blank" }
         - [LZO Wikipedia](https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Oberhumer){ target="_blank" }
+## multi-sevenzip
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        The 7-Zip file format is a compressed archive format with high compression ratios, supporting multiple algorithms, CRC checks, and multi-volume archives.
+
+        ---
+
+        - **Handler type:** Archive
+        
+
+    === "References"
+
+        - [7-Zip Technical Documentation](https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zFormat.txt){ target="_blank" }
+## Netgear CHK
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Netgear CHK firmware files consist of a custom header containing metadata and checksums, followed by kernel and root filesystem partitions. The header includes fields for partition sizes, checksums, and a board identifier.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Netgear
+
+    === "References"
+
+        - [CHK Image Format Image Builder Tool for the R7800 Series](https://github.com/Getnear/R7800/blob/master/tools/firmware-utils/src/mkchkimg.c){ target="_blank" }
+## Netgear TRX v1
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Netgear TRX v1 firmware format includes a custom header with partition offsets and a CRC32 checksum for integrity verification. It supports up to three partitions defined in the header.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Netgear
+
+    === "References"
+## Netgear TRX v2
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Netgear TRX v2 firmware format includes a custom header with partition offsets and a CRC32 checksum for integrity verification. It supports up to four partitions defined in the header.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Netgear
+
+    === "References"
 ## NTFS
 
 !!! success "Fully supported"
@@ -778,55 +862,6 @@
 
         - [RomFS Documentation](https://www.kernel.org/doc/html/latest/filesystems/romfs.html){ target="_blank" }
         - [RomFS Wikipedia](https://en.wikipedia.org/wiki/Romfs){ target="_blank" }
-## 7-Zip
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        The 7-Zip file format is a compressed archive format with high compression ratios, supporting multiple algorithms, CRC checks, and multi-volume archives.
-
-        ---
-
-        - **Handler type:** Archive
-        
-
-    === "References"
-
-        - [7-Zip Technical Documentation](https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zFormat.txt){ target="_blank" }
-## D-Link SHRS
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        SHRS is a D-Link firmware format with a custom header containing metadata, SHA-512 digests, and AES-CBC encryption parameters. The firmware data is encrypted using a fixed key and IV stored in the header.
-
-        ---
-
-        - **Handler type:** Archive
-        - **Vendor:** D-Link
-
-    === "References"
-
-        - [Breaking the D-Link DIR3060 Firmware Encryption - Recon - Part 1](https://0x00sec.org/t/breaking-the-d-link-dir3060-firmware-encryption-recon-part-1/21943){ target="_blank" }
-## Android Sparse
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        Android sparse images are a file format used to efficiently store disk images by representing sequences of zero blocks compactly. The format includes a file header, followed by chunk headers and data, with support for raw, fill, and 'don't care' chunks.
-
-        ---
-
-        - **Handler type:** FileSystem
-        - **Vendor:** Google
-
-    === "References"
-
-        - [Android Sparse Image Format Documentation](https://formats.kaitai.io/android_sparse/){ target="_blank" }
-        - [simg2img Tool](https://github.com/anestisb/android-simg2img){ target="_blank" }
 ## SquashFS (v1)
 
 !!! success "Fully supported"
@@ -995,23 +1030,6 @@
     === "References"
 
         - [StuffIt SIT File Format Documentation](https://en.wikipedia.org/wiki/StuffIt){ target="_blank" }
-## TAR (USTAR)
-
-!!! success "Fully supported"
-
-    === "Description"
-
-        USTAR (Uniform Standard Tape Archive) tar files are extensions of the original tar format with additional metadata fields.
-
-        ---
-
-        - **Handler type:** Archive
-        
-
-    === "References"
-
-        - [USTAR Format Documentation](https://en.wikipedia.org/wiki/Tar_(computing)#USTAR_format){ target="_blank" }
-        - [POSIX Tar Format Specification](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html){ target="_blank" }
 ## TAR (Unix)
 
 !!! success "Fully supported"
@@ -1029,34 +1047,23 @@
 
         - [Unix Tar Format Documentation](https://en.wikipedia.org/wiki/Tar_(computing)){ target="_blank" }
         - [GNU Tar Manual](https://www.gnu.org/software/tar/manual/){ target="_blank" }
-## Netgear TRX v1
+## TAR (USTAR)
 
 !!! success "Fully supported"
 
     === "Description"
 
-        Netgear TRX v1 firmware format includes a custom header with partition offsets and a CRC32 checksum for integrity verification. It supports up to three partitions defined in the header.
+        USTAR (Uniform Standard Tape Archive) tar files are extensions of the original tar format with additional metadata fields.
 
         ---
 
         - **Handler type:** Archive
-        - **Vendor:** Netgear
+        
 
     === "References"
-## Netgear TRX v2
 
-!!! success "Fully supported"
-
-    === "Description"
-
-        Netgear TRX v2 firmware format includes a custom header with partition offsets and a CRC32 checksum for integrity verification. It supports up to four partitions defined in the header.
-
-        ---
-
-        - **Handler type:** Archive
-        - **Vendor:** Netgear
-
-    === "References"
+        - [USTAR Format Documentation](https://en.wikipedia.org/wiki/Tar_(computing)#USTAR_format){ target="_blank" }
+        - [POSIX Tar Format Specification](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html){ target="_blank" }
 ## UBI
 
 !!! success "Fully supported"
@@ -1107,6 +1114,34 @@
     === "References"
 
         - [FreeBSD UZIP Documentation](https://github.com/freebsd/freebsd-src/tree/master/sys/geom/uzip){ target="_blank" }
+## Xiaomi HDR1
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Xiaomi HDR1 firmware files feature a custom header containing metadata, CRC32 checksum, and blob offsets for embedded data. These files are used in Xiaomi devices for firmware updates.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Xiaomi
+
+    === "References"
+## Xiaomi HDR2
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Xiaomi HDR2 firmware files feature a custom header with metadata, CRC32 checksum, and blob offsets for embedded data. These files also include additional fields for device ID and region information.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Xiaomi
+
+    === "References"
 ## XZ
 
 !!! success "Fully supported"
