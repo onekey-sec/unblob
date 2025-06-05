@@ -85,7 +85,6 @@ python3.pkgs.buildPythonApplication {
     rich
     structlog
     treelib
-    unblob-native
   ];
 
   cargoDeps = rustPlatform.importCargoLock {
