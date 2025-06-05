@@ -57,13 +57,6 @@ repos:
         language: system
         types: [toml]
         entry: uv run taplo format
-      - id: taplo-lint
-        name: Lint TOML (taplo)
-        language: system
-        types: [toml]
-        entry: uv run taplo lint
-        args:
-          - --default-schema-catalogs
       - id: cargo-fmt # rustup component add rustfmt
         name: Check rust (cargo fmt)
         entry: cargo fmt --all --
