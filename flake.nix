@@ -36,11 +36,6 @@
 
       # Temporary patches for nixpkgs required for current unblob
       nixpkgsPatches = [
-        # ubi_reader: 0.8.9 -> 0.8.10
-        {
-          url = "https://github.com/NixOS/nixpkgs/commit/a3b3188908f87f3c2bafd6b66ab2c0df2c059fa9.patch";
-          hash = "sha256-MYP5q7KwbGzx01GYxvb4YwkLPV/aSzbI4Cbp+olw9a0=";
-        }
       ];
 
       # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
@@ -131,14 +126,12 @@
                   libmagic = "${file}/lib/libmagic${stdenv.hostPlatform.extensions.sharedLibrary}";
                 }
               )
-              (
-                (replaceVars "${path}/pkgs/development/python-modules/cairocffi/dlopen-paths.patch" {
-                  ext = stdenv.hostPlatform.extensions.sharedLibrary;
-                  cairo = cairo.out;
-                  glib = glib.out;
-                  gdk_pixbuf = gdk-pixbuf.out;
-                })
-              )
+              (replaceVars "${path}/pkgs/development/python-modules/cairocffi/dlopen-paths.patch" {
+                ext = stdenv.hostPlatform.extensions.sharedLibrary;
+                cairo = cairo.out;
+                glib = glib.out;
+                gdk_pixbuf = gdk-pixbuf.out;
+              })
             ];
           };
 

@@ -27,6 +27,8 @@ final: prev:
       export QUILT_PATCHES=../debian/patches
       quilt push -a
     '';
+    # orig had `src` attribute, but we are using `srcs`. This trips a warning.
+    __intentionallyOverridingVersion = true;
   });
 
   unblob = final.callPackage ./package.nix { };
