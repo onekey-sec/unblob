@@ -1,8 +1,11 @@
 {
+  nix-filter,
   lib,
-  stdenv,
+  libiconv,
   python3,
   makeWrapper,
+  rustPlatform,
+  stdenvNoCC,
   e2fsprogs-nofortify,
   erofs-utils,
   jefferson,
@@ -11,7 +14,6 @@
   lzop,
   p7zip16,
   partclone,
-  nix-filter,
   sasquatch,
   sasquatch-v4be,
   simg2img,
@@ -20,12 +22,11 @@
   upx,
   zstd,
   versionCheckHook,
-  rustPlatform,
 }:
 
 let
   # These dependencies are only added to PATH
-  runtimeDeps = lib.optional stdenv.isLinux partclone ++ [
+  runtimeDeps = [
     e2fsprogs-nofortify
     erofs-utils
     jefferson
@@ -40,15 +41,16 @@ let
     upx
     zstd
     lz4
-  ];
+  ] ++ lib.optional stdenvNoCC.isLinux partclone;
   pyproject_toml = builtins.fromTOML (builtins.readFile ./pyproject.toml);
   inherit (pyproject_toml.project) version;
 in
 python3.pkgs.buildPythonApplication {
   pname = "unblob";
+  inherit version;
   pyproject = true;
   disabled = python3.pkgs.pythonOlder "3.9";
-  inherit version;
+
   src = nix-filter {
     root = ./.;
     include = [
@@ -62,9 +64,15 @@ python3.pkgs.buildPythonApplication {
     ];
   };
 
+  cargoDeps = rustPlatform.importCargoLock {
+    lockFile = ./Cargo.lock;
+  };
+
   strictDeps = true;
 
   build-system = with python3.pkgs; [ poetry-core ];
+
+  buildInputs = lib.optionals stdenvNoCC.hostPlatform.isDarwin [ libiconv ];
 
   dependencies = with python3.pkgs; [
     arpy
@@ -87,14 +95,10 @@ python3.pkgs.buildPythonApplication {
     treelib
   ];
 
-  cargoDeps = rustPlatform.importCargoLock {
-    lockFile = ./Cargo.lock;
-  };
-
   nativeBuildInputs = with rustPlatform; [
-    cargoSetupHook
-    maturinBuildHook
     makeWrapper
+    maturinBuildHook
+    cargoSetupHook
   ];
 
   # These are runtime-only CLI dependencies, which are used through
@@ -103,6 +107,8 @@ python3.pkgs.buildPythonApplication {
     "jefferson"
     "ubi-reader"
   ];
+
+  pythonRelaxDeps = [ "lz4" ];
 
   pythonImportsCheck = [ "unblob" ];
 
