@@ -7,7 +7,7 @@ hide:
 
 unblob relies on various tools for extracting the contents of a blob. These
 extractors are either **third party tools (e.g. 7z)**, or part of unblob (available
-in [`unblob/extractors`](https://github.com/onekey-sec/unblob/tree/main/unblob/extractors)
+in [`unblob/extractors`](https://github.com/onekey-sec/unblob/tree/main/python/unblob/extractors)
 directory or specific ones next to the handler, e.g.:
 [`unblob/handlers/filesystem/romfs.py`](https://github.com/onekey-sec/unblob/blob/3008039881a0434deb75962e7999b7e35aca8271/unblob/handlers/filesystem/romfs.py#L334)).
 
