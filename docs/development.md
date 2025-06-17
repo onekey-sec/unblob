@@ -127,7 +127,7 @@ run all tests, with `python -m pytest tests/` in the activated virtualenv.
 ## Writing handlers
 
 Every handler inherits from the abstract class `Handler` located in
-[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/unblob/models.py):
+[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/python/unblob/models.py):
 
 ```python
 class Handler(abc.ABC):
@@ -218,7 +218,7 @@ If you need to parse structure using different endianness, the class exposes two
 
 `DirectoryHandler` is a specialized handler responsible for identifying multi-file formats
 located in a directory or in a subtree. The abstract class is located in
-[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/unblob/models.py):
+[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/python/unblob/models.py):
 
 ```python
 class DirectoryHandler(abc.ABC):
@@ -444,7 +444,7 @@ unblob -P ./myplugins/ ...
 
 We developed a bunch of utility functions which helped us during the development of
 existing unblob handlers. Do not hesitate to take a look at them in
-[unblob/file_utils.py](https://github.com/onekey-sec/unblob/blob/main/unblob/file_utils.py)
+[unblob/file_utils.py](https://github.com/onekey-sec/unblob/blob/main/python/unblob/file_utils.py)
 to see if any of those functions could help you during your own handler
 development.
 
@@ -545,7 +545,7 @@ the `Extractor` Python class.
 ### Extractor class
 
 The `Extractor` interface is defined in
-[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/unblob/models.py):
+[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/python/unblob/models.py):
 
 ```python
 class Extractor(abc.ABC):
@@ -571,13 +571,13 @@ Two methods are exposed by this class:
     checks for path traversals, and performing io by using Python libraries
     (`os`, `pathlib.Path`), but it turns out somewhat tedious.
     Instead we recommend to remove boilerplate and use a helper class `FileSystem` from
-    [unblob/file_utils.py](https://github.com/onekey-sec/unblob/blob/main/unblob/file_utils.py)
+    [unblob/file_utils.py](https://github.com/onekey-sec/unblob/blob/main/python/unblob/file_utils.py)
     which ensures that all file objects are created under its root.
 
 ### DirectoryExtractor class
 
 The `DirectoryExtractor` interface is defined in
-[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/unblob/models.py):
+[unblob/models.py](https://github.com/onekey-sec/unblob/blob/main/python/unblob/models.py):
 
 ```python
 class DirectoryExtractor(abc.ABC):
