@@ -85,7 +85,7 @@ repos:
         name: Check Github workflows
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 40.59.3
+    rev: 40.62.1
     hooks:
       - id: renovate-config-validator
         args: [--strict]
