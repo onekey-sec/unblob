@@ -187,7 +187,7 @@ jobs:
 
       - name: Check wheel (cross-manylinux)
         if: matrix.platform.target !=  'x86_64' && startsWith(matrix.platform.manylinux, 'manylinux')
-        uses: uraimo/run-on-arch-action@v2
+        uses: uraimo/run-on-arch-action@v3
         with:
           arch: ${{ matrix.platform.target }}
           distro: ubuntu22.04
@@ -218,7 +218,7 @@ jobs:
 
       - name: Check wheel (cross-musllinux)
         if: matrix.platform.target != 'x86_64' && startsWith(matrix.platform.manylinux, 'musllinux')
-        uses: uraimo/run-on-arch-action@v2
+        uses: uraimo/run-on-arch-action@v3
         with:
           arch: ${{ matrix.platform.target }}
           distro: alpine_latest
