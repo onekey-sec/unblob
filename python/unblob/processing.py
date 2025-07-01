@@ -1,6 +1,10 @@
+import atexit
 import multiprocessing
+import os
 import shutil
+import tempfile
 from collections.abc import Iterable, Sequence
+from contextlib import contextmanager
 from operator import attrgetter
 from pathlib import Path
 from typing import Optional, Union
@@ -100,6 +104,21 @@ class ExtractionConfig:
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
     progress_reporter: type[ProgressReporter] = NullProgressReporter
+    tmp_dir: Path = attrs.field(
+        factory=lambda: Path(tempfile.mkdtemp(prefix="unblob-tmp-"))
+    )
+
+    def __attrs_post_init__(self):
+        atexit.register(self._cleanup_tmp_dir)
+
+    def _cleanup_tmp_dir(self):
+        if isinstance(self.tmp_dir, Path) and self.tmp_dir.exists():
+            try:
+                shutil.rmtree(self.tmp_dir)
+            except Exception as e:
+                logger.warning(
+                    "Failed to clean up tmp_dir", tmp_dir=self.tmp_dir, exc_info=e
+                )
 
     def _get_output_path(self, path: Path) -> Path:
         """Return path under extract root."""
@@ -227,6 +246,24 @@ def write_json_report(report_file: Path, process_result: ProcessResult):
         logger.info("JSON report written", path=report_file)
 
 
+@contextmanager
+def tmp_dir(path):
+    """Context manager that temporarily sets all temp directory env vars."""
+    tmp_vars = ("TMP", "TMPDIR", "TEMP", "TEMPDIR")
+    saved = {}
+    try:
+        for var in tmp_vars:
+            saved[var] = os.environ.get(var)
+            os.environ[var] = str(path)
+        yield
+    finally:
+        for var, original in saved.items():
+            if original is None:
+                os.environ.pop(var, None)
+            else:
+                os.environ[var] = original
+
+
 class Processor:
     def __init__(self, config: ExtractionConfig):
         self._config = config
@@ -244,7 +281,8 @@ class Processor:
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult(task=task)
         try:
-            self._process_task(result, task)
+            with tmp_dir(self._config.tmp_dir.as_posix()):
+                self._process_task(result, task)
         except Exception as exc:
             self._process_error(result, exc)
         return result

@@ -34,6 +34,8 @@ def test_necessary_resources_can_be_created_in_sandbox(
 ):
     directory_in_extract_root = extraction_config.extract_root / "path" / "to" / "dir"
     file_in_extract_root = directory_in_extract_root / "file"
+    file_in_tmp_dir = extraction_config.tmp_dir / "tmp_file"
+    directory_in_tmp_dir = extraction_config.tmp_dir / "tmp_dir"
 
     sandbox.run(extraction_config.extract_root.mkdir, parents=True)
     sandbox.run(directory_in_extract_root.mkdir, parents=True)
@@ -44,6 +46,12 @@ def test_necessary_resources_can_be_created_in_sandbox(
     # log-file is already opened
     log_path.touch()
     sandbox.run(log_path.write_text, "log line")
+
+    sandbox.run(directory_in_tmp_dir.mkdir, parents=True)
+    sandbox.run(file_in_tmp_dir.touch)
+    sandbox.run(file_in_tmp_dir.write_text, "tmp file content")
+    sandbox.run(file_in_tmp_dir.unlink)
+    sandbox.run(directory_in_tmp_dir.rmdir)
 
 
 def test_access_outside_sandbox_is_not_possible(sandbox: Sandbox, tmp_path: Path):
