@@ -45,7 +45,7 @@ dev = [
   "pytest-cov>=3,<7",
   "pytest>=8.0.0",
   "pyyaml>=6.0.1",
-  "ruff==0.12.5",
+  "ruff==0.12.7",
   "taplo>=0.9.3",
 ]
 docs = [
