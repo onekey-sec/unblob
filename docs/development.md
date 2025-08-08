@@ -89,7 +89,7 @@ dependencies. To install all required dependencies for development, you can run
 the following command:
 
 ```
-uv install
+uv sync --all-extras --dev
 ```
 
 Please note that it installs dependencies within the dedicated virtual
