@@ -36,6 +36,9 @@ lief.logging.disable()
 
 logger = get_logger()
 
+QNX_PADDING_SIZE = 4096
+QNX_SECTION_NAME_PREFIX_BYTES = b"QNX_"
+
 KERNEL_MODULE_SIGNATURE_INFO_LEN = 12
 KERNEL_MODULE_SIGNATURE_FOOTER = b"~Module signature appended~\n"
 
@@ -371,6 +374,55 @@ class _ELFBase(StructHandler):
         # no matching UPX footer found
         return end_offset
 
+    def get_end_offset_with_qnx_null_padding(
+        self, file: File, current_end_offset: int
+    ) -> int:
+        # Check for exactly one 4KB (4096 bytes) page of null bytes, QNX
+        # binaries are often padded this way.
+        if (
+            file[current_end_offset : current_end_offset + QNX_PADDING_SIZE]
+            == b"\x00" * QNX_PADDING_SIZE
+        ):
+            return current_end_offset + QNX_PADDING_SIZE
+        return current_end_offset
+
+    def is_qnx_elf(self, file: File, start_offset: int, header, endian) -> bool:
+        # Preliminary checks for section header table validity
+        if (
+            header.e_shoff == 0
+            or header.e_shnum == 0
+            or header.e_shstrndx >= header.e_shnum
+        ):
+            return False
+
+        # Get the section header string table section
+        file.seek(
+            start_offset + header.e_shoff + header.e_shstrndx * header.e_shentsize,
+            io.SEEK_SET,
+        )
+        shstrtab_shdr = self._struct_parser.parse(
+            self.SECTION_HEADER_STRUCT, file, endian
+        )
+
+        # Read the section header string table content
+        file.seek(start_offset + shstrtab_shdr.sh_offset, io.SEEK_SET)
+        shstrtab_content = file.read(shstrtab_shdr.sh_size)
+
+        # Iterate through all section headers
+        file.seek(start_offset + header.e_shoff, io.SEEK_SET)
+        for _ in range(header.e_shnum):
+            section_header = self._struct_parser.parse(
+                self.SECTION_HEADER_STRUCT, file, endian
+            )
+            # Get the section name from the string table
+            name_offset = section_header.sh_name
+            maybe_section_name_prefix = shstrtab_content[
+                name_offset : name_offset + len(QNX_SECTION_NAME_PREFIX_BYTES)
+            ]
+            if maybe_section_name_prefix == QNX_SECTION_NAME_PREFIX_BYTES:
+                return True
+        return False
+
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ElfChunk]:
         endian = self.get_endianness(file, start_offset)
         file.seek(start_offset, io.SEEK_SET)
@@ -385,6 +437,9 @@ class _ELFBase(StructHandler):
 
         if self.is_upx(file=file, start_offset=start_offset, end_offset=end_offset):
             end_offset = self.get_upx_end_offset(file, start_offset, end_offset)
+
+        if self.is_qnx_elf(file, start_offset, header, endian):
+            end_offset = self.get_end_offset_with_qnx_null_padding(file, end_offset)
 
         # do a special extraction of ELF files with ElfChunk
         return ElfChunk(
