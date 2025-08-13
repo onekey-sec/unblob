@@ -106,7 +106,10 @@ def build_handlers_doc(
     extra_dir_handlers = plugin_manager.load_dir_handlers_from_plugins()
     dir_handlers = ctx.params["dir_handlers"] + tuple(extra_dir_handlers)
 
-    all_handlers = handlers + dir_handlers
+    # we only want handler with a valid DOC entry
+    all_handlers = [
+        handler for handler in handlers + dir_handlers if handler.DOC is not None
+    ]
 
     slugifier = slugs.slugify(case="lower", percent_encode=True)
     format_table_headers = """    | Format        | Type                                 | Fully supported?    |\n    | :------------ | :----------------------------------- | :-----------------: |\n"""

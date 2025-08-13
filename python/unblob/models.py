@@ -448,7 +448,7 @@ class DirectoryHandler(abc.ABC):
 
     PATTERN: DirectoryPattern
 
-    DOC: HandlerDoc
+    DOC: Union[HandlerDoc, None]
 
     @classmethod
     def get_dependencies(cls):
@@ -486,7 +486,7 @@ class Handler(abc.ABC, Generic[TExtractor]):
 
     EXTRACTOR: TExtractor
 
-    DOC: HandlerDoc
+    DOC: Union[HandlerDoc, None]
 
     @classmethod
     def get_dependencies(cls):
