@@ -384,6 +384,8 @@ def cli(
         else RichConsoleProgressReporter,
     )
 
+    logger.info("Creating extraction directory", extract_root=extract_root)
+    extract_root.mkdir(parents=True, exist_ok=True)
     logger.info("Start processing file", file=file)
     sandbox = Sandbox(config, log_path, report_file)
     process_results = sandbox.run(process_file, config, file, report_file)
