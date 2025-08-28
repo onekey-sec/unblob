@@ -54,7 +54,9 @@ DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 DEFAULT_SKIP_MAGIC = (
     "BFLT",
-    "Composite Document File V2 Document",
+    # TODO: Need to disable this for MSI but does it need to be enabled for
+    # other types of Composite Documents?
+    #"Composite Document File V2 Document",
     "Erlang BEAM file",
     "GIF",
     "GNU message catalog",
