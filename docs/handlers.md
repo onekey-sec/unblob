@@ -48,6 +48,7 @@
     | [`NTFS`](#ntfs) | FILESYSTEM | :octicons-check-16: |
     | [`PAR2 (MULTI-VOLUME)`](#par2-multi-volume) | ARCHIVE | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
+    | [`PE`](#pe) | EXECUTABLE | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
@@ -850,6 +851,23 @@
 
         - [Partclone GitHub Repository](https://github.com/Thomas-Tsai/partclone){ target="_blank" }
         - [Clonezilla Official Documentation](https://clonezilla.org/){ target="_blank" }
+## pe
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        The PE (Portable Executable) is a binary file format used for executable code on 32-bit and 64-bit Windows operating systems as well as in UEFI environments.
+
+        ---
+
+        - **Handler type:** Executable
+        - **Vendor:** Microsoft
+
+    === "References"
+
+        - [PE Format](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format){ target="_blank" }
+        - [Portable Executable Wikipedia](https://en.wikipedia.org/wiki/Portable_Executable){ target="_blank" }
 ## QNAP NAS
 
 !!! success "Fully supported"
