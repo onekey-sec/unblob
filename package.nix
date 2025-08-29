@@ -41,7 +41,8 @@ let
     upx
     zstd
     lz4
-  ] ++ lib.optional stdenvNoCC.isLinux partclone;
+  ]
+  ++ lib.optional stdenvNoCC.isLinux partclone;
   pyproject_toml = builtins.fromTOML (builtins.readFile ./pyproject.toml);
   inherit (pyproject_toml.project) version;
 in

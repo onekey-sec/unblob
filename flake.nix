@@ -36,6 +36,11 @@
 
       # Temporary patches for nixpkgs required for current unblob
       nixpkgsPatches = [
+        # treelib: fix build
+        {
+          url = "https://github.com/NixOS/nixpkgs/pull/438230/commits/59535e8c7e4cea6deaff06aeea6c8eddac3c5b49.patch";
+          hash = "sha256-V2SoaLpE46+J0L/KlVzASZtL8pUPbHu6B8VgcCPBaxw=";
+        }
       ];
 
       # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
@@ -112,7 +117,8 @@
               just
 
               nodejs # for pyright
-            ] ++ unblob.runtimeDeps;
+            ]
+            ++ unblob.runtimeDeps;
 
             uvExtraArgs = [
               "--group"
@@ -139,6 +145,6 @@
 
       legacyPackages = forAllSystems (system: nixpkgsFor.${system});
 
-      formatter = forAllSystems (system: nixpkgsFor.${system}.nixfmt-rfc-style);
+      formatter = forAllSystems (system: nixpkgsFor.${system}.nixfmt);
     };
 }
