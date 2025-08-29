@@ -1,6 +1,6 @@
 """MSI Handler
 
-Extracts uses 7z for now. Could migrate to fully implementation:
+Extracts uses 7z for now. Could migrate to a fully Python-based implementation:
 
     https://github.com/nightlark/pymsi
 """
@@ -51,21 +51,13 @@ class MsiHandler(Handler):
     def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
         file.seek(start_offset, io.SEEK_SET)
 
-        try:
-            # TODO: pymsi wants a path or BytesIO
-            buf = io.BytesIO()
-            buf.write(file[:])
-            buf.seek(0)
-
-            package = pymsi.Package(buf)
-            msi = pymsi.Msi(package, True)
-        except Exception:
-            return None
+        package = pymsi.Package(file)
+        msi = pymsi.Msi(package, False)
 
         # MSI moves the file pointer
-        msi_end_offset = buf.tell()
+        msi_end_offset = file.tell()
 
         return ValidChunk(
-                start_offset = start_offset,
-                end_offset = msi_end_offset,
+            start_offset = start_offset,
+            end_offset = msi_end_offset,
         )
