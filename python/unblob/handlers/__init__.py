@@ -46,7 +46,7 @@ from .compression import (
     zlib,
     zstd,
 )
-from .executable import elf, macho, xalz
+from .executable import elf, macho, pe, xalz
 from .filesystem import (
     btrfs_stream,
     cramfs,
@@ -152,6 +152,7 @@ BUILTIN_HANDLERS: Handlers = (
     elf.ELF32Handler,
     elf.ELF64Handler,
     macho.MachOHandler,
+    pe.PEHandler,
     zlib.ZlibHandler,
     engenius.EngeniusHandler,
     ecc.AutelECCHandler,
