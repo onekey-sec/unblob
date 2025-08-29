@@ -5,6 +5,7 @@ let
     ./flake.nix
     ./overlay.nix
     ./package.nix
+    ./pyproject.toml
   ];
 
   lock = builtins.fromJSON (builtins.readFile ./flake.lock);
