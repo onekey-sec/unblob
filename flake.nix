@@ -112,7 +112,8 @@
               just
 
               nodejs # for pyright
-            ] ++ unblob.runtimeDeps;
+            ]
+            ++ unblob.runtimeDeps;
 
             uvExtraArgs = [
               "--group"
