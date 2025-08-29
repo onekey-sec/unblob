@@ -140,6 +140,6 @@
 
       legacyPackages = forAllSystems (system: nixpkgsFor.${system});
 
-      formatter = forAllSystems (system: nixpkgsFor.${system}.nixfmt-rfc-style);
+      formatter = forAllSystems (system: nixpkgsFor.${system}.nixfmt);
     };
 }
