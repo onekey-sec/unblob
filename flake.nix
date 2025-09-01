@@ -38,7 +38,7 @@
       nixpkgsPatches = [
         # treelib: fix build
         {
-          url = "https://github.com/NixOS/nixpkgs/pull/438230/commits/59535e8c7e4cea6deaff06aeea6c8eddac3c5b49.patch";
+          url = "https://github.com/NixOS/nixpkgs/pull/438230/commits/dc683065d9bd488008f56e8b7c5928563300001a.patch";
           hash = "sha256-V2SoaLpE46+J0L/KlVzASZtL8pUPbHu6B8VgcCPBaxw=";
         }
       ];
