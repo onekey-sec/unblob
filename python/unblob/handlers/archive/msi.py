@@ -54,8 +54,10 @@ class MsiHandler(Handler):
         package = pymsi.Package(file)
         msi = pymsi.Msi(package, False)
 
-        # MSI moves the file pointer
-        msi_end_offset = file.tell()
+        # multiply the number of sectors by the sector size, plus 512 for header
+        msi_size = (msi.package.ole.nb_sect * msi.package.ole.sector_size) + 512
+
+        msi_end_offset = start_offset + msi_size
 
         return ValidChunk(
             start_offset = start_offset,
