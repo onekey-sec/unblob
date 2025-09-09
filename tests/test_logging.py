@@ -42,4 +42,6 @@ def test_UnknownError_can_be_logged():  # noqa: N802
     logger = structlog.get_logger()
 
     # this line used to trigger an exception:
-    logger.error("unknown", **UnknownError(exception=Exception("whatever")).asdict())
+    logger.error(
+        "unknown", **UnknownError(exception=Exception("whatever")).model_dump()
+    )
