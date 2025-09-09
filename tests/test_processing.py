@@ -226,10 +226,10 @@ def test_format_randomness_plot_error():
 def test_format_randomness_plot_no_exception(percentages: list[float], block_size: int):
     assert str(block_size) in format_randomness_plot(
         RandomnessReport(
-            shannon=RandomnessMeasurements(
+            shannon=RandomnessMeasurements.model_construct(
                 percentages=percentages, block_size=block_size, mean=mean(percentages)
             ),
-            chi_square=RandomnessMeasurements(
+            chi_square=RandomnessMeasurements.model_construct(
                 percentages=percentages, block_size=block_size, mean=mean(percentages)
             ),
         )

@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from unblob.file_utils import InvalidInputFormat
-from unblob.models import Chunk, ProcessResult, Task, TaskResult, UnknownChunk, to_json
+from unblob.models import Chunk, ProcessResult, Task, TaskResult, UnknownChunk
 from unblob.report import (
     ChunkReport,
     ExtractCommandFailedReport,
@@ -116,7 +116,7 @@ class TestChunk:
 class Test_to_json:  # noqa: N801
     def test_process_result_conversion(self):
         task = Task(path=Path("/nonexistent"), depth=0, blob_id="")
-        task_result = TaskResult(task)
+        task_result = TaskResult(task=task)
         chunk_id = "test_basic_conversion:id"
 
         task_result.add_report(
@@ -170,10 +170,9 @@ class Test_to_json:  # noqa: N801
         decoded_report = json.loads(json_text)
         assert decoded_report == [
             {
-                "__typename__": "TaskResult",
                 "reports": [
                     {
-                        "__typename__": "StatReport",
+                        "report_type": "StatReport",
                         "is_dir": False,
                         "is_file": True,
                         "is_link": False,
@@ -182,18 +181,18 @@ class Test_to_json:  # noqa: N801
                         "size": 384,
                     },
                     {
-                        "__typename__": "FileMagicReport",
+                        "report_type": "FileMagicReport",
                         "magic": "Zip archive data, at least v2.0 to extract",
                         "mime_type": "application/zip",
                     },
                     {
-                        "__typename__": "HashReport",
+                        "report_type": "HashReport",
                         "md5": "9019fcece2433ad7f12c077e84537a74",
                         "sha1": "36998218d8f43b69ef3adcadf2e8979e81eed166",
                         "sha256": "7d7ca7e1410b702b0f85d18257aebb964ac34f7fad0a0328d72e765bfcb21118",
                     },
                     {
-                        "__typename__": "ChunkReport",
+                        "report_type": "ChunkReport",
                         "end_offset": 384,
                         "extraction_reports": [],
                         "handler_name": "zip",
@@ -205,7 +204,6 @@ class Test_to_json:  # noqa: N801
                 ],
                 "subtasks": [
                     {
-                        "__typename__": "Task",
                         "blob_id": "test_basic_conversion:id",
                         "depth": 314,
                         "is_multi_file": False,
@@ -213,7 +211,6 @@ class Test_to_json:  # noqa: N801
                     }
                 ],
                 "task": {
-                    "__typename__": "Task",
                     "blob_id": "",
                     "depth": 0,
                     "is_multi_file": False,
@@ -230,16 +227,16 @@ class Test_to_json:  # noqa: N801
             exit_code=1,
         )
 
-        json_text = to_json(report)
+        json_text = report.model_dump_json()
 
         decoded_report = json.loads(json_text)
 
         assert decoded_report == {
-            "__typename__": "ExtractCommandFailedReport",
+            "report_type": "ExtractCommandFailedReport",
             "command": "dump all bytes",
             "exit_code": 1,
             "severity": "WARNING",
-            "stderr": "stdout is pretty strange ;)",
+            "stderr": "b'stdout is pretty strange ;)'",
             "stdout": (
                 "b'\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07"
                 "\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f"

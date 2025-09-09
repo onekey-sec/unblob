@@ -64,7 +64,7 @@ class Command(Extractor):
                     exit_code=res.returncode,
                 )
 
-                logger.error("Extract command failed", **error_report.asdict())
+                logger.error("Extract command failed", **error_report.model_dump())
                 raise ExtractError(error_report)
         except FileNotFoundError:
             error_report = ExtractorDependencyNotFoundReport(
@@ -72,14 +72,14 @@ class Command(Extractor):
             )
             logger.error(
                 "Can't run extract command. Is the extractor installed?",
-                **error_report.asdict(),
+                **error_report.model_dump(),
             )
             raise ExtractError(error_report) from None
         except subprocess.TimeoutExpired as e:
             error_report = ExtractorTimedOut(cmd=e.cmd, timeout=e.timeout)
             logger.error(
                 "Extract command timed out.",
-                **error_report.asdict(),
+                **error_report.model_dump(),
             )
             raise ExtractError(error_report) from None
         finally:

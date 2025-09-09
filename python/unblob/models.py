@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Generic, Optional, TypeVar, Union
 
 import attrs
+from pydantic import BaseModel
 from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
@@ -16,7 +17,7 @@ from .parser import hexstring2regex
 from .report import (
     CarveDirectoryReport,
     ChunkReport,
-    ErrorReport,
+    ErrorReportBase,
     MultiFileReport,
     RandomnessReport,
     Report,
@@ -61,12 +62,11 @@ class HandlerDoc:
         self.fully_supported = len(self.limitations) == 0
 
 
-@attrs.define(frozen=True)
-class Task:
+class Task(BaseModel):
     path: Path
     depth: int
     blob_id: str
-    is_multi_file: bool = attrs.field(default=False)
+    is_multi_file: bool = False
 
 
 @attrs.define
@@ -228,11 +228,10 @@ class MultiFile(Blob):
 ReportType = TypeVar("ReportType", bound=Report)
 
 
-@attrs.define
-class TaskResult:
+class TaskResult(BaseModel):
     task: Task
-    reports: list[Report] = attrs.field(factory=list)
-    subtasks: list[Task] = attrs.field(factory=list)
+    reports: list[Report] = []
+    subtasks: list[Task] = []
 
     def add_report(self, report: Report):
         self.reports.append(report)
@@ -244,23 +243,24 @@ class TaskResult:
         return [report for report in self.reports if isinstance(report, report_class)]
 
 
-@attrs.define
-class ProcessResult:
-    results: list[TaskResult] = attrs.field(factory=list)
+class ProcessResult(BaseModel):
+    results: list[TaskResult] = []
 
     @property
-    def errors(self) -> list[ErrorReport]:
+    def errors(self) -> list[ErrorReportBase]:
         reports = itertools.chain.from_iterable(r.reports for r in self.results)
         interesting_reports = (
-            r for r in reports if isinstance(r, (ErrorReport, ChunkReport))
+            r for r in reports if isinstance(r, (ErrorReportBase, ChunkReport))
         )
         errors = []
         for report in interesting_reports:
-            if isinstance(report, ErrorReport):
+            if isinstance(report, ErrorReportBase):
                 errors.append(report)
             else:
                 errors.extend(
-                    r for r in report.extraction_reports if isinstance(r, ErrorReport)
+                    r
+                    for r in report.extraction_reports
+                    if isinstance(r, ErrorReportBase)
                 )
         return errors
 
@@ -268,7 +268,9 @@ class ProcessResult:
         self.results.append(result)
 
     def to_json(self, indent="  "):
-        return to_json(self.results, indent=indent)
+        return json.dumps(
+            [result.model_dump(mode="json") for result in self.results], indent=indent
+        )
 
     def get_output_dir(self) -> Optional[Path]:
         try:
@@ -283,39 +285,6 @@ class ProcessResult:
         except IndexError:
             # or no extraction
             return None
-
-
-class _JSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        obj = o
-        if attrs.has(type(obj)):
-            extend_attr_output = True
-            attr_output = attrs.asdict(obj, recurse=not extend_attr_output)
-            attr_output["__typename__"] = obj.__class__.__name__
-            return attr_output
-
-        if isinstance(obj, Enum):
-            return obj.name
-
-        if isinstance(obj, Path):
-            return str(obj)
-
-        if isinstance(obj, bytes):
-            try:
-                return obj.decode()
-            except UnicodeDecodeError:
-                return str(obj)
-
-        logger.error("JSONEncoder met a non-JSON encodable value", obj=obj)
-        # the usual fail path of custom JSONEncoders is to call the parent and let it fail
-        #     return json.JSONEncoder.default(self, obj)
-        # instead of failing, just return something usable
-        return f"Non-JSON encodable value: {obj}"
-
-
-def to_json(obj, indent="  ") -> str:
-    """Encode any UnBlob object as a serialized JSON."""
-    return json.dumps(obj, cls=_JSONEncoder, indent=indent)
 
 
 class ExtractError(Exception):

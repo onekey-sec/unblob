@@ -121,14 +121,14 @@ def hello_kitty_task_results(
                     sha256="144d8b2c949cb4943128aa0081153bcba4f38eb0ba26119cc06ca1563c4999e1",
                 ),
                 CarveDirectoryReport(carve_dir=extract_root / "hello_kitty_extract"),
-                UnknownChunkReport(
+                UnknownChunkReport.model_construct(
                     id=ANY,
                     start_offset=0,
                     end_offset=6,
                     size=6,
                     randomness=None,
                 ),
-                UnknownChunkReport(
+                UnknownChunkReport.model_construct(
                     id=ANY,
                     start_offset=131,
                     end_offset=138,
@@ -183,7 +183,7 @@ def hello_kitty_task_results(
                 blob_id=kitty_id,
             ),
             reports=[
-                StatReport(
+                StatReport.model_construct(
                     path=extract_root / "hello_kitty_extract/138-263.zip_extract",
                     size=ANY,
                     is_dir=True,
@@ -236,7 +236,7 @@ def hello_kitty_task_results(
                 blob_id=hello_id,
             ),
             reports=[
-                StatReport(
+                StatReport.model_construct(
                     path=extract_root / "hello_kitty_extract/6-131.zip_extract",
                     size=ANY,
                     is_dir=True,
@@ -343,7 +343,7 @@ def container_task_results(
                     is_link=False,
                     link_target=None,
                 ),
-                FileMagicReport(
+                FileMagicReport.model_construct(
                     magic=ANY,
                     mime_type="application/zip",
                 ),
@@ -377,7 +377,7 @@ def container_task_results(
                 blob_id=chunk_id,
             ),
             reports=[
-                StatReport(
+                StatReport.model_construct(
                     path=extract_root / "container_extract",
                     size=ANY,
                     is_dir=True,

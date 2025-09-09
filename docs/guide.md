@@ -71,8 +71,7 @@ $ cat alpine-report.json
     "task": {
       "path": "/home/walkman/Projects/unblob/demo/alpine-minirootfs-3.16.1-x86_64.tar.gz",
       "depth": 0,
-      "chunk_id": "",
-      "__typename__": "Task"
+      "chunk_id": ""
     },
     "reports": [
       {
@@ -82,12 +81,12 @@ $ cat alpine-report.json
         "is_file": true,
         "is_link": false,
         "link_target": null,
-        "__typename__": "StatReport"
+        "report_type": "StatReport"
       },
       {
         "magic": "gzip compressed data, max compression, from Unix, original size modulo 2^32 5816320\\012- data",
         "mime_type": "application/gzip",
-        "__typename__": "FileMagicReport"
+        "report_type": "FileMagicReport"
       },
       {
         "id": "13590:1",
@@ -97,18 +96,16 @@ $ cat alpine-report.json
         "size": 2711958,
         "is_encrypted": false,
         "extraction_reports": [],
-        "__typename__": "ChunkReport"
+        "report_type": "ChunkReport"
       }
     ],
     "subtasks": [
       {
         "path": "/home/walkman/Projects/unblob/demo/alpine-minirootfs-3.16.1-x86_64.tar.gz_extract",
         "depth": 1,
-        "chunk_id": "13590:1",
-        "__typename__": "Task"
+        "chunk_id": "13590:1"
       }
-    ],
-    "__typename__": "TaskResult"
+    ]
   },
   ...
 ]
@@ -144,7 +141,7 @@ $ unblob -vvv unknown-file | grep -C 15 "Entropy distribution"
 2024-10-30 10:52.03 [debug    ] Shannon entropy calculated     block_size=0x20000 highest=99.99 lowest=99.98 mean=99.98 path=unknown-file_extract/0-10485760.unknown pid=1963719 size=0xa00000
 2024-10-30 10:52.03 [debug    ] Chi square probability calculated block_size=0x20000 highest=97.88 lowest=3.17 mean=52.76 path=unknown-file_extract/0-10485760.unknown pid=1963719 size=0xa00000
 2024-10-30 10:52.03 [debug    ] Entropy chart                  chart=
-                              Randomness distribution                           
+                              Randomness distribution
    ┌───────────────────────────────────────────────────────────────────────────┐
 100┤ •• Shannon entropy (%)        •••••••••♰••••••••••••••••••••••••••••••••••│
  90┤ ♰♰ Chi square probability (%)   ♰ ♰ ♰♰♰♰                    ♰    ♰  ♰     │
@@ -158,8 +155,8 @@ $ unblob -vvv unknown-file | grep -C 15 "Entropy distribution"
  10┤       ♰      ♰    ♰  ♰  ♰     ♰♰    ♰         ♰                   ♰♰      │
   0┤                                ♰                                   ♰      │
    └─┬──┬─┬──┬────┬───┬──┬──┬──┬───┬───┬──┬────┬───┬────┬──┬──┬────┬──┬───┬──┬─┘
-   0 2  5 7 11   16  20 23 27 30  34  38 42   47  51   56 60 63   68 71  76 79  
-                                   131072 bytes                                 
+   0 2  5 7 11   16  20 23 27 30  34  38 42   47  51   56 60 63   68 71  76 79
+                                   131072 bytes
  path=unknown-file_extract/0-10485760.unknown pid=1963719
 2024-10-30 10:52.03 [info     ] Extracting unknown chunk       chunk=0xc96196-0x1696196 path=unknown-file_extract/13197718-23683478.unknown pid=1963719
 2024-10-30 10:52.03 [debug    ] Carving chunk                  path=unknown-file_extract/13197718-23683478.unknown pid=1963719
@@ -167,7 +164,7 @@ $ unblob -vvv unknown-file | grep -C 15 "Entropy distribution"
 2024-10-30 10:52.03 [debug    ] Shannon entropy calculated     block_size=0x20000 highest=99.99 lowest=99.98 mean=99.98 path=unknown-file_extract/13197718-23683478.unknown pid=1963719 size=0xa00000
 2024-10-30 10:52.03 [debug    ] Chi square probability calculated block_size=0x20000 highest=99.03 lowest=0.23 mean=42.62 path=unknown-file_extract/13197718-23683478.unknown pid=1963719 size=0xa00000
 2024-10-30 10:52.03 [debug    ] Entropy chart                  chart=
-                              Randomness distribution                           
+                              Randomness distribution
    ┌───────────────────────────────────────────────────────────────────────────┐
 100┤ •• Shannon entropy (%)        •••••••••••••••••••••♰••••••••••••••••••••••│
  90┤ ♰♰ Chi square probability (%)         ♰           ♰♰            ♰         │
@@ -181,8 +178,8 @@ $ unblob -vvv unknown-file | grep -C 15 "Entropy distribution"
  10┤     ♰                ♰    ♰       ♰ ♰  ♰ ♰ ♰♰   ♰ ♰♰     ♰♰ ♰♰   ♰  ♰ ♰   │
   0┤                                           ♰ ♰    ♰♰          ♰       ♰♰   │
    └─┬──┬─┬──┬────┬───┬──┬──┬──┬───┬───┬──┬────┬───┬────┬──┬──┬────┬──┬───┬──┬─┘
-   0 2  5 7 11   16  20 23 27 30  34  38 42   47  51   56 60 63   68 71  76 79  
-                                   131072 bytes 
+   0 2  5 7 11   16  20 23 27 30  34  38 42   47  51   56 60 63   68 71  76 79
+                                   131072 bytes
 ```
 
 ### Skip extraction with file magic
