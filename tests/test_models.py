@@ -4,7 +4,14 @@ from pathlib import Path
 import pytest
 
 from unblob.file_utils import InvalidInputFormat
-from unblob.models import Chunk, ProcessResult, Task, TaskResult, UnknownChunk
+from unblob.models import (
+    Chunk,
+    ProcessResult,
+    ReportModelAdapter,
+    Task,
+    TaskResult,
+    UnknownChunk,
+)
 from unblob.report import (
     ChunkReport,
     ExtractCommandFailedReport,
@@ -218,6 +225,67 @@ class Test_to_json:  # noqa: N801
                 },
             },
         ]
+
+    def test_process_result_deserialization(self):
+        task = Task(path=Path("/nonexistent"), depth=0, blob_id="")
+        task_result = TaskResult(task=task)
+        chunk_id = "test_basic_conversion:id"
+
+        task_result.add_report(
+            StatReport(
+                path=task.path,
+                size=384,
+                is_dir=False,
+                is_file=True,
+                is_link=False,
+                link_target=None,
+            )
+        )
+        task_result.add_report(
+            FileMagicReport(
+                magic="Zip archive data, at least v2.0 to extract",
+                mime_type="application/zip",
+            )
+        )
+        task_result.add_report(
+            HashReport(
+                md5="9019fcece2433ad7f12c077e84537a74",
+                sha1="36998218d8f43b69ef3adcadf2e8979e81eed166",
+                sha256="7d7ca7e1410b702b0f85d18257aebb964ac34f7fad0a0328d72e765bfcb21118",
+            )
+        )
+        task_result.add_report(
+            ChunkReport(
+                id=chunk_id,
+                handler_name="zip",
+                start_offset=0,
+                end_offset=384,
+                size=384,
+                is_encrypted=False,
+                extraction_reports=[],
+            )
+        )
+        task_result.add_subtask(
+            Task(
+                path=Path("/extractions/nonexistent_extract"),
+                depth=314,
+                blob_id=chunk_id,
+            )
+        )
+
+        process_result = ProcessResult(results=[task_result])
+
+        json_text = process_result.to_json()
+
+        # output must be a valid json string
+        assert isinstance(json_text, str)
+
+        # deserialize using ReportModel TypeAdapter
+        report_data = ReportModelAdapter.validate_json(json_text)
+
+        # convert to ProcessResult object and compare
+        deserialized_process_result = ProcessResult(results=report_data)
+        assert process_result == deserialized_process_result
 
     def test_exotic_command_output(self):
         report = ExtractCommandFailedReport(
