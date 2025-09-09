@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Generic, Optional, TypeVar, Union
 
 import attrs
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
@@ -285,6 +285,22 @@ class ProcessResult(BaseModel):
         except IndexError:
             # or no extraction
             return None
+
+
+ReportModel = list[TaskResult]
+ReportModelAdapter = TypeAdapter(ReportModel)
+"""Use this for deserialization (import JSON report back into Python
+objects) of the JSON report.
+
+For example:
+
+with open('report.json', 'r') as f:
+    data: str = f.read()
+    report_data: ReportModel = ReportModelAdapter.validate_json(data)
+
+For another example see:
+tests/test_models.py::Test_to_json::test_process_result_deserialization
+"""
 
 
 class ExtractError(Exception):
