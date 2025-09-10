@@ -40,7 +40,7 @@ class UnknownErrorBase(ErrorReportBase):
         arbitrary_types_allowed=True
     )  # Necessary to support Exception type
 
-    def model_post_init(self, __context: Any) -> None:
+    def model_post_init(self, _: Any) -> None:
         if isinstance(self.exception, Exception):
             self.exception = "".join(
                 traceback.format_exception(
