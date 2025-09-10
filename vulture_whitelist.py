@@ -1,6 +1,8 @@
 # pyright: reportUnusedExpression=false
 # ruff: noqa: B018
 
+import importlib
+import inspect
 import sys
 
 import unblob.plugins
@@ -76,10 +78,13 @@ Handler.DOC
 
 ReportModelAdapter
 
-report_type
-
 UnknownErrorBase.model_config
 UnknownErrorBase.model_post_init
 
 ExtractCommandFailedReport.encode_bytes
 ExtractCommandFailedReport.decode_bytes
+
+module = importlib.import_module("unblob.report")
+for _, obj in inspect.getmembers(module, inspect.isclass):
+    if hasattr(obj, "report_type"):
+        obj.report_type
