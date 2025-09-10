@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import stat
 import traceback
@@ -7,7 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Annotated, Any, Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 
 class ReportBase(BaseModel):
@@ -88,14 +89,16 @@ class ExtractCommandFailedReport(ErrorReportBase):
     exit_code: int
     report_type: Literal["ExtractCommandFailedReport"] = "ExtractCommandFailedReport"
 
-    # In case there is any strange encoding in stdout/stderr, convert them to str when serializing
-    @field_serializer("stdout")
-    def stdout_to_str(self, v: bytes, _info):
-        return str(v)
+    # Use base64 to encode and decode bytes data in case there are non-standard characters
+    @field_serializer("stdout", "stderr")
+    def encode_bytes(self, v: bytes, _):
+        return base64.b64encode(v).decode("ascii")
 
-    @field_serializer("stderr")
-    def stderr_to_str(self, v: bytes, _info):
-        return str(v)
+    @field_validator("stdout", "stderr", mode="before")
+    def decode_bytes(cls: ExtractCommandFailedReport, v: Any):
+        if isinstance(v, str):
+            return base64.b64decode(v)
+        return v
 
 
 class OutputDirectoryExistsReport(ErrorReportBase):
