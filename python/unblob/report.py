@@ -5,7 +5,7 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Any, Literal, Union
+from typing import Annotated, Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
@@ -33,7 +33,7 @@ class UnknownErrorBase(ErrorReportBase):
     """Describes an exception raised during file processing."""
 
     severity: Severity = Severity.ERROR
-    exception: str | Exception
+    exception: Union[str, Exception]
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True
@@ -147,7 +147,7 @@ class StatReport(ReportBase):
     is_dir: bool
     is_file: bool
     is_link: bool
-    link_target: Path | None
+    link_target: Optional[Path]
     report_type: Literal["StatReport"] = "StatReport"
 
     @classmethod
@@ -237,7 +237,7 @@ class UnknownChunkReport(ReportBase):
     start_offset: int
     end_offset: int
     size: int
-    randomness: RandomnessReport | None
+    randomness: Optional[RandomnessReport]
     report_type: Literal["UnknownChunkReport"] = "UnknownChunkReport"
 
 
@@ -272,7 +272,7 @@ class ExtractionProblemBase(ReportBase):
 
     problem: str
     resolution: str
-    path: str | None = None
+    path: Optional[str] = None
 
     @property
     def log_msg(self):

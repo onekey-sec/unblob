@@ -295,8 +295,8 @@ objects) of the JSON report.
 For example:
 
 with open('report.json', 'r') as f:
-    data: str = f.read()
-    report_data: ReportModel = ReportModelAdapter.validate_json(data)
+    data = f.read()
+    report_data = ReportModelAdapter.validate_json(data)
 
 For another example see:
 tests/test_models.py::Test_to_json::test_process_result_deserialization
