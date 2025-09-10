@@ -1,3 +1,5 @@
+# ruff: noqa: UP007,UP045
+
 from __future__ import annotations
 
 import base64
@@ -95,7 +97,8 @@ class ExtractCommandFailedReport(ErrorReportBase):
         return base64.b64encode(v).decode("ascii")
 
     @field_validator("stdout", "stderr", mode="before")
-    def decode_bytes(cls: ExtractCommandFailedReport, v: Any):
+    @classmethod
+    def decode_bytes(cls, v: Any):
         if isinstance(v, str):
             return base64.b64decode(v)
         return v
