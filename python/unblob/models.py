@@ -17,7 +17,7 @@ from .parser import hexstring2regex
 from .report import (
     CarveDirectoryReport,
     ChunkReport,
-    ErrorReportBase,
+    ErrorReport,
     MultiFileReport,
     RandomnessReport,
     Report,
@@ -247,20 +247,18 @@ class ProcessResult(BaseModel):
     results: list[TaskResult] = []
 
     @property
-    def errors(self) -> list[ErrorReportBase]:
+    def errors(self) -> list[ErrorReport]:
         reports = itertools.chain.from_iterable(r.reports for r in self.results)
         interesting_reports = (
-            r for r in reports if isinstance(r, (ErrorReportBase, ChunkReport))
+            r for r in reports if isinstance(r, (ErrorReport, ChunkReport))
         )
         errors = []
         for report in interesting_reports:
-            if isinstance(report, ErrorReportBase):
+            if isinstance(report, ErrorReport):
                 errors.append(report)
             else:
                 errors.extend(
-                    r
-                    for r in report.extraction_reports
-                    if isinstance(r, ErrorReportBase)
+                    r for r in report.extraction_reports if isinstance(r, ErrorReport)
                 )
         return errors
 
