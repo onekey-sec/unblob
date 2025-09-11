@@ -179,7 +179,7 @@ class Test_to_json:  # noqa: N801
             {
                 "reports": [
                     {
-                        "report_type": "StatReport",
+                        "__typename__": "StatReport",
                         "is_dir": False,
                         "is_file": True,
                         "is_link": False,
@@ -188,18 +188,18 @@ class Test_to_json:  # noqa: N801
                         "size": 384,
                     },
                     {
-                        "report_type": "FileMagicReport",
+                        "__typename__": "FileMagicReport",
                         "magic": "Zip archive data, at least v2.0 to extract",
                         "mime_type": "application/zip",
                     },
                     {
-                        "report_type": "HashReport",
+                        "__typename__": "HashReport",
                         "md5": "9019fcece2433ad7f12c077e84537a74",
                         "sha1": "36998218d8f43b69ef3adcadf2e8979e81eed166",
                         "sha256": "7d7ca7e1410b702b0f85d18257aebb964ac34f7fad0a0328d72e765bfcb21118",
                     },
                     {
-                        "report_type": "ChunkReport",
+                        "__typename__": "ChunkReport",
                         "end_offset": 384,
                         "extraction_reports": [],
                         "handler_name": "zip",
