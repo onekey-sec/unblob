@@ -8,13 +8,26 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Any, Literal, Optional, Union
+from typing import Annotated, Any, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Discriminator,
+    Tag,
+    computed_field,
+    field_serializer,
+    field_validator,
+)
 
 
 class ReportBase(BaseModel):
     """A common base class for different reports. This will enable easy pydantic configuration of all models from a single point in the future if desired."""
+
+    @computed_field
+    @property
+    def __typename__(self) -> str:
+        return self.__class__.__name__
 
 
 class Severity(Enum):
@@ -24,15 +37,11 @@ class Severity(Enum):
     WARNING = "WARNING"
 
 
-class ErrorReportBase(ReportBase):
+class ErrorReport(ReportBase):
     severity: Severity
 
 
-class ErrorReport(ErrorReportBase):
-    report_type: Literal["ErrorReport"] = "ErrorReport"
-
-
-class UnknownErrorBase(ErrorReportBase):
+class UnknownError(ErrorReport):
     """Describes an exception raised during file processing."""
 
     severity: Severity = Severity.ERROR
@@ -53,35 +62,23 @@ class UnknownErrorBase(ErrorReportBase):
     """Exceptions are also formatted at construct time."""
 
 
-class UnknownError(UnknownErrorBase):
-    """Describes an exception raised during file processing."""
-
-    report_type: Literal["UnknownError"] = "UnknownError"
-
-
-class CalculateChunkExceptionReport(UnknownErrorBase):
+class CalculateChunkExceptionReport(UnknownError):
     """Describes an exception raised during calculate_chunk execution."""
 
     start_offset: int
     # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
     handler: str
-    report_type: Literal["CalculateChunkExceptionReport"] = (
-        "CalculateChunkExceptionReport"
-    )
 
 
-class CalculateMultiFileExceptionReport(UnknownErrorBase):
+class CalculateMultiFileExceptionReport(UnknownError):
     """Describes an exception raised during calculate_chunk execution."""
 
     path: Path
     # Stored in `str` rather than `Handler`, because the pickle picks ups structs from `C_DEFINITIONS`
     handler: str
-    report_type: Literal["CalculateMultiFileExceptionReport"] = (
-        "CalculateMultiFileExceptionReport"
-    )
 
 
-class ExtractCommandFailedReport(ErrorReportBase):
+class ExtractCommandFailedReport(ErrorReport):
     """Describes an error when failed to run the extraction command."""
 
     severity: Severity = Severity.WARNING
@@ -89,7 +86,6 @@ class ExtractCommandFailedReport(ErrorReportBase):
     stdout: bytes
     stderr: bytes
     exit_code: int
-    report_type: Literal["ExtractCommandFailedReport"] = "ExtractCommandFailedReport"
 
     # Use base64 to encode and decode bytes data in case there are non-standard characters
     @field_serializer("stdout", "stderr")
@@ -104,47 +100,40 @@ class ExtractCommandFailedReport(ErrorReportBase):
         return v
 
 
-class OutputDirectoryExistsReport(ErrorReportBase):
+class OutputDirectoryExistsReport(ErrorReport):
     severity: Severity = Severity.ERROR
     path: Path
-    report_type: Literal["OutputDirectoryExistsReport"] = "OutputDirectoryExistsReport"
 
 
-class ExtractorDependencyNotFoundReport(ErrorReportBase):
+class ExtractorDependencyNotFoundReport(ErrorReport):
     """Describes an error when the dependency of an extractor doesn't exist."""
 
     severity: Severity = Severity.ERROR
     dependencies: list[str]
-    report_type: Literal["ExtractorDependencyNotFoundReport"] = (
-        "ExtractorDependencyNotFoundReport"
-    )
 
 
-class ExtractorTimedOut(ErrorReportBase):
+class ExtractorTimedOut(ErrorReport):
     """Describes an error when the extractor execution timed out."""
 
     severity: Severity = Severity.ERROR
     cmd: str
     timeout: float
-    report_type: Literal["ExtractorTimedOut"] = "ExtractorTimedOut"
 
 
-class MaliciousSymlinkRemoved(ErrorReportBase):
+class MaliciousSymlinkRemoved(ErrorReport):
     """Describes an error when malicious symlinks have been removed from disk."""
 
     severity: Severity = Severity.WARNING
     link: str
     target: str
-    report_type: Literal["MaliciousSymlinkRemoved"] = "MaliciousSymlinkRemoved"
 
 
-class MultiFileCollisionReport(ErrorReportBase):
+class MultiFileCollisionReport(ErrorReport):
     """Describes an error when MultiFiles collide on the same file."""
 
     severity: Severity = Severity.ERROR
     paths: set[Path]
     handler: str
-    report_type: Literal["MultiFileCollisionReport"] = "MultiFileCollisionReport"
 
 
 class StatReport(ReportBase):
@@ -154,7 +143,6 @@ class StatReport(ReportBase):
     is_file: bool
     is_link: bool
     link_target: Optional[Path]
-    report_type: Literal["StatReport"] = "StatReport"
 
     @classmethod
     def from_path(cls, path: Path):
@@ -179,7 +167,6 @@ class HashReport(ReportBase):
     md5: str
     sha1: str
     sha256: str
-    report_type: Literal["HashReport"] = "HashReport"
 
     @classmethod
     def from_path(cls, path: Path):
@@ -204,7 +191,6 @@ class HashReport(ReportBase):
 class FileMagicReport(ReportBase):
     magic: str
     mime_type: str
-    report_type: Literal["FileMagicReport"] = "FileMagicReport"
 
 
 class RandomnessMeasurements(BaseModel):
@@ -224,7 +210,6 @@ class RandomnessMeasurements(BaseModel):
 class RandomnessReport(ReportBase):
     shannon: RandomnessMeasurements
     chi_square: RandomnessMeasurements
-    report_type: Literal["RandomnessReport"] = "RandomnessReport"
 
 
 class ChunkReport(ReportBase):
@@ -235,7 +220,6 @@ class ChunkReport(ReportBase):
     size: int
     is_encrypted: bool
     extraction_reports: list[Report]
-    report_type: Literal["ChunkReport"] = "ChunkReport"
 
 
 class UnknownChunkReport(ReportBase):
@@ -244,12 +228,10 @@ class UnknownChunkReport(ReportBase):
     end_offset: int
     size: int
     randomness: Optional[RandomnessReport]
-    report_type: Literal["UnknownChunkReport"] = "UnknownChunkReport"
 
 
 class CarveDirectoryReport(ReportBase):
     carve_dir: Path
-    report_type: Literal["CarveDirectoryReport"] = "CarveDirectoryReport"
 
 
 class MultiFileReport(ReportBase):
@@ -258,10 +240,9 @@ class MultiFileReport(ReportBase):
     name: str
     paths: list[Path]
     extraction_reports: list[Report]
-    report_type: Literal["MultiFileReport"] = "MultiFileReport"
 
 
-class ExtractionProblemBase(ReportBase):
+class ExtractionProblem(ReportBase):
     """A non-fatal problem discovered during extraction.
 
     A report like this still means, that the extraction was successful,
@@ -288,27 +269,8 @@ class ExtractionProblemBase(ReportBase):
         logger.warning(self.log_msg, path=self.path)
 
 
-class ExtractionProblem(ExtractionProblemBase):
-    """A non-fatal problem discovered during extraction.
-
-    A report like this still means, that the extraction was successful,
-    but there were problems that got resolved.
-    The output is expected to be complete, with the exception of
-    the reported path.
-
-    Examples
-    --------
-    - duplicate entries for certain archive formats (tar, zip)
-    - unsafe symlinks pointing outside of extraction directory
-
-    """
-
-    report_type: Literal["ExtractionProblem"] = "ExtractionProblem"
-
-
-class PathTraversalProblem(ExtractionProblemBase):
+class PathTraversalProblem(ExtractionProblem):
     extraction_path: str
-    report_type: Literal["PathTraversalProblem"] = "PathTraversalProblem"
 
     def log_with(self, logger):
         logger.warning(
@@ -318,49 +280,55 @@ class PathTraversalProblem(ExtractionProblemBase):
         )
 
 
-class LinkExtractionProblem(ExtractionProblemBase):
+class LinkExtractionProblem(ExtractionProblem):
     link_path: str
-    report_type: Literal["LinkExtractionProblem"] = "LinkExtractionProblem"
 
     def log_with(self, logger):
         logger.warning(self.log_msg, path=self.path, link_path=self.link_path)
 
 
-class SpecialFileExtractionProblem(ExtractionProblemBase):
+class SpecialFileExtractionProblem(ExtractionProblem):
     mode: int
     device: int
-    report_type: Literal["SpecialFileExtractionProblem"] = (
-        "SpecialFileExtractionProblem"
-    )
 
     def log_with(self, logger):
         logger.warning(self.log_msg, path=self.path, mode=self.mode, device=self.device)
 
 
+def _get_report_type(report: dict | ReportBase):
+    if isinstance(report, dict):
+        return report.get("__typename__")
+    return report.__typename__
+
+
 Report = Annotated[
     Union[
-        ErrorReport,
-        UnknownError,
-        CalculateChunkExceptionReport,
-        CalculateMultiFileExceptionReport,
-        ExtractCommandFailedReport,
-        OutputDirectoryExistsReport,
-        ExtractorDependencyNotFoundReport,
-        ExtractorTimedOut,
-        MaliciousSymlinkRemoved,
-        MultiFileCollisionReport,
-        StatReport,
-        HashReport,
-        FileMagicReport,
-        RandomnessReport,
-        ChunkReport,
-        UnknownChunkReport,
-        CarveDirectoryReport,
-        MultiFileReport,
-        ExtractionProblem,
-        PathTraversalProblem,
-        LinkExtractionProblem,
-        SpecialFileExtractionProblem,
+        Annotated[ErrorReport, Tag("ErrorReport")],
+        Annotated[UnknownError, Tag("UnknownError")],
+        Annotated[CalculateChunkExceptionReport, Tag("CalculateChunkExceptionReport")],
+        Annotated[
+            CalculateMultiFileExceptionReport, Tag("CalculateMultiFileExceptionReport")
+        ],
+        Annotated[ExtractCommandFailedReport, Tag("ExtractCommandFailedReport")],
+        Annotated[OutputDirectoryExistsReport, Tag("OutputDirectoryExistsReport")],
+        Annotated[
+            ExtractorDependencyNotFoundReport, Tag("ExtractorDependencyNotFoundReport")
+        ],
+        Annotated[ExtractorTimedOut, Tag("ExtractorTimedOut")],
+        Annotated[MaliciousSymlinkRemoved, Tag("MaliciousSymlinkRemoved")],
+        Annotated[MultiFileCollisionReport, Tag("MultiFileCollisionReport")],
+        Annotated[StatReport, Tag("StatReport")],
+        Annotated[HashReport, Tag("HashReport")],
+        Annotated[FileMagicReport, Tag("FileMagicReport")],
+        Annotated[RandomnessReport, Tag("RandomnessReport")],
+        Annotated[ChunkReport, Tag("ChunkReport")],
+        Annotated[UnknownChunkReport, Tag("UnknownChunkReport")],
+        Annotated[CarveDirectoryReport, Tag("CarveDirectoryReport")],
+        Annotated[MultiFileReport, Tag("MultiFileReport")],
+        Annotated[ExtractionProblem, Tag("ExtractionProblem")],
+        Annotated[PathTraversalProblem, Tag("PathTraversalProblem")],
+        Annotated[LinkExtractionProblem, Tag("LinkExtractionProblem")],
+        Annotated[SpecialFileExtractionProblem, Tag("SpecialFileExtractionProblem")],
     ],
-    Field(discriminator="report_type"),
+    Discriminator(_get_report_type),
 ]

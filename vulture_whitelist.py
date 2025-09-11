@@ -1,8 +1,6 @@
 # pyright: reportUnusedExpression=false
 # ruff: noqa: B018
 
-import importlib
-import inspect
 import sys
 
 import unblob.plugins
@@ -24,7 +22,7 @@ from unblob.report import (
     ExtractCommandFailedReport,
     FileMagicReport,
     StatReport,
-    UnknownErrorBase,
+    UnknownError,
 )
 
 _HexStringToRegex.literal
@@ -78,13 +76,8 @@ Handler.DOC
 
 ReportModelAdapter
 
-UnknownErrorBase.model_config
-UnknownErrorBase.model_post_init
+UnknownError.model_config
+UnknownError.model_post_init
 
 ExtractCommandFailedReport.encode_bytes
 ExtractCommandFailedReport.decode_bytes
-
-module = importlib.import_module("unblob.report")
-for _, obj in inspect.getmembers(module, inspect.isclass):
-    if hasattr(obj, "report_type"):
-        obj.report_type
