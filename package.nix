@@ -86,6 +86,7 @@ python3.pkgs.buildPythonApplication {
     python3.pkgs.lz4 # shadowed by pkgs.lz4
     plotext
     pluggy
+    pydantic
     pyfatfs
     pymdown-extensions
     pyperscan
