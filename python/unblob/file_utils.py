@@ -491,15 +491,7 @@ class FileSystem:
         self.root = root.resolve()
         self.problems = []
 
-    def record_problem(
-        self,
-        problem: Union[
-            ExtractionProblem,
-            LinkExtractionProblem,
-            PathTraversalProblem,
-            SpecialFileExtractionProblem,
-        ],
-    ):
+    def record_problem(self, problem: ExtractionProblem):
         self.problems.append(problem)
         problem.log_with(logger)
 
