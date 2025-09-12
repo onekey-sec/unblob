@@ -242,7 +242,7 @@ class Processor:
         self._get_mime_type = magic.Magic(mime=True).from_file
 
     def process_task(self, task: Task) -> TaskResult:
-        result = TaskResult(task)
+        result = TaskResult(task=task)
         try:
             self._process_task(result, task)
         except Exception as exc:
@@ -393,7 +393,7 @@ class _DirectoryTask:
             task_result.add_report(error_report)
             logger.warning(
                 "Unhandled Exception during multi file calculation",
-                **error_report.asdict(),
+                **error_report.model_dump(),
             )
 
     def _check_conflicting_files(

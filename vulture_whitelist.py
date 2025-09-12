@@ -12,20 +12,24 @@ from unblob.models import (
     Handler,
     HandlerDoc,
     HandlerType,
+    ReportModelAdapter,
     SingleFile,
     TaskResult,
-    _JSONEncoder,
 )
 from unblob.parser import _HexStringToRegex
-from unblob.report import ChunkReport, FileMagicReport, StatReport
+from unblob.report import (
+    ChunkReport,
+    ExtractCommandFailedReport,
+    FileMagicReport,
+    StatReport,
+    UnknownError,
+)
 
 _HexStringToRegex.literal
 _HexStringToRegex.wildcard
 _HexStringToRegex.jump
 _HexStringToRegex.range_jump
 _HexStringToRegex.alternative
-
-_JSONEncoder.default
 
 TaskResult.filter_reports
 ChunkReport.handler_name
@@ -69,3 +73,11 @@ HandlerDoc
 generate_markdown
 
 Handler.DOC
+
+ReportModelAdapter
+
+UnknownError.model_config
+UnknownError.model_post_init
+
+ExtractCommandFailedReport.encode_bytes
+ExtractCommandFailedReport.decode_bytes

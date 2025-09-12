@@ -1,25 +1,33 @@
+# ruff: noqa: UP007,UP045
+
+from __future__ import annotations
+
+import base64
 import hashlib
 import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union, final
+from typing import Annotated, Any, Optional, Union
 
-import attrs
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Discriminator,
+    Tag,
+    computed_field,
+    field_serializer,
+    field_validator,
+)
 
 
-@attrs.define(kw_only=True, frozen=True)
-class Report:
-    """A common base class for different reports."""
+class ReportBase(BaseModel):
+    """A common base class for different reports. This will enable easy pydantic configuration of all models from a single point in the future if desired."""
 
-    def __attrs_post_init__(self):
-        for field in attrs.fields(type(self)):
-            value = getattr(self, field.name)
-            if isinstance(value, int):
-                object.__setattr__(self, field.name, int(value))
-
-    def asdict(self) -> dict:
-        return attrs.asdict(self)
+    @computed_field
+    @property
+    def __typename__(self) -> str:
+        return self.__class__.__name__
 
 
 class Severity(Enum):
@@ -29,37 +37,31 @@ class Severity(Enum):
     WARNING = "WARNING"
 
 
-@attrs.define(kw_only=True, frozen=True)
-class ErrorReport(Report):
+class ErrorReport(ReportBase):
     severity: Severity
 
 
-def _convert_exception_to_str(obj: Union[str, Exception]) -> str:
-    if isinstance(obj, str):
-        return obj
-    if isinstance(obj, Exception):
-        e: Exception = obj
-        return "".join(traceback.format_exception(type(e), e, e.__traceback__))
-    raise ValueError("Invalid exception object", obj)
-
-
-@attrs.define(kw_only=True, frozen=True)
 class UnknownError(ErrorReport):
     """Describes an exception raised during file processing."""
 
-    severity: Severity = attrs.field(default=Severity.ERROR)
-    exception: Union[str, Exception] = attrs.field(  # pyright: ignore[reportGeneralTypeIssues]
-        converter=_convert_exception_to_str
-    )
-    """Exceptions are also formatted at construct time.
+    severity: Severity = Severity.ERROR
+    exception: Union[str, Exception]
 
-    `attrs` is not integrated enough with type checker/LSP provider `pyright` to include converters.
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True
+    )  # Necessary to support Exception type
 
-    See: https://www.attrs.org/en/stable/types.html#pyright
-    """
+    def model_post_init(self, _: Any) -> None:
+        if isinstance(self.exception, Exception):
+            self.exception = "".join(
+                traceback.format_exception(
+                    type(self.exception), self.exception, self.exception.__traceback__
+                )
+            )
+
+    """Exceptions are also formatted at construct time."""
 
 
-@attrs.define(kw_only=True, frozen=True)
 class CalculateChunkExceptionReport(UnknownError):
     """Describes an exception raised during calculate_chunk execution."""
 
@@ -68,7 +70,6 @@ class CalculateChunkExceptionReport(UnknownError):
     handler: str
 
 
-@attrs.define(kw_only=True, frozen=True)
 class CalculateMultiFileExceptionReport(UnknownError):
     """Describes an exception raised during calculate_chunk execution."""
 
@@ -77,7 +78,6 @@ class CalculateMultiFileExceptionReport(UnknownError):
     handler: str
 
 
-@attrs.define(kw_only=True, frozen=True)
 class ExtractCommandFailedReport(ErrorReport):
     """Describes an error when failed to run the extraction command."""
 
@@ -87,14 +87,24 @@ class ExtractCommandFailedReport(ErrorReport):
     stderr: bytes
     exit_code: int
 
+    # Use base64 to encode and decode bytes data in case there are non-standard characters
+    @field_serializer("stdout", "stderr")
+    def encode_bytes(self, v: bytes, _):
+        return base64.b64encode(v).decode("ascii")
 
-@attrs.define(kw_only=True, frozen=True)
+    @field_validator("stdout", "stderr", mode="before")
+    @classmethod
+    def decode_bytes(cls, v: Any):
+        if isinstance(v, str):
+            return base64.b64decode(v)
+        return v
+
+
 class OutputDirectoryExistsReport(ErrorReport):
     severity: Severity = Severity.ERROR
     path: Path
 
 
-@attrs.define(kw_only=True, frozen=True)
 class ExtractorDependencyNotFoundReport(ErrorReport):
     """Describes an error when the dependency of an extractor doesn't exist."""
 
@@ -102,7 +112,6 @@ class ExtractorDependencyNotFoundReport(ErrorReport):
     dependencies: list[str]
 
 
-@attrs.define(kw_only=True, frozen=True)
 class ExtractorTimedOut(ErrorReport):
     """Describes an error when the extractor execution timed out."""
 
@@ -111,7 +120,6 @@ class ExtractorTimedOut(ErrorReport):
     timeout: float
 
 
-@attrs.define(kw_only=True, frozen=True)
 class MaliciousSymlinkRemoved(ErrorReport):
     """Describes an error when malicious symlinks have been removed from disk."""
 
@@ -120,7 +128,6 @@ class MaliciousSymlinkRemoved(ErrorReport):
     target: str
 
 
-@attrs.define(kw_only=True, frozen=True)
 class MultiFileCollisionReport(ErrorReport):
     """Describes an error when MultiFiles collide on the same file."""
 
@@ -129,8 +136,7 @@ class MultiFileCollisionReport(ErrorReport):
     handler: str
 
 
-@attrs.define(kw_only=True, frozen=True)
-class StatReport(Report):
+class StatReport(ReportBase):
     path: Path
     size: int
     is_dir: bool
@@ -157,8 +163,7 @@ class StatReport(Report):
         )
 
 
-@attrs.define(kw_only=True, frozen=True)
-class HashReport(Report):
+class HashReport(ReportBase):
     md5: str
     sha1: str
     sha256: str
@@ -183,14 +188,12 @@ class HashReport(Report):
         )
 
 
-@attrs.define(kw_only=True, frozen=True)
-class FileMagicReport(Report):
+class FileMagicReport(ReportBase):
     magic: str
     mime_type: str
 
 
-@attrs.define(kw_only=True, frozen=True)
-class RandomnessMeasurements:
+class RandomnessMeasurements(BaseModel):
     percentages: list[float]
     block_size: int
     mean: float
@@ -204,15 +207,12 @@ class RandomnessMeasurements:
         return min(self.percentages)
 
 
-@attrs.define(kw_only=True, frozen=True)
-class RandomnessReport(Report):
+class RandomnessReport(ReportBase):
     shannon: RandomnessMeasurements
     chi_square: RandomnessMeasurements
 
 
-@final
-@attrs.define(kw_only=True, frozen=True)
-class ChunkReport(Report):
+class ChunkReport(ReportBase):
     id: str
     handler_name: str
     start_offset: int
@@ -222,9 +222,7 @@ class ChunkReport(Report):
     extraction_reports: list[Report]
 
 
-@final
-@attrs.define(kw_only=True, frozen=True)
-class UnknownChunkReport(Report):
+class UnknownChunkReport(ReportBase):
     id: str
     start_offset: int
     end_offset: int
@@ -232,14 +230,11 @@ class UnknownChunkReport(Report):
     randomness: Optional[RandomnessReport]
 
 
-@attrs.define(kw_only=True, frozen=True)
-class CarveDirectoryReport(Report):
+class CarveDirectoryReport(ReportBase):
     carve_dir: Path
 
 
-@final
-@attrs.define(kw_only=True, frozen=True)
-class MultiFileReport(Report):
+class MultiFileReport(ReportBase):
     id: str
     handler_name: str
     name: str
@@ -247,8 +242,7 @@ class MultiFileReport(Report):
     extraction_reports: list[Report]
 
 
-@attrs.define(kw_only=True, frozen=True)
-class ExtractionProblem(Report):
+class ExtractionProblem(ReportBase):
     """A non-fatal problem discovered during extraction.
 
     A report like this still means, that the extraction was successful,
@@ -275,7 +269,6 @@ class ExtractionProblem(Report):
         logger.warning(self.log_msg, path=self.path)
 
 
-@attrs.define(kw_only=True, frozen=True)
 class PathTraversalProblem(ExtractionProblem):
     extraction_path: str
 
@@ -287,7 +280,6 @@ class PathTraversalProblem(ExtractionProblem):
         )
 
 
-@attrs.define(kw_only=True, frozen=True)
 class LinkExtractionProblem(ExtractionProblem):
     link_path: str
 
@@ -295,10 +287,48 @@ class LinkExtractionProblem(ExtractionProblem):
         logger.warning(self.log_msg, path=self.path, link_path=self.link_path)
 
 
-@attrs.define(kw_only=True, frozen=True)
 class SpecialFileExtractionProblem(ExtractionProblem):
     mode: int
     device: int
 
     def log_with(self, logger):
         logger.warning(self.log_msg, path=self.path, mode=self.mode, device=self.device)
+
+
+def _get_report_type(report: dict | ReportBase):
+    if isinstance(report, dict):
+        return report.get("__typename__")
+    return report.__typename__
+
+
+Report = Annotated[
+    Union[
+        Annotated[ErrorReport, Tag("ErrorReport")],
+        Annotated[UnknownError, Tag("UnknownError")],
+        Annotated[CalculateChunkExceptionReport, Tag("CalculateChunkExceptionReport")],
+        Annotated[
+            CalculateMultiFileExceptionReport, Tag("CalculateMultiFileExceptionReport")
+        ],
+        Annotated[ExtractCommandFailedReport, Tag("ExtractCommandFailedReport")],
+        Annotated[OutputDirectoryExistsReport, Tag("OutputDirectoryExistsReport")],
+        Annotated[
+            ExtractorDependencyNotFoundReport, Tag("ExtractorDependencyNotFoundReport")
+        ],
+        Annotated[ExtractorTimedOut, Tag("ExtractorTimedOut")],
+        Annotated[MaliciousSymlinkRemoved, Tag("MaliciousSymlinkRemoved")],
+        Annotated[MultiFileCollisionReport, Tag("MultiFileCollisionReport")],
+        Annotated[StatReport, Tag("StatReport")],
+        Annotated[HashReport, Tag("HashReport")],
+        Annotated[FileMagicReport, Tag("FileMagicReport")],
+        Annotated[RandomnessReport, Tag("RandomnessReport")],
+        Annotated[ChunkReport, Tag("ChunkReport")],
+        Annotated[UnknownChunkReport, Tag("UnknownChunkReport")],
+        Annotated[CarveDirectoryReport, Tag("CarveDirectoryReport")],
+        Annotated[MultiFileReport, Tag("MultiFileReport")],
+        Annotated[ExtractionProblem, Tag("ExtractionProblem")],
+        Annotated[PathTraversalProblem, Tag("PathTraversalProblem")],
+        Annotated[LinkExtractionProblem, Tag("LinkExtractionProblem")],
+        Annotated[SpecialFileExtractionProblem, Tag("SpecialFileExtractionProblem")],
+    ],
+    Discriminator(_get_report_type),
+]

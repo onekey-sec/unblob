@@ -63,7 +63,7 @@ def test_command_execution_failure(tmpdir: Path):
         command.extract(Path("input"), outdir)
 
     assert list(excinfo.value.reports) == [
-        ExtractCommandFailedReport(
+        ExtractCommandFailedReport.model_construct(
             command=mock.ANY,
             stdout=b"stdout",
             stderr=b"stderr",

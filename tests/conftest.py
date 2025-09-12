@@ -12,4 +12,4 @@ from unblob.testing import (  # noqa: F401 (module imported but unused)
 @pytest.fixture
 def task_result():
     task = Task(path=Path("/nonexistent"), depth=0, blob_id="")
-    return TaskResult(task)
+    return TaskResult(task=task)
