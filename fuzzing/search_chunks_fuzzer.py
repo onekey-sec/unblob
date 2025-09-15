@@ -59,7 +59,7 @@ def test_search_chunks(data):
             depth=0,
             blob_id="",
         )
-        result = TaskResult(task)
+        result = TaskResult(task=task)
         search_chunks(file, len(data), config.handlers, result)
 
 

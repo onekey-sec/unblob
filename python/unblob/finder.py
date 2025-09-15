@@ -63,7 +63,7 @@ def _calculate_chunk(
         )
         task_result.add_report(error_report)
         logger.error(
-            "Unhandled Exception during chunk calculation", **error_report.asdict()
+            "Unhandled Exception during chunk calculation", **error_report.model_dump()
         )
 
 
