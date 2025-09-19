@@ -21,7 +21,7 @@ dependencies = [
   "pymdown-extensions>=10.15",
   "pyperscan>=0.3.0",
   "python-magic>=0.4.27",
-  "pyzstd",
+  "pyzstd>0.16.2",
   "rarfile>=4.1",
   "rich>=13.3.5",
   "structlog>=24.1.0",

@@ -24,6 +24,9 @@
     "enabled": true,
     "description": "opt-in support for nix https://docs.renovatebot.com/modules/manager/nix/#enabling"
   },
+  "pep621": {
+    "rangeStrategy": "update-lockfile"
+  },
   "pre-commit": {
     "enabled": true,
     "description": "opt-in support for pre-commit  https://docs.renovatebot.com/modules/manager/nix/#enabling"
