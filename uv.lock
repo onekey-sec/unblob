@@ -1874,7 +1874,7 @@ requires-dist = [
     { name = "pymdown-extensions", specifier = ">=10.15" },
     { name = "pyperscan", specifier = ">=0.3.0" },
     { name = "python-magic", specifier = ">=0.4.27" },
-    { name = "pyzstd" },
+    { name = "pyzstd", specifier = ">0.16.2" },
     { name = "rarfile", specifier = ">=4.1" },
     { name = "rich", specifier = ">=13.3.5" },
     { name = "structlog", specifier = ">=24.1.0" },
