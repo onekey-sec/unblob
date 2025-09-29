@@ -1,5 +1,8 @@
+import atexit
 import multiprocessing
+import os
 import shutil
+import tempfile
 from collections.abc import Iterable, Sequence
 from operator import attrgetter
 from pathlib import Path
@@ -100,6 +103,21 @@ class ExtractionConfig:
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
     progress_reporter: type[ProgressReporter] = NullProgressReporter
+    tmp_dir: Path = attrs.field(
+        factory=lambda: Path(tempfile.mkdtemp(prefix="unblob-tmp-"))
+    )
+
+    def __attrs_post_init__(self):
+        atexit.register(self._cleanup_tmp_dir)
+
+    def _cleanup_tmp_dir(self):
+        if isinstance(self.tmp_dir, Path) and self.tmp_dir.exists():
+            try:
+                shutil.rmtree(self.tmp_dir)
+            except Exception as e:
+                logger.warning(
+                    "Failed to clean up tmp_dir", tmp_dir=self.tmp_dir, exc_info=e
+                )
 
     def _get_output_path(self, path: Path) -> Path:
         """Return path under extract root."""
@@ -244,10 +262,16 @@ class Processor:
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult(task=task)
         try:
+            self._set_tmp_dir()
             self._process_task(result, task)
         except Exception as exc:
             self._process_error(result, exc)
         return result
+
+    def _set_tmp_dir(self):
+        """Set environment variables so all subprocesses and handlers use our temp dir."""
+        for var in ("TMP", "TMPDIR", "TEMP", "TEMPDIR"):
+            os.environ[var] = self._config.tmp_dir.as_posix()
 
     def _process_error(self, result: TaskResult, exc: Exception):
         error_report = UnknownError(exception=exc)

@@ -55,6 +55,10 @@ class Sandbox:
             AccessFS.remove_file(config.extract_root),
             AccessFS.make_dir(config.extract_root.parent),
             AccessFS.read_write(log_path),
+            # Allow access to the managed temp directory for handlers
+            AccessFS.read_write(config.tmp_dir),
+            AccessFS.remove_dir(config.tmp_dir),
+            AccessFS.remove_file(config.tmp_dir),
             *extra_passthrough,
         ]
 
