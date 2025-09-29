@@ -70,7 +70,7 @@ class File(mmap.mmap):
 
     def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:  # pyright: ignore[reportIncompatibleMethodOverride]
         try:
-            super().seek(pos, whence)
+            super().seek(pos, whence)  # pyright: ignore[reportArgumentType]
         except ValueError as e:
             raise SeekError from e
         return self.tell()
