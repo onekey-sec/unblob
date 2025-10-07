@@ -45,12 +45,16 @@ class PEExtractor(Extractor):
         """
         Test if binary appears to be a Nullsoft Installer self-extracting archive
 
+        Partially based on file magic's rule:
+
+        https://github.com/file/file/blob/7ed3febfcd616804a2ec6495b3e5f9ccb6fc5f8f/magic/Magdir/msdos#L383
+
         TODO: this series of tests is possibly too strict
         """
 
         return binary.has_resources and \
             binary.resources_manager.has_manifest and \
-            "Nullsoft" in binary.resources_manager.manifest
+            "Nullsoft " in binary.resources_manager.manifest
 
 
 
