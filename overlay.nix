@@ -29,6 +29,8 @@ final: prev:
     '';
     # orig had `src` attribute, but we are using `srcs`. This trips a warning.
     __intentionallyOverridingVersion = true;
+
+    separateDebugInfo = true;
   });
 
   unblob = final.callPackage ./package.nix { };
