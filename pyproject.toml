@@ -151,7 +151,7 @@ parametrize-names-type = "csv"
 "attr".msg = "Use `attrs` (with an 's') instead"
 
 [tool.pytest.ini_options]
-addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
+addopts = "--cov --cov-fail-under=90"
 norecursedirs = """
   *.egg
   *_extract
@@ -162,15 +162,10 @@ norecursedirs = """
   tests/integration
 """
 
-[tool.coverage.paths]
-source = ["tests", "unblob"]
-
 [tool.coverage.run]
 branch = true
 concurrency = ["multiprocessing"]
-parallel = true
-sigterm = true
-source = ["tests", "unblob"]
+source = ["python", "tests"]
 
 [tool.coverage.report]
 fail_under = 90
