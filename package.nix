@@ -126,16 +126,12 @@ python3.pkgs.buildPythonApplication {
     with python3.pkgs;
     [
       pytestCheckHook
-      pytest-cov
+      pytest-cov-stub
       versionCheckHook
     ]
     ++ runtimeDeps;
 
   versionCheckProgramArg = "--version";
-
-  pytestFlagsArray = [
-    "--no-cov"
-  ];
 
   passthru = {
     # helpful to easily add these to a nix-shell environment
