@@ -36,11 +36,6 @@
 
       # Temporary patches for nixpkgs required for current unblob
       nixpkgsPatches = [
-        # treelib: fix build
-        {
-          url = "https://github.com/NixOS/nixpkgs/pull/438230/commits/dc683065d9bd488008f56e8b7c5928563300001a.patch";
-          hash = "sha256-V2SoaLpE46+J0L/KlVzASZtL8pUPbHu6B8VgcCPBaxw=";
-        }
       ];
 
       # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
