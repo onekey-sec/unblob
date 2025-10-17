@@ -43,7 +43,7 @@ dev = [
   "atheris>=2.3,<3.0; sys_platform == 'linux' and python_version < '3.12'",
   "pre-commit>=3.5,<5.0",
   "pyright>=1.1.349",
-  "pytest-cov>=3,<7",
+  "pytest-cov>=7,<8",
   "pytest>=8.0.0",
   "pyyaml>=6.0.1",
   "ruff==0.12.12",
@@ -151,7 +151,7 @@ parametrize-names-type = "csv"
 "attr".msg = "Use `attrs` (with an 's') instead"
 
 [tool.pytest.ini_options]
-addopts = "--cov=unblob --cov=tests --cov-branch --cov-fail-under=90"
+addopts = "--cov --cov-fail-under=90"
 norecursedirs = """
   *.egg
   *_extract
@@ -162,15 +162,10 @@ norecursedirs = """
   tests/integration
 """
 
-[tool.coverage.paths]
-source = ["tests", "unblob"]
-
 [tool.coverage.run]
 branch = true
 concurrency = ["multiprocessing"]
-parallel = true
-sigterm = true
-source = ["tests", "unblob"]
+source = ["python", "tests"]
 
 [tool.coverage.report]
 fail_under = 90

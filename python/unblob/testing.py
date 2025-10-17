@@ -9,7 +9,6 @@ import attrs
 import pytest
 from lark.lark import Lark
 from lark.visitors import Discard, Transformer
-from pytest_cov.embed import cleanup_on_sigterm
 
 from unblob.finder import build_hyperscan_database
 from unblob.logging import configure_logger
@@ -23,9 +22,6 @@ def configure_logging(tmp_path_factory):
     extract_root = tmp_path_factory.mktemp("extract")
     log_path = tmp_path_factory.mktemp("logs") / "unblob.log"
     configure_logger(verbosity_level=3, extract_root=extract_root, log_path=log_path)
-
-    # https://pytest-cov.readthedocs.io/en/latest/subprocess-support.html#if-you-use-multiprocessing-process
-    cleanup_on_sigterm()
 
 
 def gather_integration_tests(test_data_path: Path):
