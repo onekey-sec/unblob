@@ -1,3 +1,4 @@
+import functools
 import io
 import itertools
 from collections import defaultdict
@@ -187,6 +188,7 @@ class YAFFSConfig:
     ecc: bool
 
 
+@functools.total_ordering
 @attrs.define
 class YAFFSEntry:
     object_type: YaffsObjectType
