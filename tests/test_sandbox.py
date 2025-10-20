@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import pytest
-
 from rust.test_sandbox import landlock_supported
+
 from unblob.processing import ExtractionConfig
 from unblob.sandbox import Sandbox
 
