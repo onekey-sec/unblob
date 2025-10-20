@@ -5,9 +5,9 @@ from unittest import mock
 
 import pytest
 from click.testing import CliRunner
+from rust.test_sandbox import landlock_supported
 
 import unblob.cli
-from rust.test_sandbox import landlock_supported
 from unblob.extractors import Command
 from unblob.extractors.command import MultiFileCommand
 from unblob.handlers import BUILTIN_HANDLERS
