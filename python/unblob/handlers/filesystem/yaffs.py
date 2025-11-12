@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 import attrs
+import functools
 from structlog import get_logger
 from treelib.exceptions import NodeIDAbsentError
 from treelib.tree import Tree
@@ -187,6 +188,7 @@ class YAFFSConfig:
     ecc: bool
 
 
+@functools.total_ordering
 @attrs.define
 class YAFFSEntry:
     object_type: YaffsObjectType
