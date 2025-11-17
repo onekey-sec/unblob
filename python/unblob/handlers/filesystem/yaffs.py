@@ -1,4 +1,3 @@
-import functools
 import io
 import itertools
 from collections import defaultdict
@@ -188,7 +187,6 @@ class YAFFSConfig:
     ecc: bool
 
 
-@functools.total_ordering
 @attrs.define
 class YAFFSEntry:
     object_type: YaffsObjectType
@@ -205,18 +203,6 @@ class YAFFSEntry:
     st_atime: int = attrs.field(default=0)
     st_mtime: int = attrs.field(default=0)
     st_ctime: int = attrs.field(default=0)
-
-    def __lt__(self, other):
-        return self.object_id < other.object_id
-
-    def __gt__(self, other):
-        return self.object_id > other.object_id
-
-    def __eq__(self, other):
-        return self.object_id == other.object_id
-
-    def __hash__(self):
-        return hash(self.object_id)
 
     def __str__(self):
         return f"{self.object_id}: {self.name}"
