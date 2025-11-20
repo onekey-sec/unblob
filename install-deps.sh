@@ -12,6 +12,7 @@ apt-get install --no-install-recommends -y \
     p7zip-full \
     partclone \
     unar \
+    upx \
     xz-utils \
     libmagic1 \
     zstd
