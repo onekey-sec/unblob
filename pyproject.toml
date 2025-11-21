@@ -32,7 +32,7 @@ description = "Extract files from any kind of container formats"
 license = { text = "MIT" }
 name = "unblob"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 version = "25.5.26"
 
 [project.scripts]
