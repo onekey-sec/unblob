@@ -6,6 +6,10 @@ RUN chown -R unblob /data
 
 WORKDIR /data/output
 
+# Enable backports, required to get upx package
+RUN printf "deb http://deb.debian.org/debian bookworm-backports main\n" \
+    > /etc/apt/sources.list.d/backports.list
+
 COPY install-deps.sh /
 RUN sh -xeu /install-deps.sh
 
