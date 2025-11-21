@@ -28,10 +28,12 @@ $ unblob --show-external-dependencies
 The following executables found installed, which are needed by unblob:
     7z                          ✓
     debugfs                     ✓
+    fsck.erofs                  ✓
     jefferson                   ✓
     lz4                         ✓
     lziprecover                 ✓
     lzop                        ✓
+    partclone.restore           ✓
     sasquatch                   ✓
     sasquatch-v4be              ✓
     simg2img                    ✓
@@ -56,10 +58,12 @@ for current versions.
 | --------------------------- | ----------------------------------------------------- | --------------- | ------------- | ---------------------------------------------------------------- |
 | p7zip-full                  | `7z`                                                  | 16.02           | ❌            | https://www.7-zip.org/                                           |
 | e2fsprogs                   | `debugfs`                                             | 1.45.5          | ❌            | http://e2fsprogs.sourceforge.net/                                |
+| erofs                       | `fsck.erofs`                                          | 1.8.10          | ❌            | https://github.com/erofs/erofs-utils                             |
 | lz4                         | `lz4`                                                 | 1.9.3           | ❌            | https://github.com/lz4/lz4                                       |
 | lziprecover                 | `lziprecover`                                         | 1.22            | ❌            | http://www.nongnu.org/lzip/lziprecover.html                      |
 | lzop                        | `lzop`                                                | 1.04            | ❌            | https://www.lzop.org/                                            |
-| android-sdk-libsparse-utils | `img2simg`                                            | 8.1.0           | ❌            | https://packages.debian.org/unstable/android-sdk-libsparse-utils |
+| partclone                   | `partclone.restore`                                   | 0.3.39          | ❌            | https://github.com/Thomas-Tsai/partclone                         |
+| android-sdk-libsparse-utils | `simg2img`                                            | 8.1.0           | ❌            | https://packages.debian.org/unstable/android-sdk-libsparse-utils |
 | unar                        | `unar`                                                | 1.10.1          | ❌            | https://theunarchiver.com/command-line                           |
 | sasquatch                   | `sasquatch`, `sasquatch-v4be`                         | 1.0             | ❌            | https://github.com/onekey-sec/sasquatch                          |
 | jefferson                   | `jefferson`                                           | master          | ✅            | https://github.com/onekey-sec/jefferson                          |
