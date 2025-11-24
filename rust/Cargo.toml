@@ -20,7 +20,7 @@ bench = false
 log = "0.4.22"
 pyo3 = "0.25.0"
 pyo3-log = "0.12.0"
-statrs = "0.18.0"
+statrs = { version = "0.18.0", default-features = false }
 thiserror = "2.0.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
