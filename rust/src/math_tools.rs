@@ -123,7 +123,7 @@ mod tests {
         #[test]
         fn test_random_distribution() {
             let mut random_data = [0u8; 4096];
-            StdRng::from_entropy().fill_bytes(&mut random_data);
+            StdRng::from_os_rng().fill_bytes(&mut random_data);
             let chi_square_value = chi_square_probability(&random_data);
 
             assert!(
