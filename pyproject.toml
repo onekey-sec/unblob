@@ -32,7 +32,7 @@ description = "Extract files from any kind of container formats"
 license = { text = "MIT" }
 name = "unblob"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 version = "25.5.26"
 
 [project.scripts]
@@ -194,6 +194,9 @@ features = [
   "pyo3/abi3-py39",        # https://docs.python.org/3/c-api/stable.html
   "pyo3/extension-module", # This is an extension module
 ]
+
+[tool.uv.sources]
+taplo = { git = "https://github.com/tamasfe/taplo", tag = "0.10.0" }
 
 [build-system]
 build-backend = "maturin"

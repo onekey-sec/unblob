@@ -2,7 +2,7 @@ inputs:
   python-version:
     description: "Python version to setup"
     required: false
-    default: "3.9"
+    default: "3.10"
   install-test-deps:
     description: "Wether to install 3rd Party dependencies (for tests)"
     required: false

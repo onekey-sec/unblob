@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -138,7 +138,6 @@ jobs:
     name: Build wheels (linux)
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.*.labels.*.name, 'dependencies')
     needs: [check_pre_commit]
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -152,6 +151,7 @@ jobs:
           # lief is not available for this platform (and no sdist is provided)
           # - manylinux: musllinux_1_1
           #   target: aarch64
+    runs-on: ${{ matrix.platform.target == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -183,24 +183,17 @@ jobs:
           python3 -m venv wheel.venv
           source wheel.venv/bin/activate
           pip install dist/*.whl
-          unblob --help
+          unblob --version
 
       - name: Check wheel (cross-manylinux)
         if: matrix.platform.target !=  'x86_64' && startsWith(matrix.platform.manylinux, 'manylinux')
-        uses: uraimo/run-on-arch-action@v3
-        with:
-          arch: ${{ matrix.platform.target }}
-          distro: ubuntu22.04
-          githubToken: ${{ github.token }}
-          install: |
-            apt-get update
-            apt-get install -y --no-install-recommends python3-venv libmagic1
-          run: |
-            set -e
-            python3 -m venv wheel.venv
-            source wheel.venv/bin/activate
-            pip install dist/*.whl
-            unblob --version
+        shell: bash
+        run: |
+          set -e
+          python3 -m venv wheel.venv
+          source wheel.venv/bin/activate
+          pip install dist/*.whl
+          unblob --version
 
       - name: Check wheel (x86-musllinux)
         if: matrix.platform.target == 'x86_64' && startsWith(matrix.platform.manylinux, 'musllinux')
@@ -218,15 +211,13 @@ jobs:
 
       - name: Check wheel (cross-musllinux)
         if: matrix.platform.target != 'x86_64' && startsWith(matrix.platform.manylinux, 'musllinux')
-        uses: uraimo/run-on-arch-action@v3
+        uses: addnab/docker-run-action@v3
         with:
-          arch: ${{ matrix.platform.target }}
-          distro: alpine_latest
-          githubToken: ${{ github.token }}
-          install: |
-            apk add py3-pip libmagic gcc lz4 musl-dev python3-dev
+          image: alpine:latest
+          options: -v ${{ github.workspace }}:/io -w /io
           run: |
             set -e
+            apk add py3-pip libmagic gcc lz4 musl-dev python3-dev
             python3 -m venv wheel.venv
             source wheel.venv/bin/activate
             pip install dist/*.whl
