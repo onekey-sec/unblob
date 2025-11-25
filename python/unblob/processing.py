@@ -1,4 +1,3 @@
-import atexit
 import multiprocessing
 import os
 import shutil
@@ -104,21 +103,7 @@ class ExtractionConfig:
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
     progress_reporter: type[ProgressReporter] = NullProgressReporter
-    tmp_dir: Path = attrs.field(
-        factory=lambda: Path(tempfile.mkdtemp(prefix="unblob-tmp-"))
-    )
-
-    def __attrs_post_init__(self):
-        atexit.register(self._cleanup_tmp_dir)
-
-    def _cleanup_tmp_dir(self):
-        if isinstance(self.tmp_dir, Path) and self.tmp_dir.exists():
-            try:
-                shutil.rmtree(self.tmp_dir)
-            except Exception as e:
-                logger.warning(
-                    "Failed to clean up tmp_dir", tmp_dir=self.tmp_dir, exc_info=e
-                )
+    tmp_dir: Path = attrs.field(factory=lambda: Path(tempfile.gettempdir()))
 
     def _get_output_path(self, path: Path) -> Path:
         """Return path under extract root."""
@@ -247,21 +232,43 @@ def write_json_report(report_file: Path, process_result: ProcessResult):
 
 
 @contextmanager
-def tmp_dir(path):
-    """Context manager that temporarily sets all temp directory env vars."""
+def task_tmp_dir(parent_tmp_dir):
+    """Context manager that creates a task-specific temp subdirectory.
+
+    Creates a subdirectory under parent_tmp_dir, sets all temp env vars to it,
+    yields the path, then cleans up the subdirectory on exit.
+
+    The parent_tmp_dir itself is NOT cleaned up - caller is responsible for that.
+    """
     tmp_vars = ("TMP", "TMPDIR", "TEMP", "TEMPDIR")
     saved = {}
+
+    # Create task-specific subdirectory
+    task_temp = Path(tempfile.mkdtemp(dir=parent_tmp_dir, prefix="unblob-task-"))
+
     try:
+        # Override env vars to point to task subdirectory
         for var in tmp_vars:
             saved[var] = os.environ.get(var)
-            os.environ[var] = str(path)
-        yield
+            os.environ[var] = str(task_temp)
+        yield task_temp
     finally:
+        # Restore original env vars
         for var, original in saved.items():
             if original is None:
                 os.environ.pop(var, None)
             else:
                 os.environ[var] = original
+
+        # Clean up the task subdirectory (NOT the parent)
+        try:
+            shutil.rmtree(task_temp)
+        except Exception as e:
+            logger.warning(
+                "Failed to clean up task temp dir",
+                task_temp=task_temp,
+                exc_info=e,
+            )
 
 
 class Processor:
@@ -281,7 +288,7 @@ class Processor:
     def process_task(self, task: Task) -> TaskResult:
         result = TaskResult(task=task)
         try:
-            with tmp_dir(self._config.tmp_dir.as_posix()):
+            with task_tmp_dir(self._config.tmp_dir):
                 self._process_task(result, task)
         except Exception as exc:
             self._process_error(result, exc)

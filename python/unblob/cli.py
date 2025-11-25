@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import atexit
+import shutil
 import sys
+import tempfile
 from collections.abc import Iterable
 from importlib.metadata import version
 from pathlib import Path
@@ -363,6 +365,9 @@ def cli(
     extra_magics_to_skip = () if clear_skip_magics else DEFAULT_SKIP_MAGIC
     skip_magic = tuple(sorted(set(skip_magic).union(extra_magics_to_skip)))
 
+    # Create dedicated unblob temp directory
+    unblob_tmp_dir = Path(tempfile.mkdtemp(prefix="unblob-", dir=tempfile.gettempdir()))
+
     config = ExtractionConfig(
         extract_root=extract_root,
         force_extract=force,
@@ -382,6 +387,7 @@ def cli(
         progress_reporter=NullProgressReporter
         if verbose
         else RichConsoleProgressReporter,
+        tmp_dir=unblob_tmp_dir,
     )
 
     logger.info("Creating extraction directory", extract_root=extract_root)
@@ -389,6 +395,17 @@ def cli(
     logger.info("Start processing file", file=file)
     sandbox = Sandbox(config, log_path, report_file)
     process_results = sandbox.run(process_file, config, file, report_file)
+
+    # Clean up the temp directory we created
+    try:
+        shutil.rmtree(unblob_tmp_dir)
+    except Exception as e:
+        logger.warning(
+            "Failed to clean up tmp_dir",
+            tmp_dir=unblob_tmp_dir,
+            exc_info=e,
+        )
+
     if verbose == 0:
         if skip_extraction:
             print_scan_report(process_results)

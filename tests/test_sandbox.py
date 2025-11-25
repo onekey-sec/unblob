@@ -21,6 +21,9 @@ def extraction_config(extraction_config, tmp_path):
     extraction_config.extract_root = tmp_path / "extract" / "root"
     # parent has to exist
     extraction_config.extract_root.parent.mkdir()
+    # Set tmp_dir to a specific directory under tmp_path to avoid conflicts
+    extraction_config.tmp_dir = tmp_path / "unblob_tmp"
+    extraction_config.tmp_dir.mkdir()
     return extraction_config
 
 
