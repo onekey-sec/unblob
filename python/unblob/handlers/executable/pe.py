@@ -1,4 +1,5 @@
 import io
+import struct
 from pathlib import Path
 from typing import Optional
 
@@ -97,6 +98,25 @@ class PEHandler(Handler):
         binary = lief.PE.parse(file[start_offset:])
         if not binary:
             return None
+
+        # Check to see if we can extract the size of the full NSIS Installer by
+        # including the archive size from the NSIS header.
+        if binary.overlay:
+            overlay = bytes(binary.overlay)
+
+            magic_offset = overlay.find(b'NullsoftInst')
+            if magic_offset != -1:
+                header_start = magic_offset - 8
+                if header_start < 0:
+                    # Malformed NSIS header?
+                    return None
+
+                _, _, _, _, archive_size = struct.unpack('II12sII', overlay[header_start:header_start + 28])
+
+                return ValidChunk(
+                    start_offset=start_offset,
+                    end_offset=start_offset + binary.overlay_offset + archive_size,
+                )
 
         return ValidChunk(
             start_offset=start_offset,
