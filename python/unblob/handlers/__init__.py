@@ -38,7 +38,7 @@ from .compression import (
     zlib,
     zstd,
 )
-from .executable import elf
+from .executable import elf, pe
 from .filesystem import (
     cramfs,
     extfs,
@@ -116,6 +116,7 @@ BUILTIN_HANDLERS: Handlers = (
     zstd.ZSTDHandler,
     elf.ELF32Handler,
     elf.ELF64Handler,
+    pe.PEHandler,
     zlib.ZlibHandler,
     engenius.EngeniusHandler,
     ecc.AutelECCHandler,
