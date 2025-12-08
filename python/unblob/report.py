@@ -171,8 +171,8 @@ class HashReport(ReportBase):
     @classmethod
     def from_path(cls, path: Path):
         chunk_size = 1024 * 64
-        md5 = hashlib.md5()  # noqa: S324
-        sha1 = hashlib.sha1()  # noqa: S324
+        md5 = hashlib.md5(usedforsecurity=False)
+        sha1 = hashlib.sha1(usedforsecurity=False)
         sha256 = hashlib.sha256()
 
         with path.open("rb") as f:
