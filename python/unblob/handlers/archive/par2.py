@@ -60,7 +60,9 @@ class MultiVolumePAR2Handler(DirectoryHandler):
                 packet_content = f.read(
                     header.packet_length - len(header) + offset_to_recovery_id
                 )
-                packet_checksum = hashlib.md5(packet_content).digest()  # noqa: S324
+                packet_checksum = hashlib.md5(
+                    packet_content, usedforsecurity=False
+                ).digest()
 
                 if packet_checksum != header.md5_hash:
                     return False
