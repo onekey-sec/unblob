@@ -546,7 +546,10 @@ class FileSystem:
         logger.debug("creating directory", dir_path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "mkdir")
 
-        safe_path.mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
+        # Directories with restrictive permission bits (e.g. 0o000) immediately
+        # block creation of nested entries, so force owner rwx during extraction.
+        safe_mode = mode | 0o700
+        safe_path.mkdir(mode=safe_mode, parents=parents, exist_ok=exist_ok)
 
     def mkfifo(self, path: Path, mode=0o666):
         logger.debug("creating fifo", path=path, _verbosity=3)
