@@ -40,6 +40,7 @@
     | [`LZIP`](#lzip) | COMPRESSION | :octicons-check-16: |
     | [`LZMA`](#lzma) | COMPRESSION | :octicons-check-16: |
     | [`LZO`](#lzo) | COMPRESSION | :octicons-check-16: |
+    | [`MSI`](#msi) | ARCHIVE | :octicons-alert-fill-12: |
     | [`MULTI-SEVENZIP`](#multi-sevenzip) | ARCHIVE | :octicons-check-16: |
     | [`NETGEAR CHK`](#netgear-chk) | ARCHIVE | :octicons-check-16: |
     | [`NETGEAR TRX V1`](#netgear-trx-v1) | ARCHIVE | :octicons-check-16: |
@@ -718,6 +719,28 @@
 
         - [LZO File Format Documentation](http://www.lzop.org/){ target="_blank" }
         - [LZO Wikipedia](https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Oberhumer){ target="_blank" }
+## MSI
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Microsoft Installer (MSI) files are used for the installation, maintenance, and removal of software.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Microsoft
+
+    === "References"
+
+        - [MSI File Format Documentation](https://docs.microsoft.com/en-us/windows/win32/msi/overview-of-windows-installer){ target="_blank" }
+        - [Compound File Binary Format](https://en.wikipedia.org/wiki/Compound_File_Binary_Format){ target="_blank" }
+
+    === "Limitations"
+
+        - Limited to CFB based extraction, not full-on MSI extraction
+        - Extracted files have names coming from CFB internal representation, and may not correspond to the one they would have on disk after running the installer
 ## multi-sevenzip
 
 !!! success "Fully supported"
