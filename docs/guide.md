@@ -244,6 +244,10 @@ Options:
   --report PATH                   File to store metadata generated during the
                                   extraction process (in JSON format).
   -k, --keep-extracted-chunks     Keep extracted chunks
+  --delete-extracted-files TEXT   Delete fully extracted temporary files. Use
+                                  'selected:<handler1,handler2>' to limit
+                                  deletions to specific handlers.  [default:
+                                  none]
   -v, --verbose                   Verbosity level, counting, maximum level: 3
                                   (use: -v, -vv, -vvv)
   --show-external-dependencies    Shows commands needs to be available for

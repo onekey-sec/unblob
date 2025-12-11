@@ -33,6 +33,7 @@ from .processing import (
     DEFAULT_PROCESS_NUM,
     DEFAULT_SKIP_EXTENSION,
     DEFAULT_SKIP_MAGIC,
+    ExtractedFileDeletionMode,
     ExtractionConfig,
     process_file,
 )
@@ -49,6 +50,36 @@ def restore_cursor():
 
 def get_version():
     return version("unblob")
+
+
+def _parse_delete_extracted_files(
+    _ctx: click.Context,
+    _param: click.Option,
+    value: str,
+) -> tuple[ExtractedFileDeletionMode, tuple[str, ...]]:
+    normalized = value.strip().lower()
+    if normalized == ExtractedFileDeletionMode.NONE.value:
+        return (ExtractedFileDeletionMode.NONE, ())
+    if normalized == ExtractedFileDeletionMode.ALL.value:
+        return (ExtractedFileDeletionMode.ALL, ())
+
+    prefix = f"{ExtractedFileDeletionMode.SELECTED.value}:"
+    if normalized.startswith(prefix):
+        handlers_raw = value[len(prefix) :].strip()
+        if not handlers_raw:
+            raise click.BadParameter(
+                "Provide at least one handler name with 'selected:<handler1,handler2>'."
+            )
+        handlers = tuple(
+            handler.strip() for handler in handlers_raw.split(",") if handler.strip()
+        )
+        if not handlers:
+            raise click.BadParameter(
+                "Provide at least one handler name with 'selected:<handler1,handler2>'."
+            )
+        return (ExtractedFileDeletionMode.SELECTED, handlers)
+
+    raise click.BadParameter("Use 'none', 'all', or 'selected:<handler1,handler2>'.")
 
 
 def show_version(
@@ -299,6 +330,14 @@ class UnblobContext(click.Context):
     help="Keep extracted chunks",
 )
 @click.option(
+    "--delete-extracted-files",
+    default=ExtractedFileDeletionMode.NONE.value,
+    show_default=True,
+    help="Delete fully extracted temporary files. Use 'selected:<handler1,handler2>' "
+    "to restrict deletions to specific handlers.",
+    callback=_parse_delete_extracted_files,
+)
+@click.option(
     "--carve-suffix",
     "carve_suffix",
     default="_extract",
@@ -350,6 +389,7 @@ def cli(
     skip_extraction: bool,
     no_sandbox: bool,
     keep_extracted_chunks: bool,
+    delete_extracted_files: tuple[ExtractedFileDeletionMode, tuple[str, ...]],
     carve_suffix: str,
     extract_suffix: str,
     handlers: Handlers,
@@ -383,6 +423,8 @@ def cli(
         handlers=handlers,
         dir_handlers=dir_handlers,
         keep_extracted_chunks=keep_extracted_chunks,
+        extracted_file_deletion=delete_extracted_files[0],
+        extracted_file_handler_filter=delete_extracted_files[1],
         extract_suffix=extract_suffix,
         carve_suffix=carve_suffix,
         verbose=verbose,
