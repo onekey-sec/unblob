@@ -1,3 +1,4 @@
+import enum
 import multiprocessing
 import shutil
 from collections.abc import Iterable, Sequence
@@ -36,6 +37,7 @@ from .pool import make_pool
 from .report import (
     CalculateMultiFileExceptionReport,
     CarveDirectoryReport,
+    ErrorReport,
     FileMagicReport,
     HashReport,
     MultiFileCollisionReport,
@@ -81,6 +83,12 @@ DEFAULT_SKIP_MAGIC = (
 DEFAULT_SKIP_EXTENSION = (".rlib",)
 
 
+class TemporaryFileDeletionMode(enum.Enum):
+    NONE = enum.auto()
+    SOME = enum.auto()
+    ALL = enum.auto()
+
+
 @attrs.define(kw_only=True)
 class ExtractionConfig:
     extract_root: Path = attrs.field(converter=lambda value: value.resolve())
@@ -99,6 +107,11 @@ class ExtractionConfig:
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
     progress_reporter: type[ProgressReporter] = NullProgressReporter
+    temporary_file_deletion: TemporaryFileDeletionMode = TemporaryFileDeletionMode.NONE
+    temporary_file_handler_filter: Iterable[str] = attrs.field(
+        default=(),
+        converter=lambda values: tuple(str(value) for value in values),
+    )
 
     def _get_output_path(self, path: Path) -> Path:
         """Return path under extract root."""
@@ -612,7 +625,7 @@ class _FileTask:
             return report
         return None
 
-    def _extract_chunk(
+    def _extract_chunk(  # noqa: C901
         self,
         carved_path: Path,
         chunk: ValidChunk,
@@ -620,6 +633,7 @@ class _FileTask:
         *,
         remove_extracted_input: bool,
     ):
+        extraction_successful = False
         if extract_dir.exists():
             # Extraction directory is not supposed to exist, it mixes up original and extracted files,
             # and it would just introduce weird, non-deterministic problems due to interference on paths
@@ -644,6 +658,10 @@ class _FileTask:
             if result := chunk.extract(carved_path, extract_dir):
                 extraction_reports.extend(result.reports)
 
+            extraction_successful = not any(
+                isinstance(report, ErrorReport) for report in extraction_reports
+            )
+
             if remove_extracted_input:
                 logger.debug("Removing extracted chunk", path=carved_path)
                 carved_path.unlink()
@@ -660,6 +678,9 @@ class _FileTask:
         fix_extracted_directory(extract_dir, self.result)
         delete_empty_extract_dir(extract_dir)
 
+        if extraction_successful:
+            self._delete_temporary_file_if_needed(carved_path, chunk)
+
         if extract_dir.exists():
             self.result.add_subtask(
                 Task(
@@ -668,6 +689,47 @@ class _FileTask:
                     depth=self.task.depth + 1,
                 )
             )
+
+    def _delete_temporary_file_if_needed(
+        self, carved_path: Path, chunk: ValidChunk
+    ) -> None:
+        filter_set = set(self.config.temporary_file_handler_filter)
+        if not self._should_delete_temporary_file(chunk, filter_set):
+            return
+
+        if self.task.depth == 0:
+            return
+
+        if not carved_path.exists() or carved_path.is_dir():
+            return
+
+        try:
+            carved_path.unlink()
+            logger.debug(
+                "Removed temporary file after extraction",
+                path=carved_path,
+                handler=chunk.handler.NAME,
+            )
+        except OSError:
+            logger.warning(
+                "Failed to remove temporary file after extraction", path=carved_path
+            )
+
+    def _should_delete_temporary_file(
+        self, chunk: ValidChunk, filter_set: set[str]
+    ) -> bool:
+        if not chunk.is_whole_file:
+            return False
+
+        deletion_mode = self.config.temporary_file_deletion
+
+        if deletion_mode is TemporaryFileDeletionMode.NONE:
+            return False
+
+        if deletion_mode is TemporaryFileDeletionMode.SOME:
+            return chunk.handler.NAME in filter_set
+
+        return True
 
 
 def assign_file_to_chunks(chunks: Sequence[Chunk], file: File):

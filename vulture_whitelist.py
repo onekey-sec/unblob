@@ -17,6 +17,7 @@ from unblob.models import (
     TaskResult,
 )
 from unblob.parser import _HexStringToRegex
+from unblob.processing import TemporaryFileDeletionMode
 from unblob.report import (
     ChunkReport,
     ExtractCommandFailedReport,
@@ -81,3 +82,5 @@ UnknownError.model_post_init
 
 ExtractCommandFailedReport.encode_bytes
 ExtractCommandFailedReport.decode_bytes
+
+TemporaryFileDeletionMode.ALL
