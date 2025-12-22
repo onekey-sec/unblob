@@ -77,7 +77,7 @@ repos:
         name: Check vulture
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.35.0
+    rev: 0.36.0
     hooks:
       - id: check-github-actions
         name: Check Github actions
