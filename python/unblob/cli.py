@@ -22,6 +22,7 @@ from unblob.report import (
     Severity,
     StatReport,
     UnknownChunkReport,
+    register_report_types,
 )
 
 from .cli_options import verbosity_option
@@ -366,6 +367,9 @@ def cli(
 
     extra_dir_handlers = plugin_manager.load_dir_handlers_from_plugins()
     dir_handlers += tuple(extra_dir_handlers)
+
+    extra_report_types = plugin_manager.load_report_types_from_plugins()
+    register_report_types(extra_report_types)
 
     extra_magics_to_skip = () if clear_skip_magics else DEFAULT_SKIP_MAGIC
     skip_magic = tuple(sorted(set(skip_magic).union(extra_magics_to_skip)))

@@ -21,7 +21,10 @@ from unblob.report import (
     ChunkReport,
     ExtractCommandFailedReport,
     FileMagicReport,
+    MultiFileReport,
+    Report,
     StatReport,
+    UnknownChunkReport,
     UnknownError,
 )
 
@@ -32,9 +35,12 @@ _HexStringToRegex.range_jump
 _HexStringToRegex.alternative
 
 TaskResult.filter_reports
+TaskResult.validate_reports
 ChunkReport.handler_name
+ChunkReport.validate_extraction_reports
 FileMagicReport.magic
 FileMagicReport.mime_type
+MultiFileReport.validate_extraction_reports
 StatReport.is_link
 
 SingleFile
@@ -75,6 +81,9 @@ generate_markdown
 Handler.DOC
 
 ReportModelAdapter
+Report.__typename__
+
+UnknownChunkReport.validate_randomness
 
 UnknownError.model_config
 UnknownError.model_post_init

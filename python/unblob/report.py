@@ -8,20 +8,21 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 from pydantic import (
     BaseModel,
     ConfigDict,
-    Discriminator,
-    Tag,
     computed_field,
     field_serializer,
     field_validator,
 )
 
 
-class ReportBase(BaseModel):
+class Report(BaseModel):
     """A common base class for different reports. This will enable easy pydantic configuration of all models from a single point in the future if desired."""
 
     @computed_field
@@ -37,7 +38,7 @@ class Severity(Enum):
     WARNING = "WARNING"
 
 
-class ErrorReport(ReportBase):
+class ErrorReport(Report):
     severity: Severity
 
 
@@ -136,7 +137,7 @@ class MultiFileCollisionReport(ErrorReport):
     handler: str
 
 
-class StatReport(ReportBase):
+class StatReport(Report):
     path: Path
     size: int
     is_dir: bool
@@ -163,7 +164,7 @@ class StatReport(ReportBase):
         )
 
 
-class HashReport(ReportBase):
+class HashReport(Report):
     md5: str
     sha1: str
     sha256: str
@@ -188,7 +189,7 @@ class HashReport(ReportBase):
         )
 
 
-class FileMagicReport(ReportBase):
+class FileMagicReport(Report):
     magic: str
     mime_type: str
 
@@ -207,12 +208,12 @@ class RandomnessMeasurements(BaseModel):
         return min(self.percentages)
 
 
-class RandomnessReport(ReportBase):
+class RandomnessReport(Report):
     shannon: RandomnessMeasurements
     chi_square: RandomnessMeasurements
 
 
-class ChunkReport(ReportBase):
+class ChunkReport(Report):
     id: str
     handler_name: str
     start_offset: int
@@ -221,28 +222,48 @@ class ChunkReport(ReportBase):
     is_encrypted: bool
     extraction_reports: list[Report]
 
+    @field_validator("extraction_reports", mode="before")
+    @classmethod
+    def validate_extraction_reports(cls, value: Any) -> list[Report]:
+        return validate_report_list(value)
 
-class UnknownChunkReport(ReportBase):
+
+class UnknownChunkReport(Report):
     id: str
     start_offset: int
     end_offset: int
     size: int
     randomness: Optional[RandomnessReport]
 
+    @field_validator("randomness", mode="before")
+    @classmethod
+    def validate_randomness(cls, value: Any) -> Optional[RandomnessReport]:
+        if value is None:
+            return None
+        parsed = parse_report(value)
+        if not isinstance(parsed, RandomnessReport):
+            raise TypeError("Randomness must be a RandomnessReport.")
+        return parsed
 
-class CarveDirectoryReport(ReportBase):
+
+class CarveDirectoryReport(Report):
     carve_dir: Path
 
 
-class MultiFileReport(ReportBase):
+class MultiFileReport(Report):
     id: str
     handler_name: str
     name: str
     paths: list[Path]
     extraction_reports: list[Report]
 
+    @field_validator("extraction_reports", mode="before")
+    @classmethod
+    def validate_extraction_reports(cls, value: Any) -> list[Report]:
+        return validate_report_list(value)
 
-class ExtractionProblem(ReportBase):
+
+class ExtractionProblem(Report):
     """A non-fatal problem discovered during extraction.
 
     A report like this still means, that the extraction was successful,
@@ -295,40 +316,69 @@ class SpecialFileExtractionProblem(ExtractionProblem):
         logger.warning(self.log_msg, path=self.path, mode=self.mode, device=self.device)
 
 
-def _get_report_type(report: dict | ReportBase):
-    if isinstance(report, dict):
-        return report.get("__typename__")
-    return report.__typename__
+BUILTIN_REPORT_TYPES: tuple[type[Report], ...] = (
+    ErrorReport,
+    UnknownError,
+    CalculateChunkExceptionReport,
+    CalculateMultiFileExceptionReport,
+    ExtractCommandFailedReport,
+    OutputDirectoryExistsReport,
+    ExtractorDependencyNotFoundReport,
+    ExtractorTimedOut,
+    MaliciousSymlinkRemoved,
+    MultiFileCollisionReport,
+    StatReport,
+    HashReport,
+    FileMagicReport,
+    RandomnessReport,
+    ChunkReport,
+    UnknownChunkReport,
+    CarveDirectoryReport,
+    MultiFileReport,
+    ExtractionProblem,
+    PathTraversalProblem,
+    LinkExtractionProblem,
+    SpecialFileExtractionProblem,
+)
+
+_REPORT_REGISTRY: dict[str, type[Report]] = {}
 
 
-Report = Annotated[
-    Union[
-        Annotated[ErrorReport, Tag("ErrorReport")],
-        Annotated[UnknownError, Tag("UnknownError")],
-        Annotated[CalculateChunkExceptionReport, Tag("CalculateChunkExceptionReport")],
-        Annotated[
-            CalculateMultiFileExceptionReport, Tag("CalculateMultiFileExceptionReport")
-        ],
-        Annotated[ExtractCommandFailedReport, Tag("ExtractCommandFailedReport")],
-        Annotated[OutputDirectoryExistsReport, Tag("OutputDirectoryExistsReport")],
-        Annotated[
-            ExtractorDependencyNotFoundReport, Tag("ExtractorDependencyNotFoundReport")
-        ],
-        Annotated[ExtractorTimedOut, Tag("ExtractorTimedOut")],
-        Annotated[MaliciousSymlinkRemoved, Tag("MaliciousSymlinkRemoved")],
-        Annotated[MultiFileCollisionReport, Tag("MultiFileCollisionReport")],
-        Annotated[StatReport, Tag("StatReport")],
-        Annotated[HashReport, Tag("HashReport")],
-        Annotated[FileMagicReport, Tag("FileMagicReport")],
-        Annotated[RandomnessReport, Tag("RandomnessReport")],
-        Annotated[ChunkReport, Tag("ChunkReport")],
-        Annotated[UnknownChunkReport, Tag("UnknownChunkReport")],
-        Annotated[CarveDirectoryReport, Tag("CarveDirectoryReport")],
-        Annotated[MultiFileReport, Tag("MultiFileReport")],
-        Annotated[ExtractionProblem, Tag("ExtractionProblem")],
-        Annotated[PathTraversalProblem, Tag("PathTraversalProblem")],
-        Annotated[LinkExtractionProblem, Tag("LinkExtractionProblem")],
-        Annotated[SpecialFileExtractionProblem, Tag("SpecialFileExtractionProblem")],
-    ],
-    Discriminator(_get_report_type),
-]
+def register_report_type(report_type: type[Report]) -> None:
+    typename = report_type.__name__
+    existing = _REPORT_REGISTRY.get(typename)
+    if existing is not None and existing is not report_type:
+        raise ValueError(f"Report type name conflict: {typename}")
+    _REPORT_REGISTRY[typename] = report_type
+
+
+def register_report_types(report_types: Iterable[type[Report]]) -> None:
+    for report_type in report_types:
+        register_report_type(report_type)
+
+
+def get_report_type(typename: str) -> type[Report] | None:
+    return _REPORT_REGISTRY.get(typename)
+
+
+def parse_report(report: Report | dict[str, Any]) -> Report:
+    if isinstance(report, Report):
+        return report
+    if not isinstance(report, dict):
+        raise TypeError("Report data must be a mapping or Report instance.")
+    typename = report.get("__typename__")
+    if not typename:
+        raise ValueError("Report data is missing __typename__.")
+    report_type = get_report_type(typename)
+    if report_type is None:
+        raise ValueError(f"Unknown report type: {typename}")
+    return report_type.model_validate(report)
+
+
+def validate_report_list(value: Any) -> list[Report]:
+    if not isinstance(value, list):
+        raise TypeError("Report list must be a list.")
+    return [parse_report(item) for item in value]
+
+
+register_report_types(BUILTIN_REPORT_TYPES)

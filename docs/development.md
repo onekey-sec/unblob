@@ -440,6 +440,58 @@ pointing to the directory containing our plugin, e.g.
 unblob -P ./myplugins/ ...
 ```
 
+### Custom reports
+
+Handlers and extractors can emit structured reports during extraction. These
+reports are serialized into the JSON output, and they can be filtered by type
+in the CLI and in post-processing tooling.
+
+To define a custom report:
+
+1. Create a subclass of `Report` with the fields you need.
+2. Return instances of that report from your extractor in `ExtractResult`,
+   or raise `ExtractError` with your report instances.
+3. Register the report type so unblob can deserialize it from JSON.
+
+Example:
+
+```python
+from unblob.models import ExtractResult
+from unblob.report import Report
+
+class MyReport(Report):
+    message: str
+    severity: str
+
+class MyExtractor:
+    def extract(self, inpath, outdir):
+        report = MyReport(message="custom report", severity="info")
+        return ExtractResult(reports=[report])
+```
+
+Custom reports are tagged using `__typename__`, which defaults to the class
+name. Avoid name collisions with built-in reports and other plugins.
+
+### Importing reports through plugins
+
+If you distribute custom reports in a plugin, register them through the
+`unblob_register_reports` hook. This allows unblob to validate and deserialize
+your custom reports at runtime.
+
+```python
+from unblob.plugins import hookimpl
+from unblob.report import Report
+
+class MyReport(Report):
+    message: str
+
+@hookimpl
+def unblob_register_reports() -> list[type[Report]]:
+    return [MyReport]
+```
+
+Load the plugin with `-P` / `--plugins-path` like handlers and extractors.
+
 ### Utilities Functions
 
 We developed a bunch of utility functions which helped us during the development of
