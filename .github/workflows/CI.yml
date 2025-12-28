@@ -47,8 +47,8 @@ jobs:
       - name: Check pre-commit hook
         uses: pre-commit/action@v3.0.1
 
-  check_pyright:
-    name: Check - pyright
+  check_ty:
+    name: Check - ty
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
@@ -57,8 +57,8 @@ jobs:
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
 
-      - name: Check - pyright
-        run: uv run pyright .
+      - name: Check - ty
+        run: uv run ty check .
 
   check_documentation:
     name: Check - Documentation
@@ -77,7 +77,7 @@ jobs:
 
   run_python_tests:
     name: Run tests (Python)
-    needs: [check_pre_commit, check_pyright]
+    needs: [check_pre_commit, check_ty]
     runs-on: ubuntu-latest
     strategy:
       matrix:
