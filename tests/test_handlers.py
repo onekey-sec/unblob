@@ -24,7 +24,7 @@ from unblob.testing import (
 )
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
-HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
+HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.parametrize(

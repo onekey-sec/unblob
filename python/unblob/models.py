@@ -440,7 +440,7 @@ class DirectoryHandler(abc.ABC, Generic[DExtractor]):
     def get_dependencies(cls):
         """Return external command dependencies needed for this handler to work."""
         if cls.EXTRACTOR is not None:
-            return cls.EXTRACTOR.get_dependencies()
+            return cls.EXTRACTOR.get_dependencies()  # ty: ignore[invalid-argument-type, possibly-missing-attribute]
         return []
 
     @abc.abstractmethod
@@ -455,7 +455,7 @@ class DirectoryHandler(abc.ABC, Generic[DExtractor]):
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
 
-        return self.EXTRACTOR.extract(paths, outdir)
+        return self.EXTRACTOR.extract(paths, outdir)  # ty: ignore[invalid-argument-type, possibly-missing-attribute]
 
 
 TExtractor = TypeVar("TExtractor", bound=Union[None, Extractor])
@@ -478,7 +478,7 @@ class Handler(abc.ABC, Generic[TExtractor]):
     def get_dependencies(cls):
         """Return external command dependencies needed for this handler to work."""
         if cls.EXTRACTOR is not None:
-            return cls.EXTRACTOR.get_dependencies()
+            return cls.EXTRACTOR.get_dependencies()  # ty: ignore[invalid-argument-type, possibly-missing-attribute]
         return []
 
     @abc.abstractmethod
@@ -493,7 +493,7 @@ class Handler(abc.ABC, Generic[TExtractor]):
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
 
-        return self.EXTRACTOR.extract(inpath, outdir)
+        return self.EXTRACTOR.extract(inpath, outdir)  # ty: ignore[invalid-argument-type, possibly-missing-attribute]
 
 
 class StructHandler(Handler):
