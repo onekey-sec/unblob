@@ -42,12 +42,12 @@ unblob = "unblob.cli:main"
 dev = [
   "atheris>=2.3,<3.0; sys_platform == 'linux' and python_version < '3.12'",
   "pre-commit>=3.5,<5.0",
-  "pyright>=1.1.349",
   "pytest-cov>=7,<8",
   "pytest>=8.0.0",
   "pyyaml>=6.0.1",
   "ruff==0.14.10",
   "taplo>=0.9.3",
+  "ty>=0.0.7",
 ]
 docs = [
   "cairosvg>=2.7.1",
@@ -175,13 +175,12 @@ skip_covered = true
 exclude = ["python/unblob/testing.py"]
 paths = ["python/", "vulture_whitelist.py"]
 
-[tool.pyright]
-exclude = [
-  ".venv",
-  "build",
-]
-typeCheckingMode = "standard"
+[tool.ty.src]
+exclude = [".venv", "build"]
 
+[tool.ty.rules]
+unresolved-attribute = "ignore"
+unresolved-import = "ignore"
 
 [tool.maturin]
 locked = true
