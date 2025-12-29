@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 RUN mkdir -p /data/input /data/output
 RUN useradd -m unblob
