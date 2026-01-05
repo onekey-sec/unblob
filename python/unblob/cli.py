@@ -34,6 +34,7 @@ from .processing import (
     DEFAULT_SKIP_EXTENSION,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
+    TemporaryFileDeletionMode,
     process_file,
 )
 from .sandbox import Sandbox
@@ -293,6 +294,20 @@ class UnblobContext(click.Context):
     help="Keep extracted chunks",
 )
 @click.option(
+    "--delete-temporary-files",
+    type=click.Choice(TemporaryFileDeletionMode, case_sensitive=False),
+    default=TemporaryFileDeletionMode.NONE,
+    show_default=True,
+    help="Delete fully extracted temporary files. "
+    "Use 'some' to delete only handlers listed via --temporary-file-handler.",
+)
+@click.option(
+    "--temporary-file-handler",
+    "temporary_file_handler_filter",
+    multiple=True,
+    help="Handler names eligible for deletion when --delete-temporary-files=some.",
+)
+@click.option(
     "--carve-suffix",
     "carve_suffix",
     default="_extract",
@@ -343,6 +358,8 @@ def cli(
     clear_skip_magics: bool,
     skip_extraction: bool,
     keep_extracted_chunks: bool,
+    delete_temporary_files: TemporaryFileDeletionMode,
+    temporary_file_handler_filter: Iterable[str],
     carve_suffix: str,
     extract_suffix: str,
     handlers: Handlers,
@@ -376,6 +393,8 @@ def cli(
         handlers=handlers,
         dir_handlers=dir_handlers,
         keep_extracted_chunks=keep_extracted_chunks,
+        temporary_file_deletion=delete_temporary_files,
+        temporary_file_handler_filter=temporary_file_handler_filter,
         extract_suffix=extract_suffix,
         carve_suffix=carve_suffix,
         verbose=verbose,

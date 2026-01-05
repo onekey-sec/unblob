@@ -18,6 +18,7 @@ from unblob.processing import (
     DEFAULT_SKIP_EXTENSION,
     DEFAULT_SKIP_MAGIC,
     ExtractionConfig,
+    TemporaryFileDeletionMode,
 )
 from unblob.ui import (
     NullProgressReporter,
@@ -311,6 +312,58 @@ def test_keep_extracted_chunks(
         process_file_mock.call_args.args[0].keep_extracted_chunks
         == keep_extracted_chunks
     ), fail_message
+
+
+@pytest.mark.parametrize(
+    "args, expected_mode, expected_filter",
+    [
+        ([], TemporaryFileDeletionMode.NONE, ()),
+        (
+            ["--delete-temporary-files", "all"],
+            TemporaryFileDeletionMode.ALL,
+            (),
+        ),
+        (
+            [
+                "--delete-temporary-files",
+                "some",
+                "--temporary-file-handler",
+                "tar",
+                "--temporary-file-handler",
+                "gzip",
+            ],
+            TemporaryFileDeletionMode.SOME,
+            ("tar", "gzip"),
+        ),
+    ],
+)
+def test_temporary_file_deletion_options(
+    args: list[str],
+    expected_mode: TemporaryFileDeletionMode,
+    expected_filter: tuple[str, ...],
+    tmp_path: Path,
+):
+    runner = CliRunner()
+    in_path = (
+        Path(__file__).parent
+        / "integration"
+        / "archive"
+        / "zip"
+        / "regular"
+        / "__input__"
+        / "apple.zip"
+    )
+    params = [*args, "--extract-dir", str(tmp_path), str(in_path)]
+
+    process_file_mock = mock.MagicMock()
+    with mock.patch.object(unblob.cli, "process_file", process_file_mock):
+        result = runner.invoke(unblob.cli.cli, params)
+
+    assert result.exit_code == 0
+    process_file_mock.assert_called_once()
+    config_arg = process_file_mock.call_args.args[0]
+    assert config_arg.temporary_file_deletion is expected_mode
+    assert config_arg.temporary_file_handler_filter == expected_filter
 
 
 @pytest.mark.parametrize(
