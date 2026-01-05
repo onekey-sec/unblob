@@ -30,6 +30,17 @@ class ReportBase(BaseModel):
         return self.__class__.__name__
 
 
+class CustomReportBase(ReportBase):
+    """A base class for custom report types defined by users."""
+    model_config = ConfigDict(extra="allow")
+
+    @computed_field
+    @property
+    def __typename__(self) -> str:
+        """All custom reports will have the same typename for usage in tagged unions."""
+        return "CustomReport"
+
+
 class Severity(Enum):
     """Represents possible problems encountered during execution."""
 
@@ -329,6 +340,7 @@ Report = Annotated[
         Annotated[PathTraversalProblem, Tag("PathTraversalProblem")],
         Annotated[LinkExtractionProblem, Tag("LinkExtractionProblem")],
         Annotated[SpecialFileExtractionProblem, Tag("SpecialFileExtractionProblem")],
+        Annotated[CustomReport, Tag("CustomReport")],
     ],
     Discriminator(_get_report_type),
 ]
