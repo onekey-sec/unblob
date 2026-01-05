@@ -23,7 +23,7 @@ pub fn shannon_entropy(data: &[u8]) -> f64 {
 /// Calculates Shannon entropy of data
 #[pyfunction(name = "shannon_entropy")]
 pub fn py_shannon_entropy(py: Python, data: &[u8]) -> PyResult<f64> {
-    py.allow_threads(|| Ok(shannon_entropy(data)))
+    py.detach(|| Ok(shannon_entropy(data)))
 }
 
 pub fn chi_square_probability(data: &[u8]) -> f64 {
@@ -60,7 +60,7 @@ pub fn chi_square_probability(data: &[u8]) -> f64 {
 /// Calculates Chi Square of data
 #[pyfunction(name = "chi_square_probability")]
 pub fn py_chi_square_probability(py: Python, data: &[u8]) -> PyResult<f64> {
-    py.allow_threads(|| Ok(chi_square_probability(data)))
+    py.detach(|| Ok(chi_square_probability(data)))
 }
 
 pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
