@@ -89,8 +89,8 @@ class Sandbox:
             thread.join()
 
         if exception:
-            raise exception  # pyright: ignore[reportGeneralTypeIssues]
-        return result  # pyright: ignore[reportReturnType]
+            raise exception  # ty: ignore[invalid-return-type]
+        return result  # ty: ignore[invalid-return-type]
 
     def _try_enter_sandbox(self):
         try:

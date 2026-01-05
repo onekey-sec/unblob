@@ -73,7 +73,7 @@ def _worker_process(handler, input_, output):
     signal.signal(signal.SIGTERM, signal.SIG_DFL)
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    sys.breakpointhook = multiprocessing_breakpoint
+    sys.breakpointhook = multiprocessing_breakpoint  # ty: ignore[invalid-assignment]
     while (args := input_.get()) is not _SENTINEL:
         result = handler(args)
         output.put(result)

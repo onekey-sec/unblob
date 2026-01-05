@@ -41,6 +41,12 @@ repos:
           - nix-command flakes
           - --accept-flake-config
           - fmt
+      - id: ty
+        name: Type check python (ty)
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        entry: uv run ty check .
       - id: statix
         name: Lint Nix (statix)
         types: [nix]

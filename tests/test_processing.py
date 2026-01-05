@@ -428,7 +428,7 @@ def test_randomness_calculation(tmp_path: Path):
         extract_root=tmp_path / "extract_root",
         randomness_depth=100,
         randomness_plot=True,
-        handlers=(handlers.archive.zip.ZIPHandler,),
+        handlers=(handlers.archive.zip.ZIPHandler,),  # ty: ignore[possibly-missing-attribute]
     )
 
     # ** action
@@ -608,7 +608,7 @@ def multi_file_extraction_config(extraction_root: Path):
     return ExtractionConfig(
         extract_root=extraction_root,
         randomness_depth=0,
-        handlers=(handlers.archive.zip.ZIPHandler, DummyTestHandler),
+        handlers=(handlers.archive.zip.ZIPHandler, DummyTestHandler),  # ty: ignore[possibly-missing-attribute]
         dir_handlers=(SplitDirHandler,),
     )
 
@@ -851,7 +851,7 @@ def test_multi_file_calculate_exception(
     extraction_root: Path,
 ):
     multi_file_extraction_config.dir_handlers = (ExceptionDirHandler,)
-    multi_file_extraction_config.handlers = (handlers.archive.zip.ZIPHandler,)
+    multi_file_extraction_config.handlers = (handlers.archive.zip.ZIPHandler,)  # ty: ignore[possibly-missing-attribute]
 
     process_result = process_file(multi_file_extraction_config, multi_volume_zip)
 
