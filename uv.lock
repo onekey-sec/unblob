@@ -594,15 +594,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cstruct"
-version = "6.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/82/c5/f799c0eadda8b30a7a93c901539322eca00419dba24a0a332c96698c763e/cstruct-6.1.tar.gz", hash = "sha256:1e7af7b52c8dd3a6ad66df7e481150e4e273ec508950b4a0051e116375b7f28a", size = 35843, upload-time = "2025-03-21T22:02:36.476Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/94/ee3086a52244c646b74080eb1978a8916e73ef60da332846c1998ac5ecd2/cstruct-6.1-py2.py3-none-any.whl", hash = "sha256:8f607cc9ebd704c42a55d1ed54deb3af7fd4fa381e8cb3151c18ea124c4e83d1", size = 32296, upload-time = "2025-03-21T22:02:35.074Z" },
-]
-
-[[package]]
 name = "defusedxml"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -717,16 +708,16 @@ wheels = [
 
 [[package]]
 name = "jefferson"
-version = "0.4.6"
+version = "0.4.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
-    { name = "cstruct" },
+    { name = "dissect-cstruct" },
     { name = "lzallright" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/19/94/6c09639a645a5a591b5c2be9366aadc99be3a9c2f274ad7d61cf8356e5f6/jefferson-0.4.6.tar.gz", hash = "sha256:1ac7eafa72b318b25f35a2ca7cf381b0423b485bad2be0c30fce859af728fd2b", size = 7871, upload-time = "2025-02-11T09:30:04.589Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/03/1279f05568c7912bfe1545638216234d5190558a94b5c15c0d9ecd555685/jefferson-0.4.7.tar.gz", hash = "sha256:7c49a746cd14ed1fcd0b2fe7d606dca12493675cae00cf8cdef240ce7a3fd7a0", size = 6622, upload-time = "2026-01-13T12:43:23.779Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/28/9f237fd612d83360d25264bbaddd9e491062f70883cdc65598c3dd7efa5d/jefferson-0.4.6-py3-none-any.whl", hash = "sha256:0cd6a08e28f1f89730910bc6e65e165e03bc9b69597cdb7daec54d5c14b205bd", size = 9203, upload-time = "2025-02-11T09:30:02.93Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/81/e2971d88febee243cb44e7b5abe2631a78f9cd09a575a0bfa25398607950/jefferson-0.4.7-py3-none-any.whl", hash = "sha256:161bbd4ee24ab0322bb04b22cb212ae9902e8d87fe659bf201f9c2e633545900", size = 8642, upload-time = "2026-01-13T12:43:22.874Z" },
 ]
 
 [[package]]
@@ -1915,7 +1906,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "cryptography", specifier = ">=41.0" },
     { name = "dissect-cstruct", specifier = ">=4.0,<5.0" },
-    { name = "jefferson", specifier = ">=0.4.5" },
+    { name = "jefferson", specifier = ">=0.4.7" },
     { name = "lark", specifier = ">=1.1.8" },
     { name = "lief", specifier = ">=0.16.1" },
     { name = "lz4", specifier = ">=4.3.2,!=4.4.3" },
