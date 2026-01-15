@@ -18,7 +18,7 @@ from .archive import (
     zip as ziparchive,
 )
 from .archive.autel import ecc
-from .archive.dlink import encrpted_img, shrs
+from .archive.dlink import deafbead, encrpted_img, shrs
 from .archive.engeniustech import engenius
 from .archive.hp import bdl, ipkg
 from .archive.instar import bneg, instar_hd
@@ -56,6 +56,7 @@ from .filesystem.android import erofs, sparse
 
 BUILTIN_HANDLERS: Handlers = (
     cramfs.CramFSHandler,
+    deafbead.DeafBeadHandler,
     extfs.EXTHandler,
     fat.FATHandler,
     jffs2.JFFS2NewHandler,
