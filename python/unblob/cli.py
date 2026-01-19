@@ -285,6 +285,12 @@ class UnblobContext(click.Context):
     help="Only carve chunks and skip further extraction",
 )
 @click.option(
+    "--no-sandbox",
+    is_flag=True,
+    show_default=True,
+    help="Disable Landlock sandboxing (useful for breakpoint-based debugging).",
+)
+@click.option(
     "-k",
     "--keep-extracted-chunks",
     "keep_extracted_chunks",
@@ -342,6 +348,7 @@ def cli(
     skip_extension: Iterable[str],
     clear_skip_magics: bool,
     skip_extraction: bool,
+    no_sandbox: bool,
     keep_extracted_chunks: bool,
     carve_suffix: str,
     extract_suffix: str,
@@ -387,8 +394,13 @@ def cli(
     logger.info("Creating extraction directory", extract_root=extract_root)
     extract_root.mkdir(parents=True, exist_ok=True)
     logger.info("Start processing file", file=file)
-    sandbox = Sandbox(config, log_path, report_file)
-    process_results = sandbox.run(process_file, config, file, report_file)
+
+    if no_sandbox:
+        process_results = process_file(config, file, report_file)
+    else:
+        sandbox = Sandbox(config, log_path, report_file)
+        process_results = sandbox.run(process_file, config, file, report_file)
+
     if verbose == 0:
         if skip_extraction:
             print_scan_report(process_results)
