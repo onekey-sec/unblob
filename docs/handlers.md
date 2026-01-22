@@ -16,6 +16,7 @@
     | [`CPIO (PORTABLE ASCII)`](#cpio-portable-ascii) | ARCHIVE | :octicons-check-16: |
     | [`CPIO (PORTABLE OLD ASCII)`](#cpio-portable-old-ascii) | ARCHIVE | :octicons-check-16: |
     | [`CRAMFS`](#cramfs) | FILESYSTEM | :octicons-check-16: |
+    | [`D-LINK DEAFBEAD`](#d-link-deafbead) | ARCHIVE | :octicons-check-16: |
     | [`D-LINK ENCRPTED_IMG`](#d-link-encrpted_img) | ARCHIVE | :octicons-check-16: |
     | [`D-LINK SHRS`](#d-link-shrs) | ARCHIVE | :octicons-check-16: |
     | [`DMG`](#dmg) | ARCHIVE | :octicons-check-16: |
@@ -321,6 +322,20 @@
 
         - [CramFS Documentation](https://web.archive.org/web/20160304053532/http://sourceforge.net/projects/cramfs/){ target="_blank" }
         - [CramFS Wikipedia](https://en.wikipedia.org/wiki/Cramfs){ target="_blank" }
+## D-Link DEAFBEAD
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Archive files as found in D-Link DSL-500G and DSL-504G firmware images.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** D-Link
+
+    === "References"
 ## D-Link encrpted_img
 
 !!! success "Fully supported"
