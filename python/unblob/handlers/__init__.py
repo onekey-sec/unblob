@@ -71,6 +71,8 @@ BUILTIN_HANDLERS: Handlers = (
     squashfs.SquashFSv3NSHandler,
     squashfs.SquashFSv4LEHandler,
     squashfs.SquashFSv4BEHandler,
+    squashfs.SquashFSv4LEBroadcomHandler,
+    squashfs.SquashFSv4BEBroadcomHandler,
     ubi.UBIHandler,
     ubi.UBIFSHandler,
     yaffs.YAFFSHandler,
