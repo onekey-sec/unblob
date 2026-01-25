@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 import structlog
 
-from unblob.logging import _format_message, noformat
+from unblob.logging import RawString, _format_message, noformat
 from unblob.report import UnknownError
 
 
@@ -45,3 +45,10 @@ def test_UnknownError_can_be_logged():  # noqa: N802
     logger.error(
         "unknown", **UnknownError(exception=Exception("whatever")).model_dump()
     )
+
+
+def test_raw_str_repr_keeps_value():
+    value = "abc\n\x1b[31mred\x1b[0m"
+    wrapped = RawString(value)
+    assert repr(wrapped) == value
+    assert str(wrapped) == value

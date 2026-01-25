@@ -14,6 +14,19 @@ def format_hex(value: int):
     return f"0x{value:x}"
 
 
+class RawString:
+    """Wrap a string so ConsoleRenderer prints it without repr()-escaping."""
+
+    def __init__(self, value: str | None):
+        self._value = value or ""
+
+    def __repr__(self) -> str:
+        return self._value
+
+    def __str__(self) -> str:
+        return self._value
+
+
 class noformat:  # noqa: N801
     """Keep the value from formatting.
 
@@ -43,7 +56,7 @@ def _format_message(value: Any, extract_root: Path) -> Any:
         return new_value.as_posix().encode("utf-8", errors="surrogateescape")
 
     if isinstance(value, Structure):
-        return dumpstruct(value, output="string")
+        return RawString(dumpstruct(value, output="string"))
 
     if isinstance(value, int):
         return format_hex(value)
