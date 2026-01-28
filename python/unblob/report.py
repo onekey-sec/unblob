@@ -242,6 +242,11 @@ class MultiFileReport(ReportBase):
     extraction_reports: list[Report]
 
 
+class ExtractedFileDeletedReport(ReportBase):
+    path: Path
+    handler_name: str
+
+
 class ExtractionProblem(ReportBase):
     """A non-fatal problem discovered during extraction.
 
@@ -325,6 +330,7 @@ Report = Annotated[
         Annotated[UnknownChunkReport, Tag("UnknownChunkReport")],
         Annotated[CarveDirectoryReport, Tag("CarveDirectoryReport")],
         Annotated[MultiFileReport, Tag("MultiFileReport")],
+        Annotated[ExtractedFileDeletedReport, Tag("ExtractedFileDeletedReport")],
         Annotated[ExtractionProblem, Tag("ExtractionProblem")],
         Annotated[PathTraversalProblem, Tag("PathTraversalProblem")],
         Annotated[LinkExtractionProblem, Tag("LinkExtractionProblem")],
