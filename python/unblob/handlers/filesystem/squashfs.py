@@ -404,6 +404,14 @@ class SquashFSv4LEHandler(_SquashFSBase):
             68 73 71 73 [24] 04 00
         """
         ),
+        HexString(
+            """
+            // 00000000  73 68 73 71 03 00 00 00  00 c1 9c 61 00 00 02 00  |shsq.......a....|
+            // 00000010  01 00 00 00 01 00 11 00  c0 00 01 00 04 00 00 00  |................|
+            // squashfs_v4_magic_broadcom_le
+            73 68 73 71 [24] 04 00
+        """
+        ),
     ]
 
     C_DEFINITIONS = r"""
@@ -498,7 +506,15 @@ class SquashFSv4BEHandler(SquashFSv4LEHandler):
             // squashfs_v4_magic_be
             73 71 73 68 [24] 00 04
         """
-        )
+        ),
+        HexString(
+            """
+            // 00000000  73 71 73 68 00 00 00 03  61 9c c1 00 00 02 00 00  |qshs.......a....|
+            // 00000010  00 01 00 00 00 01 00 11  00 c0 00 01 00 04 00 00  |................|
+            // squashfs_v4_magic_broadcom_be
+            71 73 68 73 [24] 00 04
+        """
+        ),
     ]
 
     EXTRACTOR = SquashFSv4BEExtractor()
