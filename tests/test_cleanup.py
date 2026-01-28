@@ -10,7 +10,12 @@ from pathlib import Path
 import pytest
 
 from unblob.models import File, Handler, Regex, ValidChunk
-from unblob.processing import ExtractionConfig, process_file
+from unblob.processing import (
+    ExtractedFileDeletionMode,
+    ExtractionConfig,
+    process_file,
+)
+from unblob.report import ExtractedFileDeletedReport
 from unblob.testing import check_result
 
 _ZIP_CONTENT = b"good file"
@@ -102,4 +107,29 @@ def test_keep_chunks_with_null_extractor(input_file: Path, output_dir: Path):
     )
     all_reports = process_file(config, input_file)
     assert list(output_dir.glob("**/*.null"))
+    check_result(all_reports)
+
+
+def test_delete_intermediate_files_reported(input_file: Path, output_dir: Path):
+    inner_zip = wrapzip("inner.txt", _ZIP_CONTENT)
+    outer_zip = wrapzip("inner.zip", inner_zip)
+    input_file.write_bytes(outer_zip)
+
+    config = ExtractionConfig(
+        extract_root=output_dir,
+        randomness_depth=0,
+        extracted_file_deletion=ExtractedFileDeletionMode.ALL,
+    )
+
+    all_reports = process_file(config, input_file)
+    inner_zip_path = output_dir / f"{input_file.name}_extract" / "inner.zip"
+
+    assert not inner_zip_path.exists()
+    deleted_reports = [
+        report
+        for result in all_reports.results
+        for report in result.reports
+        if isinstance(report, ExtractedFileDeletedReport)
+    ]
+    assert any(report.path == inner_zip_path for report in deleted_reports)
     check_result(all_reports)

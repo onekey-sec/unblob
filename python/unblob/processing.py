@@ -38,6 +38,7 @@ from .report import (
     CalculateMultiFileExceptionReport,
     CarveDirectoryReport,
     ErrorReport,
+    ExtractedFileDeletedReport,
     FileMagicReport,
     HashReport,
     MultiFileCollisionReport,
@@ -703,6 +704,12 @@ class _FileTask:
 
         try:
             delete_candidate_path.unlink()
+            self.result.add_report(
+                ExtractedFileDeletedReport(
+                    path=delete_candidate_path,
+                    handler_name=chunk.handler.NAME,
+                )
+            )
             logger.debug(
                 "Removed extracted file after extraction",
                 path=delete_candidate_path,
