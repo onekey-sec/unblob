@@ -659,10 +659,6 @@ class _FileTask:
             if result := chunk.extract(carved_path, extract_dir):
                 extraction_reports.extend(result.reports)
 
-            extraction_successful = not any(
-                isinstance(report, ErrorReport) for report in extraction_reports
-            )
-
             if remove_extracted_input:
                 logger.debug("Removing extracted chunk", path=carved_path)
                 carved_path.unlink()
@@ -673,6 +669,9 @@ class _FileTask:
             logger.exception("Unknown error happened while extracting chunk")
             extraction_reports.append(UnknownError(exception=exc))
 
+        extraction_successful = not any(
+            isinstance(report, ErrorReport) for report in extraction_reports
+        )
         self.result.add_report(chunk.as_report(extraction_reports))
 
         # we want to get consistent partial output even in case of unforeseen problems
