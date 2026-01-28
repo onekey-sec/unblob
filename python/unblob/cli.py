@@ -333,8 +333,9 @@ class UnblobContext(click.Context):
     "--delete-extracted-files",
     default=ExtractedFileDeletionMode.NONE.value,
     show_default=True,
-    help="Delete fully extracted temporary files. Use 'selected:<handler1,handler2>' "
-    "to restrict deletions to specific handlers.",
+    help="Delete fully extracted intermediate files (whole-file chunks only). "
+    "Use 'selected:<handler1,handler2>' (comma-separated) to restrict deletions "
+    "to specific handlers.",
     callback=_parse_delete_extracted_files,
 )
 @click.option(
