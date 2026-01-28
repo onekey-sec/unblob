@@ -17,7 +17,12 @@ from unblob.report import (
     ExtractCommandFailedReport,
     FileMagicReport,
     HashReport,
+    RandomnessMeasurements,
+    RandomnessReport,
+    Report,
     StatReport,
+    UnknownChunkReport,
+    register_report_type,
 )
 
 
@@ -302,3 +307,60 @@ class Test_to_json:  # noqa: N801
         assert decoded_report == report
 
         decoded_report = json.loads(json_text)
+
+
+def test_custom_report_registration_and_deserialization():
+    class CustomReport(Report):
+        message: str
+
+    register_report_type(CustomReport)
+
+    task = Task(path=Path("/custom"), depth=0, blob_id="")
+    custom_report = CustomReport(message="hello")
+    chunk_report = ChunkReport(
+        id="custom-chunk",
+        handler_name="custom",
+        start_offset=0,
+        end_offset=1,
+        size=1,
+        is_encrypted=False,
+        extraction_reports=[custom_report],
+    )
+
+    task_result = TaskResult(task=task, reports=[custom_report, chunk_report])
+    process_result = ProcessResult(results=[task_result])
+
+    json_text = process_result.to_json()
+    report_data = ReportModelAdapter.validate_json(json_text)
+
+    assert isinstance(report_data[0].reports[0], CustomReport)
+    assert isinstance(report_data[0].reports[1], ChunkReport)
+    assert isinstance(report_data[0].reports[1].extraction_reports[0], CustomReport)
+
+
+def test_unknown_chunk_report_randomness_validation():
+    randomness = RandomnessReport(
+        shannon=RandomnessMeasurements(
+            percentages=[0.1, 0.2],
+            block_size=2,
+            mean=0.15,
+        ),
+        chi_square=RandomnessMeasurements(
+            percentages=[0.3, 0.4],
+            block_size=2,
+            mean=0.35,
+        ),
+    )
+    randomness_data = randomness.model_dump(mode="json", serialize_as_any=True)
+
+    report = UnknownChunkReport.model_validate(
+        {
+            "id": "chunk",
+            "start_offset": 0,
+            "end_offset": 1,
+            "size": 1,
+            "randomness": randomness_data,
+        }
+    )
+
+    assert isinstance(report.randomness, RandomnessReport)
