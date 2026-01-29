@@ -6,6 +6,7 @@ import pytest
 from unblob.file_utils import InvalidInputFormat
 from unblob.models import (
     Chunk,
+    Glob,
     ProcessResult,
     ReportModelAdapter,
     Task,
@@ -364,3 +365,25 @@ def test_unknown_chunk_report_randomness_validation():
     )
 
     assert isinstance(report.randomness, RandomnessReport)
+
+
+class TestGlob:
+    def test_single_pattern(self, tmp_path: Path):
+        path_a = tmp_path / "a.txt"
+        path_a.touch()
+        path_b = tmp_path / "b.log"
+        path_b.touch()
+
+        glob = Glob("*.txt")
+        assert list(glob.get_files(tmp_path)) == [path_a]
+
+    def test_multiple_patterns(self, tmp_path: Path):
+        path_a = tmp_path / "a.txt"
+        path_a.touch()
+        path_b = tmp_path / "b.log"
+        path_b.touch()
+        path_c = tmp_path / "c.bin"
+        path_c.touch()
+
+        glob = Glob("*.txt", "*.log")
+        assert list(glob.get_files(tmp_path)) == [path_a, path_b]

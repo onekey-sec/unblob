@@ -416,11 +416,14 @@ class DirectoryPattern:
 
 
 class Glob(DirectoryPattern):
-    def __init__(self, pattern):
-        self._pattern = pattern
+    def __init__(self, *patterns):
+        if not patterns:
+            raise ValueError("At least one pattern must be provided")
+        self._patterns = patterns
 
     def get_files(self, directory: Path) -> Iterable[Path]:
-        return directory.glob(self._pattern)
+        for pattern in self._patterns:
+            yield from directory.glob(pattern)
 
 
 class SingleFile(DirectoryPattern):
