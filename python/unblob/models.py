@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Generic, Optional, TypeVar, Union
 
 import attrs
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, TypeAdapter, field_validator
 from structlog import get_logger
 
 from .file_utils import Endian, File, InvalidInputFormat, StructParser
@@ -22,6 +22,7 @@ from .report import (
     RandomnessReport,
     Report,
     UnknownChunkReport,
+    validate_report_list,
 )
 
 logger = get_logger()
@@ -233,6 +234,11 @@ class TaskResult(BaseModel):
     reports: list[Report] = []
     subtasks: list[Task] = []
 
+    @field_validator("reports", mode="before")
+    @classmethod
+    def validate_reports(cls, value):
+        return validate_report_list(value)
+
     def add_report(self, report: Report):
         self.reports.append(report)
 
@@ -267,7 +273,11 @@ class ProcessResult(BaseModel):
 
     def to_json(self, indent="  "):
         return json.dumps(
-            [result.model_dump(mode="json") for result in self.results], indent=indent
+            [
+                result.model_dump(mode="json", serialize_as_any=True)
+                for result in self.results
+            ],
+            indent=indent,
         )
 
     def get_output_dir(self) -> Optional[Path]:

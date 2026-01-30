@@ -10,6 +10,7 @@ from structlog import get_logger
 
 from unblob import hookspecs
 from unblob.models import DirectoryHandler, Handler
+from unblob.report import Report
 
 # The entrypoints are defined by the to-be-loaded plugins. The version
 # should be incremented whenever a backward-incompatible change is
@@ -118,3 +119,11 @@ class UnblobPluginManager(pluggy.PluginManager):
             )
 
         return extra_handlers
+
+    def load_report_types_from_plugins(self) -> list[type[Report]]:
+        extra_report_types = list(itertools.chain(*self.hook.unblob_register_reports()))
+        if extra_report_types:
+            logger.debug(
+                "Loaded report types from plugins", report_types=extra_report_types
+            )
+        return extra_report_types
