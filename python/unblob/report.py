@@ -263,6 +263,11 @@ class MultiFileReport(Report):
         return validate_report_list(value)
 
 
+class ExtractedFileDeletedReport(Report):
+    path: Path
+    handler_name: str
+
+
 class ExtractionProblem(Report):
     """A non-fatal problem discovered during extraction.
 
@@ -324,6 +329,7 @@ BUILTIN_REPORT_TYPES: tuple[type[Report], ...] = (
     ExtractCommandFailedReport,
     OutputDirectoryExistsReport,
     ExtractorDependencyNotFoundReport,
+    ExtractedFileDeletedReport,
     ExtractorTimedOut,
     MaliciousSymlinkRemoved,
     MultiFileCollisionReport,

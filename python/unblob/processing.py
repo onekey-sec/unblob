@@ -1,3 +1,4 @@
+import enum
 import multiprocessing
 import shutil
 from collections.abc import Iterable, Sequence
@@ -36,6 +37,8 @@ from .pool import make_pool
 from .report import (
     CalculateMultiFileExceptionReport,
     CarveDirectoryReport,
+    ErrorReport,
+    ExtractedFileDeletedReport,
     FileMagicReport,
     HashReport,
     MultiFileCollisionReport,
@@ -81,6 +84,12 @@ DEFAULT_SKIP_MAGIC = (
 DEFAULT_SKIP_EXTENSION = (".rlib",)
 
 
+class ExtractedFileDeletionMode(enum.Enum):
+    NONE = "none"
+    SELECTED = "selected"
+    ALL = "all"
+
+
 @attrs.define(kw_only=True)
 class ExtractionConfig:
     extract_root: Path = attrs.field(converter=lambda value: value.resolve())
@@ -99,6 +108,11 @@ class ExtractionConfig:
     dir_handlers: DirectoryHandlers = BUILTIN_DIR_HANDLERS
     verbose: int = 1
     progress_reporter: type[ProgressReporter] = NullProgressReporter
+    extracted_file_deletion: ExtractedFileDeletionMode = ExtractedFileDeletionMode.NONE
+    extracted_file_handler_filter: Iterable[str] = attrs.field(
+        default=(),
+        converter=lambda values: tuple(str(value) for value in values),
+    )
 
     def _get_output_path(self, path: Path) -> Path:
         """Return path under extract root."""
@@ -550,13 +564,15 @@ class _FileTask:
             # skip carving, extract directly the whole file (chunk)
             carved_path = self.task.path
             for chunk in outer_chunks:
-                self._extract_chunk(
+                extraction_successful = self._extract_chunk(
                     carved_path,
                     chunk,
                     self.config.get_extract_dir_for(carved_path),
                     # since we do not carve, we want to keep the input around
                     remove_extracted_input=False,
                 )
+                if extraction_successful:
+                    self._delete_extracted_file_if_needed(self.task.path, chunk)
         else:
             self._carve_then_extract_chunks(file, outer_chunks, unknown_chunks)
 
@@ -586,7 +602,6 @@ class _FileTask:
 
         for chunk in outer_chunks:
             carved_path = carve_valid_chunk(carve_dir, file, chunk)
-
             self._extract_chunk(
                 carved_path,
                 chunk,
@@ -619,7 +634,8 @@ class _FileTask:
         extract_dir: Path,
         *,
         remove_extracted_input: bool,
-    ):
+    ) -> bool:
+        extraction_successful = False
         if extract_dir.exists():
             # Extraction directory is not supposed to exist, it mixes up original and extracted files,
             # and it would just introduce weird, non-deterministic problems due to interference on paths
@@ -633,11 +649,11 @@ class _FileTask:
             self.result.add_report(
                 chunk.as_report([OutputDirectoryExistsReport(path=extract_dir)])
             )
-            return
+            return False
 
         if self.config.skip_extraction:
             fix_extracted_directory(extract_dir, self.result)
-            return
+            return False
 
         extraction_reports = []
         try:
@@ -654,6 +670,9 @@ class _FileTask:
             logger.exception("Unknown error happened while extracting chunk")
             extraction_reports.append(UnknownError(exception=exc))
 
+        extraction_successful = not any(
+            isinstance(report, ErrorReport) for report in extraction_reports
+        )
         self.result.add_report(chunk.as_report(extraction_reports))
 
         # we want to get consistent partial output even in case of unforeseen problems
@@ -668,6 +687,55 @@ class _FileTask:
                     depth=self.task.depth + 1,
                 )
             )
+        return extraction_successful
+
+    def _delete_extracted_file_if_needed(
+        self, delete_candidate_path: Path, chunk: ValidChunk
+    ) -> None:
+        filter_set = set(self.config.extracted_file_handler_filter)
+        if not self._should_delete_extracted_file(chunk, filter_set):
+            return
+
+        if self.task.depth == 0:
+            return
+
+        if not delete_candidate_path.exists() or delete_candidate_path.is_dir():
+            return
+
+        try:
+            delete_candidate_path.unlink()
+            self.result.add_report(
+                ExtractedFileDeletedReport(
+                    path=delete_candidate_path,
+                    handler_name=chunk.handler.NAME,
+                )
+            )
+            logger.debug(
+                "Removed extracted file after extraction",
+                path=delete_candidate_path,
+                handler=chunk.handler.NAME,
+            )
+        except OSError:
+            logger.warning(
+                "Failed to remove extracted file after extraction",
+                path=delete_candidate_path,
+            )
+
+    def _should_delete_extracted_file(
+        self, chunk: ValidChunk, filter_set: set[str]
+    ) -> bool:
+        if not chunk.is_whole_file:
+            return False
+
+        deletion_mode = self.config.extracted_file_deletion
+
+        if deletion_mode is ExtractedFileDeletionMode.NONE:
+            return False
+
+        if deletion_mode is ExtractedFileDeletionMode.SELECTED:
+            return chunk.handler.NAME in filter_set
+
+        return True
 
 
 def assign_file_to_chunks(chunks: Sequence[Chunk], file: File):
