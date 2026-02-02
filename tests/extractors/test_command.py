@@ -72,6 +72,32 @@ def test_command_execution_failure(tmpdir: Path):
     ]
 
 
+def test_command_execution_failure_with_stdout_redirect(tmpdir: Path):
+    outdir = PosixPath(tmpdir)
+    command = Command(
+        "python",
+        "-c",
+        "import sys\n"
+        "sys.stdout.write('stdout')\n"
+        "sys.stderr.write('stderr')\n"
+        "sys.exit(1)",
+        stdout="out.txt",
+    )
+
+    with pytest.raises(ExtractError) as excinfo:
+        command.extract(Path("input"), outdir)
+
+    assert (outdir / "out.txt").read_bytes() == b"stdout"
+    assert list(excinfo.value.reports) == [
+        ExtractCommandFailedReport.model_construct(
+            command=mock.ANY,
+            stdout=b"",
+            stderr=b"stderr",
+            exit_code=1,
+        )
+    ]
+
+
 def test_command_not_found(tmpdir: Path):
     outdir = PosixPath(tmpdir)
     command = Command("this-command-should-not-exist-in-any-system")
