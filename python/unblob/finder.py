@@ -3,6 +3,7 @@
 The main "entry point" is search_chunks_by_priority.
 """
 
+import sys
 from functools import lru_cache
 from typing import Optional
 
@@ -74,7 +75,8 @@ def _hyperscan_match(
     offset += context.start_offset
     real_offset = offset + handler.PATTERN_MATCH_OFFSET
 
-    if real_offset < 0:
+    # See https://github.com/vlaci/pyperscan/issues/110
+    if real_offset < 0 or real_offset > sys.maxsize:
         return Scan.Continue
 
     # Skip chunk calculation if this would start inside another one,
