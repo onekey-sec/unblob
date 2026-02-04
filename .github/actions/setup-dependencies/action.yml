@@ -22,6 +22,7 @@ runs:
       uses: mozilla-actions/sccache-action@v0.0.9
       with:
         disable_annotations: true # it is very spammy, but useful for diagnostics
+        version: "v0.12.0"
 
     - name: Enable sccache
       run: |
