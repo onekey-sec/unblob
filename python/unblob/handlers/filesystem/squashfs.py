@@ -23,8 +23,10 @@ PAD_SIZES = [4_096, 1_024]
 
 class SquashFSExtractor(Extractor):
     EXECUTABLE = "sasquatch"
+    V4BE_EXECUTABLE = "sasquatch-v4be"
 
-    def __init__(self, big_endian_magic: int):
+    def __init__(self, version: int, big_endian_magic: int):
+        self.version = version
         self.big_endian_magic = big_endian_magic
 
     def extract(self, inpath: Path, outdir: Path):
@@ -32,11 +34,24 @@ class SquashFSExtractor(Extractor):
             endian = get_endian(file, self.big_endian_magic)
 
         commands_args = []
+        executable = self.EXECUTABLE
 
-        if endian == Endian.BIG:
-            commands_args.append("-be")
-        else:
-            commands_args.append("-le")
+        match endian, self.version:
+            case Endian.BIG, 4:
+                executable = self.V4BE_EXECUTABLE
+                struct_parser = StructParser(SquashFSv4LEHandler.C_DEFINITIONS)
+                with File.from_path(inpath) as f:
+                    header = struct_parser.parse(
+                        SquashFSv4LEHandler.HEADER_STRUCT, f, Endian.BIG
+                    )
+                    # see https://raw.githubusercontent.com/Freetz/freetz/master/tools/make/squashfs4-host-be/AVM-BE-format.txt
+                    is_avm = header.bytes_used == header.mkfs_time
+                    if not is_avm:
+                        commands_args.append("-be")
+            case Endian.BIG, _:
+                commands_args.append("-be")
+            case Endian.LITTLE, _:
+                commands_args.append("-le")
 
         commands_args.extend(
             [
@@ -47,17 +62,17 @@ class SquashFSExtractor(Extractor):
                 "{inpath}",
             ]
         )
-        extractor = Command(self.EXECUTABLE, *commands_args)
+        extractor = Command(executable, *commands_args)
         extractor.extract(inpath, outdir)
 
     def get_dependencies(self) -> list[str]:
-        return [self.EXECUTABLE]
+        return [self.EXECUTABLE, self.V4BE_EXECUTABLE]
 
 
 class _SquashFSBase(StructHandler):
     BIG_ENDIAN_MAGIC = 0x73_71_73_68
 
-    EXTRACTOR = SquashFSExtractor(0x73_71_73_68)
+    EXTRACTOR = SquashFSExtractor(3, 0x73_71_73_68)
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(start_offset)
@@ -260,7 +275,7 @@ class SquashFSv3DDWRTHandler(SquashFSv3Handler):
 
     BIG_ENDIAN_MAGIC = 0x74_71_73_68
 
-    EXTRACTOR = SquashFSExtractor(0x74_71_73_68)
+    EXTRACTOR = SquashFSExtractor(3, 0x74_71_73_68)
 
     PATTERNS = [
         HexString(
@@ -305,7 +320,7 @@ class SquashFSv3BroadcomHandler(SquashFSv3Handler):
 
     BIG_ENDIAN_MAGIC = 0x71_73_68_73
 
-    EXTRACTOR = SquashFSExtractor(0x71_73_68_73)
+    EXTRACTOR = SquashFSExtractor(3, 0x71_73_68_73)
 
     PATTERNS = [
         HexString(
@@ -351,7 +366,7 @@ class SquashFSv3NSHandler(SquashFSv3Handler):
 
     BIG_ENDIAN_MAGIC = 0x73_71_6C_7A
 
-    EXTRACTOR = SquashFSExtractor(0x73_71_6C_7A)
+    EXTRACTOR = SquashFSExtractor(3, 0x73_71_6C_7A)
 
     PATTERNS = [
         HexString(
@@ -450,42 +465,6 @@ class SquashFSv4LEHandler(_SquashFSBase):
     )
 
 
-class SquashFSv4BEExtractor(Extractor):
-    EXECUTABLE = "sasquatch-v4be"
-
-    def is_avm(self, header) -> bool:
-        # see https://raw.githubusercontent.com/Freetz/freetz/master/tools/make/squashfs4-host-be/AVM-BE-format.txt
-        return header.bytes_used == header.mkfs_time
-
-    def extract(self, inpath: Path, outdir: Path):
-        struct_parser = StructParser(SquashFSv4LEHandler.C_DEFINITIONS)
-
-        with File.from_path(inpath) as f:
-            header = struct_parser.parse(
-                SquashFSv4LEHandler.HEADER_STRUCT, f, Endian.BIG
-            )
-
-        commands_args = []
-
-        if not self.is_avm(header):
-            commands_args.append("-be")
-
-        commands_args.extend(
-            [
-                "-no-exit-code",
-                "-f",
-                "-d",
-                "{outdir}",
-                "{inpath}",
-            ]
-        )
-        extractor = Command(self.EXECUTABLE, *commands_args)
-        extractor.extract(inpath, outdir)
-
-    def get_dependencies(self) -> list[str]:
-        return [self.EXECUTABLE]
-
-
 class SquashFSv4BEHandler(SquashFSv4LEHandler):
     NAME = "squashfs_v4_be"
 
@@ -497,10 +476,10 @@ class SquashFSv4BEHandler(SquashFSv4LEHandler):
             // squashfs_v4_magic_be
             73 71 73 68 [24] 00 04
         """
-        )
+        ),
     ]
 
-    EXTRACTOR = SquashFSv4BEExtractor()
+    EXTRACTOR = SquashFSExtractor(4, 0x73_71_73_68)
 
     DOC = HandlerDoc(
         name="SquashFS (v4-BE)",
