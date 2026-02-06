@@ -79,10 +79,21 @@ jobs:
     name: Run tests (Python)
     needs: [check_pre_commit, check_pyright]
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:25.10
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
+      - name: Install base tools
+        run: |
+          apt update
+          apt install -y --no-install-recommends \
+            curl git git-lfs ca-certificates \
+            build-essential pkg-config
+          rm -rf /var/lib/apt/lists/*
+        shell: bash
+
       - name: Checkout source code
         uses: actions/checkout@v4
 
