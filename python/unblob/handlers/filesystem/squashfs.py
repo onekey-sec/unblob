@@ -498,3 +498,48 @@ class SquashFSv4BEHandler(SquashFSv4LEHandler):
         ],
         limitations=[],
     )
+
+
+class SquashFSv4BroadcomHandler(SquashFSv4LEHandler):
+    NAME = "squashfs_v4_broadcom"
+
+    BIG_ENDIAN_MAGIC = 0x71_73_68_73
+
+    EXTRACTOR = SquashFSExtractor(4, 0x71_73_68_73)
+
+    PATTERNS = [
+        HexString(
+            """
+            // 00000000  71 73 68 73 00 00 00 05  62 1f 5e 09 00 02 00 00  |qshs....b.^.....|
+            // 00000010  00 00 00 01 00 01 00 11  00 c0 00 01 00 04 00 00  |................|
+            // squashfs_v4_magic_broadcom_be
+            71 73 68 73 [24] 00 04
+        """
+        ),
+        HexString(
+            """
+            // 00000000  73 68 73 71 03 00 00 00  00 c1 9c 61 00 00 02 00  |shsq.......a....|
+            // 00000010  01 00 00 00 01 00 11 00  c0 00 01 00 04 00 00 00  |................|
+            // squashfs_v4_magic_broadcom_le
+            73 68 73 71 [24] 04 00
+        """
+        ),
+    ]
+
+    DOC = HandlerDoc(
+        name="SquashFS (v4-broadcom)",
+        description="SquashFS version 4 is a compressed, read-only file system format designed for minimal storage usage. It is widely used in embedded systems and Linux distributions for efficient storage and fast access.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor="Broadcom",
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
