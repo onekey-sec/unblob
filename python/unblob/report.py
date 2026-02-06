@@ -8,18 +8,27 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Annotated, Any, Optional, Union
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     computed_field,
     field_serializer,
     field_validator,
 )
+
+
+def ensure_bytes(value: Any) -> bytes:
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, str):
+        return value.encode()
+    return b""
 
 
 class Report(BaseModel):
@@ -84,8 +93,8 @@ class ExtractCommandFailedReport(ErrorReport):
 
     severity: Severity = Severity.WARNING
     command: str
-    stdout: bytes
-    stderr: bytes
+    stdout: Annotated[bytes, BeforeValidator(ensure_bytes)]
+    stderr: Annotated[bytes, BeforeValidator(ensure_bytes)]
     exit_code: int
 
     # Use base64 to encode and decode bytes data in case there are non-standard characters
