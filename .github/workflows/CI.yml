@@ -38,6 +38,7 @@ jobs:
         uses: ./.github/actions/setup-dependencies
         with:
           install-test-deps: "false"
+          uv-groups: "check"
 
       - name: Setup Nix
         uses: cachix/install-nix-action@v31
@@ -56,6 +57,8 @@ jobs:
 
       - name: Setup 3rd party dependencies
         uses: ./.github/actions/setup-dependencies
+        with:
+          uv-groups: "type"
 
       - name: Check - pyright
         run: uv run pyright .
@@ -90,6 +93,7 @@ jobs:
         uses: ./.github/actions/setup-dependencies
         with:
           python-version: ${{ matrix.python-version }}
+          uv-groups: "test"
 
       - name: Setup git lfs
         uses: ./.github/actions/setup-git-lfs

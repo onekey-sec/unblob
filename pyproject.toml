@@ -39,15 +39,18 @@ version = "25.11.25"
 unblob = "unblob.cli:main"
 
 [dependency-groups]
-dev = [
-  "atheris>=2.3,<3.0; sys_platform == 'linux' and python_version < '3.12'",
+check = [
   "pre-commit>=3.5,<5.0",
-  "pyright>=1.1.349",
-  "pytest-cov>=7,<8",
-  "pytest>=8.0.0",
   "pyyaml>=6.0.1",
   "ruff==0.14.14",
   "taplo>=0.9.3",
+  "vulture>=2.13",
+]
+dev = [
+  { include-group = "check" },
+  { include-group = "fuzz" },
+  { include-group = "test" },
+  { include-group = "type" },
 ]
 docs = [
   "cairosvg>=2.7.1",
@@ -56,6 +59,16 @@ docs = [
   "mkdocstrings>=0.30,<0.31",
   "pillow>=10.2.0,<12.0",
   "pymdown-extensions>=10.15",
+]
+fuzz = [
+  "atheris>=2.3,<3.0; sys_platform == 'linux' and python_version < '3.12'",
+]
+test = [
+  "pytest-cov>=7,<8",
+  "pytest>=8.0.0",
+]
+type = [
+  "pyright>=1.1.349",
 ]
 
 [tool.ruff]
