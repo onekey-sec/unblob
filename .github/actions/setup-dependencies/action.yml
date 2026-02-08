@@ -7,6 +7,10 @@ inputs:
     description: "Wether to install 3rd Party dependencies (for tests)"
     required: false
     default: "true" # unfortunately boolean variables are not supported
+  uv-groups:
+    description: "Space-separated uv dependency groups to install"
+    required: false
+    default: ""
 
 name: "Setup dependencies"
 description: "Install all required dependencies for worflows to run."
@@ -38,7 +42,15 @@ runs:
         python-version: ${{ inputs.python-version }}
 
     - name: Install the project
-      run: uv sync
+      run: |
+        set -e
+        group_args=""
+        if [ -n "${{ inputs.uv-groups }}" ]; then
+          for group in ${{ inputs.uv-groups }}; do
+            group_args="$group_args --group ${group}"
+          done
+        fi
+        uv sync --no-dev ${group_args}
       shell: bash
 
     - name: Setup pip # some tools need it, and uv virtualenvs doesn't contain it

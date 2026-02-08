@@ -1881,6 +1881,13 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+check = [
+    { name = "pre-commit" },
+    { name = "pyyaml" },
+    { name = "ruff" },
+    { name = "taplo" },
+    { name = "vulture" },
+]
 dev = [
     { name = "atheris", marker = "python_full_version < '3.12' and sys_platform == 'linux'" },
     { name = "pre-commit" },
@@ -1890,6 +1897,7 @@ dev = [
     { name = "pyyaml" },
     { name = "ruff" },
     { name = "taplo" },
+    { name = "vulture" },
 ]
 docs = [
     { name = "cairosvg" },
@@ -1898,6 +1906,16 @@ docs = [
     { name = "mkdocstrings-python" },
     { name = "pillow" },
     { name = "pymdown-extensions" },
+]
+fuzz = [
+    { name = "atheris", marker = "python_full_version < '3.12' and sys_platform == 'linux'" },
+]
+test = [
+    { name = "pytest" },
+    { name = "pytest-cov" },
+]
+type = [
+    { name = "pyright" },
 ]
 
 [package.metadata]
@@ -1927,6 +1945,13 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+check = [
+    { name = "pre-commit", specifier = ">=3.5,<5.0" },
+    { name = "pyyaml", specifier = ">=6.0.1" },
+    { name = "ruff", specifier = "==0.14.14" },
+    { name = "taplo", git = "https://github.com/tamasfe/taplo?tag=0.10.0" },
+    { name = "vulture", specifier = ">=2.13" },
+]
 dev = [
     { name = "atheris", marker = "python_full_version < '3.12' and sys_platform == 'linux'", specifier = ">=2.3,<3.0" },
     { name = "pre-commit", specifier = ">=3.5,<5.0" },
@@ -1936,6 +1961,7 @@ dev = [
     { name = "pyyaml", specifier = ">=6.0.1" },
     { name = "ruff", specifier = "==0.14.14" },
     { name = "taplo", git = "https://github.com/tamasfe/taplo?tag=0.10.0" },
+    { name = "vulture", specifier = ">=2.13" },
 ]
 docs = [
     { name = "cairosvg", specifier = ">=2.7.1" },
@@ -1945,6 +1971,12 @@ docs = [
     { name = "pillow", specifier = ">=10.2.0,<12.0" },
     { name = "pymdown-extensions", specifier = ">=10.15" },
 ]
+fuzz = [{ name = "atheris", marker = "python_full_version < '3.12' and sys_platform == 'linux'", specifier = ">=2.3,<3.0" }]
+test = [
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-cov", specifier = ">=7,<8" },
+]
+type = [{ name = "pyright", specifier = ">=1.1.349" }]
 
 [[package]]
 name = "urllib3"
@@ -1968,6 +2000,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/aa/a3/4d310fa5f00863544e1d0f4de93bddec248499ccf97d4791bc3122c9d4f3/virtualenv-20.36.1.tar.gz", hash = "sha256:8befb5c81842c641f8ee658481e42641c68b5eab3521d8e092d18320902466ba", size = 6032239, upload-time = "2026-01-09T18:21:01.296Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/2a/dc2228b2888f51192c7dc766106cd475f1b768c10caaf9727659726f7391/virtualenv-20.36.1-py3-none-any.whl", hash = "sha256:575a8d6b124ef88f6f51d56d656132389f961062a9177016a50e4f507bbcc19f", size = 6008258, upload-time = "2026-01-09T18:20:59.425Z" },
+]
+
+[[package]]
+name = "vulture"
+version = "2.14"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tomli", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8e/25/925f35db758a0f9199113aaf61d703de891676b082bd7cf73ea01d6000f7/vulture-2.14.tar.gz", hash = "sha256:cb8277902a1138deeab796ec5bef7076a6e0248ca3607a3f3dee0b6d9e9b8415", size = 58823, upload-time = "2024-12-08T17:39:43.319Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/56/0cc15b8ff2613c1d5c3dc1f3f576ede1c43868c1bc2e5ccaa2d4bcd7974d/vulture-2.14-py2.py3-none-any.whl", hash = "sha256:d9a90dba89607489548a49d557f8bac8112bd25d3cbc8aeef23e860811bd5ed9", size = 28915, upload-time = "2024-12-08T17:39:40.573Z" },
 ]
 
 [[package]]
