@@ -1,5 +1,6 @@
 import binascii
 import io
+import itertools
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -62,7 +63,7 @@ class TRXExtractor(Extractor):
                     if offset > 0
                 ]
             )
-            for i, (start_offset, end_offset) in enumerate(zip(offsets, offsets[1:])):
+            for i, (start_offset, end_offset) in enumerate(itertools.pairwise(offsets)):
                 chunk = Chunk(start_offset=start_offset, end_offset=end_offset)
                 carve_chunk_to_file(outdir.joinpath(Path(f"part{i}")), file, chunk)
 

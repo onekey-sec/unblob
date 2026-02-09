@@ -53,7 +53,7 @@ T = TypeVar("T")
 def assert_same_chunks(expected, actual, explanation=None):
     """Assert ignoring the chunk.id-s."""
     assert len(expected) == len(actual), explanation
-    for e, a in zip(expected, actual):
+    for e, a in zip(expected, actual, strict=False):
         assert attrs.evolve(e, id="") == attrs.evolve(a, id=""), explanation
 
 
