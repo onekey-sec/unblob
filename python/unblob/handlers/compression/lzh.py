@@ -1,5 +1,4 @@
 import io
-from typing import Optional
 
 from ...extractors import Command
 from ...file_utils import Endian
@@ -78,7 +77,7 @@ class LZHHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, Endian.LITTLE)
 
         if header.level_identifier > 0x2:

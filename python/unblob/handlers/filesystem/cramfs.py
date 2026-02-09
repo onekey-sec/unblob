@@ -1,6 +1,5 @@
 import binascii
 import struct
-from typing import Optional
 
 from unblob.extractors import Command
 
@@ -67,7 +66,7 @@ class CramFSHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         endian = get_endian(file, BIG_ENDIAN_MAGIC)
         header = self.parse_header(file, endian)
         valid_signature = header.signature == b"Compressed ROMFS"

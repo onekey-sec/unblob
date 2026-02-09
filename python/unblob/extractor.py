@@ -3,7 +3,6 @@
 import errno
 import os
 from pathlib import Path
-from typing import Union
 
 from structlog import get_logger
 
@@ -115,7 +114,7 @@ def fix_extracted_directory(outdir: Path, task_result: TaskResult):
 
 
 def carve_unknown_chunk(
-    extract_dir: Path, file: File, chunk: Union[UnknownChunk, PaddingChunk]
+    extract_dir: Path, file: File, chunk: UnknownChunk | PaddingChunk
 ) -> Path:
     extension = "unknown"
     if isinstance(chunk, PaddingChunk):

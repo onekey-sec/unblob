@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Optional
 
 import arpy
 from structlog import get_logger
@@ -27,7 +26,7 @@ SIGNATURE_LENGTH = 0x8
 
 
 class ArExtractor(Extractor):
-    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         fs = FileSystem(outdir)
 
         with arpy.Archive(inpath.as_posix()) as archive:
@@ -88,7 +87,7 @@ class ARHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         offset_file = OffsetFile(file, start_offset)
         ar = arpy.Archive(fileobj=offset_file)  # type: ignore
 

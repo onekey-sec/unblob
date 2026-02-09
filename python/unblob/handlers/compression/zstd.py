@@ -1,5 +1,4 @@
 import io
-from typing import Optional
 
 from structlog import get_logger
 
@@ -63,7 +62,7 @@ class ZSTDHandler(Handler):
             + (single_segment and not frame_content_size)
         )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(start_offset, io.SEEK_SET)
         file.seek(MAGIC_LEN, io.SEEK_CUR)
 

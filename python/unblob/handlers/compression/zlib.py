@@ -1,7 +1,6 @@
 import re
 import zlib
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -63,7 +62,7 @@ class ZlibHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         for pattern in DMGHandler.PATTERNS:
             if re.search(pattern.as_regex(), file[-512:]):
                 raise InvalidInputFormat(

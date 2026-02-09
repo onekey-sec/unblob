@@ -1,5 +1,3 @@
-from typing import Union
-
 from .models import HandlerDoc, Reference
 
 _HANDLER_DOC_MARKDOWN_TEMPLATE = """## {name}
@@ -23,7 +21,7 @@ _HANDLER_DOC_MARKDOWN_TEMPLATE = """## {name}
 """
 
 
-def _make_paragraph(lines: Union[str, None, list[str]]):  # noqa: C901
+def _make_paragraph(lines: str | None | list[str]):  # noqa: C901
     if not lines:
         return ""
 

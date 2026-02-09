@@ -1,5 +1,4 @@
 import io
-from typing import Optional
 
 import pytest
 
@@ -200,7 +199,7 @@ def pad_contents(contents: bytes, alignment: int):
     ],
 )
 def test_squashfs_chunk_is_detected(
-    contents: bytes, handler_class, start: bytes, pad_align: Optional[int], extra: bytes
+    contents: bytes, handler_class, start: bytes, pad_align: int | None, extra: bytes
 ):
     start_offset = len(start)
     if pad_align is None:

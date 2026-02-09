@@ -6,8 +6,9 @@ import queue
 import signal
 import sys
 import threading
+from collections.abc import Callable
 from multiprocessing.queues import JoinableQueue
-from typing import Any, Callable, Union
+from typing import Any
 
 from .logging import multiprocessing_breakpoint
 
@@ -187,7 +188,7 @@ class SinglePool(PoolBase):
         pass
 
 
-def make_pool(process_num, handler, result_callback) -> Union[SinglePool, MultiPool]:
+def make_pool(process_num, handler, result_callback) -> SinglePool | MultiPool:
     if process_num == 1:
         return SinglePool(handler=handler, result_callback=result_callback)
 

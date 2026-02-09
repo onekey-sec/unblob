@@ -1,5 +1,3 @@
-from typing import Optional
-
 from structlog import get_logger
 
 from unblob.file_utils import InvalidInputFormat
@@ -118,7 +116,7 @@ class EXTHandler(StructHandler):
             return False
         return True
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file)
         end_offset = start_offset + (
             header.s_blocks_count_lo * (EXT_BLOCK_SIZE << header.s_log_block_size)

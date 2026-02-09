@@ -1,7 +1,6 @@
 import hashlib
 import io
 from pathlib import Path
-from typing import Optional
 
 from unblob.file_utils import Endian, StructParser
 from unblob.models import (
@@ -68,7 +67,7 @@ class MultiVolumePAR2Handler(DirectoryHandler):
                     return False
         return True
 
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         paths = sorted(
             [p for p in file.parent.glob(f"{file.stem}.*") if p.resolve().exists()]
         )

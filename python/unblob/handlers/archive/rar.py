@@ -7,8 +7,6 @@ RAR Version 5.x
 https://www.rarlab.com/technote.htm#rarsign
 """
 
-from typing import Optional
-
 import rarfile
 from structlog import get_logger
 
@@ -58,7 +56,7 @@ class RarHandler(Handler):
         limitations=["Does not support encrypted RAR files."],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         try:
             rar_file = rarfile.RarFile(file)
         except (rarfile.Error, ValueError):

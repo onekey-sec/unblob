@@ -2,7 +2,6 @@ import contextlib
 import os
 import tarfile
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -132,7 +131,7 @@ class _TarHandler(StructHandler):
 
     EXTRACTOR = TarExtractor()
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(start_offset)
         header = self.parse_header(file)
         header_size = snull(header.size)

@@ -4,7 +4,6 @@ from collections import defaultdict
 from collections.abc import Iterable
 from enum import IntEnum
 from pathlib import Path
-from typing import Optional
 
 import attrs
 from structlog import get_logger
@@ -272,7 +271,7 @@ def is_valid_header(header) -> bool:
 class YAFFSParser:
     HEADER_STRUCT: str
 
-    def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
+    def __init__(self, file: File, config: YAFFSConfig | None = None):
         self.file_entries = Tree()
         self.data_chunks = defaultdict(list)
         self.file = file
@@ -448,7 +447,7 @@ class YAFFSParser:
                 parent=str(entry.parent_obj_id),
             )
 
-    def get_entry(self, object_id: int) -> Optional[YAFFSEntry]:
+    def get_entry(self, object_id: int) -> YAFFSEntry | None:
         try:
             entry = self.file_entries.get_node(str(object_id))
             if entry:
@@ -597,7 +596,7 @@ class YAFFS2Parser(YAFFSParser):
 class YAFFS1Parser(YAFFSParser):
     HEADER_STRUCT = "yaffs1_obj_hdr_t"
 
-    def __init__(self, file: File, config: Optional[YAFFSConfig] = None):
+    def __init__(self, file: File, config: YAFFSConfig | None = None):
         # from https://yaffs.net/archives/yaffs-development-notes: currently each chunk
         # is the same size as a NAND flash page (ie. 512 bytes + 16 byte spare).
         # In the future we might decide to allow for different chunk sizes.
@@ -763,7 +762,7 @@ class YAFFSHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         parser = instantiate_parser(file, start_offset)
         parser.parse()
         # skip 0xFF padding

@@ -4,7 +4,7 @@ import zipfile
 from collections.abc import Collection
 from pathlib import Path
 from statistics import mean
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 import attrs
 import pytest
@@ -526,7 +526,7 @@ class SplitDirHandler(DirectoryHandler):
     PATTERN = Glob("*.part0")
     EXTRACTOR = ConcatenateExtractor()
 
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         return MultiFile(
             name=file.name[:-6], paths=sorted(file.parent.glob(f"{file.name[:-1]}*"))
         )
@@ -549,7 +549,7 @@ class SpecialDirHandler(DirectoryHandler):
     PATTERN = SingleFile("special")
     EXTRACTOR = ConcatenateExtractor()
 
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         return MultiFile(name="special", paths=sorted(file.parent.glob("special*")))
 
 
@@ -558,7 +558,7 @@ class MultiLevelSplitDirHandler(DirectoryHandler):
     PATTERN = Glob("*.parts")
     EXTRACTOR = ConcatenateExtractor()
 
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         return MultiFile(
             name=file.name[:-6],
             paths=[file, *sorted(file.parent.glob(f"{file.name}/*"))],
@@ -570,7 +570,7 @@ class ExceptionDirHandler(SplitDirHandler):
     PATTERN = Glob("*.part0")
     EXTRACTOR = None
 
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         del file
         raise ValueError("Something bad happened")
 
@@ -580,7 +580,7 @@ class DummyTestHandler(Handler):
     PATTERNS = [Regex("AA")]
     EXTRACTOR = Command("cp", "{inpath}", "{outdir}/AA")
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         del file
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
 

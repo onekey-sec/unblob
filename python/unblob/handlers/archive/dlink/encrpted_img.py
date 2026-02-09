@@ -1,6 +1,5 @@
 import io
 from pathlib import Path
-from typing import Optional
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from structlog import get_logger
@@ -78,7 +77,7 @@ class EncrptedHandler(StructHandler):
     def is_valid_header(self, header) -> bool:
         return header.size >= len(header)
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.BIG)
 
         if not self.is_valid_header(header):

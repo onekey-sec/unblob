@@ -1,6 +1,5 @@
 import binascii
 import io
-from typing import Optional
 
 from structlog import get_logger
 
@@ -107,7 +106,7 @@ class _JFFS2Base(StructHandler):
             return False
         return True
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(0, io.SEEK_END)
         eof = file.tell()
         file.seek(start_offset)

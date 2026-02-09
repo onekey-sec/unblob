@@ -1,6 +1,5 @@
 import io
 import lzma
-from typing import Optional
 
 from structlog import get_logger
 
@@ -86,7 +85,7 @@ class LZMAHandler(Handler):
             return False
         return True
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         read_size = 0
         file.seek(start_offset + 1)
         dictionary_size = convert_int32(file.read(4), Endian.LITTLE)

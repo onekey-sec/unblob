@@ -1,5 +1,4 @@
 import io
-from typing import Optional
 
 from structlog import get_logger
 
@@ -51,7 +50,7 @@ class LZipHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(HEADER_LEN, io.SEEK_CUR)
         # quite the naive idea but it works
         # the idea is to read 8 bytes uint64 every 2 bytes alignment

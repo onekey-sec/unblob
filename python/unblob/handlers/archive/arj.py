@@ -1,6 +1,5 @@
 import binascii
 import io
-from typing import Optional
 
 from structlog import get_logger
 
@@ -180,7 +179,7 @@ class ARJHandler(StructHandler):
         if extended_header.size != 0:
             raise ARJExtendedHeader
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         try:
             # Read past the main header.
             self._read_arj_main_header(file, start_offset)

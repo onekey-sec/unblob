@@ -1,7 +1,7 @@
 import binascii
 import io
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 from structlog import get_logger
 
@@ -70,7 +70,7 @@ class TRXExtractor(Extractor):
 class NetgearTRXBase(StructHandler):
     HEADER_STRUCT = "trx_header_t"
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.LITTLE)
 
         if not self.is_valid_header(header):

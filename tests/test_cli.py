@@ -1,6 +1,5 @@
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Optional
 from unittest import mock
 
 import pytest
@@ -45,7 +44,7 @@ class TestDirHandler(DirectoryHandler):
     PATTERN = Glob("*.test")
     EXTRACTOR = MultiFileCommand("test-multi", "for", "test", "handler")
 
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         pass
 
 

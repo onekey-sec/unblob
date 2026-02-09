@@ -5,7 +5,7 @@ import json
 from collections.abc import Iterable
 from enum import Enum
 from pathlib import Path
-from typing import Generic, Optional, TypeVar, Union
+from typing import Generic, Optional, TypeVar
 
 import attrs
 from pydantic import BaseModel, TypeAdapter, field_validator
@@ -52,8 +52,8 @@ class Reference:
 @dataclasses.dataclass
 class HandlerDoc:
     name: str
-    description: Union[str, None]
-    vendor: Union[str, None]
+    description: str | None
+    vendor: str | None
     references: list[Reference]
     limitations: list[str]
     handler_type: HandlerType
@@ -93,7 +93,7 @@ class Chunk(Blob):
     end_offset: int = attrs.field(kw_only=True)
     """The index of the first byte after the end of the chunk"""
 
-    file: Optional[File] = None
+    file: File | None = None
 
     def __attrs_post_init__(self):
         if self.start_offset < 0 or self.end_offset < 0:
@@ -173,7 +173,7 @@ class UnknownChunk(Chunk):
     like most common bytes (like \x00 and \xFF), ASCII strings, high randomness, etc.
     """
 
-    def as_report(self, randomness: Optional[RandomnessReport]) -> UnknownChunkReport:
+    def as_report(self, randomness: RandomnessReport | None) -> UnknownChunkReport:
         return UnknownChunkReport(
             id=self.id,
             start_offset=self.start_offset,
@@ -193,7 +193,7 @@ class PaddingChunk(Chunk):
 
     def as_report(
         self,
-        randomness: Optional[RandomnessReport],  #   noqa: ARG002
+        randomness: RandomnessReport | None,  #   noqa: ARG002
     ) -> ChunkReport:
         return ChunkReport(
             id=self.id,
@@ -280,7 +280,7 @@ class ProcessResult(BaseModel):
             indent=indent,
         )
 
-    def get_output_dir(self) -> Optional[Path]:
+    def get_output_dir(self) -> Path | None:
         try:
             top_result = self.results[0]
             if carves := top_result.filter_reports(CarveDirectoryReport):
@@ -330,7 +330,7 @@ class Extractor(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         """Extract the carved out chunk.
 
         Raises ExtractError on failure.
@@ -343,7 +343,7 @@ class DirectoryExtractor(abc.ABC):
         return []
 
     @abc.abstractmethod
-    def extract(self, paths: list[Path], outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, paths: list[Path], outdir: Path) -> ExtractResult | None:
         """Extract from a multi file path list.
 
         Raises ExtractError on failure.
@@ -435,7 +435,7 @@ class SingleFile(DirectoryPattern):
         return [path] if path.exists() else []
 
 
-DExtractor = TypeVar("DExtractor", bound=Union[None, DirectoryExtractor])
+DExtractor = TypeVar("DExtractor", bound=None | DirectoryExtractor)
 
 
 class DirectoryHandler(abc.ABC, Generic[DExtractor]):
@@ -447,7 +447,7 @@ class DirectoryHandler(abc.ABC, Generic[DExtractor]):
 
     PATTERN: DirectoryPattern
 
-    DOC: Union[HandlerDoc, None]
+    DOC: HandlerDoc | None
 
     @classmethod
     def get_dependencies(cls):
@@ -457,10 +457,10 @@ class DirectoryHandler(abc.ABC, Generic[DExtractor]):
         return []
 
     @abc.abstractmethod
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         """Calculate the MultiFile in a directory, using a file matched by the pattern as a starting point."""
 
-    def extract(self, paths: list[Path], outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, paths: list[Path], outdir: Path) -> ExtractResult | None:
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", paths=paths)
             raise ExtractError
@@ -471,7 +471,7 @@ class DirectoryHandler(abc.ABC, Generic[DExtractor]):
         return self.EXTRACTOR.extract(paths, outdir)
 
 
-TExtractor = TypeVar("TExtractor", bound=Union[None, Extractor])
+TExtractor = TypeVar("TExtractor", bound=None | Extractor)
 
 
 class Handler(abc.ABC, Generic[TExtractor]):
@@ -485,7 +485,7 @@ class Handler(abc.ABC, Generic[TExtractor]):
 
     EXTRACTOR: TExtractor
 
-    DOC: Union[HandlerDoc, None]
+    DOC: HandlerDoc | None
 
     @classmethod
     def get_dependencies(cls):
@@ -495,10 +495,10 @@ class Handler(abc.ABC, Generic[TExtractor]):
         return []
 
     @abc.abstractmethod
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         """Calculate the Chunk offsets from the File and the file type headers."""
 
-    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", path=inpath)
             raise ExtractError

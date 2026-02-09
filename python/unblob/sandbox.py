@@ -1,9 +1,9 @@
 import ctypes
 import sys
 import threading
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Callable, Optional, TypeVar
+from typing import TypeVar
 
 from structlog import get_logger
 
@@ -41,7 +41,7 @@ class Sandbox:
         self,
         config: ExtractionConfig,
         log_path: Path,
-        report_file: Optional[Path],
+        report_file: Path | None,
         extra_passthrough: Iterable[AccessFS] = (),
     ):
         self.passthrough = [

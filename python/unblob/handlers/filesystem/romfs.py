@@ -229,11 +229,11 @@ class RomFSHeader:
     def is_recursive(self, addr) -> bool:
         return addr in self.inodes
 
-    def recursive_walk(self, addr: int, parent: Optional[FileHeader] = None):
+    def recursive_walk(self, addr: int, parent: FileHeader | None = None):
         while self.is_valid_addr(addr) is True:
             addr = self.walk_dir(addr, parent)
 
-    def walk_dir(self, addr: int, parent: Optional[FileHeader] = None):
+    def walk_dir(self, addr: int, parent: FileHeader | None = None):
         self.file.seek(addr, io.SEEK_SET)
         file_header = FileHeader(addr, self.file)
         file_header.parent = parent
@@ -350,7 +350,7 @@ class RomFSFSHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         if not valid_checksum(file.read(512)):
             raise InvalidInputFormat("Invalid RomFS checksum.")
 

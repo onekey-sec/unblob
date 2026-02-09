@@ -4,7 +4,6 @@ import sys
 from collections.abc import Iterable
 from importlib.metadata import version
 from pathlib import Path
-from typing import Optional
 
 import click
 from pymdownx import slugs
@@ -192,9 +191,9 @@ class UnblobContext(click.Context):
     def __init__(
         self,
         *args,
-        handlers: Optional[Handlers] = None,
-        dir_handlers: Optional[DirectoryHandlers] = None,
-        plugin_manager: Optional[UnblobPluginManager] = None,
+        handlers: Handlers | None = None,
+        dir_handlers: DirectoryHandlers | None = None,
+        plugin_manager: UnblobPluginManager | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -379,7 +378,7 @@ def cli(
     *,
     file: Path,
     extract_root: Path,
-    report_file: Optional[Path],
+    report_file: Path | None,
     log_path: Path,
     force: bool,
     process_num: int,
@@ -396,7 +395,7 @@ def cli(
     extract_suffix: str,
     handlers: Handlers,
     dir_handlers: DirectoryHandlers,
-    plugins_path: Optional[Path],
+    plugins_path: Path | None,
     plugin_manager: UnblobPluginManager,
     verbose: int,
 ) -> ProcessResult:

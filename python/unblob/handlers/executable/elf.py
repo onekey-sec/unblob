@@ -2,7 +2,6 @@ import io
 import shutil
 import zlib
 from pathlib import Path
-from typing import Optional
 
 import attrs
 import lief
@@ -371,7 +370,7 @@ class _ELFBase(StructHandler):
         # no matching UPX footer found
         return end_offset
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ElfChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ElfChunk | None:
         endian = self.get_endianness(file, start_offset)
         file.seek(start_offset, io.SEEK_SET)
         header = self.parse_header(file, endian)

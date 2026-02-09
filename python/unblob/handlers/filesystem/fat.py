@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pyfatfs._exceptions import PyFATException
 from pyfatfs.PyFat import PyFat
 from structlog import get_logger
@@ -68,7 +66,7 @@ class FATHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         pyfat_fs = PyFatNoClose(offset=start_offset)
         try:
             pyfat_fs.set_fp(file)  # type: ignore
