@@ -670,7 +670,7 @@ class YAFFS1Parser(YAFFSParser):
         ):
             # serial is a 2 bit, this function works since there's always at most
             # two chunks with the same chunk_id at any given time
-            yield max(chunks, key=lambda chunk: ((chunk.serial + 1) & 3))
+            yield max(chunks, key=lambda chunk: (chunk.serial + 1) & 3)
 
 
 def is_yaffs_v1(file: File, start_offset: int) -> bool:
