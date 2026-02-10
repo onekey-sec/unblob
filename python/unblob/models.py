@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import abc
 import dataclasses
 import itertools
 import json
-from collections.abc import Iterable
 from enum import Enum
-from pathlib import Path
-from typing import Generic, Optional, TypeVar
+from pathlib import Path  # noqa: TC003
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 import attrs
 from pydantic import BaseModel, TypeAdapter, field_validator
@@ -24,6 +25,9 @@ from .report import (
     UnknownChunkReport,
     validate_report_list,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 logger = get_logger()
 
@@ -116,7 +120,7 @@ class Chunk(Blob):
         assert self.file
         return self.start_offset == 0 and self.end_offset == self.file.size()
 
-    def contains(self, other: "Chunk") -> bool:
+    def contains(self, other: Chunk) -> bool:
         return (
             self.start_offset < other.start_offset
             and self.end_offset >= other.end_offset
@@ -136,10 +140,10 @@ class Chunk(Blob):
 class ValidChunk(Chunk):
     """Known to be valid chunk of a File, can be extracted with an external program."""
 
-    handler: "Handler" = attrs.field(init=False, eq=False)
+    handler: Handler = attrs.field(init=False, eq=False)
     is_encrypted: bool = attrs.field(default=False)
 
-    def extract(self, inpath: Path, outdir: Path) -> Optional["ExtractResult"]:
+    def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         if self.is_encrypted:
             logger.warning(
                 "Encrypted file is not extracted",
@@ -211,9 +215,9 @@ class MultiFile(Blob):
     name: str = attrs.field(kw_only=True)
     paths: list[Path] = attrs.field(kw_only=True)
 
-    handler: "DirectoryHandler" = attrs.field(init=False, eq=False)
+    handler: DirectoryHandler = attrs.field(init=False, eq=False)
 
-    def extract(self, outdir: Path) -> Optional["ExtractResult"]:
+    def extract(self, outdir: Path) -> ExtractResult | None:
         return self.handler.extract(self.paths, outdir)
 
     def as_report(self, extraction_reports: list[Report]) -> MultiFileReport:

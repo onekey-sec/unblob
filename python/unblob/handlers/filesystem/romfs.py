@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import io
 import os
 import stat
 import struct
 from enum import IntEnum, unique
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -86,7 +87,7 @@ class FileHeader:
     checksum: int
     filename: bytes
     depth: int = -1
-    parent: Optional["FileHeader"] = None
+    parent: FileHeader | None = None
     start_offset: int
     end_offset: int
     file: File
@@ -177,7 +178,7 @@ class RomFSHeader:
     eof: int
     file: File
     end_offset: int
-    inodes: dict[int, "FileHeader"]
+    inodes: dict[int, FileHeader]
     fs: FileSystem
 
     def __init__(
