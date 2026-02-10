@@ -1,5 +1,4 @@
 import io
-from typing import Optional
 
 from unblob.extractors import Command
 from unblob.file_utils import (
@@ -84,7 +83,7 @@ class EROFSHandler(StructHandler):
             and header.block_size_bs >= 9
         )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(start_offset + SUPERBLOCK_OFFSET, io.SEEK_SET)
         header = self.parse_header(file, Endian.LITTLE)
         if not self.is_valid_header(header):

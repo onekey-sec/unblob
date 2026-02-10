@@ -4,7 +4,6 @@ Frame format definition: https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_forma
 """
 
 import io
-from typing import Optional
 
 from lz4.block import LZ4BlockError, decompress
 from structlog import get_logger
@@ -102,7 +101,7 @@ class LegacyFrameHandler(_LZ4HandlerBase):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         self._skip_magic_bytes(file)
 
         while True:
@@ -156,7 +155,7 @@ class SkippableFrameHandler(_LZ4HandlerBase):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         self._skip_magic_bytes(file)
         frame_size = convert_int32(file.read(FRAME_SIZE_LEN), Endian.LITTLE)
         file.seek(frame_size, io.SEEK_CUR)
@@ -189,7 +188,7 @@ class DefaultFrameHandler(_LZ4HandlerBase):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         self._skip_magic_bytes(file)
 
         # 2. we parse the frame descriptor of dynamic size

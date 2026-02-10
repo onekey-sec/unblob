@@ -1,5 +1,3 @@
-from typing import Optional
-
 from structlog import get_logger
 
 from unblob.extractors import Command
@@ -137,7 +135,7 @@ class ISO9660FSHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, Endian.LITTLE)
         size = from_733(header.volume_space_size) * from_723(header.logical_block_size)
 

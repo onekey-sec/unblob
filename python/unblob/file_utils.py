@@ -12,7 +12,7 @@ import sys
 import unicodedata
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Literal, Optional, Protocol, Union, overload
+from typing import Literal, Protocol, overload
 
 from dissect.cstruct import cstruct
 from structlog import get_logger
@@ -46,7 +46,7 @@ class File(mmap.mmap):
     access: int
 
     @classmethod
-    def from_bytes(cls, content: Union[bytes, bytearray]):
+    def from_bytes(cls, content: bytes | bytearray):
         if not content:
             raise ValueError("Can't create File from empty bytes.")
         m = cls(-1, len(content))
@@ -197,7 +197,7 @@ def decode_int(value, base: int) -> int:
         raise InvalidInputFormat from exc
 
 
-def decode_multibyte_integer(data: Union[bytes, bytearray]) -> tuple[int, int]:
+def decode_multibyte_integer(data: bytes | bytearray) -> tuple[int, int]:
     """Decode multi-bytes integer into integer size and integer value.
 
     Multibyte integers of static length are stored in little endian byte order.
@@ -347,7 +347,7 @@ class StructParser:
     def parse(
         self,
         struct_name: str,
-        file: Union[File, bytes],
+        file: File | bytes,
         endian: Endian,
     ):
         cparser = self.cparser_le if endian is Endian.LITTLE else self.cparser_be
@@ -575,7 +575,7 @@ class FileSystem:
             )
             self.record_problem(problem)
 
-    def _get_checked_link(self, src: Path, dst: Path) -> Optional[_FSLink]:
+    def _get_checked_link(self, src: Path, dst: Path) -> _FSLink | None:
         link = _FSLink(root=self.root, src=src, dst=dst)
         if link.is_safe:
             return link

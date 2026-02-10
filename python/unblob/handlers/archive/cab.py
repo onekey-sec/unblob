@@ -1,5 +1,3 @@
-from typing import Optional
-
 from structlog import get_logger
 
 from ...extractors import Command
@@ -68,7 +66,7 @@ class CABHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file)
 
         if header.cbCabinet < len(header):

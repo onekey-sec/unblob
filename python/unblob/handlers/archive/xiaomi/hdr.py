@@ -2,7 +2,7 @@ import binascii
 import io
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 from structlog import get_logger
 
@@ -135,7 +135,7 @@ class HDRExtractor(Extractor):
 class HDRHandlerBase(StructHandler):
     HEADER_STRUCT = "hdr1_header_t"
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.LITTLE)
 
         if not is_valid_header(header):

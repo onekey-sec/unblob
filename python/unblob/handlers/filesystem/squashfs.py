@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -60,7 +59,7 @@ class _SquashFSBase(StructHandler):
 
     EXTRACTOR = SquashFSExtractor(0x73_71_73_68)
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(start_offset)
         endian = get_endian(file, self.BIG_ENDIAN_MAGIC)
         header = self.parse_header(file, endian)

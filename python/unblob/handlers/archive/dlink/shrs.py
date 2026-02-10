@@ -1,7 +1,6 @@
 import hashlib
 import io
 from pathlib import Path
-from typing import Optional
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from structlog import get_logger
@@ -95,7 +94,7 @@ class SHRSHandler(StructHandler):
         file.seek(-header.file_size_no_padding, io.SEEK_CUR)
         return digest == header.encrypted_digest
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.BIG)
 
         if not self.is_valid_header(header, file):

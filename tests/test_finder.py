@@ -232,5 +232,5 @@ def test_search_chunks(content, expected_chunks, task_result):
     chunks = search_chunks(file, len(content), handlers, task_result)
 
     assert len(chunks) == len(expected_chunks)
-    for expected_chunk, chunk in zip(expected_chunks, chunks):
+    for expected_chunk, chunk in zip(expected_chunks, chunks, strict=False):
         assert attrs.evolve(chunk, id="") == attrs.evolve(expected_chunk, id="")

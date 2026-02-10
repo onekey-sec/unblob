@@ -1,5 +1,3 @@
-from typing import Optional
-
 from structlog import get_logger
 
 from unblob.extractors.command import Command
@@ -90,7 +88,7 @@ class DMGHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.BIG)
 
         # NOTE: the koly block is a trailer

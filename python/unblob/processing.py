@@ -4,7 +4,6 @@ import shutil
 from collections.abc import Iterable, Sequence
 from operator import attrgetter
 from pathlib import Path
-from typing import Optional, Union
 
 import attrs
 import magic
@@ -131,7 +130,7 @@ class ExtractionConfig:
 
 
 def process_file(
-    config: ExtractionConfig, input_path: Path, report_file: Optional[Path] = None
+    config: ExtractionConfig, input_path: Path, report_file: Path | None = None
 ) -> ProcessResult:
     task = Task(
         blob_id="",
@@ -192,7 +191,7 @@ def _process_task(config: ExtractionConfig, task: Task) -> ProcessResult:
     return aggregated_result
 
 
-def prepare_report_file(config: ExtractionConfig, report_file: Optional[Path]) -> bool:
+def prepare_report_file(config: ExtractionConfig, report_file: Path | None) -> bool:
     """Prevent report writing failing after an expensive extraction.
 
     Should be called before processing tasks.
@@ -386,7 +385,7 @@ class _DirectoryTask:
     @staticmethod
     def _calculate_multifile(
         dir_handler: DirectoryHandler, path: Path, task_result: TaskResult
-    ) -> Optional[MultiFile]:
+    ) -> MultiFile | None:
         try:
             return dir_handler.calculate_multifile(path)
         except InvalidInputFormat as exc:
@@ -491,7 +490,7 @@ def is_padding(file: File, chunk: UnknownChunk):
 
 def process_patterns(
     unknown_chunks: list[UnknownChunk], file: File
-) -> list[Union[UnknownChunk, PaddingChunk]]:
+) -> list[UnknownChunk | PaddingChunk]:
     processed_chunks = []
     for unknown_chunk in unknown_chunks:
         if is_padding(file, unknown_chunk):
@@ -547,7 +546,7 @@ class _FileTask:
         self,
         file: File,
         outer_chunks: list[ValidChunk],
-        unknown_chunks: list[Union[UnknownChunk, PaddingChunk]],
+        unknown_chunks: list[UnknownChunk | PaddingChunk],
     ):
         if unknown_chunks:
             logger.warning("Found unknown Chunks", chunks=unknown_chunks)
@@ -613,7 +612,7 @@ class _FileTask:
                 remove_extracted_input=not self.config.keep_extracted_chunks,
             )
 
-    def _calculate_randomness(self, path: Path) -> Optional[RandomnessReport]:
+    def _calculate_randomness(self, path: Path) -> RandomnessReport | None:
         if self.task.depth < self.config.randomness_depth:
             report = calculate_randomness(path)
             if self.config.randomness_plot:

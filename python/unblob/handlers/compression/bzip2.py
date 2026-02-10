@@ -1,5 +1,3 @@
-from typing import Optional
-
 import attrs
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
 from structlog import get_logger
@@ -155,7 +153,7 @@ class BZip2Handler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         if not _validate_stream_header(file):
             raise InvalidInputFormat("Invalid bzip2 stream header")
 

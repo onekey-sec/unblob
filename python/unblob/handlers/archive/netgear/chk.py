@@ -1,6 +1,5 @@
 import io
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -90,7 +89,7 @@ class NetgearCHKHandler(StructHandler):
             return False
         return True
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.BIG)
 
         if not self.is_valid_header(header):

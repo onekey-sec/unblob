@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -339,7 +338,7 @@ class AutelECCHandler(StructHandler):
     def is_valid_header(self, header) -> bool:
         return header.header_size == 0x20
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.LITTLE)
 
         if not self.is_valid_header(header):

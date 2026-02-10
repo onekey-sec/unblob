@@ -1,5 +1,3 @@
-# ruff: noqa: UP007,UP045
-
 from __future__ import annotations
 
 import base64
@@ -8,7 +6,7 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -46,7 +44,7 @@ class UnknownError(ErrorReport):
     """Describes an exception raised during file processing."""
 
     severity: Severity = Severity.ERROR
-    exception: Union[str, Exception]
+    exception: str | Exception
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True
@@ -143,7 +141,7 @@ class StatReport(Report):
     is_dir: bool
     is_file: bool
     is_link: bool
-    link_target: Optional[Path]
+    link_target: Path | None
 
     @classmethod
     def from_path(cls, path: Path):
@@ -233,11 +231,11 @@ class UnknownChunkReport(Report):
     start_offset: int
     end_offset: int
     size: int
-    randomness: Optional[RandomnessReport]
+    randomness: RandomnessReport | None
 
     @field_validator("randomness", mode="before")
     @classmethod
-    def validate_randomness(cls, value: Any) -> Optional[RandomnessReport]:
+    def validate_randomness(cls, value: Any) -> RandomnessReport | None:
         if value is None:
             return None
         parsed = parse_report(value)
@@ -285,7 +283,7 @@ class ExtractionProblem(Report):
 
     problem: str
     resolution: str
-    path: Optional[str] = None
+    path: str | None = None
 
     @property
     def log_msg(self):

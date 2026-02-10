@@ -3,7 +3,6 @@ import itertools
 import sys
 from pathlib import Path
 from types import ModuleType
-from typing import Optional
 
 import pluggy
 from structlog import get_logger
@@ -28,7 +27,7 @@ class UnblobPluginManager(pluggy.PluginManager):
         self.add_hookspecs(hookspecs)
 
     def load_setuptools_entrypoints(
-        self, group: str = SETUPTOOLS_ENTRYPOINT_NAME, name: Optional[str] = None
+        self, group: str = SETUPTOOLS_ENTRYPOINT_NAME, name: str | None = None
     ):
         return super().load_setuptools_entrypoints(group, name=name)
 
@@ -87,7 +86,7 @@ class UnblobPluginManager(pluggy.PluginManager):
 
         return modules
 
-    def import_plugins(self, path: Optional[Path] = None):
+    def import_plugins(self, path: Path | None = None):
         if path:
             self.import_path(path)
 

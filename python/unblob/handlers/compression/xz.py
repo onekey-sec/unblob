@@ -1,5 +1,4 @@
 import io
-from typing import Optional
 
 import attrs
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
@@ -195,7 +194,7 @@ class XZHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(start_offset + len(STREAM_START_MAGIC), io.SEEK_SET)
         stream_flag = convert_int16(file.read(2), Endian.BIG)
         if stream_flag not in VALID_FLAGS:

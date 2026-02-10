@@ -1,7 +1,8 @@
 import binascii
 import io
+import itertools
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 from structlog import get_logger
 
@@ -62,7 +63,7 @@ class TRXExtractor(Extractor):
                     if offset > 0
                 ]
             )
-            for i, (start_offset, end_offset) in enumerate(zip(offsets, offsets[1:])):
+            for i, (start_offset, end_offset) in enumerate(itertools.pairwise(offsets)):
                 chunk = Chunk(start_offset=start_offset, end_offset=end_offset)
                 carve_chunk_to_file(outdir.joinpath(Path(f"part{i}")), file, chunk)
 
@@ -70,7 +71,7 @@ class TRXExtractor(Extractor):
 class NetgearTRXBase(StructHandler):
     HEADER_STRUCT = "trx_header_t"
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.LITTLE)
 
         if not self.is_valid_header(header):

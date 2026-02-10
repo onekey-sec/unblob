@@ -10,7 +10,7 @@ def pairwise(iterable: Iterable[T]) -> Iterator[tuple[T, T]]:
     # pairwise('ABCDEFG') --> AB BC CD DE EF FG
     a, b = itertools.tee(iterable)
     next(b, None)
-    return zip(a, b)
+    return zip(a, b, strict=False)
 
 
 def get_intervals(values: list[int]) -> list[int]:

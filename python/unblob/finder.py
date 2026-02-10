@@ -5,7 +5,6 @@ The main "entry point" is search_chunks_by_priority.
 
 import sys
 from functools import lru_cache
-from typing import Optional
 
 import attrs
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
@@ -31,7 +30,7 @@ class HyperscanMatchContext:
 
 def _calculate_chunk(
     handler: Handler, file: File, real_offset, task_result: TaskResult
-) -> Optional[ValidChunk]:
+) -> ValidChunk | None:
     file.seek(real_offset)
     try:
         return handler.calculate_chunk(file, real_offset)

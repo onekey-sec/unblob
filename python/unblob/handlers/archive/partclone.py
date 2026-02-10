@@ -1,7 +1,6 @@
 import binascii
 import io
 from math import ceil
-from typing import Optional
 
 from unblob.extractors import Command
 from unblob.file_utils import File, InvalidInputFormat, get_endian_short
@@ -82,7 +81,7 @@ class PartcloneHandler(StructHandler):
             header.crc32 ^ 0xFFFFFFFF
         ) == calculated_crc  # partclone does not final XOR
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(start_offset + ENDIAN_OFFSET, io.SEEK_SET)  # go to endian
         endian = get_endian_short(file, BIG_ENDIAN_MAGIC)
         file.seek(start_offset, io.SEEK_SET)  # go to beginning of file

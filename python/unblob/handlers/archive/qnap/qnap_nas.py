@@ -1,6 +1,5 @@
 import io
 from pathlib import Path
-from typing import Optional
 
 import attrs
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
@@ -122,7 +121,7 @@ class QnapHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         context = QTSSearchContext(start_offset=start_offset, file=file, end_offset=-1)
 
         try:

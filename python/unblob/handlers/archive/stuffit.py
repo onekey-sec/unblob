@@ -18,8 +18,6 @@ If you have the resources to add support for these archive formats,
 feel free to do so !
 """
 
-from typing import Optional
-
 from structlog import get_logger
 
 from ...extractors import Command
@@ -40,7 +38,7 @@ logger = get_logger()
 class _StuffItHandlerBase(StructHandler):
     """A common base for all StuffIt formats."""
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.BIG)
 
         return ValidChunk(

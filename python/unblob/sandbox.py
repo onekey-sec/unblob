@@ -1,16 +1,10 @@
 import ctypes
-import sys
 import threading
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Callable, Optional, TypeVar
+from typing import ParamSpec, TypeVar
 
 from structlog import get_logger
-
-if sys.version_info >= (3, 10):
-    from typing import ParamSpec
-else:
-    from typing_extensions import ParamSpec
 
 from unblob._rust.sandbox import (
     AccessFS as AccessFS,
@@ -41,7 +35,7 @@ class Sandbox:
         self,
         config: ExtractionConfig,
         log_path: Path,
-        report_file: Optional[Path],
+        report_file: Path | None,
         extra_passthrough: Iterable[AccessFS] = (),
     ):
         self.passthrough = [

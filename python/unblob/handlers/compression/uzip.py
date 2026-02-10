@@ -1,8 +1,8 @@
 import lzma
 import re
 import zlib
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 import pyzstd
 
@@ -92,7 +92,9 @@ class UZIPExtractor(Extractor):
                 raise InvalidInputFormat("unsupported compression format") from None
 
             with fs.open(outpath, "wb+") as outfile:
-                for current_offset, next_offset in zip(header.toc[:-1], header.toc[1:]):
+                for current_offset, next_offset in zip(
+                    header.toc[:-1], header.toc[1:], strict=False
+                ):
                     compressed_len = next_offset - current_offset
                     if compressed_len == 0:
                         continue
@@ -135,7 +137,7 @@ class UZIPHandler(StructHandler):
             and header.block_size % 512 == 0
         )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, Endian.BIG)
 
         if not self.is_valid_header(header):

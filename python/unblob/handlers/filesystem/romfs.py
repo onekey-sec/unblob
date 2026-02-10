@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import io
 import os
 import stat
 import struct
 from enum import IntEnum, unique
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -86,7 +87,7 @@ class FileHeader:
     checksum: int
     filename: bytes
     depth: int = -1
-    parent: Optional["FileHeader"] = None
+    parent: FileHeader | None = None
     start_offset: int
     end_offset: int
     file: File
@@ -177,7 +178,7 @@ class RomFSHeader:
     eof: int
     file: File
     end_offset: int
-    inodes: dict[int, "FileHeader"]
+    inodes: dict[int, FileHeader]
     fs: FileSystem
 
     def __init__(
@@ -229,11 +230,11 @@ class RomFSHeader:
     def is_recursive(self, addr) -> bool:
         return addr in self.inodes
 
-    def recursive_walk(self, addr: int, parent: Optional[FileHeader] = None):
+    def recursive_walk(self, addr: int, parent: FileHeader | None = None):
         while self.is_valid_addr(addr) is True:
             addr = self.walk_dir(addr, parent)
 
-    def walk_dir(self, addr: int, parent: Optional[FileHeader] = None):
+    def walk_dir(self, addr: int, parent: FileHeader | None = None):
         self.file.seek(addr, io.SEEK_SET)
         file_header = FileHeader(addr, self.file)
         file_header.parent = parent
@@ -350,7 +351,7 @@ class RomFSFSHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         if not valid_checksum(file.read(512)):
             raise InvalidInputFormat("Invalid RomFS checksum.")
 

@@ -20,7 +20,6 @@ https://py7zr.readthedocs.io/en/latest/archive_format.html
 
 import binascii
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -107,7 +106,7 @@ class SevenZipHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file)
 
         check_header_crc(header)
@@ -137,7 +136,7 @@ class MultiVolumeSevenZipHandler(DirectoryHandler):
         limitations=[],
     )
 
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         paths = sorted(
             [p for p in file.parent.glob(f"{file.stem}.*") if p.resolve().exists()]
         )

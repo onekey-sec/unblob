@@ -2,7 +2,6 @@ import io
 import os
 import stat
 from pathlib import Path
-from typing import Optional
 
 import attrs
 from structlog import get_logger
@@ -381,7 +380,7 @@ class PortableASCIIWithCRCParser(PortableASCIIParser):
 class _CPIOExtractorBase(Extractor):
     PARSER: type[CPIOParserBase]
 
-    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         fs = FileSystem(outdir)
 
         with File.from_path(inpath) as file:
@@ -415,7 +414,7 @@ class _CPIOHandlerBase(Handler):
 
     EXTRACTOR: _CPIOExtractorBase
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         parser = self.EXTRACTOR.PARSER(file, start_offset)
         parser.parse()
         return ValidChunk(

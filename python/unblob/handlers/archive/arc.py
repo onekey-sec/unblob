@@ -1,5 +1,3 @@
-from typing import Optional
-
 from structlog import get_logger
 
 from unblob.extractors.command import Command
@@ -84,7 +82,7 @@ class ARCHandler(StructHandler):
             return False
         return True
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         # we loop from header to header until we reach the end header
         offset = start_offset
         while True:

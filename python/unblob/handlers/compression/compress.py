@@ -33,7 +33,6 @@ which helps identifying the exact end offset.
 """
 
 import io
-from typing import Optional
 
 from structlog import get_logger
 
@@ -251,7 +250,7 @@ class UnixCompressHandler(StructHandler):
 
         return file.tell() - 1
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(0, io.SEEK_END)
         max_len = file.tell()
 

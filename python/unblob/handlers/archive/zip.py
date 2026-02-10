@@ -1,6 +1,5 @@
 import io
 import struct
-from typing import Optional
 
 from structlog import get_logger
 
@@ -188,7 +187,7 @@ class ZIPHandler(StructHandler):
 
         return None
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         has_encrypted_files = False
         file.seek(start_offset, io.SEEK_SET)
 

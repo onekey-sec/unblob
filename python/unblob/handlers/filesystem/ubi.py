@@ -1,7 +1,6 @@
 import shutil
 import statistics
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -110,7 +109,7 @@ class UBIFSHandler(StructHandler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         endian = get_endian(file, self._BIG_ENDIAN_MAGIC)
         sb_header = self.parse_header(file, endian)
 
@@ -188,7 +187,7 @@ class UBIHandler(Handler):
                 break
         return offset
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         peb_size = self._guess_peb_size(file)
 
         logger.debug("Guessed UBI PEB size", size=peb_size)

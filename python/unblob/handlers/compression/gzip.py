@@ -20,7 +20,6 @@ import io
 import struct
 import zlib
 from pathlib import Path
-from typing import Optional
 
 from structlog import get_logger
 
@@ -86,7 +85,7 @@ class GZIPExtractor(Extractor):
     def get_dependencies(self) -> list[str]:
         return ["7z"]
 
-    def extract(self, inpath: Path, outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         name = get_gzip_embedded_name(inpath) or "gzip.uncompressed"
         extractor = Command("7z", "x", "-y", "{inpath}", "-so", stdout=name)
         return extractor.extract(inpath, outdir)
@@ -96,7 +95,7 @@ class MultiGZIPExtractor(DirectoryExtractor):
     def get_dependencies(self) -> list[str]:
         return ["7z"]
 
-    def extract(self, paths: list[Path], outdir: Path) -> Optional[ExtractResult]:
+    def extract(self, paths: list[Path], outdir: Path) -> ExtractResult | None:
         name = get_gzip_embedded_name(paths[0]) or "gzip.uncompressed"
         extractor = MultiFileCommand(
             "7z", "x", "-p", "-y", "{inpath}", "-so", stdout=name
@@ -153,7 +152,7 @@ class GZIPHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         fp = SingleMemberGzipReader(file)
         if not fp.read_header():
             return None
@@ -210,7 +209,7 @@ class MultiVolumeGzipHandler(DirectoryHandler):
                 return False
         return True
 
-    def calculate_multifile(self, file: Path) -> Optional[MultiFile]:
+    def calculate_multifile(self, file: Path) -> MultiFile | None:
         paths = sorted(
             [p for p in file.parent.glob(f"{file.stem}.*") if p.resolve().exists()]
         )
