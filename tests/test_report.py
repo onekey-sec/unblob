@@ -5,12 +5,14 @@ from unittest.mock import ANY
 from zipfile import ZipFile, ZipInfo
 
 import pytest
+from pydantic_core._pydantic_core import ValidationError
 
 from unblob.models import ProcessResult, Task, TaskResult
 from unblob.processing import ExtractionConfig, process_file
 from unblob.report import (
     CarveDirectoryReport,
     ChunkReport,
+    ExtractCommandFailedReport,
     FileMagicReport,
     HashReport,
     StatReport,
@@ -449,3 +451,21 @@ def get_normalized_task_results(process_result: ProcessResult) -> list[TaskResul
 
 def get_chunk_ids(task_result) -> list[str]:
     return [chunk_report.id for chunk_report in task_result.filter_reports(ChunkReport)]
+
+
+def test_extract_command_failed_invalid():
+    with pytest.raises(ValidationError):
+        ExtractCommandFailedReport(
+            command="test",
+            stdout=1,  # pyright: ignore[reportArgumentType]
+            stderr="",  # pyright: ignore[reportArgumentType]
+            exit_code=1,
+        )
+
+    with pytest.raises(ValidationError):
+        ExtractCommandFailedReport(
+            command="test",
+            stdout="",  # pyright: ignore[reportArgumentType]
+            stderr=1,  # pyright: ignore[reportArgumentType]
+            exit_code=1,
+        )
