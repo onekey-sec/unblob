@@ -256,7 +256,7 @@ class ProcessResult(BaseModel):
     def errors(self) -> list[ErrorReport]:
         reports = itertools.chain.from_iterable(r.reports for r in self.results)
         interesting_reports = (
-            r for r in reports if isinstance(r, (ErrorReport, ChunkReport))
+            r for r in reports if isinstance(r, ErrorReport | ChunkReport)
         )
         errors = []
         for report in interesting_reports:

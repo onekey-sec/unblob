@@ -487,7 +487,7 @@ def get_chunks_distribution(task_results: list) -> dict:
         chunk_reports = [
             report
             for report in task_result.reports
-            if isinstance(report, (ChunkReport, UnknownChunkReport))
+            if isinstance(report, ChunkReport | UnknownChunkReport)
         ]
 
         for chunk_report in chunk_reports:
@@ -541,7 +541,7 @@ def print_scan_report(reports: ProcessResult):
         chunk_reports = [
             report
             for report in task_result.reports
-            if isinstance(report, (ChunkReport, UnknownChunkReport))
+            if isinstance(report, ChunkReport | UnknownChunkReport)
         ]
         chunk_reports.sort(key=lambda x: x.start_offset)
 
