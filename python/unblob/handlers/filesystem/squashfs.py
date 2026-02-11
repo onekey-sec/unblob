@@ -196,6 +196,51 @@ class SquashFSv2Handler(SquashFSv1Handler):
     )
 
 
+class SquashFSv2NonStandardHandler(SquashFSv2Handler):
+    NAME = "squashfs_v2_nonstandard"
+
+    BIG_ENDIAN_MAGIC = 0x73_71_6C_7A
+
+    EXTRACTOR = SquashFSExtractor(2, 0x73_71_6C_7A)
+
+    PATTERNS = [
+        HexString(
+            """
+            // 00000000  73 71 6c 7a 00 00 00 05  00 00 00 00 00 00 00 00  |sqlz............|
+            // 00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 02 00 01  |................|
+            // squashfs_v2_magic_non_standard_be
+            73 71 6c 7a [24] 00 02
+        """
+        ),
+        HexString(
+            """
+            // 00000000  7a 6c 71 73 05 00 00 00  00 00 00 00 00 00 00 00  |zlqs............|
+            // 00000010  00 00 00 00 00 00 00 00  00 00 00 00 02 00 01 00  |................|
+            // squashfs_v2_magic_non_standard_le
+            7a 6c 71 73 [24] 02 00
+        """
+        ),
+    ]
+
+    DOC = HandlerDoc(
+        name="SquashFS (v2-non-standard)",
+        description="SquashFS version 2 is a compressed, read-only file system format designed for minimal storage usage. It is commonly used in embedded systems and early Linux distributions.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="SquashFS Documentation",
+                url="https://dr-emann.github.io/squashfs/",
+            ),
+            Reference(
+                title="SquashFS Wikipedia",
+                url="https://en.wikipedia.org/wiki/SquashFS",
+            ),
+        ],
+        limitations=[],
+    )
+
+
 class SquashFSv3Handler(_SquashFSBase):
     NAME = "squashfs_v3"
 
