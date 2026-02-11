@@ -224,17 +224,3 @@ There is a handy `install-deps.sh` script included in the repository and PyPI pa
         curl -L -o sasquatch_1.0.deb "https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-6/sasquatch_1.0_$(dpkg --print-architecture).deb"
         sudo dpkg -i sasquatch_1.0.deb
         rm sasquatch_1.0.deb
-
-4. We maintain a fork of e2fsprogs based on Debian upstream, with some security fixes. You can install it this way:
-
-        curl -L -o e2fsprogs_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/e2fsprogs_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
-        curl -L -o libext2fs2_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/libext2fs2_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
-        curl -L -o libss2_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/libss2_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
-        sudo dpkg -i libext2fs2_1.47.0-3.ok2.deb libss2_1.47.0-3.ok2.deb
-        sudo dpkg -i e2fsprogs_1.47.0-3.ok2.deb
-        rm -f libext2fs2_1.47.0-3.ok2.deb libss2_1.47.0-3.ok2.deb e2fsprogs_1.47.0-3.ok2.deb
-
-   In case you already had e2fsprogs installed, you might need to upgrade some more packages from e2fsprogs.
-   You can get the names of the installed e2fsprogs binary packages this way:
-
-        sudo dpkg-query -W -f '${db:Status-Abbrev}\t${source:Package}\t${Package}\n' | grep '^i...e2fsprogs' | cut -f3
