@@ -59,6 +59,7 @@
     | [`SQUASHFS (V3-DDWRT)`](#squashfs-v3-ddwrt) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V3-NON-STANDARD)`](#squashfs-v3-non-standard) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V4-BE)`](#squashfs-v4-be) | FILESYSTEM | :octicons-check-16: |
+    | [`SQUASHFS (V4-BROADCOM)`](#squashfs-v4-broadcom) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V4-LE)`](#squashfs-v4-le) | FILESYSTEM | :octicons-check-16: |
     | [`STUFFIT SIT`](#stuffit-sit) | ARCHIVE | :octicons-check-16: |
     | [`STUFFIT SIT (V5)`](#stuffit-sit-v5) | ARCHIVE | :octicons-check-16: |
@@ -1031,6 +1032,23 @@
 
         - **Handler type:** FileSystem
         
+
+    === "References"
+
+        - [SquashFS Documentation](https://dr-emann.github.io/squashfs/){ target="_blank" }
+        - [SquashFS Wikipedia](https://en.wikipedia.org/wiki/SquashFS){ target="_blank" }
+## SquashFS (v4-broadcom)
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        SquashFS version 4 is a compressed, read-only file system format designed for minimal storage usage. It is widely used in embedded systems and Linux distributions for efficient storage and fast access.
+
+        ---
+
+        - **Handler type:** FileSystem
+        - **Vendor:** Broadcom
 
     === "References"
 
