@@ -201,7 +201,7 @@ jobs:
 
       - name: Check wheel (x86-musllinux)
         if: matrix.platform.target == 'x86_64' && startsWith(matrix.platform.manylinux, 'musllinux')
-        uses: addnab/docker-run-action@v3
+        uses: maus007/docker-run-action-fork@v1
         with:
           image: alpine:latest
           options: -v ${{ github.workspace }}:/io -w /io
@@ -215,7 +215,7 @@ jobs:
 
       - name: Check wheel (cross-musllinux)
         if: matrix.platform.target != 'x86_64' && startsWith(matrix.platform.manylinux, 'musllinux')
-        uses: addnab/docker-run-action@v3
+        uses: maus007/docker-run-action-fork@v1
         with:
           image: alpine:latest
           options: -v ${{ github.workspace }}:/io -w /io
