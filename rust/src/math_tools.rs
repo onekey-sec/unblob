@@ -97,6 +97,8 @@ mod tests {
     mod chi_square {
         use super::*;
         use rand::prelude::*;
+        use rand::rngs::SysRng;
+        use rand::SeedableRng;
 
         #[test]
         fn test_non_uniform_distribution() {
@@ -123,7 +125,8 @@ mod tests {
         #[test]
         fn test_random_distribution() {
             let mut random_data = [0u8; 4096];
-            StdRng::from_os_rng().fill_bytes(&mut random_data);
+            let mut rng = StdRng::try_from_rng(&mut SysRng).unwrap();
+            rng.fill_bytes(&mut random_data);
             let chi_square_value = chi_square_probability(&random_data);
 
             assert!(
