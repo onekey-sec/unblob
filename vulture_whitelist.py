@@ -7,6 +7,7 @@ import unblob.plugins
 from unblob import cli
 from unblob.doc import generate_markdown
 from unblob.file_utils import File, FileSystem, iterbits, round_down
+from unblob.handlers.archive.dlink.fpkg import FileType as FPKGFileType
 from unblob.handlers.compression.lzo import HeaderFlags as LZOHeaderFlags
 from unblob.models import (
     Handler,
@@ -90,3 +91,8 @@ UnknownError.model_post_init
 
 ExtractCommandFailedReport.encode_bytes
 ExtractCommandFailedReport.decode_bytes
+
+FPKGFileType.REGULAR_FILE
+FPKGFileType.UNKNOWN
+FPKGFileType.CHECKSUM
+FPKGFileType.SIGNATURE
