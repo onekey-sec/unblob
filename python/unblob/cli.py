@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import atexit
+import re
 import sys
 from collections.abc import Iterable
 from importlib.metadata import version
@@ -162,7 +163,7 @@ def build_handlers_doc(
                 else "octicons-alert-fill-12"
             )
             f.write(
-                f"""    | [`{handler_class.DOC.name.upper()}`](#{slugifier(handler_class.DOC.name, sep="-")}) | {handler_class.DOC.handler_type.name} | :{support_icon}: |\n"""
+                f"""    | [`{handler_class.DOC.name.upper()}`](#{re.sub(r"-{2,}", "-", slugifier(handler_class.DOC.name, sep="-"))}) | {handler_class.DOC.handler_type.name} | :{support_icon}: |\n"""
             )
 
         for handler_class in sorted_handlers:
