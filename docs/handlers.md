@@ -18,6 +18,7 @@
     | [`CRAMFS`](#cramfs) | FILESYSTEM | :octicons-check-16: |
     | [`D-LINK DEAFBEAD`](#d-link-deafbead) | ARCHIVE | :octicons-check-16: |
     | [`D-LINK ENCRPTED_IMG`](#d-link-encrpted_img) | ARCHIVE | :octicons-check-16: |
+    | [`D-LINK FPKG`](#d-link-fpkg) | ARCHIVE | :octicons-check-16: |
     | [`D-LINK SHRS`](#d-link-shrs) | ARCHIVE | :octicons-check-16: |
     | [`DMG`](#dmg) | ARCHIVE | :octicons-check-16: |
     | [`ELF (32-BIT)`](#elf-32-bit) | EXECUTABLE | :octicons-check-16: |
@@ -354,6 +355,20 @@
     === "References"
 
         - [How-To: Extracting Decryption Keys for D-Link](https://www.onekey.com/resource/extracting-decryption-keys-dlink){ target="_blank" }
+## D-Link FPKG
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        CPKG and FPKG are archive formats used in D-Link DFL firewall firmware
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** D-Link
+
+    === "References"
 ## D-Link SHRS
 
 !!! success "Fully supported"

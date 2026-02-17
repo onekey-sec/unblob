@@ -18,7 +18,7 @@ from .archive import (
     zip as ziparchive,
 )
 from .archive.autel import ecc
-from .archive.dlink import deafbead, encrpted_img, shrs
+from .archive.dlink import deafbead, encrpted_img, fpkg, shrs
 from .archive.engeniustech import engenius
 from .archive.hp import bdl, ipkg
 from .archive.instar import bneg, instar_hd
@@ -81,6 +81,7 @@ BUILTIN_HANDLERS: Handlers = (
     trx.NetgearTRXv2Handler,
     encrpted_img.EncrptedHandler,
     shrs.SHRSHandler,
+    fpkg.FPKGHandler,
     hdr.HDR1Handler,
     hdr.HDR2Handler,
     qnap_nas.QnapHandler,
