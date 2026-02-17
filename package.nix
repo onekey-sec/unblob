@@ -12,7 +12,7 @@
   lz4,
   lziprecover,
   lzop,
-  p7zip16,
+  sevenzip,
   partclone,
   sasquatch,
   sasquatch-v4be,
@@ -32,7 +32,7 @@ let
     jefferson
     lziprecover
     lzop
-    p7zip16
+    sevenzip
     sasquatch
     sasquatch-v4be
     ubi_reader
