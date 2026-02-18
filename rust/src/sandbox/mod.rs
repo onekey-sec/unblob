@@ -61,7 +61,7 @@ impl From<&SandboxError> for PySandboxErrorKind {
     }
 }
 
-#[pyclass(name = "AccessFS", module = "unblob_native.sandbox")]
+#[pyclass(from_py_object, name = "AccessFS", module = "unblob_native.sandbox")]
 #[derive(Clone)]
 struct PyAccessFS {
     access: AccessFS,
