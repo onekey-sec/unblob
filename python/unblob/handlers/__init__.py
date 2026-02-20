@@ -23,7 +23,7 @@ from .archive.engeniustech import engenius
 from .archive.hp import bdl, ipkg
 from .archive.instar import bneg, instar_hd
 from .archive.netgear import chk, trx
-from .archive.qnap import qnap_nas
+from .archive.qnap import qnap_nas, qnap_networking
 from .archive.xiaomi import hdr
 from .compression import (
     bzip2,
@@ -85,6 +85,7 @@ BUILTIN_HANDLERS: Handlers = (
     hdr.HDR1Handler,
     hdr.HDR2Handler,
     qnap_nas.QnapHandler,
+    qnap_networking.QnapNetworkingHandler,
     bneg.BNEGHandler,
     bdl.HPBDLHandler,
     instar_hd.InstarHDHandler,
