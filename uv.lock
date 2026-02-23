@@ -1833,14 +1833,15 @@ wheels = [
 
 [[package]]
 name = "ubi-reader"
-version = "0.8.10"
+version = "0.8.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "cryptography" },
     { name = "lzallright" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/0b/3f2d9bc3a831b6a076efdf46dd60eeca00f27aea0bb500bb37686b38d4e3/ubi_reader-0.8.10.tar.gz", hash = "sha256:b2763b85f8b6c68bce592d674aa9e9cadda2939a634f42954518d5c786c60f10", size = 46084, upload-time = "2025-02-10T21:21:19.253Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/8a/bdba8e638538d808cfc6597c7100629fb0582886f7d1e1ad708300ffd9be/ubi_reader-0.8.13.tar.gz", hash = "sha256:1ace0429743ff07b5464d349088cd8869763c13dedf02393c72cbfb5e9dfff74", size = 49681, upload-time = "2026-02-20T09:43:17.682Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8b/e9/76007fe78a62483200a8fbd77bd522c2af3fdd42051b61e3c51c0a0a8f92/ubi_reader-0.8.10-py3-none-any.whl", hash = "sha256:e07c58b2716917defd8212b75435977d0beba50d290ff526f0d11a20bd7162fc", size = 70544, upload-time = "2025-02-10T21:21:17.696Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/47/db65ff3cb426c7a5cdf0b2338b854af10043a768c6733e7bf204d359e4b7/ubi_reader-0.8.13-py3-none-any.whl", hash = "sha256:62c9630ef9cb26aef1e9af648aeacbdb7001d0763ca2b579680d55efffdf9bc8", size = 77013, upload-time = "2026-02-20T09:43:18.746Z" },
 ]
 
 [[package]]
