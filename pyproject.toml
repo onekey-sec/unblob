@@ -42,7 +42,7 @@ unblob = "unblob.cli:main"
 check = [
   "pre-commit>=3.5,<5.0",
   "pyyaml>=6.0.1",
-  "ruff==0.15.1",
+  "ruff==0.15.2",
   "taplo>=0.9.3",
   "vulture>=2.13",
 ]
