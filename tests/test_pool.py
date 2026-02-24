@@ -1,7 +1,14 @@
 import multiprocessing
+import subprocess
+import sys
+import threading
+import time
+from pathlib import Path
+from textwrap import dedent
 
 import pytest
 
+from unblob import pool as pool_module
 from unblob.pool import MultiPool, SinglePool
 
 
@@ -78,3 +85,95 @@ def test_input_cannot_be_submitted_from_worker():
         pool.submit(1)
         with pytest.raises(RuntimeError, match="can only be called"):
             pool.process_until_done()
+
+
+@pytest.fixture
+def reset_shutdown_event():
+    pool_module.shutdown_event.clear()
+    yield
+    pool_module.shutdown_event.clear()
+
+
+@pytest.mark.usefixtures("reset_shutdown_event")
+def test_multipool_request_shutdown_unblocks_process_until_done():
+    def _handler(i):
+        time.sleep(0.5)
+        return i
+
+    def _callback(_pool, _result):
+        pass
+
+    with MultiPool(process_num=1, handler=_handler, result_callback=_callback) as pool:
+        pool.submit(1)
+
+        done = threading.Event()
+
+        def run():
+            pool.process_until_done()
+            done.set()
+
+        t = threading.Thread(target=run)
+        t.start()
+
+        pool_module.shutdown_event.set()
+        pool.request_shutdown()
+
+        t.join(5)
+        assert done.is_set()
+
+
+@pytest.mark.usefixtures("reset_shutdown_event")
+def test_multipool_sigterm_does_not_raise_oserror():
+    repo_root = Path(__file__).resolve().parents[1]
+    code = dedent(
+        """
+        import os
+        import signal
+        import threading
+        import time
+        import sys
+
+        def _noop(_signum, _frame):
+            pass
+
+        signal.signal(signal.SIGTERM, _noop)
+
+        sys.path.insert(0, os.path.abspath("python"))
+
+        from unblob.pool import MultiPool  # noqa: E402
+
+        def _handler(_arg):
+            time.sleep(0.5)
+            return 1
+
+        def _callback(_pool, _result):
+            pass
+
+        with MultiPool(process_num=1, handler=_handler, result_callback=_callback) as pool:
+            pool.submit(1)
+            done = threading.Event()
+
+            def run():
+                pool.process_until_done()
+                done.set()
+
+            t = threading.Thread(target=run)
+            t.start()
+            os.kill(os.getpid(), signal.SIGTERM)
+            t.join(5)
+            assert done.is_set()
+
+        print("ok")
+        """
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0
+    assert "OSError: handle is closed" not in result.stderr
+    assert "ok" in result.stdout

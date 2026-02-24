@@ -10,6 +10,8 @@ from collections.abc import Callable
 from multiprocessing.queues import JoinableQueue
 from typing import Any
 
+from structlog import get_logger
+
 from .logging import multiprocessing_breakpoint
 
 mp.set_start_method("fork")
@@ -35,6 +37,9 @@ class PoolBase(abc.ABC):
         with pools_lock:
             pools.remove(self)
 
+    def request_shutdown(self):
+        pass
+
     def __enter__(self):
         self.start()
         return self
@@ -45,6 +50,8 @@ class PoolBase(abc.ABC):
 
 pools_lock = threading.Lock()
 pools: set[PoolBase] = set()
+shutdown_event = threading.Event()
+logger = get_logger()
 
 
 class Queue(JoinableQueue):
@@ -62,6 +69,13 @@ class _Sentinel:
 
 
 _SENTINEL = _Sentinel
+
+
+class _Control:
+    pass
+
+
+_CONTROL = _Control
 
 
 def _worker_process(handler, input_, output):
@@ -166,10 +180,22 @@ class MultiPool(PoolBase):
             )
         self._input.put(args)
 
+    def request_shutdown(self):
+        if not self._running:
+            return
+        try:
+            self._output.put(_CONTROL)
+        except OSError:
+            pass
+
     def process_until_done(self):
         with contextlib.suppress(EOFError):
             while not self._input.is_empty():
                 result = self._output.get()
+                if result is _CONTROL:
+                    if shutdown_event.is_set():
+                        break
+                    continue
                 self._result_callback(self, result)
                 self._input.task_done()
 
@@ -203,9 +229,11 @@ orig_signal_handlers = {}
 
 
 def _on_terminate(signum, frame):
+    shutdown_event.set()
+    logger.warning("Pool shutdown requested", signal=signum)
     pools_snapshot = list(pools)
     for pool in pools_snapshot:
-        pool.close(immediate=True)
+        pool.request_shutdown()
 
     if callable(orig_signal_handlers[signum]):
         orig_signal_handlers[signum](signum, frame)
