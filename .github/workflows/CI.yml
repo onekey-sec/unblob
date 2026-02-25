@@ -82,24 +82,72 @@ jobs:
     name: Run tests (Python)
     needs: [check_pre_commit, check_pyright]
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:25.10
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
+      - name: Install base tools
+        run: |
+          apt update
+          apt install -y --no-install-recommends \
+            curl git git-lfs ca-certificates \
+            build-essential pkg-config \
+            cargo rustc
+          rm -rf /var/lib/apt/lists/*
+          git lfs install
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        shell: bash
+
       - name: Checkout source code
         uses: actions/checkout@v4
-
-      - name: Setup 3rd party dependencies
-        uses: ./.github/actions/setup-dependencies
-        with:
-          python-version: ${{ matrix.python-version }}
-          uv-groups: "test"
 
       - name: Setup git lfs
         uses: ./.github/actions/setup-git-lfs
 
-      - name: Run pytest
-        run: uv run pytest -vvv
+      - name: Install 3rd party dependencies
+        run: |
+          ./install-deps.sh
+        shell: bash
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+        with:
+          disable_annotations: true
+          version: "v0.12.0"
+
+      - name: Prepare uv cache
+        run: |
+          mkdir -p /tmp/uv-cache
+          chown -R ubuntu:ubuntu /tmp/uv-cache
+          echo "RUNNER_TEMP=/tmp" >> $GITHUB_ENV
+          echo "UV_CACHE_DIR=/tmp/uv-cache" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Enable sccache
+        run: |
+          echo SCCACHE_GHA_ENABLED=true >> $GITHUB_ENV
+          echo RUSTC_WRAPPER=sccache >> $GITHUB_ENV
+        shell: bash
+
+      - name: Install uv & Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install project and run pytest as unprivileged user
+        run: |
+          mkdir -p /home/ubuntu/.cache /home/ubuntu/.local/share
+          chown -R ubuntu:ubuntu /home/ubuntu
+          chown -R ubuntu:ubuntu "$GITHUB_WORKSPACE"
+          uv_bin="$(command -v uv)"
+          env_common="HOME=/home/ubuntu XDG_CACHE_HOME=/home/ubuntu/.cache XDG_DATA_HOME=/home/ubuntu/.local/share UV_PYTHON_DIR=/home/ubuntu/.local/share/uv/python UV_CACHE_DIR=/tmp/uv-cache PATH=$PATH"
+          su -s /bin/bash -c "$env_common $uv_bin sync --no-dev --group test" ubuntu
+          su -s /bin/bash -c "$env_common $uv_bin pip install pip" ubuntu
+          su -s /bin/bash -c "$env_common $uv_bin run pytest -vvv" ubuntu
 
   run_rust_tests:
     name: Run tests (Rust)
