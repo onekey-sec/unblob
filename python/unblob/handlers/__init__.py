@@ -39,7 +39,7 @@ from .compression import (
     zlib,
     zstd,
 )
-from .executable import elf
+from .executable import elf, xalz
 from .filesystem import (
     cramfs,
     extfs,
@@ -128,6 +128,7 @@ BUILTIN_HANDLERS: Handlers = (
     uzip.UZIPHandler,
     erofs.EROFSHandler,
     partclone.PartcloneHandler,
+    xalz.XALZHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (

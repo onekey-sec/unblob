@@ -70,6 +70,7 @@
     | [`UBI`](#ubi) | FILESYSTEM | :octicons-check-16: |
     | [`UBIFS`](#ubifs) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
+    | [`XAMARIN COMPRESSED ASSEMBLIES`](#xamarin-compressed-assemblies) | EXECUTABLE | :octicons-check-16: |
     | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
     | [`XIAOMI HDR2`](#xiaomi-hdr2) | ARCHIVE | :octicons-check-16: |
     | [`XZ`](#xz) | COMPRESSION | :octicons-check-16: |
@@ -1220,6 +1221,22 @@
     === "References"
 
         - [FreeBSD UZIP Documentation](https://github.com/freebsd/freebsd-src/tree/master/sys/geom/uzip){ target="_blank" }
+## Xamarin Compressed assemblies
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Xamarin compressed assemblies are Xamarin DLL compressed with LZ4 + a custom header.
+
+        ---
+
+        - **Handler type:** Executable
+        - **Vendor:** Microsoft
+
+    === "References"
+
+        - [Reverse Engineering a Xamarin Application](https://web.archive.org/web/20250114215653/https://securitygrind.com/reverse-engineering-a-xamarin-application/){ target="_blank" }
 ## Xiaomi HDR1
 
 !!! success "Fully supported"
