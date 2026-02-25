@@ -5,10 +5,9 @@ import attrs
 from pyperscan import Flag, Pattern, Scan, StreamDatabase
 from structlog import get_logger
 
-from unblob.file_utils import File, iterate_file, stream_scan
+from unblob.file_utils import File, stream_scan
 from unblob.models import (
     Endian,
-    Extractor,
     Handler,
     HandlerDoc,
     HandlerType,
@@ -17,7 +16,7 @@ from unblob.models import (
     ValidChunk,
 )
 
-from ._qnap import C_DEFINITIONS, FOOTER_LEN, Cryptor
+from ._qnap import C_DEFINITIONS, FOOTER_LEN, QnapExtractor
 
 logger = get_logger()
 
@@ -72,27 +71,9 @@ def build_stream_end_scan_db(pattern_list):
 hyperscan_stream_end_magic_db = build_stream_end_scan_db(FOOTER_PATTERN)
 
 
-class QnapExtractor(Extractor):
-    def __init__(self):
-        self._struct_parser = StructParser(C_DEFINITIONS)
-
-    def extract(self, inpath: Path, outdir: Path):
-        outpath = outdir.joinpath(f"{inpath.name}.decrypted")
-        with File.from_path(inpath) as file:
-            file.seek(-FOOTER_LEN, io.SEEK_END)
-            header = self._struct_parser.parse("qnap_header_t", file, Endian.LITTLE)
-            eof = file.tell()
-            cryptor = Cryptor(SECRET + header.file_version.decode("utf-8")[0])
-            with outpath.open("wb") as outfile:
-                for chunk in iterate_file(file, 0, header.encrypted_len, 1024):
-                    outfile.write(cryptor.decrypt_chunk(chunk))
-                for chunk in iterate_file(
-                    file,
-                    header.encrypted_len,
-                    eof - FOOTER_LEN - header.encrypted_len,
-                    1024,
-                ):
-                    outfile.write(chunk)
+class QnapNasExtractor(QnapExtractor):
+    def _get_secret(self, header) -> str:
+        return SECRET + header.file_version.decode("utf-8")[0]
 
 
 class QnapHandler(Handler):
@@ -101,7 +82,7 @@ class QnapHandler(Handler):
     PATTERNS = [
         HexString("F5 7B 47 03"),
     ]
-    EXTRACTOR = QnapExtractor()
+    EXTRACTOR = QnapNasExtractor()
 
     DOC = HandlerDoc(
         name="QNAP NAS",

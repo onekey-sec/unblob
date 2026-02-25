@@ -1,6 +1,18 @@
 # Shared infrastructure for QNAP firmware handlers.
+import io
+from pathlib import Path
+
+from unblob.file_utils import File, FileSystem, iterate_file
+from unblob.models import (
+    Endian,
+    ExtractResult,
+    Extractor,
+    StructParser,
+)
 
 FOOTER_LEN = 74
+
+NAS_DEVICE_ID_PREFIX = "QNAPNAS"  # noqa: S105
 
 C_DEFINITIONS = """
     typedef struct qnap_header {
@@ -79,3 +91,30 @@ class Cryptor:
 
     def decrypt_chunk(self, chunk):
         return bytes(map(self.decrypt_byte, chunk))
+
+
+class QnapExtractor(Extractor):
+    def __init__(self):
+        self._struct_parser = StructParser(C_DEFINITIONS)
+
+    def _get_secret(self, header) -> str:
+        raise NotImplementedError
+
+    def extract(self, inpath: Path, outdir: Path) -> ExtractResult:
+        fs = FileSystem(outdir)
+        with File.from_path(inpath) as infile, fs.open(
+            f"{inpath.name}.decrypted", "wb+"
+        ) as outfile:
+            infile.seek(-FOOTER_LEN, io.SEEK_END)
+            header = self._struct_parser.parse("qnap_header_t", infile, Endian.LITTLE)
+            cryptor = Cryptor(self._get_secret(header))
+            for chunk in iterate_file(infile, 0, header.encrypted_len, 1024):
+                outfile.write(cryptor.decrypt_chunk(chunk))
+            for chunk in iterate_file(
+                infile,
+                header.encrypted_len,
+                infile.size() - FOOTER_LEN - header.encrypted_len,
+                1024,
+            ):
+                outfile.write(chunk)
+        return ExtractResult(reports=fs.problems)
