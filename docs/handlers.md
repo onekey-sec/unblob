@@ -44,6 +44,9 @@
     | [`LZIP`](#lzip) | COMPRESSION | :octicons-check-16: |
     | [`LZMA`](#lzma) | COMPRESSION | :octicons-check-16: |
     | [`LZO`](#lzo) | COMPRESSION | :octicons-check-16: |
+    | [`MINIX FS (V1)`](#minix-fs-v1) | FILESYSTEM | :octicons-check-16: |
+    | [`MINIX FS (V2)`](#minix-fs-v2) | FILESYSTEM | :octicons-check-16: |
+    | [`MINIX FS (V3)`](#minix-fs-v3) | FILESYSTEM | :octicons-check-16: |
     | [`MSI`](#msi) | ARCHIVE | :octicons-alert-fill-12: |
     | [`MULTI-SEVENZIP`](#multi-sevenzip) | ARCHIVE | :octicons-check-16: |
     | [`NETGEAR CHK`](#netgear-chk) | ARCHIVE | :octicons-check-16: |
@@ -788,6 +791,60 @@
 
         - [LZO File Format Documentation](http://www.lzop.org/){ target="_blank" }
         - [LZO Wikipedia](https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Oberhumer){ target="_blank" }
+## MINIX FS (v1)
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        MINIX FS is a simple file system format designed as the filesystem of MINIX. MINIX is a UNIX-like operating system, originally developed by Andrew S. Tanenbaum for educational purposes.
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [Official website](https://www.minix3.org/){ target="_blank" }
+        - [Linux headers (minix_fs.h)](https://github.com/torvalds/linux/blob/master/include/uapi/linux/minix_fs.h){ target="_blank" }
+        - [Official tool for creating MINIX filesystems](https://github.com/Stichting-MINIX-Research-Foundation/minix/tree/master/minix/usr.sbin/mkfs.mfs){ target="_blank" }
+## MINIX FS (v2)
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        MINIX FS is a simple file system format designed as the filesystem of MINIX. MINIX is a UNIX-like operating system, originally developed by Andrew S. Tanenbaum for educational purposes.
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [Official website](https://www.minix3.org/){ target="_blank" }
+        - [Linux headers (minix_fs.h)](https://github.com/torvalds/linux/blob/master/include/uapi/linux/minix_fs.h){ target="_blank" }
+        - [Official tool for creating MINIX filesystems](https://github.com/Stichting-MINIX-Research-Foundation/minix/tree/master/minix/usr.sbin/mkfs.mfs){ target="_blank" }
+## MINIX FS (v3)
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        MINIX FS is a simple file system format designed as the filesystem of MINIX. MINIX is a UNIX-like operating system, originally developed by Andrew S. Tanenbaum for educational purposes.
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [Official website](https://www.minix3.org/){ target="_blank" }
+        - [Linux headers (minix_fs.h)](https://github.com/torvalds/linux/blob/master/include/uapi/linux/minix_fs.h){ target="_blank" }
+        - [Official tool for creating MINIX filesystems](https://github.com/Stichting-MINIX-Research-Foundation/minix/tree/master/minix/usr.sbin/mkfs.mfs){ target="_blank" }
 ## MSI
 
 !!! warning "Partially supported"
