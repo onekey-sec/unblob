@@ -53,6 +53,7 @@
     | [`PAR2 (MULTI-VOLUME)`](#par2-multi-volume) | ARCHIVE | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
+    | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
@@ -933,6 +934,23 @@
         - **Vendor:** QNAP
 
     === "References"
+## QNAP Networking
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        QNAP networking device firmware encrypted with the PC1 cipher. The encryption key is self-describing: it is stored as the device_id in the 74-byte 'icpnas' footer appended to the image, unlike NAS firmware which uses a shared secret prefix.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** QNAP
+
+    === "References"
+
+        - [Pwn2Own Ireland 2024: QNAP Qhora-322](https://neodyme.io/en/blog/pwn2own-2024_qhora/){ target="_blank" }
+        - [QNAP firmware encryption/decryption (PC1)](https://gist.github.com/galaxy4public/0420c7c9a8e3ff860c8d5dce430b2669){ target="_blank" }
 ## RAR
 
 !!! warning "Partially supported"
