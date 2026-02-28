@@ -16,6 +16,8 @@
     | [`CPIO (PORTABLE ASCII)`](#cpio-portable-ascii) | ARCHIVE | :octicons-check-16: |
     | [`CPIO (PORTABLE OLD ASCII)`](#cpio-portable-old-ascii) | ARCHIVE | :octicons-check-16: |
     | [`CRAMFS`](#cramfs) | FILESYSTEM | :octicons-check-16: |
+    | [`D-LINK ALPHA ENCIMG V1 FIRMWARE`](#d-link-alpha-encimg-v1-firmware) | ARCHIVE | :octicons-check-16: |
+    | [`D-LINK ALPHA ENCIMG V2 FIRMWARE`](#d-link-alpha-encimg-v2-firmware) | ARCHIVE | :octicons-check-16: |
     | [`D-LINK DEAFBEAD`](#d-link-deafbead) | ARCHIVE | :octicons-check-16: |
     | [`D-LINK ENCRPTED_IMG`](#d-link-encrpted_img) | ARCHIVE | :octicons-check-16: |
     | [`D-LINK FPKG`](#d-link-fpkg) | ARCHIVE | :octicons-check-16: |
@@ -326,6 +328,40 @@
 
         - [CramFS Documentation](https://web.archive.org/web/20160304053532/http://sourceforge.net/projects/cramfs/){ target="_blank" }
         - [CramFS Wikipedia](https://en.wikipedia.org/wiki/Cramfs){ target="_blank" }
+## D-Link Alpha encimg V1 Firmware
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Encrypted firmware images found in D-Link DIR devices manufactured by Alpha Networks.Uses AES-256-CBC encryption with device-specific keys.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** D-Link
+
+    === "References"
+
+        - [OpenWRT forum](https://forum.openwrt.org/t/adding-openwrt-support-for-d-link-dir-x1860-mt7621-mt7915-ax1800/106500){ target="_blank" }
+        - [delink tool](https://github.com/devttys0/delink/blob/main/src/encimg.rs){ target="_blank" }
+## D-Link Alpha encimg v2 Firmware
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Encrypted firmware images found in D-Link DIR devices manufactured by Alpha Networks.Uses AES-256-CBC encryption with device-specific keys.Unlike the other variant, this one uses a prepended unencrypted WRGG03 header.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** D-Link
+
+    === "References"
+
+        - [OpenWRT Wiki](https://openwrt.org/toh/d-link/d-link_dap_series_of_business_access_points#old_generation_dap-2xxxdap-3xxx_built_by_alpha_networks){ target="_blank" }
+        - [delink tool](https://github.com/devttys0/delink/blob/main/src/encimg.rs){ target="_blank" }
 ## D-Link DEAFBEAD
 
 !!! success "Fully supported"
