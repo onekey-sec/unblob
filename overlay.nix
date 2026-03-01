@@ -8,30 +8,71 @@ final: prev:
     nativeCheckInputs = (super.nativeCheckInputs or [ ]) ++ [ final.which ];
   });
 
-  p7zip16 = prev.p7zip.overrideAttrs (super: rec {
-    pname = "p7zip16";
-    version = "16.02";
-    srcs = [
-      (final.fetchurl {
-        url = "mirror://sourceforge/p7zip/p7zip_${version}_src_all.tar.bz2";
-        sha256 = "5eb20ac0e2944f6cb9c2d51dd6c4518941c185347d4089ea89087ffdd6e2341f";
-      })
-      (final.fetchurl {
-        url = "http://deb.debian.org/debian/pool/main/p/p7zip/p7zip_${version}+dfsg-8.debian.tar.xz";
-        sha256 = "sha256-ASF9yhZnrw3kiTWlHcRqrUQubryseZ1xQQG37fllHrU=";
-      })
-    ];
-    sourceRoot = "p7zip_${version}";
-    nativeBuildInputs = (super.nativeBuildInputs or [ ]) ++ [ final.quilt ];
-    prePatch = ''
-      export QUILT_PATCHES=../debian/patches
-      quilt push -a
-    '';
-    # orig had `src` attribute, but we are using `srcs`. This trips a warning.
-    __intentionallyOverridingVersion = true;
+  sevenzip = final.stdenvNoCC.mkDerivation rec {
+    pname = "sevenzip";
+    version = "26.00";
 
-    separateDebugInfo = true;
-  });
+    src =
+      let
+        baseUrl = "https://www.7-zip.org/a";
+        versionNoDots = final.lib.replaceStrings [ "." ] [ "" ] version;
+        sources = {
+          x86_64-linux = {
+            url = "${baseUrl}/7z${versionNoDots}-linux-x64.tar.xz";
+            sha256 = "sha256-x03EpISSzeQ/X+wQ1T+ypm9SDkpipp1jDETLIsR37cY=";
+          };
+          aarch64-linux = {
+            url = "${baseUrl}/7z${versionNoDots}-linux-arm64.tar.xz";
+            sha256 = "sha256-qo89ChmvlnTTrw7HiLTiYVAQceYmzXWtFJ8cLBdsyH0=";
+          };
+          x86_64-darwin = {
+            url = "${baseUrl}/7z${versionNoDots}-mac.tar.xz";
+            sha256 = "sha256-ii6nNLUrLLfVaPXxPgoTe+owBLIhvb7lMZdyipBRyEk=";
+          };
+          aarch64-darwin = {
+            url = "${baseUrl}/7z${versionNoDots}-mac.tar.xz";
+            sha256 = "sha256-ii6nNLUrLLfVaPXxPgoTe+owBLIhvb7lMZdyipBRyEk=";
+          };
+        };
+      in
+      final.fetchurl sources."${final.stdenv.targetPlatform.system}";
+
+    sourceRoot = ".";
+    dontConfigure = true;
+    dontBuild = true;
+
+    nativeBuildInputs = final.lib.optionals final.stdenvNoCC.isLinux [
+      final.autoPatchelfHook
+    ];
+
+    buildInputs = final.lib.optionals final.stdenvNoCC.isLinux [
+      final.stdenv.cc.cc.lib
+    ];
+
+    installPhase = ''
+      runHook preInstall
+
+      mkdir -p "$out/bin" "$out/share/doc/7zip"
+      install -m755 7zz "$out/bin/"
+      if [ -f 7zzs ]; then
+        install -m755 7zzs "$out/bin/"
+      fi
+      ln -s 7zz "$out/bin/7z"
+
+      install -m644 License.txt readme.txt History.txt "$out/share/doc/7zip/"
+
+      runHook postInstall
+    '';
+
+    meta = {
+      platforms = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+    };
+  };
 
   unblob = final.callPackage ./package.nix { };
 }
