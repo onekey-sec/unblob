@@ -33,5 +33,15 @@ final: prev:
     separateDebugInfo = true;
   });
 
+  erofs-utils = prev.erofs-utils.overrideAttrs (_: rec {
+    version = "1.8.10";
+    src = final.fetchFromGitHub {
+      owner = "erofs";
+      repo = "erofs-utils";
+      rev = "v${version}";
+      sha256 = "1qlig9q1fdjl0zn7206dbv7w5ssjg4az4hg7y3vk69ly0zbmwkil";
+    };
+  });
+
   unblob = final.callPackage ./package.nix { };
 }
