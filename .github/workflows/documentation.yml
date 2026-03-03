@@ -6,12 +6,17 @@ on:
       - main
       - docs
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install uv & Python
         uses: astral-sh/setup-uv@v6

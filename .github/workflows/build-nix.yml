@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - main
+permissions:
+  contents: read
+
 jobs:
   build:
     strategy:
@@ -22,6 +25,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Setup git lfs
         uses: ./.github/actions/setup-git-lfs
       - uses: cachix/install-nix-action@v31
