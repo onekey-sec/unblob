@@ -45,6 +45,9 @@ jobs:
         with:
           install_url: https://releases.nixos.org/nix/nix-2.18.8/install
 
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+
       - name: Check pre-commit hook
         uses: pre-commit/action@v3.0.1
 

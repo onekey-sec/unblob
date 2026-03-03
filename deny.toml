@@ -1,0 +1,69 @@
+# cargo-deny configuration for unblob
+# https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+# Only check dependencies for the host platform (linux) and any targets
+# explicitly used in the workspace.
+targets = [
+  { triple = "aarch64-apple-darwin" },
+  { triple = "aarch64-unknown-linux-gnu" },
+  { triple = "x86_64-apple-darwin" },
+  { triple = "x86_64-unknown-linux-gnu" },
+  { triple = "x86_64-unknown-linux-musl" },
+]
+
+# ---------------------------------------------------------------------------
+# Advisories
+# ---------------------------------------------------------------------------
+[advisories]
+# The RustSec advisory database is used as the default source.
+# https://github.com/RustSec/advisory-db
+version = 2
+# Lint level for crates that have been yanked from their source registry
+yanked = "warn"
+
+# ---------------------------------------------------------------------------
+# Licenses
+# ---------------------------------------------------------------------------
+[licenses]
+version = 2
+# Only allow licenses that are compatible with the MIT license of this project.
+allow = [
+  "Apache-2.0 WITH LLVM-exception",
+  "Apache-2.0",
+  "MIT",
+  "Unicode-3.0",
+]
+# Confidence threshold for license detection (0.0 - 1.0)
+confidence-threshold = 0.8
+
+[[licenses.clarify]]
+# ring has a non-standard license — clarify if/when it's added as a dep
+expression = "MIT AND ISC AND OpenSSL"
+license-files = [
+  { path = "LICENSE", hash = 0xbd0eed23 },
+]
+name = "ring"
+
+# ---------------------------------------------------------------------------
+# Bans
+# ---------------------------------------------------------------------------
+[bans]
+# Lint level for when multiple versions of the same crate are detected
+multiple-versions = "warn"
+# Lint level for when a crate marked as `[patch]` is used
+wildcards = "allow"
+# Do not allow the following crates at all
+deny = []
+
+# ---------------------------------------------------------------------------
+# Sources
+# ---------------------------------------------------------------------------
+[sources]
+# Lint level for what to happen when a crate from a crate registry that is
+# not in the allow list is encountered
+unknown-registry = "deny"
+# Lint level for what to happen when a crate from a git repository that is
+# not in the allow list is encountered
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+unknown-git = "deny"

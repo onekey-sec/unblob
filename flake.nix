@@ -108,6 +108,7 @@
               statix
               libz
               cargo
+              cargo-deny
               clippy
               rustc
               just
