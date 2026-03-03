@@ -169,7 +169,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist
+          args: --release --out dist -i python3.10
           sccache: "true"
           manylinux: ${{ matrix.platform.manylinux }}
 
@@ -253,7 +253,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist
+          args: --release --out dist -i python3.10
           sccache: "true"
 
       - name: Upload wheels
