@@ -23,7 +23,7 @@ runs:
       shell: bash
 
     - name: Setup sccache # for speeding up Rust builds
-      uses: mozilla-actions/sccache-action@v0.0.9
+      uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
       with:
         disable_annotations: true # it is very spammy, but useful for diagnostics
 
@@ -34,7 +34,7 @@ runs:
       shell: bash
 
     - name: Install uv & Python
-      uses: astral-sh/setup-uv@v6
+      uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
       with:
         enable-cache: true
         cache-dependency-glob: "uv.lock"
