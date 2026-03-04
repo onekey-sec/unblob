@@ -236,9 +236,9 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - runner: macos-15-intel
+          - runner: macos-26-intel
             target: x86_64
-          - runner: macos-15
+          - runner: macos-26
             target: aarch64
     steps:
       - name: Checkout source code
