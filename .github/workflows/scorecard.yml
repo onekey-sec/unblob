@@ -1,0 +1,47 @@
+name: OpenSSF Scorecard
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Run weekly on Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  # Needed to upload results to Security tab
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  scorecard:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed to upload the results to the Security tab
+      security-events: write
+      # Needed for GitHub OIDC token (if using Sigstore)
+      id-token: write
+      # Needed to read the repository contents
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard analysis
+        uses: ossf/scorecard-action@62b2cac7ed8198b15735ed49ab1e5cf35480ba46 # v2.4.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Publish results to OpenSSF for badge generation.
+          # Remove this if you prefer not to publish results publicly.
+          publish_results: true
+
+      - name: Upload Scorecard results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@ae9ef3a1d2e3413523c3741725c30064970cc0d4 # v3.32.5
+        with:
+          sarif_file: results.sarif
+          category: scorecard

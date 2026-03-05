@@ -69,6 +69,12 @@ repos:
         language: system
         pass_filenames: false
         types: [rust]
+      - id: cargo-deny
+        name: Check rust (cargo deny)
+        entry: cargo deny check
+        language: system
+        pass_filenames: false
+
 
   - repo: https://github.com/jendrikseipp/vulture
     rev: v2.14

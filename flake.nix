@@ -108,7 +108,9 @@
               statix
               libz
               cargo
+              cargo-deny
               clippy
+              pinact
               rustc
               just
 

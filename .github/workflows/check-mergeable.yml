@@ -4,6 +4,9 @@ on:
   pull_request:
   merge_group:
 
+permissions:
+  contents: read
+
 jobs:
   check_branch_history:
     # We need this job to be scheduled for merge groups as well, as it
@@ -14,8 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }} # otherwise, it'd create a merge commit
           fetch-depth: "0"
       - name: Check HEAD is rebased on ${{ github.event.pull_request.base.ref }}
