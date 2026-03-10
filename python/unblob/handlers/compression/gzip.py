@@ -152,7 +152,7 @@ class GZIPHandler(Handler):
         limitations=[],
     )
 
-    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
+    def _read_member_end_offset(self, file: File) -> int | None:
         fp = SingleMemberGzipReader(file)
         if not fp.read_header():
             return None
@@ -164,9 +164,28 @@ class GZIPHandler(Handler):
 
         file.seek(GZIP2_FOOTER_LEN - len(fp.unused_data), io.SEEK_CUR)
 
+        return file.tell()
+
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
+        end_offset = self._read_member_end_offset(file)
+        if end_offset is None:
+            return None
+
+        while end_offset < file.size():
+            try:
+                next_end_offset = self._read_member_end_offset(file)
+            except (gzip.BadGzipFile, InvalidInputFormat):
+                # Stop at the last valid member if a later member-like sequence is malformed.
+                break
+
+            if next_end_offset is None:
+                break
+
+            end_offset = next_end_offset
+
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=file.tell(),
+            end_offset=end_offset,
         )
 
 
