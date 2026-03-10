@@ -219,9 +219,10 @@ class MultiPool(PoolBase):
     def _format_exit_code(exit_code: int | None) -> str:
         if exit_code is not None and exit_code < 0:
             signum = -exit_code
-            with contextlib.suppress(ValueError):
+            try:
                 return f"killed by signal {signal.Signals(signum).name} ({signum})"
-            return f"killed by signal {signum}"
+            except ValueError:
+                return f"killed by signal {signum}"
 
         return f"exited with code {exit_code}"
 
