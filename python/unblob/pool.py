@@ -139,17 +139,19 @@ class MultiPool(PoolBase):
         self._running = False
         immediate = immediate or self._worker_failure is not None
 
-        if immediate:
-            self._terminate_workers()
-        else:
-            self._clear_input_queue()
-            self._request_workers_to_quit()
-            self._clear_output_queue()
+        try:
+            if immediate:
+                self._terminate_workers()
+            else:
+                self._clear_input_queue()
+                self._request_workers_to_quit()
+                self._clear_output_queue()
+        finally:
+            self._wait_for_workers_to_quit()
+            super().close(immediate=immediate)
 
-        self._wait_for_workers_to_quit()
         if not immediate:
             self._raise_if_worker_failed()
-        super().close(immediate=immediate)
 
     def _terminate_workers(self):
         for proc in self._procs:
