@@ -1,4 +1,6 @@
 import multiprocessing
+import os
+import signal
 import subprocess
 import sys
 import threading
@@ -9,7 +11,7 @@ from textwrap import dedent
 import pytest
 
 from unblob import pool as pool_module
-from unblob.pool import MultiPool, SinglePool
+from unblob.pool import MultiPool, SinglePool, WorkerDiedError
 
 
 def test_singlepool():
@@ -177,3 +179,21 @@ def test_multipool_sigterm_does_not_raise_oserror():
     assert result.returncode == 0
     assert "OSError: handle is closed" not in result.stderr
     assert "ok" in result.stdout
+
+
+def test_multipool_raises_when_worker_dies(monkeypatch):
+    def kill_worker(_):
+        os.kill(os.getpid(), signal.SIGKILL)
+
+    monkeypatch.setattr(MultiPool, "_result_poll_interval", 0.01)
+
+    pool = MultiPool(
+        process_num=1,
+        handler=kill_worker,
+        result_callback=lambda *_args: None,
+    )
+
+    with pool:
+        pool.submit(1)
+        with pytest.raises(WorkerDiedError, match="SIGKILL"):
+            pool.process_until_done()

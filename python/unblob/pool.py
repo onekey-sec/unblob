@@ -71,6 +71,10 @@ class _Sentinel:
 _SENTINEL = _Sentinel
 
 
+class WorkerDiedError(RuntimeError):
+    """Raised when a worker process exits before producing its queued result."""
+
+
 class _Control:
     pass
 
@@ -96,6 +100,8 @@ def _worker_process(handler, input_, output):
 
 
 class MultiPool(PoolBase):
+    _result_poll_interval = 0.1
+
     def __init__(
         self,
         process_num: int,
@@ -108,6 +114,7 @@ class MultiPool(PoolBase):
             raise ValueError("At process_num must be greater than 0")
 
         self._running = False
+        self._worker_failure: WorkerDiedError | None = None
         self._result_callback = result_callback
         self._input = Queue(ctx=mp.get_context())
         self._input.cancel_join_thread()
@@ -130,6 +137,7 @@ class MultiPool(PoolBase):
         if not self._running:
             return
         self._running = False
+        immediate = immediate or self._worker_failure is not None
 
         if immediate:
             self._terminate_workers()
@@ -139,6 +147,8 @@ class MultiPool(PoolBase):
             self._clear_output_queue()
 
         self._wait_for_workers_to_quit()
+        if not immediate:
+            self._raise_if_worker_failed()
         super().close(immediate=immediate)
 
     def _terminate_workers(self):
@@ -149,28 +159,69 @@ class MultiPool(PoolBase):
         self._output.close()
 
     def _clear_input_queue(self):
-        try:
+        with contextlib.suppress(queue.Empty):
             while True:
                 self._input.get_nowait()
-        except queue.Empty:
-            pass
 
     def _request_workers_to_quit(self):
-        for _ in self._procs:
+        for _ in self._alive_procs():
             self._input.put(_SENTINEL)
         self._input.close()
 
     def _clear_output_queue(self):
         process_quit_count = 0
-        process_num = len(self._procs)
+        process_num = len(self._alive_procs())
         while process_quit_count < process_num:
-            result = self._output.get()
+            result = self._get_result_or_raise_if_worker_failed()
             if result is _SENTINEL:
                 process_quit_count += 1
 
     def _wait_for_workers_to_quit(self):
         for p in self._procs:
             p.join()
+
+    def _alive_procs(self) -> list[mp.Process]:
+        return [proc for proc in self._procs if proc.exitcode is None]
+
+    def _get_result(self):
+        while True:
+            if self._output._reader.poll(self._result_poll_interval):  # type: ignore[attr-defined]  # noqa: SLF001
+                return self._output.get()
+            self._raise_if_worker_exited()
+
+    def _get_result_or_raise_if_worker_failed(self):
+        while True:
+            if self._output._reader.poll(self._result_poll_interval):  # type: ignore[attr-defined]  # noqa: SLF001
+                return self._output.get()
+            self._raise_if_worker_failed()
+
+    def _raise_if_worker_exited(self):
+        for proc in self._procs:
+            if proc.exitcode is not None:
+                raise self._worker_failure_for(proc)
+
+    def _raise_if_worker_failed(self):
+        for proc in self._procs:
+            if proc.exitcode not in (None, 0):
+                raise self._worker_failure_for(proc)
+
+    def _worker_failure_for(self, proc: mp.Process) -> WorkerDiedError:
+        if self._worker_failure is None:
+            self._worker_failure = WorkerDiedError(
+                f"Worker process {proc.pid} exited unexpectedly "
+                f"({self._format_exit_code(proc.exitcode)})"
+            )
+        return self._worker_failure
+
+    @staticmethod
+    def _format_exit_code(exit_code: int | None) -> str:
+        if exit_code is not None and exit_code < 0:
+            signum = -exit_code
+            with contextlib.suppress(ValueError):
+                return f"killed by signal {signal.Signals(signum).name} ({signum})"
+            return f"killed by signal {signum}"
+
+        return f"exited with code {exit_code}"
 
     def submit(self, args):
         if threading.get_native_id() != self._tid:
@@ -183,15 +234,13 @@ class MultiPool(PoolBase):
     def request_shutdown(self):
         if not self._running:
             return
-        try:
+        with contextlib.suppress(OSError):
             self._output.put(_CONTROL)
-        except OSError:
-            pass
 
     def process_until_done(self):
         with contextlib.suppress(EOFError):
             while not self._input.is_empty():
-                result = self._output.get()
+                result = self._get_result()
                 if result is _CONTROL:
                     if shutdown_event.is_set():
                         break
