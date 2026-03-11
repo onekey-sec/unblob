@@ -1,13 +1,16 @@
 import abc
+import atexit
 import contextlib
+import fcntl
 import multiprocessing as mp
+import multiprocessing.connection
 import os
 import queue
 import signal
 import sys
 import threading
 from collections.abc import Callable
-from multiprocessing.queues import JoinableQueue
+from multiprocessing.queues import JoinableQueue, SimpleQueue
 from typing import Any
 
 from .logging import multiprocessing_breakpoint
@@ -16,10 +19,6 @@ mp.set_start_method("fork")
 
 
 class PoolBase(abc.ABC):
-    def __init__(self):
-        with pools_lock:
-            pools.add(self)
-
     @abc.abstractmethod
     def submit(self, args):
         pass
@@ -31,9 +30,8 @@ class PoolBase(abc.ABC):
     def start(self):
         pass
 
-    def close(self, *, immediate=False):  # noqa: ARG002
-        with pools_lock:
-            pools.remove(self)
+    def close(self, *, immediate=False):
+        pass
 
     def __enter__(self):
         self.start()
@@ -41,10 +39,6 @@ class PoolBase(abc.ABC):
 
     def __exit__(self, exc_type, _exc_value, _tb):
         self.close(immediate=exc_type is not None)
-
-
-pools_lock = threading.Lock()
-pools: set[PoolBase] = set()
 
 
 class Queue(JoinableQueue):
@@ -57,6 +51,12 @@ class Queue(JoinableQueue):
             return self._unfinished_tasks._semlock._is_zero()  # type: ignore  # noqa: SLF001
 
 
+class ResultQueue(SimpleQueue):
+    @property
+    def reader(self) -> multiprocessing.connection.Connection:
+        return self._reader  # type: ignore
+
+
 class _Sentinel:
     pass
 
@@ -64,15 +64,35 @@ class _Sentinel:
 _SENTINEL = _Sentinel
 
 
-def _worker_process(handler, input_, output):
+class WorkerDiedError(RuntimeError):
+    pass
+
+
+def _worker_process(handler, input_, output, lifeline_worker_side, lifeline_host_side):
     # Creates a new process group, making sure no signals are
     # propagated from the main process to the worker processes.
     os.setpgrp()
 
     # Restore default signal handlers, otherwise workers would inherit
-    # them from main process
+    # them from main process. When used as a library, the hosting app
+    # is free to set-up its own signal handlers.
     signal.signal(signal.SIGTERM, signal.SIG_DFL)
     signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    os.close(  # forked processes inherit open files, we don't need the host FD
+        lifeline_host_side
+    )
+
+    def _exit_on_parent_death():
+        os.read(lifeline_worker_side, 1)
+        # We cannot really do anything about this, best to reliably
+        # abort the process
+        os._exit(1)
+
+    parent_liveness_monitor = threading.Thread(
+        target=_exit_on_parent_death, daemon=True
+    )
+    parent_liveness_monitor.start()
 
     sys.breakpointhook = multiprocessing_breakpoint
     while (args := input_.get()) is not _SENTINEL:
@@ -89,7 +109,6 @@ class MultiPool(PoolBase):
         *,
         result_callback: Callable[["MultiPool", Any], Any],
     ):
-        super().__init__()
         if process_num <= 0:
             raise ValueError("At process_num must be greater than 0")
 
@@ -97,11 +116,22 @@ class MultiPool(PoolBase):
         self._result_callback = result_callback
         self._input = Queue(ctx=mp.get_context())
         self._input.cancel_join_thread()
-        self._output = mp.SimpleQueue()
+        self._output = ResultQueue(ctx=mp.get_context())
+        # see search results for "death-pipe" or "forkfd concept"
+        (self._lifeline_worker_side, self._lifeline_host_side) = os.pipe()
+        fcntl.fcntl(self._lifeline_host_side, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
+        fcntl.fcntl(self._lifeline_worker_side, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
+
         self._procs = [
             mp.Process(
                 target=_worker_process,
-                args=(handler, self._input, self._output),
+                args=(
+                    handler,
+                    self._input,
+                    self._output,
+                    self._lifeline_worker_side,
+                    self._lifeline_host_side,
+                ),
             )
             for _ in range(process_num)
         ]
@@ -111,21 +141,46 @@ class MultiPool(PoolBase):
         self._running = True
         for p in self._procs:
             p.start()
+        # We are the host process, we don't need this anymore.
+        # Had to keep the file alive until inherited by the forked subprocess
+        os.close(self._lifeline_worker_side)
+        atexit.register(self._close_immediate)
+
+    def _any_worker_exited(self) -> bool:
+        sentinels = [p.sentinel for p in self._procs]
+        return bool(multiprocessing.connection.wait(sentinels, timeout=0))
 
     def close(self, *, immediate=False):
         if not self._running:
             return
         self._running = False
+        atexit.unregister(self._close_immediate)
+        immediate = immediate or self._any_worker_exited()
+
+        termination_exception = None
+        if not immediate:
+            try:
+                self._clear_input_queue()
+                self._request_workers_to_quit()
+                self._clear_output_queue()
+            except BaseException as exc:
+                termination_exception = exc
+                immediate = True
 
         if immediate:
             self._terminate_workers()
-        else:
-            self._clear_input_queue()
-            self._request_workers_to_quit()
-            self._clear_output_queue()
 
         self._wait_for_workers_to_quit()
-        super().close(immediate=immediate)
+
+        # closing this FD any sooner would cause workers to abort
+        # immediately, should close only after workers quit
+        os.close(self._lifeline_host_side)
+
+        if termination_exception:
+            raise termination_exception
+
+    def _close_immediate(self):
+        self.close(immediate=True)
 
     def _terminate_workers(self):
         for proc in self._procs:
@@ -135,24 +190,25 @@ class MultiPool(PoolBase):
         self._output.close()
 
     def _clear_input_queue(self):
-        try:
+        with contextlib.suppress(queue.Empty):
             while True:
                 self._input.get_nowait()
-        except queue.Empty:
-            pass
 
     def _request_workers_to_quit(self):
-        for _ in self._procs:
+        for proc in self._procs:
+            if proc.exitcode is not None:
+                continue
             self._input.put(_SENTINEL)
         self._input.close()
 
     def _clear_output_queue(self):
-        process_quit_count = 0
-        process_num = len(self._procs)
-        while process_quit_count < process_num:
-            result = self._output.get()
-            if result is _SENTINEL:
-                process_quit_count += 1
+        alive = {p.sentinel: p for p in self._procs if p.exitcode is None}
+        while alive:
+            ready = multiprocessing.connection.wait([self._output.reader, *alive])
+            for fd in ready:
+                alive.pop(fd, None)  # type: ignore[arg-type]
+            if self._output.reader in ready:
+                self._output.get()
 
     def _wait_for_workers_to_quit(self):
         for p in self._procs:
@@ -166,17 +222,37 @@ class MultiPool(PoolBase):
             )
         self._input.put(args)
 
+    def _check_worker_deaths(self, sentinels, ready):
+        for fd in ready:
+            if fd not in sentinels:
+                continue
+            proc = sentinels.pop(fd)
+            if proc.exitcode != 0:
+                exitcode = proc.exitcode
+                if exitcode is not None and exitcode < 0:
+                    reason = f"killed by signal {-exitcode}"
+                else:
+                    reason = f"exited with code {exitcode}"
+                raise WorkerDiedError(
+                    f"Worker process {proc.pid} exited unexpectedly ({reason})"
+                )
+
     def process_until_done(self):
+        sentinels = {p.sentinel: p for p in self._procs}
         with contextlib.suppress(EOFError):
             while not self._input.is_empty():
-                result = self._output.get()
-                self._result_callback(self, result)
-                self._input.task_done()
+                ready = multiprocessing.connection.wait(
+                    [self._output.reader, *sentinels]
+                )
+                self._check_worker_deaths(sentinels, ready)
+                if self._output.reader in ready:
+                    result = self._output.get()
+                    self._result_callback(self, result)
+                    self._input.task_done()
 
 
 class SinglePool(PoolBase):
     def __init__(self, handler, *, result_callback):
-        super().__init__()
         self._handler = handler
         self._result_callback = result_callback
 
@@ -197,19 +273,3 @@ def make_pool(process_num, handler, result_callback) -> SinglePool | MultiPool:
         handler=handler,
         result_callback=result_callback,
     )
-
-
-orig_signal_handlers = {}
-
-
-def _on_terminate(signum, frame):
-    pools_snapshot = list(pools)
-    for pool in pools_snapshot:
-        pool.close(immediate=True)
-
-    if callable(orig_signal_handlers[signum]):
-        orig_signal_handlers[signum](signum, frame)
-
-
-orig_signal_handlers[signal.SIGTERM] = signal.signal(signal.SIGTERM, _on_terminate)
-orig_signal_handlers[signal.SIGINT] = signal.signal(signal.SIGINT, _on_terminate)
