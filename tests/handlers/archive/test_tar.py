@@ -1,6 +1,10 @@
+import io
+import tarfile
+
 import pytest
 
 from unblob.file_utils import File
+from unblob.handlers.archive._safe_tarfile import SafeTarFile, open_safe_tarfile
 from unblob.handlers.archive.tar import (
     TarUnixHandler,
     TarUstarHandler,
@@ -190,6 +194,37 @@ PADDING_AFTER_END_OF_ARCHIVE = unhex(
 )
 
 
+def _set_tar_checksum(header: bytearray):
+    header[148:156] = b" " * 8
+    checksum = sum(header)
+    header[148:156] = f"{checksum:06o}\0 ".encode()
+
+
+def _build_gnu_tar_with_timestamp_prefix() -> bytes:
+    info = tarfile.TarInfo("Vagrantfile")
+    info.mode = 0o644
+    info.uid = 0
+    info.gid = 0
+    info.size = 0
+    info.mtime = int("13327342752", 8)
+
+    header = bytearray(info.tobuf(format=tarfile.GNU_FORMAT))
+    prefix = b"13327342752\x0013327342752"
+    header[345:500] = prefix.ljust(155, b"\0")
+    _set_tar_checksum(header)
+    return bytes(header) + (b"\0" * tarfile.BLOCKSIZE * 2)
+
+
+def _build_ustar_prefixed_tar(path: str) -> bytes:
+    info = tarfile.TarInfo(path)
+    info.mode = 0o644
+    info.uid = 0
+    info.gid = 0
+    info.size = 0
+    info.mtime = 0
+    return info.tobuf(format=tarfile.USTAR_FORMAT) + (b"\0" * tarfile.BLOCKSIZE * 2)
+
+
 @pytest.mark.parametrize(
     "contents, expected_length, message",
     [
@@ -350,6 +385,31 @@ def test_different_blocking_factor():
     content = File.from_bytes(X9216_TAR_BLOCKING_1)
     assert len(content) == 0x2A00
     assert _get_tar_end_offset(content) == len(content)
+
+
+def test_extractall_ignores_gnu_timestamp_prefix(tmp_path):
+    tar_path = tmp_path / "broken-gnu.tar"
+    tar_path.write_bytes(_build_gnu_tar_with_timestamp_prefix())
+
+    extractor = SafeTarFile(tar_path)
+    try:
+        extractor.extractall(tmp_path / "extract")  # noqa: S202
+    finally:
+        extractor.close()
+
+    assert extractor.reports == []
+    assert (tmp_path / "extract" / "Vagrantfile").is_file()
+    assert not (tmp_path / "extract" / "13327342752").exists()
+
+
+def test_open_safe_tarfile_keeps_ustar_prefix_paths():
+    path = f"{'prefix' * 10}/{'nested-file-name' * 3}.txt"
+    archive = _build_ustar_prefixed_tar(path)
+
+    with open_safe_tarfile(fileobj=io.BytesIO(archive), mode="r:") as tf:
+        members = tf.getmembers()
+
+    assert [member.name for member in members] == [path]
 
 
 @pytest.mark.parametrize(
