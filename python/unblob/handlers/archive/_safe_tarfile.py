@@ -96,6 +96,11 @@ class SafeTarFile:
         self.inpath = inpath
         self.reports = []
         self.tarfile = open_safe_tarfile(inpath)
+        if hasattr(self.tarfile, "extraction_filter") and hasattr(
+            tarfile, "fully_trusted_filter"
+        ):
+            # Path and link safety checks happen in SafeTarFile before extraction.
+            self.tarfile.extraction_filter = tarfile.fully_trusted_filter
         self.directories = {}
 
     def close(self):

@@ -1,5 +1,6 @@
 import io
 import tarfile
+import warnings
 
 import pytest
 
@@ -393,11 +394,14 @@ def test_extractall_ignores_gnu_timestamp_prefix(tmp_path):
 
     extractor = SafeTarFile(tar_path)
     try:
-        extractor.extractall(tmp_path / "extract")  # noqa: S202
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("error", DeprecationWarning)
+            extractor.extractall(tmp_path / "extract")  # noqa: S202
     finally:
         extractor.close()
 
     assert extractor.reports == []
+    assert caught == []
     assert (tmp_path / "extract" / "Vagrantfile").is_file()
     assert not (tmp_path / "extract" / "13327342752").exists()
 
