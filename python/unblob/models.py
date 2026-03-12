@@ -61,6 +61,7 @@ class HandlerDoc:
     references: list[Reference]
     limitations: list[str]
     handler_type: HandlerType
+    private: bool = False
     fully_supported: bool = dataclasses.field(init=False)
 
     def __post_init__(self):
