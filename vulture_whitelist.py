@@ -8,6 +8,9 @@ from unblob import cli
 from unblob.doc import generate_markdown
 from unblob.file_utils import File, FileSystem, iterbits, round_down
 from unblob.handlers.archive.dlink.fpkg import FileType as FPKGFileType
+from unblob.handlers.archive.tar._safe_tar_file import (  # pyright: ignore[reportMissingImports]
+    UnblobTarInfo,
+)
 from unblob.handlers.compression.lzo import HeaderFlags as LZOHeaderFlags
 from unblob.models import (
     Handler,
@@ -96,3 +99,13 @@ FPKGFileType.REGULAR_FILE
 FPKGFileType.UNKNOWN
 FPKGFileType.CHECKSUM
 FPKGFileType.SIGNATURE
+
+UnblobTarInfo.frombuf
+UnblobTarInfo.uid
+UnblobTarInfo.gid
+UnblobTarInfo.mtime
+UnblobTarInfo.uname
+UnblobTarInfo.gname
+UnblobTarInfo.devmajor
+UnblobTarInfo.devminor
+UnblobTarInfo._sparse_structs  # noqa: SLF001

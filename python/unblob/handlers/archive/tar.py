@@ -18,7 +18,7 @@ from ...models import (
     StructHandler,
     ValidChunk,
 )
-from ._safe_tarfile import SafeTarFile
+from ._safe_tarfile import SafeTarFile, open_safe_tarfile
 
 logger = get_logger()
 
@@ -45,7 +45,7 @@ def _get_tar_end_offset(file: File, offset=0):
 
 def _get_end_of_last_tar_entry(file) -> int:
     try:
-        tf = tarfile.TarFile(mode="r", fileobj=file)
+        tf = open_safe_tarfile(mode="r", fileobj=file)
     except tarfile.TarError:
         return -1
 
