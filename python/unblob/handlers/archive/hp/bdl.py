@@ -21,7 +21,7 @@ logger = get_logger()
 C_DEFINITIONS = r"""
     typedef struct bdl_toc_entry {
         uint64 offset;
-        uint64 size;
+        uint64 entry_size;
     } bdl_toc_entry_t;
 
     typedef struct bdl_header {
@@ -74,7 +74,7 @@ class HPBDLExtractor(Extractor):
                         outdir.joinpath(outdir.joinpath(Path(f"ipkg{i:03}"))),
                         Chunk(
                             start_offset=entry.offset,
-                            end_offset=entry.offset + entry.size,
+                            end_offset=entry.offset + entry.entry_size,
                         ),
                     )
                 )
@@ -120,6 +120,6 @@ class HPBDLHandler(StructHandler):
         end_offset = -1
         for _ in range(header.toc_entries):
             entry = self._struct_parser.parse("bdl_toc_entry_t", file, Endian.LITTLE)
-            end_offset = max(end_offset, start_offset + entry.offset + entry.size)
+            end_offset = max(end_offset, start_offset + entry.offset + entry.entry_size)
 
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)

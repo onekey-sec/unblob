@@ -37,7 +37,7 @@ class ARCHandler(StructHandler):
         int8 archive_marker;
         int8 header_type;
         char    name[13];		/* file name */
-        ulong size;		/* size of file, in bytes */
+        ulong file_size;	/* size of file, in bytes */
         ushort date;	/* creation date */
         ushort time;	/* creation time */
         short crc;	/* cyclic redundancy check */
@@ -97,7 +97,7 @@ class ARCHandler(StructHandler):
             if not self.valid_header(header):
                 return None
 
-            offset += len(header) + header.size
+            offset += len(header) + header.file_size
 
         return ValidChunk(
             start_offset=start_offset,

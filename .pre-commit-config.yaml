@@ -57,6 +57,12 @@ repos:
         language: system
         types: [toml]
         entry: uv run taplo format
+      - id: semgrep-cstruct-size-shadowing
+        name: Check StructParser size shadowing (semgrep)
+        language: python
+        additional_dependencies: ["semgrep>=1.104,<2"]
+        pass_filenames: false
+        entry: semgrep --config .semgrep/disallow-cstruct-size-shadowing.yml --error python/unblob/handlers
       - id: cargo-fmt # rustup component add rustfmt
         name: Check rust (cargo fmt)
         entry: cargo fmt --all --

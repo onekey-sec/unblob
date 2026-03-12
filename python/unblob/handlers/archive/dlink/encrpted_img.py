@@ -21,7 +21,7 @@ logger = get_logger()
 C_DEFINITIONS = r"""
     typedef struct encrpted_img_header {
         char magic[12]; /* encrpted_img */
-        uint32 size;    /* total size of file */
+        uint32 file_size; /* total size of file */
     } dlink_header_t;
 """
 
@@ -75,7 +75,7 @@ class EncrptedHandler(StructHandler):
     )
 
     def is_valid_header(self, header) -> bool:
-        return header.size >= len(header)
+        return header.file_size >= len(header)
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.BIG)
@@ -85,5 +85,5 @@ class EncrptedHandler(StructHandler):
 
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=start_offset + len(header) + header.size,
+            end_offset=start_offset + len(header) + header.file_size,
         )
