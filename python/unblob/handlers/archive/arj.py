@@ -49,7 +49,7 @@ class ARJHandler(StructHandler):
     C_DEFINITIONS = r"""
         typedef struct basic_header {
             uint16 id;
-            uint16 size;
+            uint16 header_size;
         } basic_header_t;
 
         typedef struct arj_header
@@ -99,7 +99,7 @@ class ARJHandler(StructHandler):
         } metadata_t;
 
         typedef struct extended_header {
-            uint16 size;
+            uint16 extended_header_size;
             // More would go here if there were an extended header
         } extended_header_t;
     """
@@ -132,14 +132,14 @@ class ARJHandler(StructHandler):
         logger.debug("Main header parsed", header=main_header, _verbosity=3)
 
         if (
-            main_header.header.size < MIN_BLOCK_SIZE
-            or main_header.header.size > MAX_BLOCK_SIZE
-            or main_header.header.size < main_header.first_hdr_size
+            main_header.header.header_size < MIN_BLOCK_SIZE
+            or main_header.header.header_size > MAX_BLOCK_SIZE
+            or main_header.header.header_size < main_header.first_hdr_size
         ):
             raise InvalidARJSize
 
         file.seek(start_offset + BASIC_HEADER_SIZE)
-        content = file.read(main_header.header.size)
+        content = file.read(main_header.header.header_size)
         calculated_crc = binascii.crc32(content)
         crc = convert_int32(file.read(4), endian=Endian.LITTLE)
 
@@ -156,7 +156,7 @@ class ARJHandler(StructHandler):
             basic_header = self.cparser_le.basic_header(file)
             logger.debug("Basic header parsed", header=basic_header, _verbosity=3)
 
-            if basic_header.size == 0:
+            if basic_header.header_size == 0:
                 # We've reached the final empty file header. This is where we want to be.
                 return file.tell()
 
@@ -176,7 +176,7 @@ class ARJHandler(StructHandler):
         # Source: 'ARJ TECHNICAL INFORMATION', September 2001
         extended_header = self.cparser_le.extended_header_t(file)
         logger.debug("Extended header parsed", header=extended_header, _verbosity=3)
-        if extended_header.size != 0:
+        if extended_header.extended_header_size != 0:
             raise ARJExtendedHeader
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:

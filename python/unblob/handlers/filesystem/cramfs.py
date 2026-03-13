@@ -33,7 +33,7 @@ class CramFSHandler(StructHandler):
     C_DEFINITIONS = r"""
         typedef struct cramfs_header {
             uint32 magic;
-            uint32 size;
+            uint32 fs_size;
             uint32 flags;
             uint32 future;
             char signature[16];
@@ -74,7 +74,7 @@ class CramFSHandler(StructHandler):
         if valid_signature and self._is_crc_valid(file, start_offset, header, endian):
             return ValidChunk(
                 start_offset=start_offset,
-                end_offset=start_offset + header.size,
+                end_offset=start_offset + header.fs_size,
             )
         return None
 
@@ -89,7 +89,7 @@ class CramFSHandler(StructHandler):
         if not (header.flags & CRAMFS_FLAG_FSID_VERSION_2):
             return True
         file.seek(start_offset)
-        content = bytearray(file.read(header.size))
+        content = bytearray(file.read(header.fs_size))
         file.seek(start_offset + 32)
         crc_bytes = file.read(4)
         header_crc = convert_int32(crc_bytes, endian)
