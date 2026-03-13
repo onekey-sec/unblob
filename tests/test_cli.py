@@ -10,7 +10,15 @@ import unblob.cli
 from unblob.extractors import Command
 from unblob.extractors.command import MultiFileCommand
 from unblob.handlers import BUILTIN_HANDLERS
-from unblob.models import DirectoryHandler, Glob, Handler, HexString, MultiFile
+from unblob.models import (
+    DirectoryHandler,
+    Glob,
+    Handler,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    MultiFile,
+)
 from unblob.processing import (
     DEFAULT_DEPTH,
     DEFAULT_PROCESS_NUM,
@@ -52,6 +60,29 @@ class ExistingCommandDirHandler(TestDirHandler):
     EXTRACTOR = MultiFileCommand("true")
 
 
+class DocumentedHandler(TestHandler):
+    DOC = HandlerDoc(
+        name="Public format",
+        description="Public docs entry",
+        vendor=None,
+        references=[],
+        limitations=[],
+        handler_type=HandlerType.ARCHIVE,
+    )
+
+
+class PrivateDocumentedHandler(TestHandler):
+    DOC = HandlerDoc(
+        name="Private format",
+        description="Private docs entry",
+        vendor=None,
+        references=[],
+        limitations=[],
+        handler_type=HandlerType.ARCHIVE,
+        private=True,
+    )
+
+
 def test_show_external_dependencies_missing():
     handlers = (ExistingCommandHandler, TestHandler)
     runner = CliRunner()
@@ -89,6 +120,25 @@ def test_show_external_dependencies_exists():
     true    ✓
 """
     )
+
+
+def test_build_handlers_doc_skips_private_entries(tmp_path: Path):
+    output_path = tmp_path / "handlers.md"
+    runner = CliRunner()
+
+    result = runner.invoke(
+        unblob.cli.cli,
+        ["--build-handlers-doc", str(output_path), __file__],
+        handlers=(PrivateDocumentedHandler, DocumentedHandler),
+        dir_handlers=(),
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+
+    content = output_path.read_text()
+    assert "Public format" in content
+    assert "Private format" not in content
 
 
 @pytest.mark.parametrize(

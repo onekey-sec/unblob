@@ -140,7 +140,9 @@ def build_handlers_doc(
 
     # we only want handler with a valid DOC entry
     all_handlers = [
-        handler for handler in handlers + dir_handlers if handler.DOC is not None
+        handler
+        for handler in handlers + dir_handlers
+        if handler.DOC is not None and not handler.DOC.private
     ]
 
     slugifier = slugs.slugify(case="lower", percent_encode=True)
