@@ -50,6 +50,7 @@ from .filesystem import (
     romfs,
     squashfs,
     ubi,
+    ufs,
     yaffs,
 )
 from .filesystem.android import erofs, sparse
@@ -132,6 +133,8 @@ BUILTIN_HANDLERS: Handlers = (
     erofs.EROFSHandler,
     partclone.PartcloneHandler,
     xalz.XALZHandler,
+    ufs.UFS1Handler,
+    ufs.UFS2Handler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
