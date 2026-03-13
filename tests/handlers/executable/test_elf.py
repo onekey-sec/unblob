@@ -1,7 +1,11 @@
 import pytest
 
 from unblob.file_utils import File
-from unblob.handlers.executable.elf import ELF64Handler
+from unblob.handlers.executable.elf import (
+    QNX_IFS_MARKER,
+    QNX_IFS_MARKER_OFFSET,
+    ELF64Handler,
+)
 from unblob.models import ValidChunk
 from unblob.testing import unhex
 
@@ -80,6 +84,23 @@ def test_chunk_is_calculated():
     assert isinstance(chunk, ValidChunk)
     assert chunk.start_offset == 0
     assert chunk.end_offset == len(ELF_CONTENT)
+
+
+def test_qnx_ifs_elf_is_ignored():
+    # Pad a valid ELF with zeros up to just past the QNX IFS marker position,
+    # then plant the marker so the handler bails out and returns None.
+    content = bytearray(ELF_CONTENT)
+    required_size = QNX_IFS_MARKER_OFFSET + len(QNX_IFS_MARKER)
+    if len(content) < required_size:
+        content += b"\x00" * (required_size - len(content))
+    content[QNX_IFS_MARKER_OFFSET : QNX_IFS_MARKER_OFFSET + len(QNX_IFS_MARKER)] = (
+        QNX_IFS_MARKER
+    )
+
+    file = File.from_bytes(bytes(content))
+    chunk = ELF64Handler().calculate_chunk(file, 0)
+
+    assert chunk is None
 
 
 @pytest.mark.parametrize(
