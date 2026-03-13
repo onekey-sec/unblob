@@ -19,7 +19,12 @@ runs:
   steps:
     - if: inputs.install-test-deps == 'true'
       name: Install 3rd party dependencies
-      run: sudo ./install-deps.sh
+      run: |
+        if [ "$(id -u)" -eq 0 ]; then
+          ./install-deps.sh
+        else
+          sudo ./install-deps.sh
+        fi
       shell: bash
 
     - name: Setup sccache # for speeding up Rust builds
