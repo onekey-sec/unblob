@@ -9,6 +9,7 @@ Each of the test folders should contain 2 things:
 
 import inspect
 import sys
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,23 @@ from unblob.testing import (
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
 HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
+
+
+def test_handler_docs_have_unique_names():
+    docs = [
+        handler.DOC for handler in handlers.BUILTIN_HANDLERS if handler.DOC is not None
+    ]
+    docs += [
+        handler.DOC
+        for handler in handlers.BUILTIN_DIR_HANDLERS
+        if handler.DOC is not None
+    ]
+
+    duplicated_names = [
+        name for name, count in Counter(doc.name for doc in docs).items() if count > 1
+    ]
+
+    assert duplicated_names == [], f"Duplicate handler doc names: {duplicated_names}"
 
 
 @pytest.mark.parametrize(
