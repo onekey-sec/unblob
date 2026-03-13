@@ -1,8 +1,10 @@
 import multiprocessing
+import os
+import time
 
 import pytest
 
-from unblob.pool import MultiPool, SinglePool
+from unblob.pool import MultiPool, SinglePool, WorkerDiedError
 
 
 def test_singlepool():
@@ -78,3 +80,40 @@ def test_input_cannot_be_submitted_from_worker():
         pool.submit(1)
         with pytest.raises(RuntimeError, match="can only be called"):
             pool.process_until_done()
+
+
+def test_multipool_worker_death():
+    def _die(_):
+        os._exit(1)
+
+    def _noop_callback(_pool, _result):
+        pass
+
+    with MultiPool(process_num=1, handler=_die, result_callback=_noop_callback) as pool:
+        pool.submit("anything")
+        with pytest.raises(WorkerDiedError):
+            pool.process_until_done()
+
+
+def test_multipool_worker_death_aborts_other_workers():
+    def _handler(action):
+        if action == "die":
+            os._exit(1)
+        time.sleep(100)
+
+    def _noop_callback(_pool, _result):
+        pass
+
+    started_at = time.perf_counter()
+    with MultiPool(
+        process_num=3, handler=_handler, result_callback=_noop_callback
+    ) as pool:
+        pool.submit("block")
+        pool.submit("die")
+        pool.submit("block")
+        with pytest.raises(WorkerDiedError):
+            pool.process_until_done()
+
+    delta = time.perf_counter() - started_at
+    # hopefully it works on overloaded systems, still 10 << 100...
+    assert delta < 10
