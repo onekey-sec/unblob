@@ -40,6 +40,8 @@ KERNEL_MODULE_SIGNATURE_FOOTER = b"~Module signature appended~\n"
 
 KERNEL_INIT_DATA_SECTION = ".init.data"
 
+QNX_IFS_MARKER = b"\xeb\x7e\xff\x00"
+QNX_IFS_MARKER_OFFSET = 0x3000
 
 # [Ref] https://github.com/upx/upx/blob/devel/src/stub/src/include/linux.h
 UPX_C_DEFINITIONS = r"""
@@ -375,6 +377,11 @@ class _ELFBase(StructHandler):
         file.seek(start_offset, io.SEEK_SET)
         header = self.parse_header(file, endian)
         if not self.is_valid_header(header):
+            return None
+
+        qnx_marker_pos = start_offset + QNX_IFS_MARKER_OFFSET
+        if file[qnx_marker_pos : qnx_marker_pos + 4] == QNX_IFS_MARKER:
+            logger.info("QNX IFS embedded in ELF identified, bailing out.")
             return None
         end_offset = self.get_end_offset(file, start_offset, header, endian)
 
