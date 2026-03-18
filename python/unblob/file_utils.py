@@ -53,6 +53,7 @@ class File(mmap.mmap):
         m.write(content)
         m.seek(0)
         m.access = mmap.ACCESS_WRITE
+        m.madvise(mmap.MADV_SEQUENTIAL)
         return m
 
     @classmethod
@@ -66,6 +67,7 @@ class File(mmap.mmap):
         with path.open(mode) as base_file:
             m = cls(base_file.fileno(), 0, access=access)
             m.access = access
+            m.madvise(mmap.MADV_SEQUENTIAL)
             return m
 
     def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:  # pyright: ignore[reportIncompatibleMethodOverride]
