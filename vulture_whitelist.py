@@ -11,6 +11,7 @@ from unblob.handlers.archive.dlink.fpkg import FileType as FPKGFileType
 from unblob.handlers.archive.tar._safe_tar_file import (  # pyright: ignore[reportMissingImports]
     UnblobTarInfo,
 )
+from unblob.handlers.compression._ucl import UCLDecompressor
 from unblob.handlers.compression.lzo import HeaderFlags as LZOHeaderFlags
 from unblob.models import (
     Handler,
@@ -109,3 +110,5 @@ UnblobTarInfo.gname
 UnblobTarInfo.devmajor
 UnblobTarInfo.devminor
 UnblobTarInfo._sparse_structs  # noqa: SLF001
+
+UCLDecompressor
