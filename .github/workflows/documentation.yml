@@ -16,7 +16,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          persist-credentials: false
+          persist-credentials: true # required to call gh-deploy
 
       - name: Install uv & Python
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
