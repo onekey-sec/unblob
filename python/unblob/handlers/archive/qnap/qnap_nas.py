@@ -25,6 +25,8 @@ FOOTER_PATTERN = [
     HexString("69 63 70 6e 61 73"),  # encrypted gzip stream start bytes
 ]
 
+_STRUCT_PARSER = StructParser(C_DEFINITIONS)
+
 
 @attrs.define
 class QTSSearchContext:
@@ -51,8 +53,7 @@ def _hyperscan_match(
     if offset < context.start_offset:
         return Scan.Continue
     context.file.seek(offset, io.SEEK_SET)
-    struct_parser = StructParser(C_DEFINITIONS)
-    header = struct_parser.parse("qnap_header_t", context.file, Endian.LITTLE)
+    header = _STRUCT_PARSER.parse("qnap_header_t", context.file, Endian.LITTLE)
     logger.debug("qnap_header_t", header=header)
 
     if is_valid_header(header):
