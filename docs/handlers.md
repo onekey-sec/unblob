@@ -54,6 +54,7 @@
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
+    | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-alert-fill-12: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
@@ -951,6 +952,26 @@
 
         - [Pwn2Own Ireland 2024: QNAP Qhora-322](https://neodyme.io/en/blog/pwn2own-2024_qhora/){ target="_blank" }
         - [QNAP firmware encryption/decryption (PC1)](https://gist.github.com/galaxy4public/0420c7c9a8e3ff860c8d5dce430b2669){ target="_blank" }
+## QNX Deflate
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        QNX deflate are compressed files using a block-based compression format with either LZO or UCL algorithm.
+
+        ---
+
+        - **Handler type:** Compression
+        - **Vendor:** Blackberry
+
+    === "References"
+
+        - [QNX wikipedia](https://en.wikipedia.org/wiki/QNX){ target="_blank" }
+
+    === "Limitations"
+
+        - UCL compression mode is not supported
 ## RAR
 
 !!! warning "Partially supported"

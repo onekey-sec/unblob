@@ -34,6 +34,7 @@ from .compression import (
     lzip,
     lzma,
     lzo,
+    qnx_deflate,
     uzip,
     xz,
     zlib,
@@ -132,6 +133,7 @@ BUILTIN_HANDLERS: Handlers = (
     erofs.EROFSHandler,
     partclone.PartcloneHandler,
     xalz.XALZHandler,
+    qnx_deflate.QNXDeflateHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (

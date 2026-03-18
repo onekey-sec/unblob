@@ -83,6 +83,7 @@ python3.pkgs.buildPythonApplication {
     dissect-cstruct
     lark
     lief.py
+    lzallright
     python3.pkgs.lz4 # shadowed by pkgs.lz4
     plotext
     pluggy
