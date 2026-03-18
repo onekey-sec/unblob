@@ -139,6 +139,8 @@ C_DEFINITIONS = """
     }  yaffs2_packed_tags_t;
 """
 
+_STRUCT_PARSER = StructParser(C_DEFINITIONS)
+
 
 class YaffsObjectType(IntEnum):
     UNKNOWN = 0
@@ -275,7 +277,6 @@ class YAFFSParser:
         self.file_entries = Tree()
         self.data_chunks = defaultdict(list)
         self.file = file
-        self._struct_parser = StructParser(C_DEFINITIONS)
         self.end_offset = -1
         if config is None:
             self.config = self.auto_detect()
@@ -312,7 +313,7 @@ class YAFFSParser:
 
             if data_chunk.chunk_id == 0:
                 try:
-                    header = self._struct_parser.parse(
+                    header = _STRUCT_PARSER.parse(
                         self.HEADER_STRUCT, page, self.config.endianness
                     )
                     logger.debug(self.HEADER_STRUCT, yaffs_obj_hdr=header, _verbosity=3)
@@ -513,7 +514,7 @@ class YAFFS2Parser(YAFFSParser):
             # adding two null bytes at the end only works if it's LE
             spare = spare[2:] + b"\x00\x00"
 
-        yaffs2_packed_tags = self._struct_parser.parse(
+        yaffs2_packed_tags = _STRUCT_PARSER.parse(
             "yaffs2_packed_tags_t", spare, self.config.endianness
         )
         logger.debug(
@@ -609,11 +610,11 @@ class YAFFS1Parser(YAFFSParser):
         super().__init__(file, config)
 
     def build_chunk(self, spare: bytes, offset: int) -> YAFFS1Chunk:
-        yaffs_sparse = self._struct_parser.parse(
+        yaffs_sparse = _STRUCT_PARSER.parse(
             "yaffs_spare_t", spare, self.config.endianness
         )
 
-        yaffs_packed_tags = self._struct_parser.parse(
+        yaffs_packed_tags = _STRUCT_PARSER.parse(
             "yaffs1_packed_tags_t",
             bytes(
                 [
@@ -673,7 +674,6 @@ class YAFFS1Parser(YAFFSParser):
 
 
 def is_yaffs_v1(file: File, start_offset: int) -> bool:
-    struct_parser = StructParser(C_DEFINITIONS)
     file.seek(start_offset, io.SEEK_SET)
     if file[0:4] == b"\x03\x00\x00\x00" or file[0:4] == b"\x01\x00\x00\x00":
         endian = Endian.LITTLE
@@ -682,9 +682,9 @@ def is_yaffs_v1(file: File, start_offset: int) -> bool:
     file.seek(start_offset + YAFFS1_PAGE_SIZE, io.SEEK_SET)
     spare = file.read(YAFFS1_SPARE_SIZE)
 
-    yaffs_sparse = struct_parser.parse("yaffs_spare_t", spare, endian)
+    yaffs_sparse = _STRUCT_PARSER.parse("yaffs_spare_t", spare, endian)
 
-    yaffs_packed_tags = struct_parser.parse(
+    yaffs_packed_tags = _STRUCT_PARSER.parse(
         "yaffs1_packed_tags_t",
         bytes(
             [
