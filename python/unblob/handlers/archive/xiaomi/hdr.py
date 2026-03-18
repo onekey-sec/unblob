@@ -55,14 +55,14 @@ C_DEFINITIONS = r"""
     struct xiaomi_blob_header {
           uint32 magic;                 /* 0x0000babe */
           uint32 flash_offset;
-          uint32 size;                  /* Size of blob */
+          uint32 blob_size;             /* Size of blob */
           uint16 type;                  /* Type of blob */
           uint16 unused;
           char name[32];                /* Name of blob */
     } blob_header_t;
 
     struct xiaomi_signature_header {
-          uint32 size;
+          uint32 signature_size;
           uint32 padding[3];
           uint8 content[0x100];
     } signature_header_t;
@@ -79,7 +79,7 @@ def calculate_crc(file: File, start_offset: int, size: int) -> int:
 def is_valid_blob_header(blob_header) -> bool:
     if blob_header.magic == BLOB_MAGIC:
         return False
-    if not blob_header.size:
+    if not blob_header.blob_size:
         return False
     try:
         snull(blob_header.name).decode("utf-8")
@@ -127,7 +127,7 @@ class HDRExtractor(Extractor):
                     Path(snull(blob_header.name).decode("utf-8")),
                     # file.tell() points to right after the blob_header == start_offset
                     file.tell(),
-                    blob_header.size,
+                    blob_header.blob_size,
                 )
             )
 

@@ -112,7 +112,7 @@ class _TarHandler(StructHandler):
             char mode[8];       /* 100 */
             char uid[8];        /* 108 */
             char gid[8];        /* 116 */
-            char size[12];      /* 124 */
+            char file_size[12]; /* 124 */
             char mtime[12];     /* 136 */
             char chksum[8];     /* 148 */
             char typeflag;      /* 156 */
@@ -134,7 +134,7 @@ class _TarHandler(StructHandler):
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(start_offset)
         header = self.parse_header(file)
-        header_size = snull(header.size)
+        header_size = snull(header.file_size)
         decode_int(header_size, 8)
 
         def signed_sum(octets) -> int:
@@ -247,7 +247,7 @@ class TarUnixHandler(_TarHandler):
             + _padded_field(r"[0-7]", 8)  # char mode[8]
             + _padded_field(r"[0-7]", 8)  # char uid[8]
             + _padded_field(r"[0-7]", 8)  # char gid[8]
-            + _padded_field(r"[0-7]", 12)  # char size[12]
+            + _padded_field(r"[0-7]", 12)  # char file_size[12]
             + _padded_field(r"[0-7]", 12)  # char mtime[12]
             + _padded_field(r"[0-7]", 8)  # char chksum[8]
             + r"[0-7\x00]"  # char typeflag[1] - no extensions

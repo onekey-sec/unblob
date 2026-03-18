@@ -82,7 +82,7 @@ class ISO9660FSHandler(StructHandler):
             uint8 length;
             uint8 xa_length;
             uint64 extent;
-            uint64 size;
+            uint64 extent_size;
             iso9660_dtime_t recording_time;
             uint8 file_flags;
             uint8 file_unit_size;
