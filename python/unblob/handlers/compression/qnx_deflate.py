@@ -9,6 +9,7 @@ from unblob.file_utils import (
     InvalidInputFormat,
     StructParser,
 )
+from unblob.handlers.compression._ucl import UCLDecompressor
 from unblob.models import (
     Extractor,
     ExtractResult,
@@ -52,17 +53,13 @@ class QNXDeflateExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path) -> ExtractResult:
         fs = FileSystem(outdir)
         with File.from_path(inpath) as file:
-            # skip filehdr to reach the first cmphdr
-            file.seek(16, io.SEEK_CUR)
-            lzo_decompressor = LZOCompressor()
-
+            fhdr = self._struct_parser.cparser_le.filehdr_t(file)
+            decompressor = LZOCompressor() if fhdr.cmptype == 0 else UCLDecompressor()
             with fs.open(Path(f"{inpath.stem}.uncompressed")) as outfile:
                 cmphdr = self._struct_parser.cparser_le.cmphdr_t(file)
                 while cmphdr.next != 0:
                     compressed_part = file.read(cmphdr.next - 8)
-                    outfile.write(
-                        lzo_decompressor.decompress(compressed_part, cmphdr.usize)
-                    )
+                    outfile.write(decompressor.decompress(compressed_part))
                     cmphdr = self._struct_parser.cparser_le.cmphdr_t(file)
             return ExtractResult(reports=fs.problems)
 
@@ -72,7 +69,7 @@ class QNXDeflateHandler(StructHandler):
     C_DEFINITIONS = QNX_C_DEFINITION
     HEADER_STRUCT = "filehdr_t"
     PATTERNS = [
-        HexString("69 77 6c 79 66 6d 62 70 [6] 00")  # iwlyfmbp
+        HexString("69 77 6c 79 66 6d 62 70 [6] (00|01)")  # iwlyfmbp
     ]
     EXTRACTOR = QNXDeflateExtractor()
     DOC = HandlerDoc(
@@ -83,7 +80,7 @@ class QNXDeflateHandler(StructHandler):
         references=[
             Reference(title="QNX wikipedia", url="https://en.wikipedia.org/wiki/QNX"),
         ],
-        limitations=["UCL compression mode is not supported"],
+        limitations=[],
     )
 
     def is_valid_header(self, header) -> bool:
