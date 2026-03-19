@@ -118,12 +118,13 @@ class EXTHandler(StructHandler):
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file)
-        end_offset = start_offset + (
-            header.s_blocks_count_lo * (EXT_BLOCK_SIZE << header.s_log_block_size)
-        )
 
         if not self.valid_header(header):
             raise InvalidInputFormat("Invalid ExtFS header.")
+
+        end_offset = start_offset + (
+            header.s_blocks_count_lo * (EXT_BLOCK_SIZE << header.s_log_block_size)
+        )
 
         return ValidChunk(
             start_offset=start_offset,
