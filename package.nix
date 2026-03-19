@@ -127,13 +127,18 @@ python3.pkgs.buildPythonApplication {
     with python3.pkgs;
     [
       pytestCheckHook
+      pexpect
+      psutil
       pytest-cov-stub
       pytest-timeout
       versionCheckHook
     ]
     ++ runtimeDeps;
 
-  pytestFlagsArray = [ "--timeout=600" ];
+  pytestFlagsArray = [
+    "--timeout=600"
+    "--with-e2e"
+  ];
 
   versionCheckProgramArg = "--version";
 
