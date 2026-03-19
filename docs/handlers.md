@@ -54,7 +54,7 @@
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
-    | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-alert-fill-12: |
+    | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
@@ -956,7 +956,7 @@
         - [QNAP firmware encryption/decryption (PC1)](https://gist.github.com/galaxy4public/0420c7c9a8e3ff860c8d5dce430b2669){ target="_blank" }
 ## QNX Deflate
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
@@ -970,10 +970,6 @@
     === "References"
 
         - [QNX wikipedia](https://en.wikipedia.org/wiki/QNX){ target="_blank" }
-
-    === "Limitations"
-
-        - UCL compression mode is not supported
 ## RAR
 
 !!! warning "Partially supported"
