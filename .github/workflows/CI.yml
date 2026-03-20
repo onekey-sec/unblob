@@ -110,7 +110,7 @@ jobs:
         uses: ./.github/actions/setup-git-lfs
 
       - name: Run pytest
-        run: uv run pytest -vvv
+        run: uv run pytest --with-e2e -vvv
 
   run_rust_tests:
     name: Run tests (Rust)
