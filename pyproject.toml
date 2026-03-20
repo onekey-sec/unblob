@@ -50,6 +50,7 @@ check = [
 dev = [
   { include-group = "check" },
   { include-group = "fuzz" },
+  { include-group = "profiling" },
   { include-group = "test" },
   { include-group = "type" },
 ]
@@ -63,6 +64,9 @@ docs = [
 ]
 fuzz = [
   "atheris>=2.3,<3.0; sys_platform == 'linux' and python_version < '3.12'",
+]
+profiling = [
+  "memray>=1.19.2",
 ]
 test = [
   "pexpect>=4.9,<5",

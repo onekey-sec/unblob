@@ -53,6 +53,7 @@ class File(mmap.mmap):
         m.write(content)
         m.seek(0)
         m.access = mmap.ACCESS_WRITE
+        m.madvise(mmap.MADV_SEQUENTIAL)
         return m
 
     @classmethod
@@ -66,6 +67,7 @@ class File(mmap.mmap):
         with path.open(mode) as base_file:
             m = cls(base_file.fileno(), 0, access=access)
             m.access = access
+            m.madvise(mmap.MADV_SEQUENTIAL)
             return m
 
     def seek(self, pos: int, whence: int = os.SEEK_SET) -> int:  # pyright: ignore[reportIncompatibleMethodOverride]
@@ -76,18 +78,7 @@ class File(mmap.mmap):
         return self.tell()
 
     def size(self) -> int:
-        size = 0
-        try:
-            size = super().size()
-        except OSError:
-            # the file was built with from_bytes() so it's not on disk,
-            # triggering an OSError on fstat() call
-            current_offset = self.tell()
-            self.seek(0, io.SEEK_END)
-            size = self.tell()
-            self.seek(current_offset, io.SEEK_SET)
-
-        return size
+        return len(self)
 
     def __enter__(self):
         return self
