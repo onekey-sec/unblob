@@ -56,7 +56,7 @@ dev = [
 ]
 docs = [
   "cairosvg>=2.7.1",
-  "mkdocs-material==9.7.5",
+  "mkdocs-material==9.7.6",
   "mkdocstrings-python>=1.8.0",
   "mkdocstrings>=0.30,<0.31",
   "pillow>=12.1.1,<12.2",
