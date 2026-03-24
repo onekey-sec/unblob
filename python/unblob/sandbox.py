@@ -1,4 +1,3 @@
-import ctypes
 import threading
 from collections.abc import Callable, Iterable
 from pathlib import Path
@@ -72,15 +71,13 @@ class Sandbox:
                 exception = e
 
         thread = threading.Thread(
-            target=_run_in_thread, args=(callback, *args), kwargs=kwargs
+            target=_run_in_thread,
+            args=(callback, *args),
+            kwargs=kwargs,
+            daemon=True,
         )
         thread.start()
-
-        try:
-            thread.join()
-        except KeyboardInterrupt:
-            raise_in_thread(thread, KeyboardInterrupt)
-            thread.join()
+        thread.join()
 
         if exception:
             raise exception  # pyright: ignore[reportGeneralTypeIssues]
@@ -93,26 +90,3 @@ class Sandbox:
             logger.warning(
                 "Sandboxing FS access is unavailable on this system, skipping."
             )
-
-
-def raise_in_thread(thread: threading.Thread, exctype: type) -> None:
-    if thread.ident is None:
-        raise RuntimeError("Thread is not started")
-
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-        ctypes.c_ulong(thread.ident), ctypes.py_object(exctype)
-    )
-
-    # success
-    if res == 1:
-        return
-
-    # Need to revert the call to restore interpreter state
-    ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_ulong(thread.ident), None)
-
-    # Thread could have exited since
-    if res == 0:
-        return
-
-    # Something bad have happened
-    raise RuntimeError("Could not raise exception in thread", thread.ident)
