@@ -19,6 +19,7 @@ from structlog import get_logger
 
 from .logging import format_hex
 from .report import (
+    ExtendedAttributeExtractionProblem,
     ExtractionProblem,
     LinkExtractionProblem,
     PathTraversalProblem,
@@ -653,3 +654,66 @@ class FileSystem:
         safe_path = self._get_extraction_path(path, "unlink")
 
         safe_path.unlink(missing_ok=True)
+
+    def rmdir(self, path: Path):
+        """Remove an empty directory."""
+        logger.debug("removing directory", dir_path=path, _verbosity=3)
+        safe_path = self._get_extraction_path(path, "rmdir")
+        safe_path.rmdir()
+
+    def rename(self, src: Path, dst: Path):
+        """Rename a file or directory."""
+        logger.debug("renaming", src_path=src, dst_path=dst, _verbosity=3)
+        safe_src = self._get_extraction_path(src, "rename src")
+        safe_dst = self._get_extraction_path(dst, "rename dst")
+        self._ensure_parent_dir(safe_dst)
+        try:
+            safe_src.rename(safe_dst)
+        except FileNotFoundError:
+            self.record_problem(
+                ExtractionProblem(problem=f"{safe_dst} not found", resolution="Skipped")
+            )
+
+    def truncate(self, path: Path, size: int):
+        """Truncate a file to the specified size."""
+        logger.debug("Truncate file", dir_path=path, _verbosity=3)
+        safe_path = self._get_extraction_path(path, "truncate")
+        os.truncate(safe_path, size)
+
+    def set_xattr(self, path: Path, attribute: str, data: bytes):
+        """Set an extended attribute for a file."""
+        logger.debug("set extented attribute", dir_path=path, _verbosity=3)
+        safe_path = self._get_extraction_path(path, "set xattr")
+        try:
+            os.setxattr(safe_path, attribute, data)
+        except PermissionError:
+            self.record_problem(
+                ExtendedAttributeExtractionProblem(
+                    problem="Extended attributes are blocked by unblob sandbox",
+                    resolution="Skipped",
+                    path=str(safe_path),
+                    attribute=attribute,
+                )
+            )
+
+    def remove_xattr(self, path: Path, attribute: str):
+        """Remove an extended attribute from a file."""
+        logger.debug("remove extented attribute", dir_path=path, _verbosity=3)
+        safe_path = self._get_extraction_path(path, "rm xattr")
+        try:
+            os.removexattr(safe_path, attribute)
+        except PermissionError:
+            self.record_problem(
+                ExtendedAttributeExtractionProblem(
+                    problem="Extended attributes are blocked by unblob sandbox",
+                    resolution="Skipped",
+                    path=str(safe_path),
+                    attribute=attribute,
+                )
+            )
+
+    def utime(self, path: Path, times: tuple[float, float] | tuple[int, int]):
+        """Set the access and modification times of a file."""
+        logger.debug("time attribution", dir_path=path, _verbosity=3)
+        safe_path = self._get_extraction_path(path, "utime")
+        os.utime(safe_path, times)
