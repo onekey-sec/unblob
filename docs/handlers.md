@@ -8,6 +8,7 @@
     | [`ARC`](#arc) | ARCHIVE | :octicons-check-16: |
     | [`ARJ`](#arj) | ARCHIVE | :octicons-check-16: |
     | [`AUTEL ECC`](#autel-ecc) | ARCHIVE | :octicons-check-16: |
+    | [`BTRFS STREAM`](#btrfs-stream) | FILESYSTEM | :octicons-alert-fill-12: |
     | [`BZIP2`](#bzip2) | COMPRESSION | :octicons-check-16: |
     | [`CAB`](#cab) | ARCHIVE | :octicons-check-16: |
     | [`COMPRESS`](#compress) | COMPRESSION | :octicons-check-16: |
@@ -203,6 +204,26 @@
     === "References"
 
         - [Autel ECC Decryption Script (Sector7)](https://gist.github.com/sector7-nl/3fc815cd2497817ad461bfbd393294cb){ target="_blank" }
+## BTRFS Stream
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        A BTRFS send stream is a binary format used to transfer btrfs subvolume snapshots between filesystems. It encodes filesystem operations (file creation, directory structure, data writes, metadata) as a sequence of commands that can be replayed by btrfs receive to reconstruct the original snapshot. It supports both full sends (complete snapshot) and incremental sends (diff between two snapshots).
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [BTRFS Stream Official Documentation](https://btrfs.readthedocs.io/en/latest/dev/dev-send-stream.html){ target="_blank" }
+
+    === "Limitations"
+
+        - Does not support incremental streams.
 ## bzip2
 
 !!! success "Fully supported"
