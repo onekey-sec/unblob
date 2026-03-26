@@ -1,5 +1,7 @@
+import functools
 import io
 import os
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -26,6 +28,25 @@ from unblob.file_utils import (
     round_up,
 )
 from unblob.report import LinkExtractionProblem, PathTraversalProblem
+
+
+@functools.lru_cache
+def has_xattr_support(path):
+    if not hasattr(os, "setxattr") or not hasattr(os, "removexattr"):
+        return False
+    with tempfile.NamedTemporaryFile(dir=path) as f:
+        try:
+            os.setxattr(f.name, b"user.test", b"1")
+            os.removexattr(f.name, b"user.test")
+        except OSError:
+            return False
+        return True
+
+
+@pytest.fixture
+def require_xattr(tmp_path):
+    if not has_xattr_support(tmp_path):
+        pytest.xfail("xattr not supported on this filesystem")
 
 
 @pytest.mark.parametrize(
@@ -712,6 +733,118 @@ class TestFileSystem:
         sandbox.unlink(path)
 
         assert (sandbox.root / path).exists()
+        assert sandbox.problems
+
+    def test_rmdir(self, sandbox: FileSystem):
+        sandbox.mkdir(Path("directory"))
+        sandbox.rmdir(Path("directory"))
+
+        assert not (sandbox.root / "directory").exists()
+        assert sandbox.problems == []
+
+    def test_rmdir_outside_sandbox(self, sandbox: FileSystem):
+        (sandbox.root / "../directory").mkdir(exist_ok=True)
+        sandbox.rmdir(Path("../directory"))
+
+        assert (sandbox.root / "../directory").exists()
+        assert sandbox.problems
+
+    def test_rename(self, sandbox: FileSystem):
+        sandbox.write_bytes(Path("file"), b"content")
+        sandbox.rename(Path("file"), Path("renamed"))
+
+        assert not (sandbox.root / "file").exists()
+        assert (sandbox.root / "renamed").read_bytes() == b"content"
+        assert sandbox.problems == []
+
+    def test_rename_outside_sandbox_dst(self, sandbox: FileSystem):
+        sandbox.write_bytes(Path("file"), b"content")
+        sandbox.rename(Path("file"), Path("../renamed"))
+
+        assert not (sandbox.root / "../renamed").exists()
+        assert sandbox.problems
+
+    def test_rename_outside_sandbox_src(self, sandbox: FileSystem):
+        sandbox.rename(Path("../nonexistent"), Path("file"))
+
+        assert sandbox.problems
+
+    def test_rename_src_not_found(self, sandbox: FileSystem):
+        sandbox.rename(Path("nonexistent"), Path("renamed"))
+
+        assert sandbox.problems
+
+    def test_truncate(self, sandbox: FileSystem):
+        sandbox.write_bytes(Path("file"), b"hello world")
+        sandbox.truncate(Path("file"), 5)
+
+        assert (sandbox.root / "file").read_bytes() == b"hello"
+        assert sandbox.problems == []
+
+    def test_truncate_outside_sandbox(self, sandbox: FileSystem):
+        (sandbox.root / "../file").write_bytes(b"hello world")
+        sandbox.truncate(Path("../file"), 5)
+
+        assert (sandbox.root / "../file").read_bytes() == b"hello world"
+        assert sandbox.problems
+
+    def test_set_xattr(self, sandbox: FileSystem, require_xattr):  # noqa: ARG002
+        sandbox.write_bytes(Path("file"), b"content")
+        sandbox.set_xattr(Path("file"), "user.test", b"value")
+
+        assert os.getxattr(sandbox.root / "file", "user.test") == b"value"
+        assert sandbox.problems == []
+
+    def test_set_xattr_outside_sandbox(self, sandbox: FileSystem, require_xattr):  # noqa: ARG002
+        (sandbox.root / "../file").write_bytes(b"content")
+        sandbox.set_xattr(Path("../file"), "user.test", b"value")
+
+        assert sandbox.problems
+
+    def test_remove_xattr(self, sandbox: FileSystem, require_xattr):  # noqa: ARG002
+        sandbox.write_bytes(Path("file"), b"content")
+        os.setxattr(sandbox.root / "file", "user.test", b"value")
+        sandbox.remove_xattr(Path("file"), "user.test")
+
+        assert os.listxattr(sandbox.root / "file") == []
+        assert sandbox.problems == []
+
+    def test_remove_xattr_outside_sandbox(self, sandbox: FileSystem, require_xattr):  # noqa: ARG002
+        path = sandbox.root / "../file"
+        path.write_bytes(b"content")
+        os.setxattr(path, "user.test", b"value")
+        sandbox.remove_xattr(Path("../file"), "user.test")
+
+        assert sandbox.problems
+
+    def test_utime(self, sandbox: FileSystem):
+        sandbox.write_bytes(Path("file"), b"content")
+        sandbox.utime(Path("file"), (1000.0, 2000.0))
+
+        stat = (sandbox.root / "file").stat()
+        assert int(stat.st_atime) == 1000
+        assert int(stat.st_mtime) == 2000
+        assert sandbox.problems == []
+
+    def test_utime_outside_sandbox(self, sandbox: FileSystem):
+        (sandbox.root / "../file").write_bytes(b"content")
+        sandbox.utime(Path("../file"), (1000.0, 2000.0))
+
+        assert sandbox.problems
+
+    def test_chmod(self, sandbox: FileSystem):
+        sandbox.write_bytes(Path("file"), b"content")
+        sandbox.chmod(Path("file"), 0o644)
+
+        assert (sandbox.root / "file").stat().st_mode & 0o777 == 0o644
+        assert sandbox.problems == []
+
+    def test_chmod_outside_sandbox(self, sandbox: FileSystem):
+        (sandbox.root / "../file").write_bytes(b"content")
+        original_mode = (sandbox.root / "../file").stat().st_mode
+        sandbox.chmod(Path("../file"), 0o777)
+
+        assert (sandbox.root / "../file").stat().st_mode == original_mode
         assert sandbox.problems
 
 
