@@ -42,6 +42,7 @@ from .compression import (
 )
 from .executable import elf, xalz
 from .filesystem import (
+    btrfs_stream,
     cramfs,
     extfs,
     fat,
@@ -137,6 +138,7 @@ BUILTIN_HANDLERS: Handlers = (
     qnx_deflate.QNXDeflateHandler,
     ufs.UFS1Handler,
     ufs.UFS2Handler,
+    btrfs_stream.BTRFSStreamHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
