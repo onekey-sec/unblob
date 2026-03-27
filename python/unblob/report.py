@@ -330,6 +330,13 @@ class SpecialFileExtractionProblem(ExtractionProblem):
         logger.warning(self.log_msg, path=self.path, mode=self.mode, device=self.device)
 
 
+class ExtendedAttributeExtractionProblem(ExtractionProblem):
+    attribute: str
+
+    def log_with(self, logger):
+        logger.warning(self.log_msg, path=self.path, attribute=self.attribute)
+
+
 BUILTIN_REPORT_TYPES: tuple[type[Report], ...] = (
     ErrorReport,
     UnknownError,
