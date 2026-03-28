@@ -195,9 +195,7 @@ class MultiPool(PoolBase):
                 self._input.get_nowait()
 
     def _request_workers_to_quit(self):
-        for proc in self._procs:
-            if proc.exitcode is not None:
-                continue
+        for _ in self._procs:
             self._input.put(_SENTINEL)
         self._input.close()
 
