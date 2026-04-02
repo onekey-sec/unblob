@@ -182,8 +182,7 @@ UFS_C_DEFINITION = """
             uint32  fs_postbloff;
             uint32  fs_rotbloff;
             uint32  fs_magic;
-            uint8
-    fs_space[1];
+            uint8   fs_space[1];
 } ufs_superblock_t;
 """
 
@@ -201,7 +200,8 @@ class _UFSHandler(StructHandler):
 
     def is_valid_header(self, header) -> bool:
         return (
-            header.fs_frag == (header.fs_bsize // header.fs_fsize)
+            header.fs_fsize > 0
+            and header.fs_frag == (header.fs_bsize // header.fs_fsize)
             and self.get_block_size(header) > 0
             and header.fs_ncg > 0
         )
@@ -220,7 +220,7 @@ class _UFSHandler(StructHandler):
 
 class UFS1Handler(_UFSHandler):
     NAME = "ufs1"
-    PATTERNS = [HexString("54 19 01")]  # UFS1 little endian
+    PATTERNS = [HexString("54 19 01 00 00")]  # UFS1 fs_magic + null fs_space
     SB_OFFSET = 0x2000
     PATTERN_MATCH_OFFSET = -SB_OFFSET - MAGIC_OFFSET
     DOC = HandlerDoc(
@@ -245,7 +245,7 @@ class UFS1Handler(_UFSHandler):
 
 class UFS2Handler(_UFSHandler):
     NAME = "ufs2"
-    PATTERNS = [HexString("19 01 54 19")]
+    PATTERNS = [HexString("19 01 54 19 00")]  # UFS2 fs_magic + null fs_space
     SB_OFFSET = 0x10000
     PATTERN_MATCH_OFFSET = -SB_OFFSET - MAGIC_OFFSET
     DOC = HandlerDoc(
