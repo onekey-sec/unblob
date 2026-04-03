@@ -1,8 +1,7 @@
 import hashlib
-import io
 from pathlib import Path
 
-from unblob.file_utils import Endian, StructParser
+from unblob.file_utils import Endian, StructParser, iterate_file
 from unblob.models import (
     DirectoryHandler,
     Glob,
@@ -54,14 +53,16 @@ class MultiVolumePAR2Handler(DirectoryHandler):
                     return False
 
                 offset_to_recovery_id = 32
-                # seek to beginning of recovery set ID
-                f.seek(offset_to_recovery_id, io.SEEK_SET)
-                packet_content = f.read(
+                packet_checksum_state = hashlib.md5(usedforsecurity=False)
+                packet_content_length = (
                     header.packet_length - len(header) + offset_to_recovery_id
                 )
-                packet_checksum = hashlib.md5(
-                    packet_content, usedforsecurity=False
-                ).digest()
+                for chunk in iterate_file(
+                    f, offset_to_recovery_id, packet_content_length
+                ):
+                    packet_checksum_state.update(chunk)
+
+                packet_checksum = packet_checksum_state.digest()
 
                 if packet_checksum != header.md5_hash:
                     return False
