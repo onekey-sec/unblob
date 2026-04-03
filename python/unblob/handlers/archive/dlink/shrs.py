@@ -5,7 +5,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from structlog import get_logger
 
-from unblob.file_utils import File, InvalidInputFormat
+from unblob.file_utils import File, InvalidInputFormat, iterate_file
 from unblob.models import (
     Endian,
     Extractor,
@@ -88,10 +88,14 @@ class SHRSHandler(StructHandler):
     def is_valid_header(self, header, file: File) -> bool:
         if header.file_size < len(header):
             return False
-        # we're exactly past the header, we compute the digest
-        digest = hashlib.sha512(file.read(header.file_size_no_padding)).digest()
-        # we seek back to where we were
-        file.seek(-header.file_size_no_padding, io.SEEK_CUR)
+        digest_state = hashlib.sha512()
+        digest_start = file.tell()
+
+        for chunk in iterate_file(file, digest_start, header.file_size_no_padding):
+            digest_state.update(chunk)
+
+        file.seek(digest_start, io.SEEK_SET)
+        digest = digest_state.digest()
         return digest == header.encrypted_digest
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
