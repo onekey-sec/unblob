@@ -43,7 +43,7 @@ jobs:
           uv-groups: "check"
 
       - name: Setup Nix
-        uses: cachix/install-nix-action@96951a368ba55167b55f1c916f7d416bac6505fe # v31.10.3
+        uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # v31.10.4
         with:
           install_url: https://releases.nixos.org/nix/nix-2.18.8/install
 
