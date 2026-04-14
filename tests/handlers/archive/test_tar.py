@@ -5,7 +5,11 @@ import warnings
 import pytest
 
 from unblob.file_utils import File
-from unblob.handlers.archive._safe_tarfile import SafeTarFile, open_safe_tarfile
+from unblob.handlers.archive._safe_tarfile import (
+    SafeTarFile,
+    UnblobTarInfo,
+    open_safe_tarfile,
+)
 from unblob.handlers.archive.tar import (
     TarUnixHandler,
     TarUstarHandler,
@@ -404,6 +408,18 @@ def test_extractall_ignores_gnu_timestamp_prefix(tmp_path):
     assert caught == []
     assert (tmp_path / "extract" / "Vagrantfile").is_file()
     assert not (tmp_path / "extract" / "13327342752").exists()
+
+
+def test_unblob_tarinfo__frombuf_ignores_gnu_timestamp_prefix():
+    archive = _build_gnu_tar_with_timestamp_prefix()
+
+    with open_safe_tarfile(fileobj=io.BytesIO(archive), mode="r:") as tf:
+        member = UnblobTarInfo._frombuf(  # noqa: SLF001
+            archive[: tarfile.BLOCKSIZE], tf.encoding, tf.errors
+        )
+
+    assert member.name == "Vagrantfile"
+    assert member.mtime == int("13327342752", 8)
 
 
 def test_open_safe_tarfile_keeps_ustar_prefix_paths():
