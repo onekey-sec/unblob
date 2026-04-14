@@ -16,8 +16,12 @@ MAX_PATH_LEN = 255
 
 class UnblobTarInfo(tarfile.TarInfo):
     @classmethod
-    def frombuf(cls, buf, encoding, errors):  # noqa: C901
+    def frombuf(cls, buf, encoding, errors):
         """Parse GNU headers without treating the prefix field as a pathname."""
+        return cls._frombuf(buf, encoding, errors)
+
+    @classmethod
+    def _frombuf(cls, buf, encoding, errors, *, dircheck=True):  # noqa: C901
         if len(buf) == 0:
             raise tarfile.EmptyHeaderError("empty header")  # pyright: ignore[reportAttributeAccessIssue]
         if len(buf) != tarfile.BLOCKSIZE:
@@ -46,7 +50,7 @@ class UnblobTarInfo(tarfile.TarInfo):
         prefix = tarfile.nts(buf[345:500], encoding, errors)  # pyright: ignore[reportAttributeAccessIssue]
         magic = buf[257:265]
 
-        if obj.type == tarfile.AREGTYPE and obj.name.endswith("/"):
+        if dircheck and obj.type == tarfile.AREGTYPE and obj.name.endswith("/"):
             obj.type = tarfile.DIRTYPE
 
         if obj.type == tarfile.GNUTYPE_SPARSE:
