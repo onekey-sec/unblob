@@ -301,6 +301,14 @@ UFS_C_DEFINITION = """
             char    d_name[d_namlen];
         };
 
+        /* Solaris & old xBSD (no type field) */
+        struct old_ufs_dirent {
+            uint32 d_ino;
+            uint16 d_reclen;
+            uint16 d_namlen;
+            char d_name[d_namlen];
+        }
+
 """
 
 MAGIC_OFFSET = 0x55C  #  relative to SB_OFFSET
@@ -313,6 +321,7 @@ class UFSParser:
     INODE_STRUCT: str
     INODE_SIZE: int
     PTR_SIZE: int
+    DIRENT_STRUCT: str = "ufs_dirent"
 
     def __init__(self, file: File, sb_offset: int):
         self.file = file
@@ -349,7 +358,7 @@ class UFSParser:
             offset = 0
             while offset < len(chunk):
                 entry = self._struct_parser.parse(
-                    "ufs_dirent", chunk[offset:], Endian.LITTLE
+                    self.DIRENT_STRUCT, chunk[offset:], Endian.LITTLE
                 )
                 # d_reclen == 0 means end of valid entries in this block
                 if entry.d_reclen == 0:
@@ -468,6 +477,10 @@ class UFS2Parser(UFSParser):
     PTR_SIZE = 8
 
 
+class SolarisUFS1Parser(UFS1Parser):
+    DIRENT_STRUCT = "old_ufs_dirent"
+
+
 class UFSExtractor(Extractor):
     def __init__(self, parser: type[UFSParser], sb_offset: int):
         self.parser = parser
@@ -560,3 +573,31 @@ class UFS2Handler(_UFSBaseHandler):
 
     def get_block_size(self, header) -> int:
         return header.fs_u11.fs_u2.fs_size_64
+
+
+class SolarisHandler(_UFSBaseHandler):
+    NAME = "solaris_ufs1"
+    PATTERNS = [HexString("08 00 00 00 [8] 54 19 01 00")]
+    SB_OFFSET = 0x2000
+    EXTRACTOR = UFSExtractor(SolarisUFS1Parser, SB_OFFSET)
+    PATTERN_MATCH_OFFSET = -SB_OFFSET - (MAGIC_OFFSET - 12)
+    DOC = HandlerDoc(
+        name="solaris_ufs1",
+        description="Solaris UFS1 is the variant of UFS1 used by Oracle Solaris and illumos-based systems such as OpenIndiana and OmniOS. It shares the same overall design as FreeBSD UFS1 but keeps an older on-disk convention inherited from early Unix, making it incompatible with FreeBSD's variant despite the shared magic number.",
+        handler_type=HandlerType.FILESYSTEM,
+        vendor=None,
+        references=[
+            Reference(
+                title="Unix File System Wikipedia",
+                url="https://en.wikipedia.org/wiki/Unix_File_System",
+            ),
+            Reference(
+                title="Oracle Solaris",
+                url="https://en.wikipedia.org/wiki/Oracle_Solaris",
+            ),
+        ],
+        limitations=[],
+    )
+
+    def get_block_size(self, header) -> int:
+        return header.fs_size

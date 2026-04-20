@@ -142,6 +142,7 @@ BUILTIN_HANDLERS: Handlers = (
     qnx_deflate.QNXDeflateHandler,
     ufs.UFS1Handler,
     ufs.UFS2Handler,
+    ufs.SolarisHandler,
     btrfs_stream.BTRFSStreamHandler,
 )
 

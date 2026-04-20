@@ -61,6 +61,7 @@
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
+    | [`SOLARIS_UFS1`](#solaris_ufs1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2)`](#squashfs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2-NON-STANDARD)`](#squashfs-v2-non-standard) | FILESYSTEM | :octicons-check-16: |
@@ -1086,6 +1087,23 @@
 
         - [RomFS Documentation](https://www.kernel.org/doc/html/latest/filesystems/romfs.html){ target="_blank" }
         - [RomFS Wikipedia](https://en.wikipedia.org/wiki/Romfs){ target="_blank" }
+## solaris_ufs1
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Solaris UFS1 is the variant of UFS1 used by Oracle Solaris and illumos-based systems such as OpenIndiana and OmniOS. It shares the same overall design as FreeBSD UFS1 but keeps an older on-disk convention inherited from early Unix, making it incompatible with FreeBSD's variant despite the shared magic number.
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
+        - [Oracle Solaris](https://en.wikipedia.org/wiki/Oracle_Solaris){ target="_blank" }
 ## SquashFS (v1)
 
 !!! success "Fully supported"
