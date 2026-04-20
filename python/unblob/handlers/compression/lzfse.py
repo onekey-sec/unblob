@@ -14,14 +14,6 @@ from unblob.models import (
     ValidChunk,
 )
 
-# LZFSE block magic values
-_MAGIC_BVX_MINUS = b"bvx-"  # uncompressed block
-_MAGIC_BVX1 = b"bvx1"  # LZVN compressed block
-_MAGIC_BVXN = b"bvxn"  # uncompressed block (newer)
-_MAGIC_BVX2 = b"bvx2"  # LZFSE compressed block
-_MAGIC_BCOMP = b"bcomp"  # LZFSE2 / LZBITMAP block (5-byte magic)
-
-# End-of-stream marker common to all LZFSE streams
 _MAGIC_BVX_END = b"bvx$"
 
 
@@ -65,6 +57,9 @@ class LZFSEHandler(Handler):
     )
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
-        for pos in iterate_patterns(file, _MAGIC_BVX_END):
-            return ValidChunk(start_offset=start_offset, end_offset=pos + len(_MAGIC_BVX_END))
-        raise InvalidInputFormat("LZFSE end-of-stream marker not found")
+        file.seek(start_offset)
+        try:
+            pos = next(iterate_patterns(file, _MAGIC_BVX_END))
+        except StopIteration:
+            raise InvalidInputFormat("LZFSE end-of-stream marker not found")
+        return ValidChunk(start_offset=start_offset, end_offset=pos + len(_MAGIC_BVX_END))

@@ -30,6 +30,7 @@ from .compression import (
     compress,
     gzip,
     lz4,
+    lzfse,
     lzh,
     lzip,
     lzfse,
