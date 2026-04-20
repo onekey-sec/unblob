@@ -77,8 +77,8 @@
     | [`TAR (USTAR)`](#tar-ustar) | ARCHIVE | :octicons-check-16: |
     | [`UBI`](#ubi) | FILESYSTEM | :octicons-check-16: |
     | [`UBIFS`](#ubifs) | FILESYSTEM | :octicons-check-16: |
-    | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-alert-fill-12: |
-    | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-alert-fill-12: |
+    | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-check-16: |
+    | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
     | [`XAMARIN COMPRESSED ASSEMBLIES`](#xamarin-compressed-assemblies) | EXECUTABLE | :octicons-check-16: |
     | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
@@ -1358,7 +1358,7 @@
         - [UBIFS Wikipedia](https://en.wikipedia.org/wiki/UBIFS){ target="_blank" }
 ## ufs1
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
@@ -1372,17 +1372,13 @@
     === "References"
 
         - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
-
-    === "Limitations"
-
-        - File extraction is not yet supported, only carving of the filesystem is currently available.
 ## ufs2
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
-        UFS2 (Unix File System 2) is an extended version of UFS1 supported by Unix-like operating systems such as FreeBSD and Solaris. It introduces 64-bit block addressing, extended file attributes, and improved performance over UFS1, while retaining the hierarchical tree structure and inodes for file metadata and data block management.
+        UFS2 (Unix File System 2) is an extended version of UFS1 supported by Unix-like operating systems such as FreeBSD. It introduces 64-bit block addressing, extended file attributes, and improved performance over UFS1, while retaining the hierarchical tree structure and inodes for file metadata and data block management.
 
         ---
 
@@ -1392,10 +1388,6 @@
     === "References"
 
         - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
-
-    === "Limitations"
-
-        - File extraction is not yet supported, only carving of the filesystem is currently available.
 ## UZIP
 
 !!! success "Fully supported"
