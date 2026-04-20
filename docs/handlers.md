@@ -24,6 +24,7 @@
     | [`D-LINK FPKG`](#d-link-fpkg) | ARCHIVE | :octicons-check-16: |
     | [`D-LINK SHRS`](#d-link-shrs) | ARCHIVE | :octicons-check-16: |
     | [`DMG`](#dmg) | ARCHIVE | :octicons-check-16: |
+    | [`DYLD SHARED CACHE`](#dyld-shared-cache) | FILESYSTEM | :octicons-check-16: |
     | [`ELF (32-BIT)`](#elf-32-bit) | EXECUTABLE | :octicons-check-16: |
     | [`ELF (64-BIT)`](#elf-64-bit) | EXECUTABLE | :octicons-check-16: |
     | [`ENGENIUS`](#engenius) | ARCHIVE | :octicons-alert-fill-12: |
@@ -466,6 +467,22 @@
     === "References"
 
         - [Apple Disk Image Format Documentation](http://newosxbook.com/DMG.html){ target="_blank" }
+## dyld Shared Cache
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        The dyld shared cache is a pre-linked collection of system dynamic libraries used by macOS and iOS to accelerate application launch. Modern caches are split across multiple files with suffixes such as .01, .symbols, .atlas, .dylddata, and .dyldlinkedit.
+
+        ---
+
+        - **Handler type:** FileSystem
+        - **Vendor:** Apple
+
+    === "References"
+
+        - [dyld - Apple open-source dynamic linker](https://github.com/apple-oss-distributions/dyld){ target="_blank" }
 ## ELF (32-bit)
 
 !!! success "Fully supported"
