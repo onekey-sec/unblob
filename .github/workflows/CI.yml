@@ -181,7 +181,7 @@ jobs:
           install-test-deps: "false"
 
       - name: Build wheels
-        uses: PyO3/maturin-action@04ac600d27cdf7a9a280dadf7147097c42b757ad # v1.50.1
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i python3.10
@@ -271,7 +271,7 @@ jobs:
           install-test-deps: "false"
 
       - name: Build wheels
-        uses: PyO3/maturin-action@04ac600d27cdf7a9a280dadf7147097c42b757ad # v1.50.1
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i python3.10
@@ -309,7 +309,7 @@ jobs:
           install-test-deps: "false"
 
       - name: Build sdist
-        uses: PyO3/maturin-action@04ac600d27cdf7a9a280dadf7147097c42b757ad # v1.50.1
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           command: sdist
           args: --out dist
@@ -504,7 +504,7 @@ jobs:
 
       - name: Publish to PyPI
         if: ${{ startsWith(github.ref, 'refs/tags/') }} || (github.event_name == 'workflow_dispatch' && github.event.inputs.test_release)
-        uses: PyO3/maturin-action@04ac600d27cdf7a9a280dadf7147097c42b757ad # v1.50.1
+        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         env:
           MATURIN_PYPI_TOKEN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && secrets.TEST_PYPI_API_TOKEN || secrets.POETRY_PYPI_TOKEN_PYPI }}
           MATURIN_REPOSITORY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && 'testpypi' || 'pypi' }}
