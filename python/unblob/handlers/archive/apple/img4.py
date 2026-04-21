@@ -18,7 +18,18 @@ from unblob.models import (
 #     IA5String <name>       (component name, e.g. "illb")
 #     OCTET STRING <payload> (compressed or raw binary)
 _IM4P_MAGIC = b"IM4P"
-_IM4P_PAYLOAD_SKIP = 12  # bytes past "IM4P" to the start of the payload OCTET STRING
+_IA5STRING_TAG = 0x16
+_OCTET_STRING_TAG = 0x04
+
+
+def _read_der_length(file: File, offset: int) -> tuple[int, int]:
+    """Return (value, header_len) for the DER length field starting at offset."""
+    file.seek(offset)
+    first = file.read(1)[0]
+    if first < 0x80:  # short form: the byte itself is the length
+        return first, 1
+    num_bytes = first & 0x7F  # long form: low 7 bits count the length bytes
+    return int.from_bytes(file.read(num_bytes), "big"), 1 + num_bytes
 
 
 class IM4PExtractor(Extractor):
@@ -27,12 +38,28 @@ class IM4PExtractor(Extractor):
 
         with File.from_path(inpath) as file:
             for pos in iterate_patterns(file, _IM4P_MAGIC):
-                payload_start = pos + _IM4P_PAYLOAD_SKIP
+                # pos is the start of the "IM4P" IA5String content (4 bytes).
+                p = pos + len(_IM4P_MAGIC)
+
+                # component name IA5String: tag, length, name bytes
+                file.seek(p)
+                if file.read(1)[0] != _IA5STRING_TAG:
+                    continue
+                p += 2 + file.read(1)[0]
+
+                # payload OCTET STRING: tag, DER length, payload bytes
+                file.seek(p)
+                if file.read(1)[0] != _OCTET_STRING_TAG:
+                    continue
+                size, header_len = _read_der_length(file, p + 1)
+                payload_start = p + 1 + header_len
+
+                available = file.size() - payload_start
                 fs.carve(
                     Path(f"{inpath.stem}.bin"),
                     file,
                     payload_start,
-                    file.size() - payload_start,
+                    min(size, available),
                 )
                 break
 
