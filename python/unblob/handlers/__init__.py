@@ -22,6 +22,7 @@ from .archive.dlink import alpha_encimg, deafbead, encrpted_img, fpkg, shrs
 from .archive.engeniustech import engenius
 from .archive.hp import bdl, ipkg
 from .archive.instar import bneg, instar_hd
+from .archive.moxa import frm
 from .archive.netgear import chk, trx
 from .archive.qnap import qnap_nas, qnap_networking
 from .archive.xiaomi import hdr
@@ -83,6 +84,7 @@ BUILTIN_HANDLERS: Handlers = (
     ubi.UBIHandler,
     ubi.UBIFSHandler,
     yaffs.YAFFSHandler,
+    frm.MoxaFRMHandler,
     chk.NetgearCHKHandler,
     trx.NetgearTRXv1Handler,
     trx.NetgearTRXv2Handler,
