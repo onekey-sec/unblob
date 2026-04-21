@@ -61,6 +61,7 @@
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
+    | [`SOLARIS_UFS1`](#solaris_ufs1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2)`](#squashfs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2-NON-STANDARD)`](#squashfs-v2-non-standard) | FILESYSTEM | :octicons-check-16: |
@@ -77,8 +78,8 @@
     | [`TAR (USTAR)`](#tar-ustar) | ARCHIVE | :octicons-check-16: |
     | [`UBI`](#ubi) | FILESYSTEM | :octicons-check-16: |
     | [`UBIFS`](#ubifs) | FILESYSTEM | :octicons-check-16: |
-    | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-alert-fill-12: |
-    | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-alert-fill-12: |
+    | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-check-16: |
+    | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
     | [`XAMARIN COMPRESSED ASSEMBLIES`](#xamarin-compressed-assemblies) | EXECUTABLE | :octicons-check-16: |
     | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
@@ -1086,6 +1087,23 @@
 
         - [RomFS Documentation](https://www.kernel.org/doc/html/latest/filesystems/romfs.html){ target="_blank" }
         - [RomFS Wikipedia](https://en.wikipedia.org/wiki/Romfs){ target="_blank" }
+## solaris_ufs1
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Solaris UFS1 is the variant of UFS1 used by Oracle Solaris and illumos-based systems such as OpenIndiana and OmniOS. It shares the same overall design as FreeBSD UFS1 but keeps an older on-disk convention inherited from early Unix, making it incompatible with FreeBSD's variant despite the shared magic number.
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
+        - [Oracle Solaris](https://en.wikipedia.org/wiki/Oracle_Solaris){ target="_blank" }
 ## SquashFS (v1)
 
 !!! success "Fully supported"
@@ -1358,7 +1376,7 @@
         - [UBIFS Wikipedia](https://en.wikipedia.org/wiki/UBIFS){ target="_blank" }
 ## ufs1
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
@@ -1372,17 +1390,13 @@
     === "References"
 
         - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
-
-    === "Limitations"
-
-        - File extraction is not yet supported, only carving of the filesystem is currently available.
 ## ufs2
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
-        UFS2 (Unix File System 2) is an extended version of UFS1 supported by Unix-like operating systems such as FreeBSD and Solaris. It introduces 64-bit block addressing, extended file attributes, and improved performance over UFS1, while retaining the hierarchical tree structure and inodes for file metadata and data block management.
+        UFS2 (Unix File System 2) is an extended version of UFS1 supported by Unix-like operating systems such as FreeBSD. It introduces 64-bit block addressing, extended file attributes, and improved performance over UFS1, while retaining the hierarchical tree structure and inodes for file metadata and data block management.
 
         ---
 
@@ -1392,10 +1406,6 @@
     === "References"
 
         - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
-
-    === "Limitations"
-
-        - File extraction is not yet supported, only carving of the filesystem is currently available.
 ## UZIP
 
 !!! success "Fully supported"
