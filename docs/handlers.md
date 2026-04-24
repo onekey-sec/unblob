@@ -45,6 +45,7 @@
     | [`LZIP`](#lzip) | COMPRESSION | :octicons-check-16: |
     | [`LZMA`](#lzma) | COMPRESSION | :octicons-check-16: |
     | [`LZO`](#lzo) | COMPRESSION | :octicons-check-16: |
+    | [`MACH-O`](#mach-o) | EXECUTABLE | :octicons-check-16: |
     | [`MINIX FS (V1)`](#minix-fs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V2)`](#minix-fs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V3)`](#minix-fs-v3) | FILESYSTEM | :octicons-check-16: |
@@ -817,6 +818,22 @@
 
         - [LZO File Format Documentation](http://www.lzop.org/){ target="_blank" }
         - [LZO Wikipedia](https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Oberhumer){ target="_blank" }
+## Mach-O
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Mach-O (Mach Object) is the native executable and library binary format used by macOS, iOS, tvOS, and watchOS. It encodes load commands describing memory segments, dynamic libraries, and code signing, and supports multiple CPU architectures via fat/universal binaries.
+
+        ---
+
+        - **Handler type:** Executable
+        - **Vendor:** Apple
+
+    === "References"
+
+        - [Mach-O Programming Topics](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/0-Introduction/introduction.html){ target="_blank" }
 ## MINIX FS (v1)
 
 !!! success "Fully supported"
