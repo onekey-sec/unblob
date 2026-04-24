@@ -4,6 +4,7 @@
     | [`7-ZIP`](#7-zip) | ARCHIVE | :octicons-check-16: |
     | [`ANDROID EROFS`](#android-erofs) | FILESYSTEM | :octicons-check-16: |
     | [`ANDROID SPARSE`](#android-sparse) | FILESYSTEM | :octicons-check-16: |
+    | [`APPLE IMG4/IM4P`](#apple-img4im4p) | ARCHIVE | :octicons-alert-fill-12: |
     | [`AR`](#ar) | ARCHIVE | :octicons-check-16: |
     | [`ARC`](#arc) | ARCHIVE | :octicons-check-16: |
     | [`ARJ`](#arj) | ARCHIVE | :octicons-check-16: |
@@ -140,6 +141,26 @@
 
         - [Android Sparse Image Format Documentation](https://formats.kaitai.io/android_sparse/){ target="_blank" }
         - [simg2img Tool](https://github.com/anestisb/android-simg2img){ target="_blank" }
+## Apple IMG4/IM4P
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        IMG4 is Apple's DER-encoded firmware image container used for signed payloads in the iOS and macOS secure boot chain. An IM4P (Image4 Payload) embeds a compressed or raw binary (typically LZFSE or LZSS) together with metadata used for cryptographic verification.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Apple
+
+    === "References"
+
+        - [libimg4 - Apple open-source IMG4 implementation](https://github.com/apple-oss-distributions/libimg4){ target="_blank" }
+
+    === "Limitations"
+
+        - Only IM4P payload extraction is supported; full IMG4 manifests are not verified
 ## AR
 
 !!! success "Fully supported"
