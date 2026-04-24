@@ -10,6 +10,7 @@ from .archive import (
     par2,
     partclone,
     rar,
+    rpm,
     sevenzip,
     stuffit,
     tar,
@@ -146,6 +147,7 @@ BUILTIN_HANDLERS: Handlers = (
     ufs.UFS2Handler,
     ufs.SolarisHandler,
     btrfs_stream.BTRFSStreamHandler,
+    rpm.RPMHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
