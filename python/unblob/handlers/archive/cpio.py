@@ -122,84 +122,167 @@ class CPIOEntry:
     path: Path
 
 
+@attrs.define
+class CPIOEntryHeader:
+    header: object
+    filename: str
+    c_filesize: int
+    c_namesize: int
+    c_mode: int
+    padded_header_size: int
+    is_trailer: bool
+
+
 class CPIOParserBase:
     _PAD_ALIGN: int
     _FILE_PAD_ALIGN: int = 512
     HEADER_STRUCT: str
+    _STRUCT_PARSER = StructParser(C_DEFINITIONS)
 
     def __init__(self, file: File, start_offset: int):
         self.file = file
         self.start_offset = start_offset
         self.end_offset = -1
         self.entries = []
-        self.struct_parser = StructParser(C_DEFINITIONS)
 
-    def parse(self):  # noqa: C901
+    @classmethod
+    def read_entry_header(cls, stream) -> CPIOEntryHeader | None:  # noqa: C901
+        """Parse one entry header + name, return None at EOF."""
+        try:
+            header = cls._STRUCT_PARSER.parse(cls.HEADER_STRUCT, stream, Endian.LITTLE)
+        except EOFError:
+            return None
+
+        c_filesize = cls._calculate_file_size(header)
+        c_namesize = cls._calculate_name_size(header)
+
+        # heuristics 1: check the filename
+        if c_namesize > MAX_LINUX_PATH_LENGTH:
+            raise InvalidInputFormat("CPIO entry filename is too long.")
+        if c_namesize == 0:
+            raise InvalidInputFormat("CPIO entry filename empty.")
+
+        padded_header_size = cls._pad_header(header, c_namesize)
+        name_padding = padded_header_size - len(header) - c_namesize
+
+        tmp_filename = stream.read(c_namesize)
+
+        # heuristics 2: check that filename is null-byte terminated
+        if not tmp_filename.endswith(b"\x00"):
+            raise InvalidInputFormat("CPIO entry filename is not null-byte terminated")
+
+        try:
+            filename = snull(tmp_filename).decode("utf-8")
+        except UnicodeDecodeError as e:
+            raise InvalidInputFormat from e
+
+        if name_padding:
+            stream.read(name_padding)
+
+        if filename == CPIO_TRAILER_NAME:
+            c_mode = 0
+            is_trailer = True
+        else:
+            c_mode = cls._calculate_mode(header)
+            file_type = c_mode & 0o770000
+            sticky_bit = c_mode & 0o7000
+            is_trailer = False
+
+            # heuristics 3: check mode field
+            if file_type not in C_FILE_TYPES or sticky_bit not in C_STICKY_BITS:
+                raise InvalidInputFormat("CPIO entry mode is invalid.")
+
+        return CPIOEntryHeader(
+            header=header,
+            filename=filename,
+            c_filesize=c_filesize,
+            c_namesize=c_namesize,
+            c_mode=c_mode,
+            padded_header_size=padded_header_size,
+            is_trailer=is_trailer,
+        )
+
+    @classmethod
+    def parse_and_extract(cls, stream, fs: FileSystem):  # noqa: C901
+        """Use for a CPIO archive from a streaming input. CRC is not verified."""
+        while (
+            True
+        ):  # Alternative : (entry := cls.read_entry_header(stream)) is not None
+            entry = cls.read_entry_header(stream)
+            if entry is None:
+                break
+
+            content_padding = cls._pad_content(entry.c_filesize) - entry.c_filesize
+
+            if entry.is_trailer:
+                stream.seek(content_padding, io.SEEK_CUR)
+                break
+
+            path = Path(entry.filename)
+            if path.name in ("", ".", ".."):
+                stream.seek(entry.c_filesize + content_padding, io.SEEK_CUR)
+                continue
+
+            # There are cases where CPIO archives have duplicated entries
+            # We then unlink the files to overwrite them and avoid an error.
+            if not stat.S_ISDIR(entry.c_mode):
+                fs.unlink(path)
+
+            if stat.S_ISREG(entry.c_mode):
+                fs.write_chunks(
+                    path, iterate_file(stream, stream.tell(), entry.c_filesize)
+                )
+            elif stat.S_ISLNK(entry.c_mode):
+                link_target = snull(stream.read(entry.c_filesize)).decode("utf-8")
+                fs.create_symlink(src=Path(link_target), dst=path)
+            elif stat.S_ISDIR(entry.c_mode):
+                fs.mkdir(path, mode=entry.c_mode & 0o777, parents=True, exist_ok=True)
+                stream.seek(entry.c_filesize, io.SEEK_CUR)
+            elif (
+                stat.S_ISCHR(entry.c_mode)
+                or stat.S_ISBLK(entry.c_mode)
+                or stat.S_ISSOCK(entry.c_mode)
+            ):
+                rdev = cls._calculate_rdev(entry.header)
+                fs.mknod(path, mode=entry.c_mode & 0o777, device=rdev)
+                stream.seek(entry.c_filesize, io.SEEK_CUR)
+            else:
+                logger.warning("unknown file type in CPIO archive")
+                stream.seek(entry.c_filesize, io.SEEK_CUR)
+
+            stream.seek(content_padding, io.SEEK_CUR)
+
+    def parse(self):
         current_offset = self.start_offset
         while True:
             self.file.seek(current_offset, io.SEEK_SET)
-            try:
-                header = self.struct_parser.parse(
-                    self.HEADER_STRUCT, self.file, Endian.LITTLE
-                )
-            except EOFError:
+            entry = self.read_entry_header(self.file)
+            if entry is None:
                 break
 
-            c_filesize = self._calculate_file_size(header)
-            c_namesize = self._calculate_name_size(header)
+            current_offset += entry.padded_header_size
 
-            # heuristics 1: check the filename
-            if c_namesize > MAX_LINUX_PATH_LENGTH:
-                raise InvalidInputFormat("CPIO entry filename is too long.")
-
-            if c_namesize == 0:
-                raise InvalidInputFormat("CPIO entry filename empty.")
-
-            padded_header_size = self._pad_header(header, c_namesize)
-            current_offset += padded_header_size
-
-            tmp_filename = self.file.read(c_namesize)
-
-            # heuristics 2: check that filename is null-byte terminated
-            if not tmp_filename.endswith(b"\x00"):
-                raise InvalidInputFormat(
-                    "CPIO entry filename is not null-byte terminated"
-                )
-
-            try:
-                filename = snull(tmp_filename).decode("utf-8")
-            except UnicodeDecodeError as e:
-                raise InvalidInputFormat from e
-
-            if filename == CPIO_TRAILER_NAME:
-                current_offset += self._pad_content(c_filesize)
+            if entry.is_trailer:
+                current_offset += self._pad_content(entry.c_filesize)
                 break
 
-            c_mode = self._calculate_mode(header)
-
-            file_type = c_mode & 0o770000
-            sticky_bit = c_mode & 0o7000
-
-            # heuristics 3: check mode field
-            is_valid = file_type in C_FILE_TYPES and sticky_bit in C_STICKY_BITS
-            if not is_valid:
-                raise InvalidInputFormat("CPIO entry mode is invalid.")
-
-            if self.valid_checksum(header, current_offset):
+            if self.valid_checksum(entry.header, current_offset):
                 self.entries.append(
                     CPIOEntry(
                         start_offset=current_offset,
-                        size=c_filesize,
-                        dev=self._calculate_dev(header),
-                        mode=c_mode,
-                        rdev=self._calculate_rdev(header),
-                        path=Path(filename),
+                        size=entry.c_filesize,
+                        dev=self._calculate_dev(entry.header),
+                        mode=entry.c_mode,
+                        rdev=self._calculate_rdev(entry.header),
+                        path=Path(entry.filename),
                     )
                 )
             else:
-                logger.warning("Invalid CRC for CPIO entry, skipping.", header=header)
+                logger.warning(
+                    "Invalid CRC for CPIO entry, skipping.", header=entry.header
+                )
 
-            current_offset += self._pad_content(c_filesize)
+            current_offset += self._pad_content(entry.c_filesize)
 
         self.end_offset = self._pad_file(current_offset)
         if self.start_offset == self.end_offset:
