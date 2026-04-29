@@ -48,6 +48,7 @@
     | [`MINIX FS (V1)`](#minix-fs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V2)`](#minix-fs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V3)`](#minix-fs-v3) | FILESYSTEM | :octicons-check-16: |
+    | [`MOXA FRM`](#moxa-frm) | ARCHIVE | :octicons-check-16: |
     | [`MSI`](#msi) | ARCHIVE | :octicons-alert-fill-12: |
     | [`MULTI-SEVENZIP`](#multi-sevenzip) | ARCHIVE | :octicons-check-16: |
     | [`NETGEAR CHK`](#netgear-chk) | ARCHIVE | :octicons-check-16: |
@@ -871,6 +872,20 @@
         - [Official website](https://www.minix3.org/){ target="_blank" }
         - [Linux headers (minix_fs.h)](https://github.com/torvalds/linux/blob/master/include/uapi/linux/minix_fs.h){ target="_blank" }
         - [Official tool for creating MINIX filesystems](https://github.com/Stichting-MINIX-Research-Foundation/minix/tree/master/minix/usr.sbin/mkfs.mfs){ target="_blank" }
+## Moxa FRM
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Firmware container format used in Moxa firmware (e.g. NPort, MGate and MiiNePort devices).
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Moxa
+
+    === "References"
 ## MSI
 
 !!! warning "Partially supported"
