@@ -84,6 +84,7 @@ python3.pkgs.buildPythonApplication {
     lark
     lief.py
     lzallright
+    lzfse
     python3.pkgs.lz4 # shadowed by pkgs.lz4
     plotext
     pluggy

@@ -41,6 +41,7 @@
     | [`LZ4`](#lz4) | COMPRESSION | :octicons-check-16: |
     | [`LZ4 (LEGACY)`](#lz4-legacy) | COMPRESSION | :octicons-check-16: |
     | [`LZ4 (SKIPPABLE)`](#lz4-skippable) | COMPRESSION | :octicons-check-16: |
+    | [`LZFSE`](#lzfse) | COMPRESSION | :octicons-check-16: |
     | [`LZH`](#lzh) | COMPRESSION | :octicons-check-16: |
     | [`LZIP`](#lzip) | COMPRESSION | :octicons-check-16: |
     | [`LZMA`](#lzma) | COMPRESSION | :octicons-check-16: |
@@ -751,6 +752,22 @@
 
         - [LZ4 Frame Format Documentation](https://github.com/lz4/lz4/blob/dev/doc/lz4_Frame_format.md){ target="_blank" }
         - [LZ4 Wikipedia](https://en.wikipedia.org/wiki/LZ4_(compression_algorithm)){ target="_blank" }
+## LZFSE
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        LZFSE is a lossless compression algorithm developed by Apple and open-sourced in 2016. It combines Lempel-Ziv back-references with Finite State Entropy coding and is the default compression format used in iOS and macOS firmware images.
+
+        ---
+
+        - **Handler type:** Compression
+        - **Vendor:** Apple
+
+    === "References"
+
+        - [lzfse - Apple open-source LZFSE library](https://github.com/lzfse/lzfse){ target="_blank" }
 ## LZH
 
 !!! success "Fully supported"
