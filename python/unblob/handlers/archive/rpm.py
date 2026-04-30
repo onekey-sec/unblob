@@ -3,6 +3,7 @@ import gzip
 import io
 import lzma
 from dataclasses import dataclass
+from enum import IntEnum
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +25,7 @@ from ...models import (
     StructParser,
     ValidChunk,
 )
-from .cpio import PortableASCIIParser
+from .cpio import CPIOEntry, PortableASCIIParser, StrippedCPIOParser
 
 logger = get_logger()
 
@@ -32,6 +33,24 @@ RPM_SIGNATURE_ALIGNMENT = 8
 RPMSIGTAG_SIZE = 1000  # INT32
 RPMSIGTAG_LONGSIZE = 270  # INT64
 RPMTAG_PAYLOADCOMPRESSOR = 1125
+RPMTAG_PAYLOADFLAGS = 1126
+
+RPMTAG_FILEMODES = 1030
+RPMTAG_FILERDEVS = 1033
+RPMTAG_FILELINKTOS = 1036
+RPMTAG_DIRINDEXES = 1116
+RPMTAG_BASENAMES = 1117
+RPMTAG_DIRNAMES = 1118
+RPMTAG_LONGFILESIZES = 5008
+
+
+class RPMType(IntEnum):
+    INT16 = 3
+    INT32 = 4
+    INT64 = 5
+    STRING_ARRAY = 8
+    I18NSTRING_ARRAY = 9
+
 
 C_DEFINITIONS = """
         typedef struct rpm_lead {
@@ -119,6 +138,17 @@ class RPMParser:
             self.compressor = self._read_cstring_entry(
                 self._main_header, compressor_entry
             )
+            return
+
+        # if RPMTAG_PAYLOADCOMPRESSOR is absent on v3/v4 rpm file, the default compression is gzip
+        # while w0.ufdio (none compression) packages omit the tag and set PAYLOADFLAGS = "0" instead.
+        payload_flags_entry = self._main_header.entries.get(RPMTAG_PAYLOADFLAGS)
+        payload_flags = (
+            self._read_cstring_entry(self._main_header, payload_flags_entry)
+            if payload_flags_entry
+            else None
+        )
+        self.compressor = "none" if payload_flags == "0" else "gzip"
 
     def _read_header_section(self, offset: int, alignment: int = 1) -> HeaderSection:
         self._file.seek(offset, io.SEEK_SET)
@@ -156,6 +186,55 @@ class RPMParser:
             "ascii"
         )
 
+    def _read_array_entry(self, section: HeaderSection, entry: Any) -> list:
+        """Read a fixed-count array tag value, dispatching on the entry's type."""
+        self._file.seek(section.data_offset + entry.offset, io.SEEK_SET)
+        # this line avoid false pylance errors
+        cparser: Any = self._struct_parser.cparser_be
+        match entry.type:
+            case RPMType.INT16:
+                return list(cparser.uint16[entry.count](self._file))
+            case RPMType.INT32:
+                return list(cparser.uint32[entry.count](self._file))
+            case RPMType.INT64:
+                return list(cparser.uint64[entry.count](self._file))
+            case RPMType.STRING_ARRAY | RPMType.I18NSTRING_ARRAY:
+                return [
+                    self._struct_parser.cparser_be.rpm_cstring_t(
+                        self._file
+                    ).value.decode("utf-8", errors="replace")
+                    for _ in range(entry.count)
+                ]
+            case _:
+                raise InvalidInputFormat(f"Unsupported RPM tag type: {entry.type}")
+
+    def build_stripped_entries(self) -> list[CPIOEntry]:
+        """Reconstruct metadata per-file from the main header arrays."""
+        if self._main_header is None:
+            raise InvalidInputFormat("RPM main header has not been parsed")
+        h = self._main_header
+        file_names: list[str] = self._read_array_entry(h, h.entries[RPMTAG_BASENAMES])
+        dirnames: list[str] = self._read_array_entry(h, h.entries[RPMTAG_DIRNAMES])
+        dirindexes: list[int] = self._read_array_entry(h, h.entries[RPMTAG_DIRINDEXES])
+        file_sizes: list[int] = self._read_array_entry(
+            h, h.entries.get(RPMTAG_LONGFILESIZES)
+        )
+        modes: list[int] = self._read_array_entry(h, h.entries[RPMTAG_FILEMODES])
+        links: list[str] = self._read_array_entry(h, h.entries[RPMTAG_FILELINKTOS])
+        rdevs: list[int] = self._read_array_entry(h, h.entries[RPMTAG_FILERDEVS])
+        return [
+            CPIOEntry(
+                start_offset=0,
+                size=file_sizes[i],
+                dev=0,
+                mode=modes[i],
+                rdev=rdevs[i],
+                path=Path(dirnames[dirindexes[i]] + file_names[i]),
+                link_target=links[i] or None,
+            )
+            for i in range(len(file_names))
+        ]
+
     @property
     def payload_offset(self) -> int:
         if self._main_header is None:
@@ -168,6 +247,13 @@ class RPMParser:
             raise InvalidInputFormat("RPM package has not been parsed")
         return self._main_header.offset + self._package_size
 
+    @property
+    def has_stripped_payload(self) -> bool:
+        """Stripped CPIO is used whenever LONGFILESIZES is needed (any file >4 GiB)."""
+        if self._main_header is None:
+            raise InvalidInputFormat("RPM main header has not been parsed")
+        return RPMTAG_LONGFILESIZES in self._main_header.entries
+
 
 class RPMExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path) -> ExtractResult:
@@ -177,7 +263,12 @@ class RPMExtractor(Extractor):
             parser.parse()
             file.seek(parser.payload_offset, io.SEEK_SET)
             with RPMExtractor.open_payload_stream(file, parser.compressor) as decoder:
-                PortableASCIIParser.parse_and_extract(decoder, fs)
+                if parser.has_stripped_payload:
+                    StrippedCPIOParser(
+                        decoder, 0, parser.build_stripped_entries()
+                    ).dump_entries(fs)  # pyright: ignore[reportArgumentType]
+                else:
+                    PortableASCIIParser(decoder, 0).parse(fs)  # pyright: ignore[reportArgumentType]
         return ExtractResult(reports=fs.problems)
 
     @staticmethod
