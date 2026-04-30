@@ -120,6 +120,7 @@ class CPIOEntry:
     mode: int
     rdev: int
     path: Path
+    link_target: str | None = None
 
 
 @attrs.define
@@ -139,11 +140,11 @@ class CPIOParserBase:
     HEADER_STRUCT: str
     _STRUCT_PARSER = StructParser(C_DEFINITIONS)
 
-    def __init__(self, file: File, start_offset: int):
+    def __init__(self, file: File, start_offset: int, entries: list | None = None):
         self.file = file
         self.start_offset = start_offset
         self.end_offset = -1
-        self.entries = []
+        self.entries = entries if entries is not None else []
 
     @classmethod
     def read_entry_header(cls, stream) -> CPIOEntryHeader | None:  # noqa: C901
@@ -202,57 +203,13 @@ class CPIOParserBase:
             is_trailer=is_trailer,
         )
 
-    @classmethod
-    def parse_and_extract(cls, stream, fs: FileSystem):  # noqa: C901
-        """Use for a CPIO archive from a streaming input. CRC is not verified."""
-        while (
-            True
-        ):  # Alternative : (entry := cls.read_entry_header(stream)) is not None
-            entry = cls.read_entry_header(stream)
-            if entry is None:
-                break
+    def parse(self, fs: FileSystem | None = None):
+        if fs is None:
+            self._parse_seekable()
+        else:
+            self._parse_streaming(fs)
 
-            content_padding = cls._pad_content(entry.c_filesize) - entry.c_filesize
-
-            if entry.is_trailer:
-                stream.seek(content_padding, io.SEEK_CUR)
-                break
-
-            path = Path(entry.filename)
-            if path.name in ("", ".", ".."):
-                stream.seek(entry.c_filesize + content_padding, io.SEEK_CUR)
-                continue
-
-            # There are cases where CPIO archives have duplicated entries
-            # We then unlink the files to overwrite them and avoid an error.
-            if not stat.S_ISDIR(entry.c_mode):
-                fs.unlink(path)
-
-            if stat.S_ISREG(entry.c_mode):
-                fs.write_chunks(
-                    path, iterate_file(stream, stream.tell(), entry.c_filesize)
-                )
-            elif stat.S_ISLNK(entry.c_mode):
-                link_target = snull(stream.read(entry.c_filesize)).decode("utf-8")
-                fs.create_symlink(src=Path(link_target), dst=path)
-            elif stat.S_ISDIR(entry.c_mode):
-                fs.mkdir(path, mode=entry.c_mode & 0o777, parents=True, exist_ok=True)
-                stream.seek(entry.c_filesize, io.SEEK_CUR)
-            elif (
-                stat.S_ISCHR(entry.c_mode)
-                or stat.S_ISBLK(entry.c_mode)
-                or stat.S_ISSOCK(entry.c_mode)
-            ):
-                rdev = cls._calculate_rdev(entry.header)
-                fs.mknod(path, mode=entry.c_mode & 0o777, device=rdev)
-                stream.seek(entry.c_filesize, io.SEEK_CUR)
-            else:
-                logger.warning("unknown file type in CPIO archive")
-                stream.seek(entry.c_filesize, io.SEEK_CUR)
-
-            stream.seek(content_padding, io.SEEK_CUR)
-
-    def parse(self):
+    def _parse_seekable(self):
         current_offset = self.start_offset
         while True:
             self.file.seek(current_offset, io.SEEK_SET)
@@ -287,6 +244,53 @@ class CPIOParserBase:
         self.end_offset = self._pad_file(current_offset)
         if self.start_offset == self.end_offset:
             raise InvalidInputFormat("Invalid CPIO archive.")
+
+    def _parse_streaming(self, fs: FileSystem):  # noqa: C901
+        """CRC is not verified in streaming mode."""
+        while True:
+            entry = self.read_entry_header(self.file)
+            if entry is None:
+                break
+
+            content_padding = self._pad_content(entry.c_filesize) - entry.c_filesize
+
+            if entry.is_trailer:
+                self.file.seek(content_padding, io.SEEK_CUR)
+                break
+
+            path = Path(entry.filename)
+            if path.name in ("", ".", ".."):
+                self.file.seek(entry.c_filesize + content_padding, io.SEEK_CUR)
+                continue
+
+            # There are cases where CPIO archives have duplicated entries
+            # We then unlink the files to overwrite them and avoid an error.
+            if not stat.S_ISDIR(entry.c_mode):
+                fs.unlink(path)
+
+            if stat.S_ISREG(entry.c_mode):
+                fs.write_chunks(
+                    path, iterate_file(self.file, self.file.tell(), entry.c_filesize)
+                )
+            elif stat.S_ISLNK(entry.c_mode):
+                link_target = snull(self.file.read(entry.c_filesize)).decode("utf-8")
+                fs.create_symlink(src=Path(link_target), dst=path)
+            elif stat.S_ISDIR(entry.c_mode):
+                fs.mkdir(path, mode=entry.c_mode & 0o777, parents=True, exist_ok=True)
+                self.file.seek(entry.c_filesize, io.SEEK_CUR)
+            elif (
+                stat.S_ISCHR(entry.c_mode)
+                or stat.S_ISBLK(entry.c_mode)
+                or stat.S_ISSOCK(entry.c_mode)
+            ):
+                rdev = self._calculate_rdev(entry.header)
+                fs.mknod(path, mode=entry.c_mode & 0o777, device=rdev)
+                self.file.seek(entry.c_filesize, io.SEEK_CUR)
+            else:
+                logger.warning("unknown file type in CPIO archive")
+                self.file.seek(entry.c_filesize, io.SEEK_CUR)
+
+            self.file.seek(content_padding, io.SEEK_CUR)
 
     def dump_entries(self, fs: FileSystem):
         for entry in self.entries:
@@ -458,6 +462,72 @@ class PortableASCIIWithCRCParser(PortableASCIIParser):
         for chunk in iterate_file(self.file, start_offset, file_size):
             calculated_checksum += sum(bytearray(chunk))
         return header_checksum == calculated_checksum & 0xFF_FF_FF_FF
+
+
+class StrippedCPIOParser(CPIOParserBase):
+    """Stripped CPIO variant (magic 07070X) used in RPM 4.12+.
+
+    File metadata is supplied at construction from the RPM main header;
+    dump_entries walks the stream forward to extract each entry.
+    """
+
+    _PAD_ALIGN = 4
+    _MAGIC = b"07070X"
+    _HEADER_SIZE = 14  # 6 magic + 8 file index
+
+    def parse(self, fs: FileSystem | None = None):
+        pass
+
+    def dump_entries(self, fs: FileSystem):  # noqa: C901
+        stream = self.file
+        header_padding = self._pad_content(self._HEADER_SIZE) - self._HEADER_SIZE
+        while True:
+            magic = stream.read(6)
+            # Stripped archives terminate with a standard newc TRAILER entry.
+            if magic in (b"070701", b"070702"):
+                break
+            if magic != self._MAGIC:
+                raise InvalidInputFormat(
+                    f"Bad stripped CPIO magic: {magic} should be 07070X"
+                )
+
+            file_index = int(stream.read(8), 16)
+            stream.seek(header_padding, io.SEEK_CUR)
+
+            entry = self.entries[file_index]
+            content_padding = self._pad_content(entry.size) - entry.size
+
+            if entry.path.name in ("", ".", ".."):
+                stream.seek(entry.size + content_padding, io.SEEK_CUR)
+                continue
+
+            if not stat.S_ISDIR(entry.mode):
+                fs.unlink(entry.path)
+
+            if stat.S_ISREG(entry.mode):
+                fs.write_chunks(
+                    entry.path, iterate_file(stream, stream.tell(), entry.size)
+                )
+            elif stat.S_ISLNK(entry.mode):
+                fs.create_symlink(src=Path(entry.link_target), dst=entry.path)
+                stream.seek(entry.size, io.SEEK_CUR)
+            elif stat.S_ISDIR(entry.mode):
+                fs.mkdir(
+                    entry.path, mode=entry.mode & 0o777, parents=True, exist_ok=True
+                )
+                stream.seek(entry.size, io.SEEK_CUR)
+            elif (
+                stat.S_ISCHR(entry.mode)
+                or stat.S_ISBLK(entry.mode)
+                or stat.S_ISSOCK(entry.mode)
+            ):
+                fs.mknod(entry.path, mode=entry.mode & 0o777, device=entry.rdev)
+                stream.seek(entry.size, io.SEEK_CUR)
+            else:
+                logger.warning("unknown file type in stripped CPIO archive")
+                stream.seek(entry.size, io.SEEK_CUR)
+
+            stream.seek(content_padding, io.SEEK_CUR)
 
 
 class _CPIOExtractorBase(Extractor):
