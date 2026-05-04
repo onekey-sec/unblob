@@ -59,6 +59,13 @@ from .filesystem import (
 )
 from .filesystem.android import erofs, sparse
 
+__all__ = [
+    "BUILTIN_DIR_HANDLERS",
+    "BUILTIN_HANDLERS",
+    "DirectoryHandlers",
+    "Handlers",
+]
+
 BUILTIN_HANDLERS: Handlers = (
     cramfs.CramFSHandler,
     deafbead.DeafBeadHandler,
