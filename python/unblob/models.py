@@ -29,6 +29,44 @@ from .report import (
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+__all__ = [
+    "Blob",
+    "Chunk",
+    "DExtractor",
+    "DirectoryExtractor",
+    "DirectoryHandler",
+    "DirectoryHandlers",
+    "DirectoryPattern",
+    "Endian",
+    "ExtractError",
+    "ExtractResult",
+    "Extractor",
+    "File",
+    "Glob",
+    "Handler",
+    "HandlerDoc",
+    "HandlerType",
+    "Handlers",
+    "HexString",
+    "InvalidInputFormat",
+    "MultiFile",
+    "PaddingChunk",
+    "Pattern",
+    "ProcessResult",
+    "Reference",
+    "Regex",
+    "ReportModel",
+    "ReportModelAdapter",
+    "SingleFile",
+    "StructHandler",
+    "StructParser",
+    "TExtractor",
+    "Task",
+    "TaskResult",
+    "UnknownChunk",
+    "ValidChunk",
+]
+
 logger = get_logger()
 
 # The state transitions are:
