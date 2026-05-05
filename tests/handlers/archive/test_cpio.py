@@ -1,7 +1,15 @@
+import stat
+from pathlib import Path
+
 import pytest
 
-from unblob.file_utils import File, InvalidInputFormat
-from unblob.handlers.archive.cpio import PortableASCIIParser, PortableOldASCIIParser
+from unblob.file_utils import File, FileSystem, InvalidInputFormat
+from unblob.handlers.archive.cpio import (
+    CPIOEntry,
+    PortableASCIIParser,
+    PortableOldASCIIParser,
+    StrippedCPIOParser,
+)
 
 
 def old_ascii_entry(
@@ -25,6 +33,12 @@ def new_ascii_entry(
         + namesize
         + b"00000000"
     )
+
+
+def stripped_archive(payload: bytes, file_index: bytes = b"00000000") -> bytes:
+    entry_padding = b"\x00" * (-len(payload) % 4)
+    trailer = new_ascii_entry(namesize=b"0000000b") + b"TRAILER!!!\x00" + b"\x00" * 3
+    return b"07070X" + file_index + b"\x00" * 2 + payload + entry_padding + trailer
 
 
 @pytest.mark.parametrize(
@@ -63,3 +77,31 @@ def test_parse_rejects_negative_filesize(parser, entry):
 
     with pytest.raises(InvalidInputFormat):
         parser(file, 0).parse()
+
+
+def test_stripped_parser_uses_rpm_symlink_metadata(tmp_path: Path) -> None:
+    payload_target = b"target-from-payload"
+    entry = CPIOEntry(
+        header=None,
+        size=len(payload_target),
+        mode=stat.S_IFLNK | 0o777,
+        rdev=0,
+        path=Path("link"),
+        link="target-from-header",
+    )
+    archive = stripped_archive(payload_target)
+    parser = StrippedCPIOParser(File.from_bytes(archive), 0, [entry])
+
+    parser.parse(FileSystem(tmp_path))
+
+    assert (tmp_path / "link").readlink() == Path("target-from-header")
+    assert parser.end_offset == len(archive)
+
+
+def test_stripped_parser_rejects_out_of_range_file_index() -> None:
+    parser = StrippedCPIOParser(
+        File.from_bytes(stripped_archive(b"", file_index=b"00000001")), 0, []
+    )
+
+    with pytest.raises(InvalidInputFormat, match="file index"):
+        parser.parse()

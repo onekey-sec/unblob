@@ -117,7 +117,7 @@ C_DEFINITIONS = r"""
 
 @attrs.define
 class CPIOEntry:
-    header: object
+    header: object | None
     size: int
     mode: int
     rdev: int
@@ -229,7 +229,8 @@ class CPIOParserBase:
                 entry.path, iterate_file(self.file, self.file.tell(), entry.size)
             )
         elif stat.S_ISLNK(entry.mode):
-            link_target = snull(self.file.read(entry.size)).decode("utf-8")
+            payload_link = snull(self.file.read(entry.size)).decode("utf-8")
+            link_target = entry.link or payload_link
             fs.create_symlink(src=Path(link_target), dst=entry.path)
         elif stat.S_ISDIR(entry.mode):
             fs.mkdir(entry.path, mode=entry.mode & 0o777, parents=True, exist_ok=True)
@@ -248,6 +249,8 @@ class CPIOParserBase:
     def verify_checksum_mismatch(
         self, fs: FileSystem, entry: CPIOEntry, calculated_checksum: int
     ):
+        if entry.header is None:
+            raise InvalidInputFormat("CPIO checksum metadata is missing")
         if self.valid_checksum(entry.header, calculated_checksum):
             return
 
@@ -414,6 +417,68 @@ class PortableASCIIWithCRCParser(PortableASCIIParser):
     def valid_checksum(self, header, calculated_checksum: int) -> bool:
         header_checksum = decode_int(header.c_chksum, 16)
         return header_checksum == calculated_checksum & 0xFF_FF_FF_FF
+
+
+class StrippedCPIOParser(CPIOParserBase):
+    """Stripped CPIO variant (magic 07070X) used in RPM 4.12+.
+
+    File metadata is supplied at construction from the RPM main header; the parser
+    walks the stream forward to extract each entry.
+    """
+
+    _PAD_ALIGN = 4
+    _MAGIC = b"07070X"
+    _HEADER_SIZE = 14  # 6 magic + 8 file index
+
+    def parse(self, fs: FileSystem | None = None):
+        header_padding = self._pad_content(self._HEADER_SIZE) - self._HEADER_SIZE
+        while True:
+            magic = self.file.read(6)
+            # Stripped archives terminate with a standard newc TRAILER entry.
+            if magic in (b"070701", b"070702"):
+                self._read_trailer()
+                break
+            if magic != self._MAGIC:
+                raise InvalidInputFormat(
+                    f"Bad stripped CPIO magic: {magic} should be 07070X"
+                )
+
+            entry = self._read_indexed_entry()
+            self.file.seek(header_padding, io.SEEK_CUR)
+            content_padding = self._pad_content(entry.size) - entry.size
+
+            if entry.path.name in ("", ".", ".."):
+                self.file.seek(entry.size + content_padding, io.SEEK_CUR)
+                continue
+
+            if fs is not None:
+                self.extract_entry(fs, entry)
+            else:
+                self.file.seek(entry.size, io.SEEK_CUR)
+            self.file.seek(content_padding, io.SEEK_CUR)
+        self.end_offset = self._pad_file(self.file.tell())
+
+    def _read_trailer(self) -> None:
+        header_rest = self.file.read(104)
+        if len(header_rest) != 104:
+            raise InvalidInputFormat("Truncated stripped CPIO trailer")
+        name_size = decode_int(header_rest[88:96], 16)
+        self._validate_entry_sizes(0, name_size)
+        trailer_name = self.file.read(name_size)
+        if trailer_name != b"TRAILER!!!\x00":
+            raise InvalidInputFormat("Invalid stripped CPIO trailer")
+        trailer_size = 110 + name_size
+        trailer_padding = round_up(trailer_size, self._PAD_ALIGN) - trailer_size
+        self.file.seek(trailer_padding, io.SEEK_CUR)
+
+    def _read_indexed_entry(self) -> CPIOEntry:
+        file_index_bytes = self.file.read(8)
+        if len(file_index_bytes) != 8:
+            raise InvalidInputFormat("Truncated stripped CPIO file index")
+        try:
+            return self.entries[int(file_index_bytes, 16)]
+        except (IndexError, ValueError) as e:
+            raise InvalidInputFormat("Invalid stripped CPIO file index") from e
 
 
 class _CPIOExtractorBase(Extractor):

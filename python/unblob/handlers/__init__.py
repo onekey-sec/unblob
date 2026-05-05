@@ -11,6 +11,7 @@ from .archive import (
     par2,
     partclone,
     rar,
+    rpm,
     sevenzip,
     stuffit,
     tar,
@@ -162,6 +163,7 @@ BUILTIN_HANDLERS: Handlers = (
     btrfs_stream.BTRFSStreamHandler,
     sbfh.SBFHHandler,
     airoha.AirohaHandler,
+    rpm.RPMHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
