@@ -405,6 +405,47 @@ class PortableASCIIWithCRCParser(PortableASCIIParser):
         return header_checksum == calculated_checksum & 0xFF_FF_FF_FF
 
 
+class StrippedCPIOParser(CPIOParserBase):
+    """Stripped CPIO variant (magic 07070X) used in RPM 4.12+.
+
+    File metadata is supplied at construction from the RPM main header;
+    dump_entries walks the stream forward to extract each entry.
+    """
+
+    _PAD_ALIGN = 4
+    _MAGIC = b"07070X"
+    _HEADER_SIZE = 14  # 6 magic + 8 file index
+
+    def parse(self, fs: FileSystem | None = None):
+        header_padding = self._pad_content(self._HEADER_SIZE) - self._HEADER_SIZE
+        while True:
+            magic = self.file.read(6)
+            # Stripped archives terminate with a standard newc TRAILER entry.
+            if magic in (b"070701", b"070702"):
+                break
+            if magic != self._MAGIC:
+                raise InvalidInputFormat(
+                    f"Bad stripped CPIO magic: {magic} should be 07070X"
+                )
+
+            file_index = int(self.file.read(8), 16)
+            self.file.seek(header_padding, io.SEEK_CUR)
+
+            entry = self.entries[file_index]
+            content_padding = self._pad_content(entry.size) - entry.size
+
+            if entry.path.name in ("", ".", ".."):
+                self.file.seek(entry.size + content_padding, io.SEEK_CUR)
+                continue
+
+            if fs is not None:
+                self.extract_entry(fs, entry)
+            else:
+                self.file.seek(entry.size, io.SEEK_CUR)
+            self.file.seek(content_padding, io.SEEK_CUR)
+        self.end_offset = self._pad_file(self.file.tell())
+
+
 class _CPIOExtractorBase(Extractor):
     PARSER: type[CPIOParserBase]
 
