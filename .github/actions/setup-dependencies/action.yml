@@ -30,7 +30,6 @@ runs:
     - name: Enable sccache
       run: |
         echo SCCACHE_GHA_ENABLED=true >> $GITHUB_ENV
-        echo RUSTC_WRAPPER=sccache >> $GITHUB_ENV
       shell: bash
 
     - name: Install uv & Python
