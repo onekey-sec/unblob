@@ -135,7 +135,7 @@ python3.pkgs.buildPythonApplication {
     ]
     ++ runtimeDeps;
 
-  pytestFlagsArray = [
+  pytestFlags = [
     "--timeout=600"
     "--with-e2e"
   ];
