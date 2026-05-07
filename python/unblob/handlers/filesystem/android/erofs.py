@@ -79,7 +79,6 @@ class EROFSHandler(StructHandler):
         return (
             header.block_count >= 1
             and header.build_time > 0
-            and header.build_time_nsec > 0
             and header.block_size_bs >= 9
         )
 
@@ -89,7 +88,7 @@ class EROFSHandler(StructHandler):
         if not self.is_valid_header(header):
             raise InvalidInputFormat("Invalid erofs header.")
 
-        end_offset = (1 << header.block_size_bs) * header.block_count
+        end_offset = start_offset + (1 << header.block_size_bs) * header.block_count
         return ValidChunk(
             start_offset=start_offset,
             end_offset=end_offset,
