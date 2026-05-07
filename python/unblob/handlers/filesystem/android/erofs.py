@@ -79,7 +79,6 @@ class EROFSHandler(StructHandler):
         return (
             header.block_count >= 1
             and header.build_time > 0
-            and header.build_time_nsec > 0
             and header.block_size_bs >= 9
         )
 
