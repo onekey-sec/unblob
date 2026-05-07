@@ -77,6 +77,7 @@
     | [`STUFFIT SIT (V5)`](#stuffit-sit-v5) | ARCHIVE | :octicons-check-16: |
     | [`TAR (UNIX)`](#tar-unix) | ARCHIVE | :octicons-check-16: |
     | [`TAR (USTAR)`](#tar-ustar) | ARCHIVE | :octicons-check-16: |
+    | [`TESLA WALL CONNECTOR SBFH`](#tesla-wall-connector-sbfh) | ARCHIVE | :octicons-check-16: |
     | [`UBI`](#ubi) | FILESYSTEM | :octicons-check-16: |
     | [`UBIFS`](#ubifs) | FILESYSTEM | :octicons-check-16: |
     | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-check-16: |
@@ -1355,6 +1356,24 @@
 
         - [USTAR Format Documentation](https://en.wikipedia.org/wiki/Tar_(computing)#USTAR_format){ target="_blank" }
         - [POSIX Tar Format Specification](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html){ target="_blank" }
+## Tesla Wall Connector SBFH
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        SBFH format is used in Tesla Wall Connector firmware, contains also a Marvell MRVL blob of ARM V7 segments
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Tesla
+
+    === "References"
+
+        - [Tesla Wall Connector Firmware File Structure](https://akrutsinger.github.io/2023/10/08/tesla-wall-connector-firmware-file-structure.html){ target="_blank" }
+        - [Marvell 88MW30x Firmware Tools](https://github.com/wfr/mrvl-88mw30x-firmware-tools){ target="_blank" }
+        - [Exploiting the Tesla Wall Connector](https://www.synacktiv.com/en/publications/exploiting-the-tesla-wall-connector-from-its-charge-port-connector.html){ target="_blank" }
 ## UBI
 
 !!! success "Fully supported"
