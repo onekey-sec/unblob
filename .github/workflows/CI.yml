@@ -128,7 +128,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Run cargo test
         env:
@@ -185,7 +185,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i python3.10
-          sccache: "true"
+          sccache: "false"
           manylinux: ${{ matrix.platform.manylinux }}
 
       - name: Upload wheels
@@ -275,7 +275,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i python3.10
-          sccache: "true"
+          sccache: "false"
 
       - name: Upload wheels
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
