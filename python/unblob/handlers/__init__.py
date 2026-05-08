@@ -25,6 +25,7 @@ from .archive.instar import bneg, instar_hd
 from .archive.moxa import frm
 from .archive.netgear import chk, trx
 from .archive.qnap import qnap_nas, qnap_networking
+from .archive.tesla import sbfh
 from .archive.xiaomi import hdr
 from .compression import (
     bzip2,
@@ -153,6 +154,7 @@ BUILTIN_HANDLERS: Handlers = (
     ufs.UFS2Handler,
     ufs.SolarisHandler,
     btrfs_stream.BTRFSStreamHandler,
+    sbfh.SBFHHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
