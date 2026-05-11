@@ -2,6 +2,7 @@
     | Format        | Type                                 | Fully supported?    |
     | :------------ | :----------------------------------- | :-----------------: |
     | [`7-ZIP`](#7-zip) | ARCHIVE | :octicons-check-16: |
+    | [`AIROHA BT FIRMWARE`](#airoha-bt-firmware) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ANDROID EROFS`](#android-erofs) | FILESYSTEM | :octicons-check-16: |
     | [`ANDROID SPARSE`](#android-sparse) | FILESYSTEM | :octicons-check-16: |
     | [`AR`](#ar) | ARCHIVE | :octicons-check-16: |
@@ -108,6 +109,27 @@
     === "References"
 
         - [7-Zip Technical Documentation](https://fastapi.metacpan.org/source/BJOERN/Compress-Deflate7-1.0/7zip/DOC/7zFormat.txt){ target="_blank" }
+## Airoha BT firmware
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Airoha Bluetooth audio firmware files are either compressed or encrypted. These firmwares are used on Bluetooth audio chips that can be found in popular earbuds and headphones.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Airoha
+
+    === "References"
+
+        - [Airoha firmware parser (010 Editor template + decryptor)](https://github.com/ramikg/airoha-firmware-parser){ target="_blank" }
+        - [Airoha Bluetooth security vulnerabilities](https://insinuator.net/2025/06/airoha-bluetooth-security-vulnerabilities/){ target="_blank" }
+
+    === "Limitations"
+
+        - AES-encrypted firmware blobs are only carved, decryption requires a per-vendor AES key/IV not embedded in the file.
 ## Android EROFS
 
 !!! success "Fully supported"

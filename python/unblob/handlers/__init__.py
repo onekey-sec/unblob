@@ -1,5 +1,6 @@
 from ..models import DirectoryHandlers, Handlers
 from .archive import (
+    airoha,
     ar,
     arc,
     arj,
@@ -155,6 +156,7 @@ BUILTIN_HANDLERS: Handlers = (
     ufs.SolarisHandler,
     btrfs_stream.BTRFSStreamHandler,
     sbfh.SBFHHandler,
+    airoha.AirohaHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
