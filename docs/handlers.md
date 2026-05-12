@@ -62,6 +62,7 @@
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
+    | [`RPM`](#rpm) | ARCHIVE | :octicons-check-16: |
     | [`SOLARIS_UFS1`](#solaris_ufs1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2)`](#squashfs-v2) | FILESYSTEM | :octicons-check-16: |
@@ -1103,6 +1104,23 @@
 
         - [RomFS Documentation](https://www.kernel.org/doc/html/latest/filesystems/romfs.html){ target="_blank" }
         - [RomFS Wikipedia](https://en.wikipedia.org/wiki/Romfs){ target="_blank" }
+## RPM
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        RPM (Red Hat Package Manager) is a package archive format used by Red Hat-based Linux distributions. An RPM file contains metadata (signature, header) and a compressed cpio archive as payload.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Red Hat
+
+    === "References"
+
+        - [RPM File Format](https://rpm-software-management.github.io/rpm/manual/format.html){ target="_blank" }
+        - [RPM Package Manager](https://en.wikipedia.org/wiki/RPM_Package_Manager){ target="_blank" }
 ## solaris_ufs1
 
 !!! success "Fully supported"
