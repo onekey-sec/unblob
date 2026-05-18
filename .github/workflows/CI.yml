@@ -43,7 +43,7 @@ jobs:
           uv-groups: "check"
 
       - name: Setup Nix
-        uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # v31.10.4
+        uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3 # v31.10.6
         with:
           install_url: https://releases.nixos.org/nix/nix-2.18.8/install
 
@@ -128,7 +128,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Run cargo test
         env:
@@ -143,7 +143,7 @@ jobs:
         run: cargo bench -- --output-format bencher | tee bench.txt
       - name: Store benchmark result
         if: matrix.os == 'ubuntu-latest'
-        uses: benchmark-action/github-action-benchmark@a60cea5bc7b49e15c1f58f411161f99e0df48372 # v1.22.0
+        uses: benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba # v1.22.1
         with:
           tool: "cargo"
           output-file-path: bench.txt
@@ -185,7 +185,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i python3.10
-          sccache: "true"
+          sccache: "false"
           manylinux: ${{ matrix.platform.manylinux }}
 
       - name: Upload wheels
@@ -275,7 +275,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist -i python3.10
-          sccache: "true"
+          sccache: "false"
 
       - name: Upload wheels
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -400,7 +400,7 @@ jobs:
           only-fixed: true
 
       - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
+        uses: github/codeql-action/upload-sarif@458d36d7d4f47d0dd16ca424c1d3cda0060f1360 # v3.35.5
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 

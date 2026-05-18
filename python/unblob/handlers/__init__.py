@@ -22,8 +22,10 @@ from .archive.dlink import alpha_encimg, deafbead, encrpted_img, fpkg, shrs
 from .archive.engeniustech import engenius
 from .archive.hp import bdl, ipkg
 from .archive.instar import bneg, instar_hd
+from .archive.moxa import frm
 from .archive.netgear import chk, trx
 from .archive.qnap import qnap_nas, qnap_networking
+from .archive.tesla import sbfh
 from .archive.xiaomi import hdr
 from .compression import (
     bzip2,
@@ -59,6 +61,13 @@ from .filesystem import (
 )
 from .filesystem.android import erofs, sparse
 
+__all__ = [
+    "BUILTIN_DIR_HANDLERS",
+    "BUILTIN_HANDLERS",
+    "DirectoryHandlers",
+    "Handlers",
+]
+
 BUILTIN_HANDLERS: Handlers = (
     apfs.APFSHandler,
     cramfs.CramFSHandler,
@@ -85,6 +94,7 @@ BUILTIN_HANDLERS: Handlers = (
     ubi.UBIHandler,
     ubi.UBIFSHandler,
     yaffs.YAFFSHandler,
+    frm.MoxaFRMHandler,
     chk.NetgearCHKHandler,
     trx.NetgearTRXv1Handler,
     trx.NetgearTRXv2Handler,
@@ -144,7 +154,9 @@ BUILTIN_HANDLERS: Handlers = (
     qnx_deflate.QNXDeflateHandler,
     ufs.UFS1Handler,
     ufs.UFS2Handler,
+    ufs.SolarisHandler,
     btrfs_stream.BTRFSStreamHandler,
+    sbfh.SBFHHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (

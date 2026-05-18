@@ -49,6 +49,7 @@
     | [`MINIX FS (V1)`](#minix-fs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V2)`](#minix-fs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V3)`](#minix-fs-v3) | FILESYSTEM | :octicons-check-16: |
+    | [`MOXA FRM`](#moxa-frm) | ARCHIVE | :octicons-check-16: |
     | [`MSI`](#msi) | ARCHIVE | :octicons-alert-fill-12: |
     | [`MULTI-SEVENZIP`](#multi-sevenzip) | ARCHIVE | :octicons-check-16: |
     | [`NETGEAR CHK`](#netgear-chk) | ARCHIVE | :octicons-check-16: |
@@ -62,6 +63,7 @@
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
+    | [`SOLARIS_UFS1`](#solaris_ufs1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2)`](#squashfs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2-NON-STANDARD)`](#squashfs-v2-non-standard) | FILESYSTEM | :octicons-check-16: |
@@ -76,10 +78,11 @@
     | [`STUFFIT SIT (V5)`](#stuffit-sit-v5) | ARCHIVE | :octicons-check-16: |
     | [`TAR (UNIX)`](#tar-unix) | ARCHIVE | :octicons-check-16: |
     | [`TAR (USTAR)`](#tar-ustar) | ARCHIVE | :octicons-check-16: |
+    | [`TESLA WALL CONNECTOR SBFH`](#tesla-wall-connector-sbfh) | ARCHIVE | :octicons-check-16: |
     | [`UBI`](#ubi) | FILESYSTEM | :octicons-check-16: |
     | [`UBIFS`](#ubifs) | FILESYSTEM | :octicons-check-16: |
-    | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-alert-fill-12: |
-    | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-alert-fill-12: |
+    | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-check-16: |
+    | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
     | [`XAMARIN COMPRESSED ASSEMBLIES`](#xamarin-compressed-assemblies) | EXECUTABLE | :octicons-check-16: |
     | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
@@ -887,6 +890,20 @@
         - [Official website](https://www.minix3.org/){ target="_blank" }
         - [Linux headers (minix_fs.h)](https://github.com/torvalds/linux/blob/master/include/uapi/linux/minix_fs.h){ target="_blank" }
         - [Official tool for creating MINIX filesystems](https://github.com/Stichting-MINIX-Research-Foundation/minix/tree/master/minix/usr.sbin/mkfs.mfs){ target="_blank" }
+## Moxa FRM
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Firmware container format used in Moxa firmware (e.g. NPort, MGate and MiiNePort devices).
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Moxa
+
+    === "References"
 ## MSI
 
 !!! warning "Partially supported"
@@ -1103,6 +1120,23 @@
 
         - [RomFS Documentation](https://www.kernel.org/doc/html/latest/filesystems/romfs.html){ target="_blank" }
         - [RomFS Wikipedia](https://en.wikipedia.org/wiki/Romfs){ target="_blank" }
+## solaris_ufs1
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Solaris UFS1 is the variant of UFS1 used by Oracle Solaris and illumos-based systems such as OpenIndiana and OmniOS. It shares the same overall design as FreeBSD UFS1 but keeps an older on-disk convention inherited from early Unix, making it incompatible with FreeBSD's variant despite the shared magic number.
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
+        - [Oracle Solaris](https://en.wikipedia.org/wiki/Oracle_Solaris){ target="_blank" }
 ## SquashFS (v1)
 
 !!! success "Fully supported"
@@ -1339,6 +1373,24 @@
 
         - [USTAR Format Documentation](https://en.wikipedia.org/wiki/Tar_(computing)#USTAR_format){ target="_blank" }
         - [POSIX Tar Format Specification](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html){ target="_blank" }
+## Tesla Wall Connector SBFH
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        SBFH format is used in Tesla Wall Connector firmware, contains also a Marvell MRVL blob of ARM V7 segments
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Tesla
+
+    === "References"
+
+        - [Tesla Wall Connector Firmware File Structure](https://akrutsinger.github.io/2023/10/08/tesla-wall-connector-firmware-file-structure.html){ target="_blank" }
+        - [Marvell 88MW30x Firmware Tools](https://github.com/wfr/mrvl-88mw30x-firmware-tools){ target="_blank" }
+        - [Exploiting the Tesla Wall Connector](https://www.synacktiv.com/en/publications/exploiting-the-tesla-wall-connector-from-its-charge-port-connector.html){ target="_blank" }
 ## UBI
 
 !!! success "Fully supported"
@@ -1375,7 +1427,7 @@
         - [UBIFS Wikipedia](https://en.wikipedia.org/wiki/UBIFS){ target="_blank" }
 ## ufs1
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
@@ -1389,17 +1441,13 @@
     === "References"
 
         - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
-
-    === "Limitations"
-
-        - File extraction is not yet supported, only carving of the filesystem is currently available.
 ## ufs2
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
-        UFS2 (Unix File System 2) is an extended version of UFS1 supported by Unix-like operating systems such as FreeBSD and Solaris. It introduces 64-bit block addressing, extended file attributes, and improved performance over UFS1, while retaining the hierarchical tree structure and inodes for file metadata and data block management.
+        UFS2 (Unix File System 2) is an extended version of UFS1 supported by Unix-like operating systems such as FreeBSD. It introduces 64-bit block addressing, extended file attributes, and improved performance over UFS1, while retaining the hierarchical tree structure and inodes for file metadata and data block management.
 
         ---
 
@@ -1409,10 +1457,6 @@
     === "References"
 
         - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
-
-    === "Limitations"
-
-        - File extraction is not yet supported, only carving of the filesystem is currently available.
 ## UZIP
 
 !!! success "Fully supported"
