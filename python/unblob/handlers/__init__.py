@@ -53,6 +53,7 @@ from .filesystem import (
     fat,
     iso9660,
     jffs2,
+    lvm,
     minifs,
     minixfs,
     ntfs,
@@ -164,6 +165,7 @@ BUILTIN_HANDLERS: Handlers = (
     sbfh.SBFHHandler,
     airoha.AirohaHandler,
     rpm.RPMHandler,
+    lvm.LVM2Handler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
