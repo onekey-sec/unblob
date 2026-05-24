@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from structlog import get_logger
 
 from unblob.file_utils import InvalidInputFormat
@@ -29,6 +31,25 @@ OS_LIST = [
         "Other",
     ),  # Other "Lites" (BSD4.4-Lite derivatives such as NetBSD, OpenBSD, XNU/Darwin, etc.)
 ]
+
+
+class ExtFSExtractor(Command):
+    """``debugfs -R`` extractor that is safe for output paths with metacharacters.
+
+    ``debugfs`` parses the ``-R`` request through libss, which re-tokenises the
+    string: whitespace separates arguments, double quotes group whitespace, and
+    a literal ``"`` inside a quoted token must be written as ``""``. The output
+    directory is interpolated into a quoted token (``rdump / "{outdir}"``), so
+    without escaping an ``outdir`` containing a ``"`` produces an
+    "Unbalanced quotes in command line" parse error. ``debugfs`` then exits 0
+    having run nothing, which would make unblob silently skip the whole ext
+    filesystem (no error reported). Escaping keeps the request well-formed for
+    any directory name produced during recursive extraction.
+    """
+
+    def _make_extract_command(self, inpath: Path, outdir: Path):
+        escaped_outdir = Path(str(outdir).replace('"', '""'))
+        return super()._make_extract_command(inpath, escaped_outdir)
 
 
 class EXTHandler(StructHandler):
@@ -70,7 +91,7 @@ class EXTHandler(StructHandler):
 
     PATTERN_MATCH_OFFSET = -MAGIC_OFFSET
 
-    EXTRACTOR = Command("debugfs", "-R", 'rdump / "{outdir}"', "{inpath}")
+    EXTRACTOR = ExtFSExtractor("debugfs", "-R", 'rdump / "{outdir}"', "{inpath}")
 
     DOC = HandlerDoc(
         name="ExtFS",
