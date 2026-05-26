@@ -50,6 +50,7 @@ from .filesystem import (
     fat,
     iso9660,
     jffs2,
+    lvm,
     minixfs,
     ntfs,
     romfs,
@@ -155,6 +156,7 @@ BUILTIN_HANDLERS: Handlers = (
     ufs.SolarisHandler,
     btrfs_stream.BTRFSStreamHandler,
     sbfh.SBFHHandler,
+    lvm.LVM2Handler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (

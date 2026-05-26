@@ -38,6 +38,7 @@
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (NEW)`](#jffs2-new) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (OLD)`](#jffs2-old) | FILESYSTEM | :octicons-check-16: |
+    | [`LVM2`](#lvm2) | FILESYSTEM | :octicons-alert-fill-12: |
     | [`LZ4`](#lz4) | COMPRESSION | :octicons-check-16: |
     | [`LZ4 (LEGACY)`](#lz4-legacy) | COMPRESSION | :octicons-check-16: |
     | [`LZ4 (SKIPPABLE)`](#lz4-skippable) | COMPRESSION | :octicons-check-16: |
@@ -701,6 +702,27 @@
 
         - [JFFS2 Documentation](https://sourceware.org/jffs2/){ target="_blank" }
         - [JFFS2 Wikipedia](https://en.wikipedia.org/wiki/JFFS2){ target="_blank" }
+## LVM2
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        LVM2 (Logical Volume Manager 2) is a volume management system for Linux block storage, grouping physical volumes (PVs) into volume groups (VGs) that expose logical volumes (LVs) as resizable virtual block devices. Each PV carries text-format metadata describing the VG layout and a data area holding LV contents as fixed-size physical extents.
+
+        ---
+
+        - **Handler type:** FileSystem
+        
+
+    === "References"
+
+        - [LVM2 on-disk format (libvslvm)](https://github.com/libyal/libvslvm/blob/main/documentation/Logical%20Volume%20Manager%20(LVM)%20format.asciidoc){ target="_blank" }
+
+    === "Limitations"
+
+        - Multi-PV volume groups produce one partial LV image per PV chunk. The data is preserved across all extractions, but combining the partials into a single LV image is left to the user.
+        - Only linear segments (striped with stripe_count=1) are supported. Other segment types (multi-stripe, mirror, raid, thin, snapshot, cache) require cross-PV reassembly or a separate format parser
 ## LZ4
 
 !!! success "Fully supported"
