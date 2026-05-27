@@ -58,6 +58,10 @@ class QNXDeflateExtractor(Extractor):
             with fs.open(Path(f"{inpath.stem}.uncompressed")) as outfile:
                 cmphdr = self._struct_parser.cparser_le.cmphdr_t(file)
                 while cmphdr.next != 0:
+                    if cmphdr.next < 8:
+                        raise InvalidInputFormat(
+                            "QNX deflate block offset is smaller than its header."
+                        )
                     compressed_part = file.read(cmphdr.next - 8)
                     outfile.write(decompressor.decompress(compressed_part))
                     cmphdr = self._struct_parser.cparser_le.cmphdr_t(file)
@@ -93,6 +97,10 @@ class QNXDeflateHandler(StructHandler):
 
         cmphdr = self.cparser_le.cmphdr_t(file)
         while cmphdr.next != 0:
+            if cmphdr.next < 8:
+                raise InvalidInputFormat(
+                    "QNX deflate block offset is smaller than its header."
+                )
             # return from 8 bytes because it parse the cmpheader
             file.seek(cmphdr.next - 8, io.SEEK_CUR)
             cmphdr = self.cparser_le.cmphdr_t(file)
