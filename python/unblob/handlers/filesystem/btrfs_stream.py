@@ -520,6 +520,10 @@ class BTRFSParser:
             "tlv_header_type_only_t", self.file, Endian.LITTLE
         )
         data_len = cmd_header.data_len - len(command) - len(tlv_type)
+        if data_len < 0:
+            raise InvalidInputFormat(
+                "BTRFS encoded_write data length is smaller than its command header."
+            )
 
         # data_len is bounded by BTRFS_MAX_COMPRESSED (128 KiB); large files are
         # split into multiple encoded_write commands, so reading at once is safe
