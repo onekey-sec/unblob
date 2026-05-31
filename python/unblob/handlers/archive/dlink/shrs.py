@@ -88,6 +88,9 @@ class SHRSHandler(StructHandler):
     def is_valid_header(self, header, file: File) -> bool:
         if header.file_size < len(header):
             return False
+        # file_size_no_padding drives the read and the negative rewind below
+        if header.file_size_no_padding > header.file_size:
+            return False
         # we're exactly past the header, we compute the digest
         digest = hashlib.sha512(file.read(header.file_size_no_padding)).digest()
         # we seek back to where we were
