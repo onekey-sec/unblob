@@ -152,8 +152,8 @@ class CPIOParserBase:
             if c_namesize > MAX_LINUX_PATH_LENGTH:
                 raise InvalidInputFormat("CPIO entry filename is too long.")
 
-            if c_namesize == 0:
-                raise InvalidInputFormat("CPIO entry filename empty.")
+            if c_namesize <= 0:
+                raise InvalidInputFormat("CPIO entry filename size is invalid.")
 
             padded_header_size = self._pad_header(header, c_namesize)
             current_offset += padded_header_size
