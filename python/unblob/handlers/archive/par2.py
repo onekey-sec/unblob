@@ -53,6 +53,9 @@ class MultiVolumePAR2Handler(DirectoryHandler):
                 if header.magic != PAR2_MAGIC:
                     return False
 
+                if header.packet_length < len(header):
+                    return False
+
                 offset_to_recovery_id = 32
                 # seek to beginning of recovery set ID
                 f.seek(offset_to_recovery_id, io.SEEK_SET)
