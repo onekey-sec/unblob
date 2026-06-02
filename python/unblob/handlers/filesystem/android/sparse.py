@@ -4,7 +4,7 @@ from structlog import get_logger
 
 from unblob.extractors.command import Command
 
-from ....file_utils import Endian
+from ....file_utils import Endian, InvalidInputFormat
 from ....models import (
     File,
     HandlerDoc,
@@ -93,6 +93,10 @@ class SparseHandler(StructHandler):
             if chunk_header.chunk_type not in VALID_CHUNK_TYPES:
                 logger.warning("Invalid chunk type in Android sparse image. Aborting.")
                 return None
+            if chunk_header.total_sz < len(chunk_header):
+                raise InvalidInputFormat(
+                    "Android sparse chunk size smaller than the chunk header."
+                )
             file.seek(chunk_header.total_sz - len(chunk_header), io.SEEK_CUR)
             count += 1
 
