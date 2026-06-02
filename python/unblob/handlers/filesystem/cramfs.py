@@ -1,9 +1,10 @@
 import binascii
+import io
 import struct
 
 from unblob.extractors import Command
 
-from ...file_utils import Endian, convert_int32, get_endian
+from ...file_utils import get_endian, iterate_file
 from ...models import (
     File,
     HandlerDoc,
@@ -16,6 +17,8 @@ from ...models import (
 
 CRAMFS_FLAG_FSID_VERSION_2 = 0x00000001
 BIG_ENDIAN_MAGIC = 0x28_CD_3D_45
+FSID_CRC_OFFSET = 32
+FSID_CRC_SIZE = 4
 
 
 def swap_int32(i):
@@ -71,7 +74,7 @@ class CramFSHandler(StructHandler):
         header = self.parse_header(file, endian)
         valid_signature = header.signature == b"Compressed ROMFS"
 
-        if valid_signature and self._is_crc_valid(file, start_offset, header, endian):
+        if valid_signature and self._is_crc_valid(file, start_offset, header):
             return ValidChunk(
                 start_offset=start_offset,
                 end_offset=start_offset + header.fs_size,
@@ -83,17 +86,26 @@ class CramFSHandler(StructHandler):
         file: File,
         start_offset: int,
         header,
-        endian: Endian,
     ) -> bool:
         # old cramfs format do not support crc
         if not (header.flags & CRAMFS_FLAG_FSID_VERSION_2):
             return True
-        file.seek(start_offset)
-        content = bytearray(file.read(header.fs_size))
-        file.seek(start_offset + 32)
-        crc_bytes = file.read(4)
-        header_crc = convert_int32(crc_bytes, endian)
-        content[32:36] = b"\x00\x00\x00\x00"
-        computed_crc = binascii.crc32(content)
+
+        file.seek(start_offset, io.SEEK_SET)
+        header_bytes = bytearray(file.read(FSID_CRC_OFFSET + FSID_CRC_SIZE))
+        header_bytes[FSID_CRC_OFFSET : FSID_CRC_OFFSET + FSID_CRC_SIZE] = (
+            b"\x00\x00\x00\x00"
+        )
+        computed_crc = binascii.crc32(header_bytes)
+
+        for chunk in iterate_file(
+            file,
+            start_offset + FSID_CRC_OFFSET + FSID_CRC_SIZE,
+            header.fs_size - FSID_CRC_OFFSET + FSID_CRC_SIZE,
+        ):
+            computed_crc = binascii.crc32(chunk, computed_crc)
+
         # some vendors like their CRC's swapped, don't ask why
-        return header_crc == computed_crc or header_crc == swap_int32(computed_crc)
+        return header.fsid_crc == computed_crc or header.fsid_crc == swap_int32(
+            computed_crc
+        )

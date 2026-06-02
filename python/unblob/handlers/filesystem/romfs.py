@@ -13,6 +13,7 @@ from ...file_utils import (
     Endian,
     FileSystem,
     InvalidInputFormat,
+    iterate_file,
     read_until_past,
     round_up,
 )
@@ -115,14 +116,13 @@ class FileHeader:
         finally:
             self.file.seek(current_position, io.SEEK_SET)
 
-    @property
     def content(self) -> bytes:
-        """Returns the file content. Applicable to files and symlinks."""
+        """Return the file content. Applicable to files and symlinks."""
         try:
             self.file.seek(self.start_offset, io.SEEK_SET)
             return self.file.read(self.size)
         finally:
-            self.file.seek(-self.size, io.SEEK_CUR)
+            self.file.seek(self.start_offset, io.SEEK_SET)
 
     @property
     def mode(self) -> int:
@@ -256,7 +256,7 @@ class RomFSHeader:
         return file_header.next_filehdr
 
     def create_symlink(self, output_path: Path, inode: FileHeader):
-        target_path = Path(inode.content.decode("utf-8"))
+        target_path = Path(inode.content().decode("utf-8"))
         self.fs.create_symlink(src=target_path, dst=output_path)
 
     def create_hardlink(self, output_path: Path, inode: FileHeader):
@@ -277,7 +277,10 @@ class RomFSHeader:
         elif inode.fs_type == FSType.DIRECTORY:
             self.fs.mkdir(output_path, mode=inode.mode, exist_ok=True)
         elif inode.fs_type == FSType.FILE:
-            self.fs.write_bytes(output_path, inode.content)
+            self.fs.write_chunks(
+                output_path,
+                iterate_file(inode.file, inode.start_offset, inode.size),
+            )
         elif inode.fs_type in [FSType.BLOCK_DEV, FSType.CHAR_DEV]:
             self.fs.mknod(output_path, mode=inode.mode, device=inode.dev)
         elif inode.fs_type == FSType.FIFO:
