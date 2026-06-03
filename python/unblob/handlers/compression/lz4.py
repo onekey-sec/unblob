@@ -31,6 +31,9 @@ FRAME_MAGICS = [*SKIPPABLE_FRAMES_MAGIC, FRAME_MAGIC, LEGACY_FRAME_MAGIC]
 _1BIT = 0x01
 _2BITS = 0x03
 
+# highest bit of the block size flags an uncompressed block, the lower 31 bits hold the size
+BLOCK_SIZE_MASK = 0x7FFFFFFF
+
 END_MARK = 0x00000000
 
 CONTENT_SIZE_LEN = 8
@@ -214,7 +217,7 @@ class DefaultFrameHandler(_LZ4HandlerBase):
             logger.debug("block_size", block_size=block_size)
             if block_size == END_MARK:
                 break
-            file.seek(block_size, io.SEEK_CUR)
+            file.seek(block_size & BLOCK_SIZE_MASK, io.SEEK_CUR)
             if flg.block_checksum:
                 file.seek(BLOCK_CHECKSUM_LEN, io.SEEK_CUR)
 
