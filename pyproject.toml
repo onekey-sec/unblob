@@ -34,7 +34,7 @@ license = { text = "MIT" }
 name = "unblob"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "26.3.30"
+version = "26.6.4"
 
 [project.scripts]
 unblob = "unblob.cli:main"
