@@ -1,7 +1,26 @@
+import struct
+
 import pytest
 
 from unblob.file_utils import File
-from unblob.handlers.filesystem.romfs import get_string, valid_checksum
+from unblob.handlers.filesystem.romfs import (
+    FileHeader,
+    FSType,
+    RomFSError,
+    get_string,
+    valid_checksum,
+)
+
+
+def build_inode(size: int, data: bytes) -> File:
+    header = (
+        struct.pack(">I", FSType.FILE)
+        + struct.pack(">I", 0)
+        + struct.pack(">I", size)
+        + struct.pack(">I", 0)
+    )
+    filename = b"file" + b"\x00" * 12
+    return File.from_bytes(header + filename + data)
 
 
 @pytest.mark.parametrize(
@@ -41,3 +60,14 @@ def test_get_string(content, expected):
 )
 def test_valid_checksum(content, valid):
     assert valid_checksum(content) == valid
+
+
+def test_content_rejects_inode_past_eof():
+    inode = FileHeader(0, build_inode(size=1000, data=b"A" * 8))
+    with pytest.raises(RomFSError):
+        _ = inode.content
+
+
+def test_content_reads_inode_within_bounds():
+    inode = FileHeader(0, build_inode(size=8, data=b"A" * 8))
+    assert inode.content == b"A" * 8
