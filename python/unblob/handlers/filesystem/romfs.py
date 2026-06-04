@@ -118,6 +118,8 @@ class FileHeader:
     @property
     def content(self) -> bytes:
         """Returns the file content. Applicable to files and symlinks."""
+        if self.start_offset + self.size > self.file.size():
+            raise RomFSError("Inode size extends past the end of the file")
         try:
             self.file.seek(self.start_offset, io.SEEK_SET)
             return self.file.read(self.size)
