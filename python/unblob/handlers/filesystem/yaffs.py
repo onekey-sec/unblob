@@ -469,7 +469,8 @@ class YAFFSParser:
 
     def get_file_chunks(self, entry: YAFFSEntry) -> Iterable[bytes]:
         for chunk in self.get_chunks(entry.object_id):
-            yield self.file[chunk.offset : chunk.offset + chunk.byte_count]
+            byte_count = min(chunk.byte_count, self.config.page_size)
+            yield self.file[chunk.offset : chunk.offset + byte_count]
 
     def extract(self, fs: FileSystem):
         for entry in [
