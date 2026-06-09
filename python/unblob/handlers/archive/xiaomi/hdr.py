@@ -154,7 +154,7 @@ class HDRHandlerBase(StructHandler):
         computed_crc = calculate_crc(
             file,
             start_offset=start_offset + CRC_CONTENT_OFFSET,
-            size=end_offset - start_offset + CRC_CONTENT_OFFSET,
+            size=end_offset - start_offset - CRC_CONTENT_OFFSET,
         )
         return header.crc32 == computed_crc
 
