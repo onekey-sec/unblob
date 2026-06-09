@@ -232,9 +232,9 @@ def iterate_over_file(
 
     while len(page) == config.page_size and len(spare) == config.spare_size:
         yield (start_offset, page, spare)
+        start_offset = file.tell()
         page = file.read(config.page_size)
         spare = file.read(config.spare_size)
-        start_offset = file.tell()
 
 
 def decode_file_size(high: int, low: int) -> int:
@@ -301,9 +301,7 @@ class YAFFSParser:
         entries = 0
         for offset, page, spare in iterate_over_file(self.file, self.config):
             try:
-                data_chunk = self.build_chunk(
-                    spare, offset - self.config.page_size - self.config.spare_size
-                )
+                data_chunk = self.build_chunk(spare, offset)
             except EOFError:
                 break
 
