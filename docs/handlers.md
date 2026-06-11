@@ -5,6 +5,7 @@
     | [`AIROHA BT FIRMWARE`](#airoha-bt-firmware) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ANDROID EROFS`](#android-erofs) | FILESYSTEM | :octicons-check-16: |
     | [`ANDROID SPARSE`](#android-sparse) | FILESYSTEM | :octicons-check-16: |
+    | [`APFS`](#apfs) | FILESYSTEM | :octicons-check-16: |
     | [`AR`](#ar) | ARCHIVE | :octicons-check-16: |
     | [`ARC`](#arc) | ARCHIVE | :octicons-check-16: |
     | [`ARJ`](#arj) | ARCHIVE | :octicons-check-16: |
@@ -164,6 +165,22 @@
 
         - [Android Sparse Image Format Documentation](https://formats.kaitai.io/android_sparse/){ target="_blank" }
         - [simg2img Tool](https://github.com/anestisb/android-simg2img){ target="_blank" }
+## APFS
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Apple File System (APFS) is Apple's proprietary filesystem introduced in macOS High Sierra and iOS 10.3, replacing HFS+. It features copy-on-write semantics, space sharing between volumes, native encryption, snapshots, and sparse files.
+
+        ---
+
+        - **Handler type:** FileSystem
+        - **Vendor:** Apple
+
+    === "References"
+
+        - [Apple File System Reference](https://developer.apple.com/support/downloads/Apple-File-System-Reference.pdf){ target="_blank" }
 ## AR
 
 !!! success "Fully supported"
