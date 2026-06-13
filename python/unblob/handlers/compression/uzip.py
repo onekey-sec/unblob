@@ -1,3 +1,4 @@
+import itertools
 import lzma
 import re
 import zlib
@@ -78,11 +79,20 @@ DECOMPRESS_METHOD: dict[bytes, type[Decompressor]] = {
 }
 
 
+def is_toc_sorted(toc) -> bool:
+    """Check that the TOC block boundaries never decrease."""
+    return all(current <= nxt for current, nxt in itertools.pairwise(toc))
+
+
 class UZIPExtractor(Extractor):
     def extract(self, inpath: Path, outdir: Path):
         with File.from_path(inpath) as infile:
             parser = StructParser(C_DEFINITIONS)
             header = parser.parse(HEADER_STRUCT, infile, Endian.BIG)
+            if not is_toc_sorted(header.toc):
+                raise InvalidInputFormat(
+                    "uzip block offset table is not monotonically increasing"
+                )
             fs = FileSystem(outdir)
             outpath = Path(inpath.stem)
 
@@ -135,6 +145,7 @@ class UZIPHandler(StructHandler):
             header.block_count > 0
             and header.block_size > 0
             and header.block_size % 512 == 0
+            and is_toc_sorted(header.toc)
         )
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
