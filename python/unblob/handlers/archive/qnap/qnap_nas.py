@@ -57,6 +57,9 @@ def _hyperscan_match(
     logger.debug("qnap_header_t", header=header)
 
     if is_valid_header(header):
+        encrypted_data_len = offset - context.start_offset
+        if header.encrypted_len == 0 or header.encrypted_len > encrypted_data_len:
+            return Scan.Continue
         context.end_offset = context.file.tell()
         return Scan.Terminate
     return Scan.Continue
