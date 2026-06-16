@@ -28,7 +28,7 @@ from unblob.models import (
 logger = get_logger()
 CRC_CONTENT_OFFSET = 12  # The CRC32 value is located after 12 byte in the header
 SIGNATURE_LEN = 272  # signature_header_t contains 4 bytes of size + 12 bytes for padding x3 + 0x100 is 256 in decimal
-BLOB_MAGIC = 0x000000BEBA  # Blob header magic
+BLOB_MAGIC = 0x0000BABE  # Blob header magic (little-endian: be ba 00 00)
 
 # https://lxr.openwrt.org/source/firmware-utils/src/xiaomifw.c
 C_DEFINITIONS = r"""
@@ -77,7 +77,7 @@ def calculate_crc(file: File, start_offset: int, size: int) -> int:
 
 
 def is_valid_blob_header(blob_header) -> bool:
-    if blob_header.magic == BLOB_MAGIC:
+    if blob_header.magic != BLOB_MAGIC:
         return False
     if not blob_header.blob_size:
         return False
