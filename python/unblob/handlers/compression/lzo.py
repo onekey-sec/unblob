@@ -146,7 +146,7 @@ class LZOHandler(StructHandler):
             if (
                 header.flags & HeaderFlags.ADLER32_C
                 or header.flags & HeaderFlags.CRC32_C
-            ):
+            ) and compressed_size < uncompressed_size:
                 checksum_size += CHECKSUM_LENGTH
 
             file.seek(checksum_size + compressed_size, io.SEEK_CUR)
