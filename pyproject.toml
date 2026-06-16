@@ -27,7 +27,7 @@ dependencies = [
   "rich>=13.3.5",
   "structlog>=24.1.0",
   "treelib>=1.7.0",
-  "ubi-reader>=0.8.9",
+  "ubi-reader>=0.8.14",
 ]
 description = "Extract files from any kind of container formats"
 license = { text = "MIT" }
