@@ -330,6 +330,9 @@ class UFSParser:
         self.super_block = self._struct_parser.parse(
             "ufs_superblock_t", self.file, Endian.LITTLE
         )
+        self.inode_count = (
+            self.super_block.fs_inodes_per_group * self.super_block.fs_ncg
+        )
 
     def walk_extract(self, fs: FileSystem, ino_num: int, path: Path):  # noqa: C901
         inode = self.read_inode(ino_num)
@@ -432,6 +435,8 @@ class UFSParser:
         return chunk[: inode.size].decode("utf-8", errors="replace")
 
     def read_inode(self, ino_number: int):
+        if not 1 <= ino_number < self.inode_count:
+            raise InvalidInputFormat(f"Inode number out of range: {ino_number}")
         cylinder_group = ino_number // self.super_block.fs_inodes_per_group
         index = ino_number % self.super_block.fs_inodes_per_group
         offset = (
