@@ -3,7 +3,7 @@ import io
 import zlib
 from pathlib import Path
 
-import pyzstd
+import zstandard
 from lzallright import LZOCompressor
 
 from unblob.file_utils import (
@@ -536,7 +536,7 @@ class BTRFSParser:
             case CompressionType.ZLIB:
                 decoded = zlib.decompressobj().decompress(data)
             case CompressionType.ZSTD:
-                decoded = pyzstd.ZstdDecompressor().decompress(data)
+                decoded = zstandard.ZstdDecompressor().decompress(data)
             case _:
                 raise InvalidInputFormat
         with fs.open(path, "rb+") as f:
