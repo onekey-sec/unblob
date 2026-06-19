@@ -158,6 +158,9 @@ class MinixFS:
         zmap_offset = imap_offset + self.superblock.s_imap_blocks * block_size
         self.inode_offset = zmap_offset + self.superblock.s_zmap_blocks * block_size
         self.zone_size = (block_size << self.superblock.s_log_zone_size) & 0xFF_FF_FF_FF
+        self.zone_count = (
+            self.superblock.s_nzones if self.version == 1 else self.superblock.s_zones
+        )
         self.inode_size = self.struct_parser.cparser_le.minix_inode.size
         self.zone_ptr_size = self.struct_parser.cparser_le.minix_inode.fields[
             "i_zone"
@@ -178,6 +181,8 @@ class MinixFS:
         raise InvalidInputFormat(f"Invalid magic: {self.superblock.s_magic:x}")
 
     def _read_zone_data(self, zone_index: int) -> bytes:
+        if not self.superblock.s_firstdatazone <= zone_index < self.zone_count:
+            raise InvalidInputFormat(f"Zone index out of range: {zone_index}")
         self.file.seek(zone_index * self.zone_size, io.SEEK_SET)
         return self.file.read(self.zone_size)
 

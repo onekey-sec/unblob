@@ -2,6 +2,8 @@ import pytest
 
 from unblob.file_utils import Endian, File, InvalidInputFormat
 from unblob.handlers.filesystem.minixfs import (
+    VERSION_TO_C_DEFINITIONS,
+    MinixFS,
     MinixFSv1Handler,
     MinixFSv2Handler,
     MinixFSv3Handler,
@@ -163,6 +165,38 @@ def test_invalid(superblock, error, handler):
     )
     with pytest.raises(InvalidInputFormat, match=error):
         handler.calculate_chunk(file, 0)
+
+
+def _v1_minixfs() -> MinixFS:
+    # firstdatazone == 5, s_nzones == 32, so valid data zones are 5..31
+    image = bytearray(
+        NULL * BLOCK_SIZE
+        + SUPERBLOCK_V1_LE_14
+        + NULL * (BLOCK_SIZE - len(SUPERBLOCK_V1_LE_14))
+        + NULL * BLOCK_SIZE * 31
+    )
+    return MinixFS(File.from_bytes(bytes(image)), 1, VERSION_TO_C_DEFINITIONS[1])
+
+
+def test_read_zone_data_accepts_valid_data_zone():
+    minix = _v1_minixfs()
+    valid_zone = minix.superblock.s_firstdatazone
+    assert len(minix._read_zone_data(valid_zone)) == minix.zone_size  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    "zone_index",
+    [
+        4,  # inode table block, below the first data zone
+        0,  # boot block
+        32,  # one past the last zone
+        1000,  # well past the end of the filesystem
+    ],
+)
+def test_read_zone_data_rejects_out_of_range_zone(zone_index):
+    minix = _v1_minixfs()
+    with pytest.raises(InvalidInputFormat, match="Zone index out of range"):
+        minix._read_zone_data(zone_index)  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
