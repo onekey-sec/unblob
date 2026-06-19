@@ -68,13 +68,17 @@ class SBFHExtractor(Extractor):
             base_vaddr = min(seg.virtual_address for seg in segments)
             image_path = Path(f"firmware_{base_vaddr:08x}.bin")
 
+            # The segment data lives in the firmware region the header declares
+            # (header_size + firmware_size), which is also the chunk boundary.
+            data_end = sbfh.header_size + sbfh.firmware_size
+
             with fs.open(image_path, "wb+") as outfile:
                 for seg in segments:
                     crc = 0xFFFFFFFF
+                    seg_start = sbfh.header_size + seg.offset
+                    seg_size = max(0, min(seg.seg_size, data_end - seg_start))
                     outfile.seek(seg.virtual_address - base_vaddr, io.SEEK_SET)
-                    for chunk in iterate_file(
-                        file, sbfh.header_size + seg.offset, seg.seg_size
-                    ):
+                    for chunk in iterate_file(file, seg_start, seg_size):
                         crc = binascii.crc32(chunk, crc)
                         outfile.write(chunk)
                     if (crc ^ -1) & 0xFFFFFFFF != seg.crc_checksum:
