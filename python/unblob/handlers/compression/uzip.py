@@ -4,7 +4,7 @@ import zlib
 from collections.abc import Callable
 from pathlib import Path
 
-import pyzstd
+import zstandard
 
 from unblob.file_utils import (
     Endian,
@@ -68,7 +68,7 @@ class ZLIBDecompressor(Decompressor):
 
 
 class ZSTDDecompressor(Decompressor):
-    DECOMPRESSOR = pyzstd.EndlessZstdDecompressor
+    DECOMPRESSOR = zstandard.ZstdDecompressor
 
 
 DECOMPRESS_METHOD: dict[bytes, type[Decompressor]] = {

@@ -92,7 +92,7 @@ python3.pkgs.buildPythonApplication {
     pymdown-extensions
     pyperscan
     python-magic
-    pyzstd
+    zstandard
     rarfile
     rich
     structlog

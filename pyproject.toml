@@ -22,12 +22,12 @@ dependencies = [
   "pymdown-extensions>=10.15",
   "pyperscan>=0.3.0",
   "python-magic>=0.4.27",
-  "pyzstd>0.16.2",
   "rarfile>=4.1",
   "rich>=13.3.5",
   "structlog>=24.1.0",
   "treelib>=1.7.0",
-  "ubi-reader>=0.8.9",
+  "ubi-reader>=0.8.14",
+  "zstandard>=0.25.0",
 ]
 description = "Extract files from any kind of container formats"
 license = { text = "MIT" }
