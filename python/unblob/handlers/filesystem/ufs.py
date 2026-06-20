@@ -376,23 +376,27 @@ class UFSParser:
 
     def read_file_content(self, inode) -> Iterator[bytes]:
         remaining = inode.size
-        for chunk in self.read_direct_blocks(inode):
-            to_read = min(len(chunk), remaining)
-            yield chunk[:to_read]
-            remaining -= to_read
+        for chunk in self.read_direct_blocks(inode, remaining):
+            yield chunk
+            remaining -= len(chunk)
             if remaining <= 0:
                 return
         for chunk in self.read_indirect_blocks(inode, remaining):
             yield chunk
 
-    def read_direct_blocks(self, inode) -> Iterator[bytes]:
+    def read_direct_blocks(self, inode, remaining: int) -> Iterator[bytes]:
         for fragment_index in self.get_direct_blocks(inode):
+            if remaining <= 0:
+                return
+            to_read = min(self.super_block.fs_bsize, remaining)
             if fragment_index == 0:
                 # Sparse file: unallocated block reads as zeroes
-                yield b"\x00" * self.super_block.fs_bsize
+                chunk = b"\x00" * to_read
             else:
-                self.file.seek(self.frag_to_offset(fragment_index), io.SEEK_SET)
-                yield self.file.read(self.super_block.fs_bsize)
+                self.seek_data_fragment(fragment_index, to_read)
+                chunk = self.file.read(to_read)
+            yield chunk
+            remaining -= len(chunk)
 
     def read_indirect_blocks(self, inode, remaining: int) -> Iterator[bytes]:  # noqa: C901
         indirect_blocks = self.get_indirect_blocks(inode)
@@ -415,12 +419,12 @@ class UFSParser:
                     # Sparse file: unallocated block reads as zeroes
                     yield b"\x00" * to_read
                 else:
-                    self.file.seek(self.frag_to_offset(data_index), io.SEEK_SET)
+                    self.seek_data_fragment(data_index, to_read)
                     yield self.file.read(to_read)
                 remaining -= to_read
 
     def read_block_pointers(self, fragment_index: int) -> list[int]:
-        self.file.seek(self.frag_to_offset(fragment_index), io.SEEK_SET)
+        self.seek_data_fragment(fragment_index, self.super_block.fs_bsize)
         data = self.file.read(self.super_block.fs_bsize)
         count = self.super_block.fs_bsize // self.PTR_SIZE
         fmt = f"<{count}I" if self.PTR_SIZE == 4 else f"<{count}Q"
@@ -452,8 +456,55 @@ class UFSParser:
         """Convert a fragment index to a byte offset."""
         return fragment_index * self.super_block.fs_fsize
 
-    def cylinder_group_start(self, cylinder_group: int) -> int:
+    def total_fragments(self) -> int:
+        """Return the number of addressable filesystem fragments."""
+        return self.super_block.fs_size
+
+    def fragments_for_size(self, size: int) -> int:
+        """Return how many filesystem fragments are needed for size bytes."""
+        if size <= 0 or self.super_block.fs_fsize <= 0:
+            return 0
+        return (size + self.super_block.fs_fsize - 1) // self.super_block.fs_fsize
+
+    def cylinder_group_base(self, cylinder_group: int) -> int:
         return cylinder_group * self.super_block.fs_frags_per_group
+
+    def is_data_fragment_span(self, fragment_index: int, read_size: int) -> bool:
+        """Check that a block pointer span stays inside the data area.
+
+        Block addresses come straight from inode and indirect-block data, so a
+        crafted image can point them at the boot block, superblock, cylinder
+        group headers or inode table, or can start in data and span into the
+        next cylinder group's metadata or past the end of the filesystem.
+        """
+        frags_per_group = self.super_block.fs_frags_per_group
+        if frags_per_group <= 0:
+            return False
+        fragment_count = self.fragments_for_size(read_size)
+        if fragment_count <= 0:
+            return False
+
+        end_fragment = fragment_index + fragment_count
+        if fragment_index <= 0 or end_fragment > self.total_fragments():
+            return False
+
+        cylinder_group = fragment_index // frags_per_group
+        group_end = self.cylinder_group_base(cylinder_group) + frags_per_group
+        data_start = (
+            self.cylinder_group_start(cylinder_group) + self.super_block.fs_dblkno
+        )
+        return fragment_index >= data_start and end_fragment <= group_end
+
+    def seek_data_fragment(self, fragment_index: int, read_size: int):
+        """Validate a block pointer, then seek to its data."""
+        if not self.is_data_fragment_span(fragment_index, read_size):
+            raise InvalidInputFormat(
+                f"Block pointer outside the data area: {fragment_index}"
+            )
+        self.file.seek(self.frag_to_offset(fragment_index), io.SEEK_SET)
+
+    def cylinder_group_start(self, cylinder_group: int) -> int:
+        return self.cylinder_group_base(cylinder_group)
 
     def get_direct_blocks(self, inode) -> list[int]:
         return inode.u2.addr.direct_blocks
@@ -481,6 +532,9 @@ class UFS2Parser(UFSParser):
     INODE_SIZE = 256
     PTR_SIZE = 8
 
+    def total_fragments(self) -> int:
+        return self.super_block.fs_u11.fs_u2.fs_size_64
+
 
 class SolarisUFS1Parser(UFS1Parser):
     DIRENT_STRUCT = "old_ufs_dirent"
@@ -505,7 +559,7 @@ class _UFSBaseHandler(StructHandler):
     EXTRACTOR = None
     SB_OFFSET = 0
 
-    def get_block_size(self, header) -> int:
+    def get_fragment_count(self, header) -> int:
         raise NotImplementedError("Subclasses must implement this function.")
 
     def is_valid_header(self, header) -> bool:
@@ -514,7 +568,7 @@ class _UFSBaseHandler(StructHandler):
             and header.fs_bsize > 0
             and header.fs_bsize <= MAX_BLOCK_SIZE
             and header.fs_frag == (header.fs_bsize // header.fs_fsize)
-            and self.get_block_size(header) > 0
+            and self.get_fragment_count(header) > 0
             and header.fs_ncg > 0
         )
 
@@ -526,7 +580,7 @@ class _UFSBaseHandler(StructHandler):
         if not self.is_valid_header(header):
             raise InvalidInputFormat("Invalid UFS Header")
 
-        end_offset = start_offset + (self.get_block_size(header) * header.fs_fsize)
+        end_offset = start_offset + (self.get_fragment_count(header) * header.fs_fsize)
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
 
 
@@ -552,7 +606,7 @@ class UFS1Handler(_UFSBaseHandler):
         limitations=[],
     )
 
-    def get_block_size(self, header) -> int:
+    def get_fragment_count(self, header) -> int:
         return header.fs_size
 
 
@@ -576,7 +630,7 @@ class UFS2Handler(_UFSBaseHandler):
         limitations=[],
     )
 
-    def get_block_size(self, header) -> int:
+    def get_fragment_count(self, header) -> int:
         return header.fs_u11.fs_u2.fs_size_64
 
 
@@ -604,5 +658,5 @@ class SolarisHandler(_UFSBaseHandler):
         limitations=[],
     )
 
-    def get_block_size(self, header) -> int:
+    def get_fragment_count(self, header) -> int:
         return header.fs_size
