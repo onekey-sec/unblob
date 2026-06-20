@@ -118,5 +118,5 @@ class EngeniusHandler(StructHandler):
 
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=start_offset + len(header) + header.length,
+            end_offset=start_offset + header.length,
         )
