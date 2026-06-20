@@ -122,11 +122,15 @@ class HDRExtractor(Extractor):
             if not is_valid_blob_header(blob_header):
                 raise InvalidInputFormat("Invalid HDR blob header.")
 
+            # file.tell() points to right after the blob_header == start_offset
+            blob_start = file.tell()
+            if blob_start + blob_header.blob_size > header.signature_offset:
+                raise InvalidInputFormat("HDR blob data extends past the signature.")
+
             yield (
                 (
                     Path(snull(blob_header.name).decode("utf-8")),
-                    # file.tell() points to right after the blob_header == start_offset
-                    file.tell(),
+                    blob_start,
                     blob_header.blob_size,
                 )
             )
