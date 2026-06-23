@@ -104,8 +104,18 @@ class DMGHandler(StructHandler):
         # │koly trailer │
         # └─────────────┘
         #
+        # The image begins where the furthest structure the trailer references
+        # ends, walking back from the trailer. Deriving the start from
+        # DataForkLength alone assumes the XML plist sits right after the data
+        # fork; images with a resource fork (or any gap) are then carved from
+        # inside the data fork.
+        image_size = max(
+            header.DataForkOffset + header.DataForkLength,
+            header.RsrcForkOffset + header.RsrcForkLength,
+            header.XMLOffset + header.XMLLength,
+        )
 
         return ValidChunk(
-            start_offset=start_offset - header.XMLLength - header.DataForkLength,
+            start_offset=start_offset - image_size,
             end_offset=start_offset + len(header),
         )
