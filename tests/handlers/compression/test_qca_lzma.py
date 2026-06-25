@@ -60,3 +60,25 @@ def test_invalid_chunk(contents, error):
     file = File.from_bytes(contents)
     with pytest.raises(InvalidInputFormat, match=error):
         handler.calculate_chunk(file, 0)
+
+
+def test_compressed_size_past_stream_end():
+    # A crafted image whose declared compressed_size reaches past the end of the
+    # LZMA stream into trailing bytes (here a following gzip header). Decompression
+    # still succeeds, so without the guard those bytes are carved into the chunk
+    # and skipped during the scan instead of being extracted on their own.
+    chunk_bytes = FILE_CONTENTS[
+        START_OFFSET : START_OFFSET + 34
+    ]  # 16 header + 18 stream
+    trailing = bytes.fromhex("1f 8b 08 00 de ad be ef")
+    compressed_size = int.from_bytes(chunk_bytes[8:12], "little")
+    header = (
+        chunk_bytes[:8]
+        + (compressed_size + len(trailing)).to_bytes(4, "little")
+        + chunk_bytes[12:16]
+    )
+    file = File.from_bytes(header + chunk_bytes[16:] + trailing)
+    with pytest.raises(
+        InvalidInputFormat, match="ends before its declared compressed_size"
+    ):
+        handler.calculate_chunk(file, 0)
