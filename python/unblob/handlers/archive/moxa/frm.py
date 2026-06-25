@@ -91,14 +91,17 @@ class MoxaFRMExtractor(Extractor):
             case SectionTypes.FW_BINARY:
                 fs.carve(Path("firmware.bin"), file, section.offset, section.length)
             case SectionTypes.FILESYSTEM:
-                self._extract_fs_section(file, fs, section.offset)
+                self._extract_fs_section(file, fs, section.offset, section.length)
             case _:
                 raise InvalidInputFormat(f"Unknown section type: {section.type}")
 
-    def _extract_fs_section(self, file: File, fs: FileSystem, section_offset: int):
+    def _extract_fs_section(
+        self, file: File, fs: FileSystem, section_offset: int, section_length: int
+    ):
         file.seek(section_offset, io.SEEK_SET)
         fs_header = self._struct_parser.parse("frm_fs_header_t", file, Endian.LITTLE)
 
+        section_end = section_offset + section_length
         file_table_offset = section_offset + fs_header.file_table_offset
         for index in range(fs_header.file_count or fs_header.file_count2):
             entry_offset = file_table_offset + index * fs_header.file_header_length
@@ -109,8 +112,13 @@ class MoxaFRMExtractor(Extractor):
             if not name:
                 continue
 
-            file.seek(section_offset + entry.data_offset, io.SEEK_SET)
-            raw = file.read(entry.file_length)
+            data_start = section_offset + entry.data_offset
+            if data_start >= section_end:
+                continue
+            read_length = min(entry.file_length, section_end - data_start)
+
+            file.seek(data_start, io.SEEK_SET)
+            raw = file.read(read_length)
             self._write_file(fs, Path(name.decode("ascii", errors="replace")), raw)
 
     @staticmethod
