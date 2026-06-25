@@ -58,6 +58,7 @@
     | [`NTFS`](#ntfs) | FILESYSTEM | :octicons-check-16: |
     | [`PAR2 (MULTI-VOLUME)`](#par2-multi-volume) | ARCHIVE | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
+    | [`QCA LZMA`](#qca-lzma) | COMPRESSION | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
@@ -1040,6 +1041,22 @@
 
         - [Partclone GitHub Repository](https://github.com/Thomas-Tsai/partclone){ target="_blank" }
         - [Clonezilla Official Documentation](https://clonezilla.org/){ target="_blank" }
+## QCA LZMA
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Compressed LZMA streams with custom header format found in powerline firmware images using Qualcomm Atheros (QCA) chips of various vendors (TP-Link, Netgear, Trendnet, etc.). The images use the NVM format and contain the compressed firmware executable.
+
+        ---
+
+        - **Handler type:** Compression
+        - **Vendor:** Qualcomm Atheros
+
+    === "References"
+
+        - [open-plc-utils](https://github.com/qca/open-plc-utils){ target="_blank" }
 ## QNAP NAS
 
 !!! success "Fully supported"
