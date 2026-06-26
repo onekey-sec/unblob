@@ -50,6 +50,8 @@ CPKG_HEADER = "cpkg_header_t"
 FILE_HEADER = "file_header_t"
 CPKG_HEADER_SIZE = 12
 FILE_HEADER_SIZE = 0x1C
+# offset of the filename within a file header (header_len + type + unknown + file_size)
+FILE_HEADER_NAME_OFFSET = 12
 VALID_MAGICS = {b"FPKG", b"CPKG"}
 
 
@@ -100,6 +102,16 @@ class FPKGParser:
         if file_header.header_len != FILE_HEADER_SIZE:
             raise InvalidInputFormat(
                 f"Invalid file header length: {file_header.header_len}"
+            )
+        # The file data is read from entry start + header_len, so the name must be
+        # NUL terminated inside the fixed header. An unterminated name is otherwise
+        # parsed out of the following file data and desyncs the entry walk.
+        if (
+            FILE_HEADER_NAME_OFFSET + len(file_header.filename)
+            >= file_header.header_len
+        ):
+            raise InvalidInputFormat(
+                f"Filename not terminated within file header: {file_header.filename}"
             )
         if not file_header.filename.isascii():
             raise InvalidInputFormat(f"Invalid filename: {file_header.filename}")
