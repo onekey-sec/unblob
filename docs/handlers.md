@@ -46,6 +46,7 @@
     | [`LZIP`](#lzip) | COMPRESSION | :octicons-check-16: |
     | [`LZMA`](#lzma) | COMPRESSION | :octicons-check-16: |
     | [`LZO`](#lzo) | COMPRESSION | :octicons-check-16: |
+    | [`MINIFS`](#minifs) | FILESYSTEM | :octicons-alert-fill-12: |
     | [`MINIX FS (V1)`](#minix-fs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V2)`](#minix-fs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V3)`](#minix-fs-v3) | FILESYSTEM | :octicons-check-16: |
@@ -842,6 +843,26 @@
 
         - [LZO File Format Documentation](http://www.lzop.org/){ target="_blank" }
         - [LZO Wikipedia](https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Oberhumer){ target="_blank" }
+## MiniFS
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Proprietary read-only filesystem used in TP-Link embedded firmware.
+
+        ---
+
+        - **Handler type:** FileSystem
+        - **Vendor:** TP-Link
+
+    === "References"
+
+        - [Reverse Engineered MiniFS File System](https://arxiv.org/html/2407.05064v1){ target="_blank" }
+
+    === "Limitations"
+
+        - There could be more versions of MiniFS which may not be unpacked successfully.
 ## MINIX FS (v1)
 
 !!! success "Fully supported"
