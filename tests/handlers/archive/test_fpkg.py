@@ -47,6 +47,11 @@ def test_chunk_calculation():
             DB_FILE_CONTENTS[:0x40] + bytes.fromhex("FF FF") + DB_FILE_CONTENTS[0x42:],
             "Invalid filename",
         ),
+        (
+            # 16 byte name with no NUL inside the fixed header (data starts at +0x1C)
+            DB_FILE_CONTENTS[:0x40] + b"A" * 16 + b"\x00" * 16,
+            "Filename not terminated within file header",
+        ),
     ],
 )
 def test_invalid_chunk(contents, error):
