@@ -61,6 +61,16 @@ def _decompress(file: File, header, chunk_size: int = 1_024) -> Iterator[bytes]:
         bytes_read += len(chunk)
         yield decompressor.decompress(chunk)
 
+    # The end offset is derived from compressed_size, so the stream must actually
+    # fill it. When the LZMA stream terminates earlier, the surplus bytes inside
+    # the declared region (which may be a following file) would be carved into the
+    # chunk and skipped during the scan instead of being extracted on their own.
+    consumed = bytes_read - len(decompressor.unused_data)
+    if decompressor.eof and consumed < header.compressed_size:
+        raise InvalidInputFormat(
+            "QCA LZMA stream ends before its declared compressed_size"
+        )
+
 
 class QcaLzmaHandler(StructHandler):
     NAME = "qca_lzma"
