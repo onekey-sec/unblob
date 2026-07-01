@@ -230,6 +230,24 @@ def _build_ustar_prefixed_tar(path: str) -> bytes:
     return info.tobuf(format=tarfile.USTAR_FORMAT) + (b"\0" * tarfile.BLOCKSIZE * 2)
 
 
+def _build_ustar_tar_with_7digit_checksum() -> bytes:
+    # Some real-world tar writers encode the header checksum as 7 octal
+    # digits followed by a single NUL (filling all 8 bytes), instead of the
+    # POSIX "6 octal digits, NUL, space" convention. GNU tar reads both.
+    info = tarfile.TarInfo("test/foo.dat")
+    info.mode = 0o644
+    info.uid = 0
+    info.gid = 0
+    info.size = 0
+    info.mtime = 0
+
+    header = bytearray(info.tobuf(format=tarfile.USTAR_FORMAT))
+    header[148:156] = b" " * 8
+    checksum = sum(header)
+    header[148:156] = f"{checksum:07o}\0".encode()
+    return bytes(header) + (b"\0" * tarfile.BLOCKSIZE * 2)
+
+
 @pytest.mark.parametrize(
     "contents, expected_length, message",
     [
@@ -466,3 +484,17 @@ def test_calculate_chunk_unix(prefix):
     assert chunk is not None
     assert chunk.start_offset == len(prefix)
     assert chunk.end_offset == len(prefix) + len(UNIX_TAR_CONTENT)
+
+
+def test_calculate_chunk_seven_digit_checksum():
+    # The header checksum can be stored as 7 octal digits + NUL rather than
+    # the POSIX "6 digits, NUL, space". unblob must accept it, like GNU tar.
+    archive = _build_ustar_tar_with_7digit_checksum()
+    tar_file = File.from_bytes(archive)
+    handler = TarUstarHandler()
+
+    chunk = handler.calculate_chunk(tar_file, 0)
+
+    assert chunk is not None
+    assert chunk.start_offset == 0
+    assert chunk.end_offset == len(archive)
