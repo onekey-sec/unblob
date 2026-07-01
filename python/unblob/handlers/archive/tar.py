@@ -1,5 +1,6 @@
 import contextlib
 import os
+import re
 import tarfile
 from pathlib import Path
 
@@ -140,15 +141,16 @@ class _TarHandler(StructHandler):
         def signed_sum(octets) -> int:
             return sum(b if b < 128 else 256 - b for b in octets)
 
-        if header.chksum[6:8] not in (b"\x00 ", b" \x00"):
+        chksum_match = re.search(rb"^(?P<digits>[0-7]+)[\x00\x20]+$", header.chksum)
+        if not chksum_match:
             logger.debug(
                 "Invalid checksum format",
-                actual_last_2_bytes=header.chksum[6:8],
+                chksum=header.chksum,
                 handler=self.NAME,
                 _verbosity=3,
             )
             return None
-        checksum = decode_int(header.chksum[:6], 8)
+        checksum = decode_int(chksum_match.group("digits"), 8)
         header_bytes_for_checksum = (
             file[start_offset : start_offset + 148]
             + b" " * 8  # chksum field is replaced with "blanks"
