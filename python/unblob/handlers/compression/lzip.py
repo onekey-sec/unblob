@@ -19,8 +19,9 @@ logger = get_logger()
 
 # magic (4 bytes) + VN (1 byte) + DS (1 byte)
 HEADER_LEN = 4 + 1 + 1
-# LZMA stream is 2 bytes aligned
-LZMA_ALIGNMENT = 2
+# lzip does not pad the LZMA stream, so a member's total length can be odd;
+# scan byte-by-byte so the member_size trailer is found at any offset
+LZMA_ALIGNMENT = 1
 
 
 class LZipHandler(Handler):
@@ -53,7 +54,7 @@ class LZipHandler(Handler):
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(HEADER_LEN, io.SEEK_CUR)
         # quite the naive idea but it works
-        # the idea is to read 8 bytes uint64 every 2 bytes alignment
+        # the idea is to read 8 bytes uint64 at every byte offset
         # until we end up reading the Member Size field which corresponds
         # to "the total size of the member, including header and trailer".
         # We either find it or reach EOF, which will be caught by finder.
