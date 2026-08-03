@@ -23,7 +23,7 @@ runs:
       shell: bash
 
     - name: Setup sccache # for speeding up Rust builds
-      uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
+      uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
       with:
         disable_annotations: true # it is very spammy, but useful for diagnostics
 
