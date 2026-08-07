@@ -88,7 +88,10 @@ class NTFSHandler(StructHandler):
         if fsize == 0:
             raise InvalidInputFormat("NTFS header with null disk size.")
 
-        end_offset = start_offset + len(header) + fsize
+        # total_sectors excludes the trailing backup boot sector, so the volume
+        # spans one extra sector. That sector is bytes_per_sector wide, not a
+        # fixed 512, so scale it with the sector size rather than the header.
+        end_offset = start_offset + fsize + header.bytes_per_sector
         return ValidChunk(
             start_offset=start_offset,
             end_offset=end_offset,
