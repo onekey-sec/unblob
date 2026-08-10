@@ -21,7 +21,7 @@ _HANDLER_DOC_MARKDOWN_TEMPLATE = """## {name}
 """
 
 
-def _make_paragraph(lines: str | None | list[str]):  # noqa: C901
+def _make_paragraph(lines: str | list[str] | None):  # noqa: C901
     if not lines:
         return ""
 
