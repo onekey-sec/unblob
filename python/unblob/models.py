@@ -478,7 +478,7 @@ class SingleFile(DirectoryPattern):
         return [path] if path.exists() else []
 
 
-DExtractor = TypeVar("DExtractor", bound=None | DirectoryExtractor)
+DExtractor = TypeVar("DExtractor", bound=DirectoryExtractor | None)
 
 
 class DirectoryHandler(abc.ABC, Generic[DExtractor]):
@@ -514,7 +514,7 @@ class DirectoryHandler(abc.ABC, Generic[DExtractor]):
         return self.EXTRACTOR.extract(paths, outdir)
 
 
-TExtractor = TypeVar("TExtractor", bound=None | Extractor)
+TExtractor = TypeVar("TExtractor", bound=Extractor | None)
 
 
 class Handler(abc.ABC, Generic[TExtractor]):
