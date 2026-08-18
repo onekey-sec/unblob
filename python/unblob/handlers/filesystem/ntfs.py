@@ -88,7 +88,8 @@ class NTFSHandler(StructHandler):
         if fsize == 0:
             raise InvalidInputFormat("NTFS header with null disk size.")
 
-        end_offset = start_offset + len(header) + fsize
+        trailing_backup_boot_sector_size = header.bytes_per_sector
+        end_offset = start_offset + fsize + trailing_backup_boot_sector_size
         return ValidChunk(
             start_offset=start_offset,
             end_offset=end_offset,
