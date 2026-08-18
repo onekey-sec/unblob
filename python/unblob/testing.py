@@ -106,7 +106,16 @@ def check_result(reports: ProcessResult):
         for error in reports.errors
         if not (
             isinstance(error, ExtractCommandFailedReport)
-            and error.stderr == b"\nERRORS:\nUnexpected end of archive\n\n"
+            and (
+                error.stderr == b"\nERRORS:\nUnexpected end of archive\n\n"
+                or (
+                    error.command.startswith("debugfs ")
+                    and b"while creating symlink" in error.stderr
+                    and error.stderr.endswith(
+                        b"*** buffer overflow detected ***: terminated\n"
+                    )
+                )
+            )
         )
     ]
     assert errors == [], "Unexpected error reports"
