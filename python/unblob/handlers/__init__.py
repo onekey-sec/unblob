@@ -19,6 +19,7 @@ from .archive import (
 from .archive import (
     zip as ziparchive,
 )
+from .archive.apple import dyld
 from .archive.autel import ecc
 from .archive.dlink import alpha_encimg, deafbead, encrpted_img, fpkg, shrs
 from .archive.engeniustech import engenius
@@ -172,4 +173,5 @@ BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
     sevenzip.MultiVolumeSevenZipHandler,
     gzip.MultiVolumeGzipHandler,
     par2.MultiVolumePAR2Handler,
+    dyld.MultifileDyldCacheHandler,
 )
