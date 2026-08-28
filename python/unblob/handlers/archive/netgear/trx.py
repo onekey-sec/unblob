@@ -7,7 +7,13 @@ from typing import TYPE_CHECKING, cast
 from structlog import get_logger
 
 from unblob.extractor import carve_chunk_to_file
-from unblob.file_utils import Endian, File, InvalidInputFormat, StructParser
+from unblob.file_utils import (
+    Endian,
+    File,
+    InvalidInputFormat,
+    StructParser,
+    iterate_file,
+)
 from unblob.models import (
     Chunk,
     Extractor,
@@ -88,9 +94,15 @@ class NetgearTRXBase(StructHandler):
         return header.len >= len(header)
 
     def _is_crc_valid(self, file: File, start_offset: int, header) -> bool:
-        file.seek(start_offset + CRC_CONTENT_OFFSET)
-        content = bytearray(file.read(header.len - CRC_CONTENT_OFFSET))
-        computed_crc = (binascii.crc32(content) ^ -1) & 0xFFFFFFFF
+        computed_crc = 0
+        for chunk in iterate_file(
+            file,
+            start_offset + CRC_CONTENT_OFFSET,
+            header.len - CRC_CONTENT_OFFSET,
+        ):
+            computed_crc = binascii.crc32(chunk, computed_crc)
+
+        computed_crc = (computed_crc ^ -1) & 0xFFFFFFFF
         return header.crc32 == computed_crc
 
 

@@ -1,4 +1,5 @@
 import struct
+from unittest.mock import Mock
 
 import pytest
 
@@ -7,6 +8,7 @@ from unblob.handlers.filesystem.romfs import (
     FileHeader,
     FSType,
     RomFSError,
+    RomFSHeader,
     get_string,
     valid_checksum,
 )
@@ -65,9 +67,20 @@ def test_valid_checksum(content, valid):
 def test_content_rejects_inode_past_eof():
     inode = FileHeader(0, build_inode(size=1000, data=b"A" * 8))
     with pytest.raises(RomFSError):
-        _ = inode.content
+        inode.content()
 
 
 def test_content_reads_inode_within_bounds():
     inode = FileHeader(0, build_inode(size=8, data=b"A" * 8))
-    assert inode.content == b"A" * 8
+    assert inode.content() == b"A" * 8
+
+
+def test_create_inode_rejects_regular_file_past_eof():
+    inode = FileHeader(0, build_inode(size=1000, data=b"A" * 8))
+    header = object.__new__(RomFSHeader)
+    header.fs = Mock()
+
+    with pytest.raises(RomFSError):
+        header.create_inode(inode)
+
+    header.fs.write_chunks.assert_not_called()
