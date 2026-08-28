@@ -101,7 +101,7 @@ class CramFSHandler(StructHandler):
         for chunk in iterate_file(
             file,
             start_offset + FSID_CRC_OFFSET + FSID_CRC_SIZE,
-            header.fs_size - FSID_CRC_OFFSET + FSID_CRC_SIZE,
+            header.fs_size - (FSID_CRC_OFFSET + FSID_CRC_SIZE),
         ):
             computed_crc = binascii.crc32(chunk, computed_crc)
 
