@@ -502,16 +502,6 @@ jobs:
         with:
           subject-path: dist/*
 
-      - name: Publish to PyPI
-        if: ${{ startsWith(github.ref, 'refs/tags/') }} || (github.event_name == 'workflow_dispatch' && github.event.inputs.test_release)
-        uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
-        env:
-          MATURIN_PYPI_TOKEN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && secrets.TEST_PYPI_API_TOKEN || secrets.POETRY_PYPI_TOKEN_PYPI }}
-          MATURIN_REPOSITORY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_release && 'testpypi' || 'pypi' }}
-        with:
-          command: upload
-          args: --non-interactive --skip-existing dist/*
-
       - name: Create GitHub Release
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
@@ -522,3 +512,59 @@ jobs:
             --title "${{ github.ref_name }}" \
             --generate-notes \
             dist/*
+
+  publish-to-pypi:
+    name: Publish distribution to PyPI
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - run_python_tests
+      - run_rust_tests
+      - build_linux_wheels
+      - build_macos_wheels
+      - build_sdist
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/unblob
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download distribution packages
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-to-testpypi:
+    name: Publish distribution to TestPyPI
+    if: github.event_name == 'workflow_dispatch' && inputs.test_release
+    needs:
+      - run_python_tests
+      - run_rust_tests
+      - build_linux_wheels
+      - build_macos_wheels
+      - build_sdist
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/unblob
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download distribution packages
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish distribution to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
