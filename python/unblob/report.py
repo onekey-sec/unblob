@@ -227,6 +227,10 @@ class MetadataReport(Report):
     pass
 
 
+class EncryptionMetadataReport(MetadataReport):
+    is_encrypted: bool
+
+
 class HandledBlobReport(Report):
     id: str
     handler_name: str
@@ -243,7 +247,6 @@ class ChunkReport(HandledBlobReport):
     start_offset: int
     end_offset: int
     size: int
-    is_encrypted: bool
 
 
 class UnknownChunkReport(Report):
@@ -354,6 +357,7 @@ BUILTIN_REPORT_TYPES: tuple[type[Report], ...] = (
     HashReport,
     FileMagicReport,
     RandomnessReport,
+    EncryptionMetadataReport,
     ChunkReport,
     UnknownChunkReport,
     CarveDirectoryReport,

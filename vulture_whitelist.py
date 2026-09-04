@@ -24,6 +24,7 @@ from unblob.models import (
 )
 from unblob.parser import _HexStringToRegex
 from unblob.report import (
+    EncryptionMetadataReport,
     ExtractCommandFailedReport,
     FileMagicReport,
     HandledBlobReport,
@@ -43,6 +44,7 @@ TaskResult.filter_reports
 TaskResult.validate_reports
 HandledBlobReport.handler_name
 HandledBlobReport.validate_reports
+EncryptionMetadataReport.is_encrypted
 FileMagicReport.magic
 FileMagicReport.mime_type
 StatReport.is_link

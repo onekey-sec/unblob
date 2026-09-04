@@ -94,8 +94,8 @@ $ cat alpine-report.json
         "start_offset": 0,
         "end_offset": 2711958,
         "size": 2711958,
-        "is_encrypted": false,
         "extraction_reports": [],
+        "metadata_reports": [],
         "__typename__": "ChunkReport"
       }
     ],

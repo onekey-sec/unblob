@@ -12,9 +12,11 @@ from unblob.models import (
     Task,
     TaskResult,
     UnknownChunk,
+    ValidChunk,
 )
 from unblob.report import (
     ChunkReport,
+    EncryptionMetadataReport,
     ExtractCommandFailedReport,
     FileMagicReport,
     HashReport,
@@ -128,6 +130,40 @@ class TestChunk:
             Chunk(start_offset=start_offset, end_offset=end_offset)
 
 
+@pytest.mark.parametrize(
+    "metadata_reports, expected",
+    [
+        pytest.param([], False, id="not-reported"),
+        pytest.param(
+            [EncryptionMetadataReport(is_encrypted=False)],
+            False,
+            id="not-encrypted",
+        ),
+        pytest.param(
+            [EncryptionMetadataReport(is_encrypted=True)],
+            True,
+            id="encrypted",
+        ),
+        pytest.param(
+            [
+                EncryptionMetadataReport(is_encrypted=False),
+                EncryptionMetadataReport(is_encrypted=True),
+            ],
+            True,
+            id="conflicting-status-is-encrypted",
+        ),
+    ],
+)
+def test_valid_chunk_encryption_status(metadata_reports, expected):
+    chunk = ValidChunk(
+        start_offset=0,
+        end_offset=1,
+        metadata_reports=metadata_reports,
+    )
+
+    assert chunk.is_encrypted is expected
+
+
 class Test_to_json:  # noqa: N801
     def test_process_result_conversion(self):
         task = Task(path=Path("/nonexistent"), depth=0, blob_id="")
@@ -164,7 +200,6 @@ class Test_to_json:  # noqa: N801
                 start_offset=0,
                 end_offset=384,
                 size=384,
-                is_encrypted=False,
                 extraction_reports=[],
             )
         )
@@ -212,7 +247,6 @@ class Test_to_json:  # noqa: N801
                         "extraction_reports": [],
                         "handler_name": "zip",
                         "id": "test_basic_conversion:id",
-                        "is_encrypted": False,
                         "metadata_reports": [],
                         "size": 384,
                         "start_offset": 0,
@@ -270,7 +304,6 @@ class Test_to_json:  # noqa: N801
                 start_offset=0,
                 end_offset=384,
                 size=384,
-                is_encrypted=False,
                 extraction_reports=[],
             )
         )
@@ -327,7 +360,6 @@ def test_custom_report_registration_and_deserialization():
         start_offset=0,
         end_offset=1,
         size=1,
-        is_encrypted=False,
         extraction_reports=[custom_report],
     )
 
@@ -355,9 +387,11 @@ def test_metadata_report_registration_and_deserialization():
         start_offset=0,
         end_offset=1,
         size=1,
-        is_encrypted=False,
         extraction_reports=[],
-        metadata_reports=[metadata_report],
+        metadata_reports=[
+            metadata_report,
+            EncryptionMetadataReport(is_encrypted=True),
+        ],
     )
     multi_file_report = MultiFileReport(
         id="multi-sevenzip",
