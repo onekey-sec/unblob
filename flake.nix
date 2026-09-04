@@ -2,6 +2,9 @@
   description = "Extract files from any kind of container formats";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  # nixpkgs 26.11 no longer has an x86_64-darwin stdenv. Keep this input
+  # only while that platform remains in unblob's CI matrix.
+  inputs.nixpkgs-x86_64-darwin.url = "github:NixOS/nixpkgs/nixos-26.05";
   inputs.filter.url = "github:numtide/nix-filter";
   inputs.flake-compat = {
     url = "github:edolstra/flake-compat";
@@ -21,6 +24,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-x86_64-darwin,
       shell-hooks,
       filter,
       ...
@@ -36,6 +40,7 @@
 
       # Temporary patches for nixpkgs required for current unblob
       nixpkgsPatches = [
+        ./nix/patches/fs-python-3.14.patch
       ];
 
       # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
@@ -45,27 +50,50 @@
       nixpkgsFor = forAllSystems (
         system:
         let
+          nixpkgsSource = if system == "x86_64-darwin" then nixpkgs-x86_64-darwin else nixpkgs;
+          systemNixpkgsPatches = if system == "x86_64-darwin" then [ ] else nixpkgsPatches;
+
           importPkgs =
-            nixpkgs:
-            import nixpkgs {
+            nixpkgsSource: extraOverlays:
+            import nixpkgsSource {
               inherit system;
               overlays = [
                 self.overlays.default
                 shell-hooks.overlays.default
-              ];
+              ]
+              ++ extraOverlays;
             };
 
-          bootstrapPkgs = importPkgs nixpkgs;
+          bootstrapPkgs = importPkgs nixpkgsSource [ ];
 
           patchedNixpkgs = bootstrapPkgs.applyPatches {
             name = "nixpkgs-patched";
-            src = nixpkgs;
-            patches = map bootstrapPkgs.fetchpatch nixpkgsPatches;
+            src = nixpkgsSource;
+            patches = map (
+              patch: if builtins.isPath patch then patch else bootstrapPkgs.fetchpatch patch
+            ) systemNixpkgsPatches;
           };
 
-          finalPkgs = importPkgs patchedNixpkgs;
+          finalPkgs = importPkgs patchedNixpkgs [
+            (final: prev: {
+              # Preserve the derivation context so consumers of `pkgs.path`
+              # retain the patched nixpkgs source as a build dependency.
+              path = "${patchedNixpkgs}";
+
+              # nix-shell-hooks currently references the former nixpkgs source
+              # location of auto-patchelf.sh. Use the packaged setup hook until
+              # it switches to a stable package path.
+              pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+                (_pythonFinal: pythonPrev: {
+                  autoPatchelfVenvShellHook = pythonPrev.autoPatchelfVenvShellHook.overrideAttrs (_old: {
+                    autoPatchelfHook = "${final.autoPatchelfHook}/nix-support/setup-hook";
+                  });
+                })
+              ];
+            })
+          ];
         in
-        if builtins.length nixpkgsPatches != 0 then finalPkgs else bootstrapPkgs
+        if builtins.length systemNixpkgsPatches != 0 then finalPkgs else bootstrapPkgs
       );
     in
     {

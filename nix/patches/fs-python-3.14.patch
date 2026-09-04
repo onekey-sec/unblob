@@ -1,0 +1,53 @@
+diff --git a/pkgs/development/python-modules/fs/default.nix b/pkgs/development/python-modules/fs/default.nix
+index f77d02801153..97eea4e5be7c 100644
+--- a/pkgs/development/python-modules/fs/default.nix
++++ b/pkgs/development/python-modules/fs/default.nix
+@@ -6,0 +7 @@
++  fetchpatch,
+@@ -24,3 +24,0 @@
+-  # https://github.com/PyFilesystem/pyfilesystem2/issues/596
+-  disabled = pythonAtLeast "3.14";
+-
+@@ -32,5 +29,32 @@
+-  postPatch = ''
+-    # https://github.com/PyFilesystem/pyfilesystem2/pull/591
+-    substituteInPlace tests/test_ftpfs.py \
+-      --replace ThreadedTestFTPd FtpdThreadWrapper
+-  '';
++  # Temporary compatibility fixes for Python 3.14 and setuptools 82.
++  # Remove once PyFilesystem and nixpkgs ship equivalent fixes.
++  patches = [
++    (fetchpatch {
++      # https://github.com/PyFilesystem/pyfilesystem2/pull/588
++      url = "https://github.com/PyFilesystem/pyfilesystem2/commit/5c4bde407300dc7b4af6019c19219eaad59d93ee.patch";
++      hash = "sha256-rH0sOq19KPoXFLmIZdwP2/dZAFmGwViE1e+XYdVdUb0=";
++    })
++    (fetchpatch {
++      # https://github.com/PyFilesystem/pyfilesystem2/pull/589
++      url = "https://github.com/PyFilesystem/pyfilesystem2/commit/136e7e257eebfcd1f561a6b2f897eb8bfd44574e.patch";
++      hash = "sha256-AGeT8GUlbI1O7EFhuS9zzqPTE2lVXOzj8/JPjUnpNPk=";
++    })
++    (fetchpatch {
++      # https://github.com/PyFilesystem/pyfilesystem2/pull/590
++      url = "https://github.com/PyFilesystem/pyfilesystem2/commit/c009996c7f4a9ac3bd98cdd86b354c08a68d36c0.patch";
++      excludes = [ "setup.cfg" ];
++      hash = "sha256-Pw30ofLvxMm5dfY3XrjYsWcPKf3rLWMLbREsrB2tuZw=";
++    })
++  ];
++
++  postPatch = ''
++    # https://github.com/PyFilesystem/pyfilesystem2/pull/591
++    substituteInPlace tests/test_ftpfs.py \
++      --replace ThreadedTestFTPd FtpdThreadWrapper
++  ''
++  + lib.optionalString (pythonAtLeast "3.14") ''
++    # https://github.com/PyFilesystem/pyfilesystem2/issues/596
++    substituteInPlace fs/_url_tools.py \
++      --replace 'import platform' $'import platform\nimport sys' \
++      --replace '    return path_snippet' $'    if sys.version_info >= (3, 14):\n        path_snippet = path_snippet.removeprefix("//")\n    return path_snippet'
++  '';
+@@ -41 +65,0 @@
+-    setuptools
+@@ -91,2 +114,0 @@
+-    # https://github.com/PyFilesystem/pyfilesystem2/issues/577
+-    broken = lib.versionAtLeast setuptools.version "82";
