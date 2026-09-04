@@ -227,13 +227,9 @@ class MetadataReport(Report):
     pass
 
 
-class ChunkReport(Report):
+class HandledBlobReport(Report):
     id: str
     handler_name: str
-    start_offset: int
-    end_offset: int
-    size: int
-    is_encrypted: bool
     extraction_reports: list[Report]
     metadata_reports: list[MetadataReport] = Field(default_factory=list)
 
@@ -246,6 +242,13 @@ class ChunkReport(Report):
     @classmethod
     def validate_metadata_reports(cls, value: Any) -> list[Report]:
         return validate_report_list(value)
+
+
+class ChunkReport(HandledBlobReport):
+    start_offset: int
+    end_offset: int
+    size: int
+    is_encrypted: bool
 
 
 class UnknownChunkReport(Report):
@@ -270,23 +273,9 @@ class CarveDirectoryReport(Report):
     carve_dir: Path
 
 
-class MultiFileReport(Report):
-    id: str
-    handler_name: str
+class MultiFileReport(HandledBlobReport):
     name: str
     paths: list[Path]
-    extraction_reports: list[Report]
-    metadata_reports: list[MetadataReport] = Field(default_factory=list)
-
-    @field_validator("extraction_reports", mode="before")
-    @classmethod
-    def validate_extraction_reports(cls, value: Any) -> list[Report]:
-        return validate_report_list(value)
-
-    @field_validator("metadata_reports", mode="before")
-    @classmethod
-    def validate_metadata_reports(cls, value: Any) -> list[Report]:
-        return validate_report_list(value)
 
 
 class ExtractedFileDeletedReport(Report):

@@ -24,10 +24,9 @@ from unblob.models import (
 )
 from unblob.parser import _HexStringToRegex
 from unblob.report import (
-    ChunkReport,
     ExtractCommandFailedReport,
     FileMagicReport,
-    MultiFileReport,
+    HandledBlobReport,
     Report,
     StatReport,
     UnknownChunkReport,
@@ -42,13 +41,11 @@ _HexStringToRegex.alternative
 
 TaskResult.filter_reports
 TaskResult.validate_reports
-ChunkReport.handler_name
-ChunkReport.validate_extraction_reports
-ChunkReport.validate_metadata_reports
+HandledBlobReport.handler_name
+HandledBlobReport.validate_extraction_reports
+HandledBlobReport.validate_metadata_reports
 FileMagicReport.magic
 FileMagicReport.mime_type
-MultiFileReport.validate_extraction_reports
-MultiFileReport.validate_metadata_reports
 StatReport.is_link
 
 SingleFile
