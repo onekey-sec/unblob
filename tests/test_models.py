@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from unblob.file_utils import InvalidInputFormat
-from unblob.handlers.archive.sevenzip import SevenZipMetadataReport
 from unblob.models import (
     Chunk,
     Glob,
@@ -360,18 +359,28 @@ def test_metadata_report_registration_and_deserialization():
         extraction_reports=[],
         metadata_reports=[metadata_report],
     )
+    multi_file_report = MultiFileReport(
+        id="multi-sevenzip",
+        handler_name="multi-sevenzip",
+        name="archive.7z.001",
+        paths=[Path("/archive.7z.001"), Path("/archive.7z.002")],
+        extraction_reports=[],
+        metadata_reports=[metadata_report],
+    )
     process_result = ProcessResult(
         results=[
             TaskResult(
                 task=Task(path=Path("/archive.7z"), depth=0, blob_id=""),
-                reports=[chunk_report],
+                reports=[chunk_report, multi_file_report],
             )
         ]
     )
 
     report_data = ReportModelAdapter.validate_json(process_result.to_json())
     deserialized_process_result = ProcessResult(results=report_data)
-    [deserialized_chunk_report] = deserialized_process_result.results[0].reports
+    deserialized_chunk_report, deserialized_multi_file_report = (
+        deserialized_process_result.results[0].reports
+    )
 
     assert isinstance(deserialized_chunk_report, ChunkReport)
     deserialized_metadata_report, deserialized_encryption_report = (
