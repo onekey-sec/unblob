@@ -6,7 +6,7 @@ import stat
 import traceback
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -15,6 +15,7 @@ from pydantic import (
     BaseModel,
     BeforeValidator,
     ConfigDict,
+    Field,
     computed_field,
     field_serializer,
     field_validator,
@@ -222,19 +223,35 @@ class RandomnessReport(Report):
     chi_square: RandomnessMeasurements
 
 
-class ChunkReport(Report):
+class MetadataReport(Report):
+    pass
+
+
+class EncryptionMetadataReport(MetadataReport):
+    is_encrypted: bool
+
+
+class HandledBlobReport(Report):
     id: str
     handler_name: str
-    start_offset: int
-    end_offset: int
-    size: int
-    is_encrypted: bool
     extraction_reports: list[Report]
+    metadata_reports: list[MetadataReport] = Field(default_factory=list)
 
     @field_validator("extraction_reports", mode="before")
     @classmethod
     def validate_extraction_reports(cls, value: Any) -> list[Report]:
         return validate_report_list(value)
+
+    @field_validator("metadata_reports", mode="before")
+    @classmethod
+    def validate_metadata_reports(cls, value: Any) -> list[Report]:
+        return validate_report_list(value)
+
+
+class ChunkReport(HandledBlobReport):
+    start_offset: int
+    end_offset: int
+    size: int
 
 
 class UnknownChunkReport(Report):
@@ -259,17 +276,9 @@ class CarveDirectoryReport(Report):
     carve_dir: Path
 
 
-class MultiFileReport(Report):
-    id: str
-    handler_name: str
+class MultiFileReport(HandledBlobReport):
     name: str
     paths: list[Path]
-    extraction_reports: list[Report]
-
-    @field_validator("extraction_reports", mode="before")
-    @classmethod
-    def validate_extraction_reports(cls, value: Any) -> list[Report]:
-        return validate_report_list(value)
 
 
 class ExtractedFileDeletedReport(Report):
@@ -353,6 +362,7 @@ BUILTIN_REPORT_TYPES: tuple[type[Report], ...] = (
     HashReport,
     FileMagicReport,
     RandomnessReport,
+    EncryptionMetadataReport,
     ChunkReport,
     UnknownChunkReport,
     CarveDirectoryReport,
@@ -364,14 +374,16 @@ BUILTIN_REPORT_TYPES: tuple[type[Report], ...] = (
 )
 
 _REPORT_REGISTRY: dict[str, type[Report]] = {}
+ReportType = TypeVar("ReportType", bound=type[Report])
 
 
-def register_report_type(report_type: type[Report]) -> None:
+def register_report_type(report_type: ReportType) -> ReportType:
     typename = report_type.__name__
     existing = _REPORT_REGISTRY.get(typename)
     if existing is not None and existing is not report_type:
         raise ValueError(f"Report type name conflict: {typename}")
     _REPORT_REGISTRY[typename] = report_type
+    return report_type
 
 
 def register_report_types(report_types: Iterable[type[Report]]) -> None:

@@ -24,6 +24,7 @@ from pathlib import Path
 from structlog import get_logger
 
 from unblob.extractors import Command
+from unblob.report import MetadataReport, register_report_type
 
 from ...extractors.command import MultiFileCommand
 from ...file_utils import Endian, InvalidInputFormat, StructParser
@@ -77,6 +78,14 @@ def calculate_sevenzip_size(header) -> int:
     return len(header) + header.next_header_offset + header.next_header_size
 
 
+@register_report_type
+class SevenZipMetadataReport(MetadataReport):
+    """Report for 7-Zip metadata."""
+
+    version_major: int
+    version_minor: int
+
+
 class SevenZipHandler(StructHandler):
     NAME = "sevenzip"
 
@@ -106,6 +115,14 @@ class SevenZipHandler(StructHandler):
         limitations=[],
     )
 
+    def get_metadata_reports(self, header) -> list[MetadataReport]:
+        return [
+            SevenZipMetadataReport(
+                version_major=int(header.version_maj),
+                version_minor=int(header.version_min),
+            )
+        ]
+
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file)
 
@@ -113,7 +130,13 @@ class SevenZipHandler(StructHandler):
 
         size = calculate_sevenzip_size(header)
 
-        return ValidChunk(start_offset=start_offset, end_offset=start_offset + size)
+        metadata_reports = self.get_metadata_reports(header)
+
+        return ValidChunk(
+            start_offset=start_offset,
+            end_offset=start_offset + size,
+            metadata_reports=metadata_reports,
+        )
 
 
 class MultiVolumeSevenZipHandler(DirectoryHandler):

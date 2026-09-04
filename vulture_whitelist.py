@@ -8,6 +8,7 @@ from unblob import cli
 from unblob.doc import generate_markdown
 from unblob.file_utils import File, FileSystem, iterbits, round_down
 from unblob.handlers.archive.dlink.fpkg import FileType as FPKGFileType
+from unblob.handlers.archive.sevenzip import SevenZipMetadataReport
 from unblob.handlers.archive.tar._safe_tar_file import (  # pyright: ignore[reportMissingImports]
     UnblobTarInfo,
 )
@@ -23,10 +24,10 @@ from unblob.models import (
 )
 from unblob.parser import _HexStringToRegex
 from unblob.report import (
-    ChunkReport,
+    EncryptionMetadataReport,
     ExtractCommandFailedReport,
     FileMagicReport,
-    MultiFileReport,
+    HandledBlobReport,
     Report,
     StatReport,
     UnknownChunkReport,
@@ -41,11 +42,12 @@ _HexStringToRegex.alternative
 
 TaskResult.filter_reports
 TaskResult.validate_reports
-ChunkReport.handler_name
-ChunkReport.validate_extraction_reports
+HandledBlobReport.handler_name
+HandledBlobReport.validate_extraction_reports
+HandledBlobReport.validate_metadata_reports
+EncryptionMetadataReport.is_encrypted
 FileMagicReport.magic
 FileMagicReport.mime_type
-MultiFileReport.validate_extraction_reports
 StatReport.is_link
 
 SingleFile
@@ -112,3 +114,6 @@ UnblobTarInfo.devminor
 UnblobTarInfo._sparse_structs  # noqa: SLF001
 
 UCLDecompressor
+
+SevenZipMetadataReport.version_major
+SevenZipMetadataReport.version_minor
