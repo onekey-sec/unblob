@@ -43,9 +43,11 @@ TaskResult.filter_reports
 TaskResult.validate_reports
 ChunkReport.handler_name
 ChunkReport.validate_extraction_reports
+ChunkReport.validate_metadata_reports
 FileMagicReport.magic
 FileMagicReport.mime_type
 MultiFileReport.validate_extraction_reports
+MultiFileReport.validate_metadata_reports
 StatReport.is_link
 
 SingleFile

@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from unblob.file_utils import InvalidInputFormat
+from unblob.handlers.archive.sevenzip import SevenZipMetadataReport
 from unblob.models import (
     Chunk,
     Glob,
@@ -211,6 +212,7 @@ class Test_to_json:  # noqa: N801
                         "handler_name": "zip",
                         "id": "test_basic_conversion:id",
                         "is_encrypted": False,
+                        "metadata_reports": [],
                         "size": 384,
                         "start_offset": 0,
                     },
@@ -337,6 +339,37 @@ def test_custom_report_registration_and_deserialization():
     assert isinstance(report_data[0].reports[0], CustomReport)
     assert isinstance(report_data[0].reports[1], ChunkReport)
     assert isinstance(report_data[0].reports[1].extraction_reports[0], CustomReport)
+
+
+def test_metadata_report_registration_and_deserialization():
+    metadata_report = SevenZipMetadataReport(version_major=1, version_minor=2)
+    chunk_report = ChunkReport(
+        id="sevenzip-chunk",
+        handler_name="sevenzip",
+        start_offset=0,
+        end_offset=1,
+        size=1,
+        is_encrypted=False,
+        extraction_reports=[],
+        metadata_reports=[metadata_report],
+    )
+    process_result = ProcessResult(
+        results=[
+            TaskResult(
+                task=Task(path=Path("/archive.7z"), depth=0, blob_id=""),
+                reports=[chunk_report],
+            )
+        ]
+    )
+
+    report_data = ReportModelAdapter.validate_json(process_result.to_json())
+    deserialized_process_result = ProcessResult(results=report_data)
+    [deserialized_chunk_report] = deserialized_process_result.results[0].reports
+
+    assert isinstance(deserialized_chunk_report, ChunkReport)
+    [deserialized_metadata_report] = deserialized_chunk_report.metadata_reports
+    assert isinstance(deserialized_metadata_report, SevenZipMetadataReport)
+    assert deserialized_metadata_report == metadata_report
 
 
 def test_unknown_chunk_report_randomness_validation():
