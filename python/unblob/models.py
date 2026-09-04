@@ -19,6 +19,7 @@ from .report import (
     CarveDirectoryReport,
     ChunkReport,
     ErrorReport,
+    MetadataReport,
     MultiFileReport,
     RandomnessReport,
     Report,
@@ -181,6 +182,7 @@ class ValidChunk(Chunk):
 
     handler: Handler = attrs.field(init=False, eq=False)
     is_encrypted: bool = attrs.field(default=False)
+    metadata_reports: list[MetadataReport] = attrs.field(factory=list, kw_only=True)
 
     def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         if self.is_encrypted:
@@ -201,6 +203,7 @@ class ValidChunk(Chunk):
             size=self.size,
             handler_name=self.handler.NAME,
             is_encrypted=self.is_encrypted,
+            metadata_reports=self.metadata_reports,
             extraction_reports=extraction_reports,
         )
 
@@ -246,6 +249,7 @@ class PaddingChunk(Chunk):
             is_encrypted=False,
             handler_name="padding",
             extraction_reports=[],
+            metadata_reports=[],
         )
 
 
@@ -266,6 +270,7 @@ class MultiFile(Blob):
             paths=self.paths,
             handler_name=self.handler.NAME,
             extraction_reports=extraction_reports,
+            metadata_reports=[],
         )
 
 
