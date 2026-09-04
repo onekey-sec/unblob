@@ -3,6 +3,8 @@ import struct
 
 from structlog import get_logger
 
+from unblob.report import EncryptionMetadataReport
+
 from ...extractors import Command
 from ...file_utils import InvalidInputFormat, iterate_patterns
 from ...models import (
@@ -227,5 +229,7 @@ class ZIPHandler(StructHandler):
         return ValidChunk(
             start_offset=start_offset,
             end_offset=file.tell(),
-            is_encrypted=has_encrypted_files,
+            metadata_reports=[
+                EncryptionMetadataReport(is_encrypted=has_encrypted_files)
+            ],
         )

@@ -11,6 +11,7 @@ import rarfile
 from structlog import get_logger
 
 from unblob.extractors import Command
+from unblob.report import EncryptionMetadataReport
 
 from ...models import (
     File,
@@ -68,5 +69,7 @@ class RarHandler(Handler):
         return ValidChunk(
             start_offset=start_offset,
             end_offset=rar_end_offset,
-            is_encrypted=rar_file.needs_password(),
+            metadata_reports=[
+                EncryptionMetadataReport(is_encrypted=rar_file.needs_password())
+            ],
         )
