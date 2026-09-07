@@ -5,6 +5,7 @@
     | [`AIROHA BT FIRMWARE`](#airoha-bt-firmware) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ANDROID EROFS`](#android-erofs) | FILESYSTEM | :octicons-check-16: |
     | [`ANDROID SPARSE`](#android-sparse) | FILESYSTEM | :octicons-check-16: |
+    | [`APPLE ARCHIVE`](#apple-archive) | ARCHIVE | :octicons-alert-fill-12: |
     | [`AR`](#ar) | ARCHIVE | :octicons-check-16: |
     | [`ARC`](#arc) | ARCHIVE | :octicons-check-16: |
     | [`ARJ`](#arj) | ARCHIVE | :octicons-check-16: |
@@ -170,6 +171,27 @@
 
         - [Android Sparse Image Format Documentation](https://formats.kaitai.io/android_sparse/){ target="_blank" }
         - [simg2img Tool](https://github.com/anestisb/android-simg2img){ target="_blank" }
+## Apple Archive
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Apple Archive is Apple's proprietary archive format introduced with macOS Big Sur, used for distributing macOS software updates and installers. Files begin with the AA01 magic and contain field-tagged entries encoding paths, LZFSE-compressed data blobs, symbolic links, and extended attributes.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Apple
+
+    === "References"
+
+        - [Apple Archive - Apple Developer Documentation](https://developer.apple.com/documentation/applearchive){ target="_blank" }
+
+    === "Limitations"
+
+        - Only PATP/DATA/LNKP/XATA/TYP1 field tags are handled; other tags are silently skipped
+        - Symlink targets are logged but not created in the output directory
 ## AR
 
 !!! success "Fully supported"
