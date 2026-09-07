@@ -90,11 +90,14 @@ python3.pkgs.buildPythonApplication {
     pluggy
     pydantic
     pyfatfs
+    pyhpke
     pymdown-extensions
     pyperscan
+    python-aea
     python-magic
     zstandard
     rarfile
+    requests
     rich
     structlog
     treelib

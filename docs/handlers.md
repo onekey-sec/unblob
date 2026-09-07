@@ -5,6 +5,7 @@
     | [`AIROHA BT FIRMWARE`](#airoha-bt-firmware) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ANDROID EROFS`](#android-erofs) | FILESYSTEM | :octicons-check-16: |
     | [`ANDROID SPARSE`](#android-sparse) | FILESYSTEM | :octicons-check-16: |
+    | [`APPLE ENCRYPTED ARCHIVE (AEA)`](#apple-encrypted-archive-aea) | ARCHIVE | :octicons-alert-fill-12: |
     | [`AR`](#ar) | ARCHIVE | :octicons-check-16: |
     | [`ARC`](#arc) | ARCHIVE | :octicons-check-16: |
     | [`ARJ`](#arj) | ARCHIVE | :octicons-check-16: |
@@ -170,6 +171,27 @@
 
         - [Android Sparse Image Format Documentation](https://formats.kaitai.io/android_sparse/){ target="_blank" }
         - [simg2img Tool](https://github.com/anestisb/android-simg2img){ target="_blank" }
+## Apple Encrypted Archive (AEA)
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Apple Encrypted Archive (AEA) is Apple's encrypted container format used for secure firmware and OTA update distribution. Profile 1 archives use Hybrid Public Key Encryption (HPKE) with Apple's WKMS key management service to wrap a per-archive symmetric key.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Apple
+
+    === "References"
+
+        - [Apple Archive - Apple Developer Documentation](https://developer.apple.com/documentation/applearchive){ target="_blank" }
+
+    === "Limitations"
+
+        - Decryption requires access to Apple's WKMS key management service
+        - Archives without WKMS fields cannot be decrypted
 ## AR
 
 !!! success "Fully supported"
