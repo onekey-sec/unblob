@@ -164,25 +164,25 @@ class SafeTarFile:
         # prevent traversal attempts through links
         if tarinfo.islnk() or tarinfo.issym():
             if Path(tarinfo.linkname).is_absolute():
-
-                def calculate_linkname():
+                if tarinfo.islnk():
+                    link_path = Path(tarinfo.linkname)
+                    relative_linkname = str(link_path.relative_to(link_path.anchor))
+                else:
                     root = extract_root.resolve()
                     path = (extract_root / tarinfo.name).resolve()
 
                     if path.parts[: len(root.parts)] != root.parts:
-                        return None
+                        self.record_problem(
+                            tarinfo,
+                            "Absolute path conversion to extraction relative failed - would escape root.",
+                            "Skipped.",
+                        )
+                        return
 
                     depth = max(0, len(path.parts) - len(root.parts) - 1)
-                    return ("/".join([".."] * depth) or ".") + tarinfo.linkname
-
-                relative_linkname = calculate_linkname()
-                if relative_linkname is None:
-                    self.record_problem(
-                        tarinfo,
-                        "Absolute path conversion to extraction relative failed - would escape root.",
-                        "Skipped.",
-                    )
-                    return
+                    relative_linkname = (
+                        "/".join([".."] * depth) or "."
+                    ) + tarinfo.linkname
 
                 assert not Path(relative_linkname).is_absolute()
                 self.record_problem(
@@ -192,7 +192,12 @@ class SafeTarFile:
                 )
                 tarinfo.linkname = relative_linkname
 
-            resolved_path = (extract_root / tarinfo.name).parent / tarinfo.linkname
+            # Symbolic link targets are relative to the link's parent, while tar
+            # hard link targets are relative to the extraction root.
+            if tarinfo.islnk():
+                resolved_path = extract_root / tarinfo.linkname
+            else:
+                resolved_path = (extract_root / tarinfo.name).parent / tarinfo.linkname
             if not is_safe_path(basedir=extract_root, path=resolved_path):
                 self.record_problem(
                     tarinfo,
