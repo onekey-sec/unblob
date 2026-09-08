@@ -18,7 +18,9 @@ from .parser import hexstring2regex
 from .report import (
     CarveDirectoryReport,
     ChunkReport,
+    EncryptionMetadataReport,
     ErrorReport,
+    MetadataReport,
     MultiFileReport,
     RandomnessReport,
     Report,
@@ -180,7 +182,15 @@ class ValidChunk(Chunk):
     """Known to be valid chunk of a File, can be extracted with an external program."""
 
     handler: Handler = attrs.field(init=False, eq=False)
-    is_encrypted: bool = attrs.field(default=False)
+    metadata_reports: list[MetadataReport] = attrs.field(factory=list, kw_only=True)
+
+    @property
+    def is_encrypted(self) -> bool:
+        return any(
+            report.is_encrypted
+            for report in self.metadata_reports
+            if isinstance(report, EncryptionMetadataReport)
+        )
 
     def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         if self.is_encrypted:
@@ -200,7 +210,7 @@ class ValidChunk(Chunk):
             end_offset=self.end_offset,
             size=self.size,
             handler_name=self.handler.NAME,
-            is_encrypted=self.is_encrypted,
+            metadata_reports=self.metadata_reports,
             extraction_reports=extraction_reports,
         )
 
@@ -243,9 +253,9 @@ class PaddingChunk(Chunk):
             start_offset=self.start_offset,
             end_offset=self.end_offset,
             size=self.size,
-            is_encrypted=False,
             handler_name="padding",
             extraction_reports=[],
+            metadata_reports=[],
         )
 
 
@@ -266,6 +276,7 @@ class MultiFile(Blob):
             paths=self.paths,
             handler_name=self.handler.NAME,
             extraction_reports=extraction_reports,
+            metadata_reports=[],
         )
 
 

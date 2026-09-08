@@ -12,6 +12,7 @@ from unblob.processing import ExtractionConfig, process_file
 from unblob.report import (
     CarveDirectoryReport,
     ChunkReport,
+    EncryptionMetadataReport,
     ExtractCommandFailedReport,
     FileMagicReport,
     HashReport,
@@ -143,7 +144,6 @@ def hello_kitty_task_results(
                     end_offset=264,
                     size=1,
                     handler_name="padding",
-                    is_encrypted=False,
                     extraction_reports=[],
                 ),
                 ChunkReport(
@@ -152,8 +152,8 @@ def hello_kitty_task_results(
                     start_offset=6,
                     end_offset=131,
                     size=125,
-                    is_encrypted=False,
                     extraction_reports=[],
+                    metadata_reports=[EncryptionMetadataReport(is_encrypted=False)],
                 ),
                 ChunkReport(
                     id=kitty_id,
@@ -161,8 +161,8 @@ def hello_kitty_task_results(
                     start_offset=138,
                     end_offset=263,
                     size=125,
-                    is_encrypted=False,
                     extraction_reports=[],
+                    metadata_reports=[EncryptionMetadataReport(is_encrypted=False)],
                 ),
             ],
             subtasks=[
@@ -360,8 +360,8 @@ def container_task_results(
                     start_offset=0,
                     end_offset=384,
                     size=384,
-                    is_encrypted=False,
                     extraction_reports=[],
+                    metadata_reports=[EncryptionMetadataReport(is_encrypted=False)],
                 ),
             ],
             subtasks=[
