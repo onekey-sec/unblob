@@ -98,7 +98,7 @@ class FileHeader:
         fs_typeexec_next = struct.unpack(">L", file.read(4))[0]
         self.next_filehdr = fs_typeexec_next & ~0b1111
         self.fs_type = FSType(fs_typeexec_next & 0b0111)
-        self.executable = fs_typeexec_next & 0b1000
+        self.executable = bool(fs_typeexec_next & 0b1000)
         self.spec_info = struct.unpack(">I", file.read(4))[0]
         self.size = struct.unpack(">I", file.read(4))[0]
         self.checksum = struct.unpack(">I", file.read(4))[0]
