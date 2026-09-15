@@ -1,3 +1,5 @@
+"""LZFSE format handler backed by the external :mod:`lzfse` package."""
+
 import io
 from enum import Enum
 from pathlib import Path

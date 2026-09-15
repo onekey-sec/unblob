@@ -15,8 +15,14 @@ RUN sh -xeu /install-deps.sh
 
 # You MUST do an uv build before to have the wheel to copy & install here (CI action will do this when building)
 COPY dist/*.whl /tmp/
-RUN pip --disable-pip-version-check install --upgrade pip
-RUN pip install /tmp/unblob*.whl --prefix /usr/local
+# lzfse has no CPython 3.14 wheel, so pip must compile it from source. Keep the
+# compiler in this layer only; the extracted extension remains after it is purged.
+RUN pip --disable-pip-version-check install --upgrade pip \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y gcc libc6-dev \
+    && pip install /tmp/unblob*.whl --prefix /usr/local \
+    && apt-get purge --auto-remove -y gcc libc6-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 USER unblob
 ENTRYPOINT ["unblob"]
