@@ -400,7 +400,7 @@ jobs:
           only-fixed: true
 
       - name: Upload SARIF report
-        uses: github/codeql-action/upload-sarif@faaca9a8f6edddba5725ffe5adefdab6669a2eca # v3.38.0
+        uses: github/codeql-action/upload-sarif@3ea06614dafe36dec890db3446326e0d40ce53d4 # v3.38.1
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
