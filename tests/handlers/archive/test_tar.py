@@ -428,6 +428,86 @@ def test_extractall_ignores_gnu_timestamp_prefix(tmp_path):
     assert not (tmp_path / "extract" / "13327342752").exists()
 
 
+def test_extractall_rejects_hardlink_escaping_extraction_root(tmp_path):
+    outside_path = tmp_path / "outside"
+    outside_path.write_bytes(b"outside")
+    tar_path = tmp_path / "hardlink-escape.tar"
+
+    with tarfile.open(tar_path, "w") as archive:
+        hardlink = tarfile.TarInfo("nested/link")
+        hardlink.type = tarfile.LNKTYPE
+        hardlink.linkname = "../outside"
+        archive.addfile(hardlink)
+
+    extract_root = tmp_path / "extract"
+    extractor = SafeTarFile(tar_path)
+    try:
+        extractor.extractall(extract_root)  # noqa: S202
+    finally:
+        extractor.close()
+
+    assert not (extract_root / "nested" / "link").exists()
+    assert [report.problem for report in extractor.reports] == [
+        "Traversal attempt through link path."
+    ]
+
+
+def test_extractall_accepts_root_relative_hardlink_target(tmp_path):
+    tar_path = tmp_path / "hardlink.tar"
+
+    with tarfile.open(tar_path, "w") as archive:
+        target = tarfile.TarInfo("target")
+        target.size = len(b"content")
+        archive.addfile(target, io.BytesIO(b"content"))
+
+        hardlink = tarfile.TarInfo("nested/link")
+        hardlink.type = tarfile.LNKTYPE
+        hardlink.linkname = "target"
+        archive.addfile(hardlink)
+
+    extract_root = tmp_path / "extract"
+    extractor = SafeTarFile(tar_path)
+    try:
+        extractor.extractall(extract_root)  # noqa: S202
+    finally:
+        extractor.close()
+
+    target_path = extract_root / "target"
+    link_path = extract_root / "nested" / "link"
+    assert extractor.reports == []
+    assert link_path.read_bytes() == b"content"
+    assert link_path.samefile(target_path)
+
+
+def test_extractall_converts_absolute_hardlink_target(tmp_path):
+    tar_path = tmp_path / "absolute-hardlink.tar"
+
+    with tarfile.open(tar_path, "w") as archive:
+        target = tarfile.TarInfo("target")
+        target.size = len(b"content")
+        archive.addfile(target, io.BytesIO(b"content"))
+
+        hardlink = tarfile.TarInfo("nested/link")
+        hardlink.type = tarfile.LNKTYPE
+        hardlink.linkname = "/target"
+        archive.addfile(hardlink)
+
+    extract_root = tmp_path / "extract"
+    extractor = SafeTarFile(tar_path)
+    try:
+        extractor.extractall(extract_root)  # noqa: S202
+    finally:
+        extractor.close()
+
+    target_path = extract_root / "target"
+    link_path = extract_root / "nested" / "link"
+    assert [report.problem for report in extractor.reports] == [
+        "Absolute path as link target."
+    ]
+    assert link_path.read_bytes() == b"content"
+    assert link_path.samefile(target_path)
+
+
 def test_unblob_tarinfo__frombuf_ignores_gnu_timestamp_prefix():
     archive = _build_gnu_tar_with_timestamp_prefix()
 
