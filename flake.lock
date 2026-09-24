@@ -33,11 +33,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1778036283,
-        "narHash": "sha256-62EWg6lI0qyzm7oAx5cAnGkLutvJsRBe0KkEW2JDZCE=",
+        "lastModified": 1790178388,
+        "narHash": "sha256-kK3t7gwoz4Nx8RF46cs1Xz/skKNcK7y3KYP+gGqX6W8=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "ed67bc86e84e51d4a88e73c7fd36006dc876476f",
+        "rev": "00455b0a3690d3f5dc61e9aef4277dc86235b73f",
         "type": "github"
       },
       "original": {
@@ -57,11 +57,11 @@
     },
     "shell-hooks": {
       "locked": {
-        "lastModified": 1777468175,
-        "narHash": "sha256-I4ZT5YFNdVSbVXdnWGXwmIAalh5rpqZKiZvW249koCE=",
+        "lastModified": 1785767946,
+        "narHash": "sha256-3dCgCfsVXSzcBFz+EKGosvty2tXYioM9FGSlVeL1F2U=",
         "owner": "vlaci",
         "repo": "nix-shell-hooks",
-        "rev": "54cd9a05ad92382d1c5ddf2f1229d79d8765c0bc",
+        "rev": "f2bb090b9c2901895273ff55891df354791c204f",
         "type": "github"
       },
       "original": {
