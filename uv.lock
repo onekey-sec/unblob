@@ -722,16 +722,16 @@ wheels = [
 
 [[package]]
 name = "jefferson"
-version = "0.4.7"
+version = "0.4.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "dissect-cstruct" },
     { name = "lzallright" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/03/1279f05568c7912bfe1545638216234d5190558a94b5c15c0d9ecd555685/jefferson-0.4.7.tar.gz", hash = "sha256:7c49a746cd14ed1fcd0b2fe7d606dca12493675cae00cf8cdef240ce7a3fd7a0", size = 6622, upload-time = "2026-01-13T12:43:23.779Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/4e/4ed99ac8d89090fae572188e59a4114d337076bfac5928992c3531002790/jefferson-0.4.8.tar.gz", hash = "sha256:269edb74a9c89b69415a8ece852b193a9565251ec9f92f8b4ccf70082ec2ce71", size = 6634, upload-time = "2026-09-22T06:48:58.194Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/81/e2971d88febee243cb44e7b5abe2631a78f9cd09a575a0bfa25398607950/jefferson-0.4.7-py3-none-any.whl", hash = "sha256:161bbd4ee24ab0322bb04b22cb212ae9902e8d87fe659bf201f9c2e633545900", size = 8642, upload-time = "2026-01-13T12:43:22.874Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/a2/e4d62bcd0f5d610a7eb7f89957b3f7d5e1c7efb725d2c375a3d0784c706c/jefferson-0.4.8-py3-none-any.whl", hash = "sha256:30db339fb6203f83631dfc27b39a145a13a62f538cf95d83d241a04593e6edc0", size = 8656, upload-time = "2026-09-22T06:48:56.903Z" },
 ]
 
 [[package]]
