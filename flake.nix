@@ -2,6 +2,8 @@
   description = "Extract files from any kind of container formats";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  # Nixpkgs 26.11 dropped x86_64-darwin; 26.05 supports it until end of 2026.
+  inputs.nixpkgs-x86_64-darwin.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
   inputs.filter.url = "github:numtide/nix-filter";
   inputs.flake-compat = {
     url = "github:edolstra/flake-compat";
@@ -21,6 +23,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-x86_64-darwin,
       shell-hooks,
       filter,
       ...
@@ -45,6 +48,8 @@
       nixpkgsFor = forAllSystems (
         system:
         let
+          nixpkgsSrc = if system == "x86_64-darwin" then nixpkgs-x86_64-darwin else nixpkgs;
+
           importPkgs =
             nixpkgs:
             import nixpkgs {
@@ -55,11 +60,11 @@
               ];
             };
 
-          bootstrapPkgs = importPkgs nixpkgs;
+          bootstrapPkgs = importPkgs nixpkgsSrc;
 
           patchedNixpkgs = bootstrapPkgs.applyPatches {
             name = "nixpkgs-patched";
-            src = nixpkgs;
+            src = nixpkgsSrc;
             patches = map bootstrapPkgs.fetchpatch nixpkgsPatches;
           };
 
