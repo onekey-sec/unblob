@@ -1,3 +1,5 @@
+import stat
+
 import pytest
 
 from unblob.file_utils import Endian, File, InvalidInputFormat
@@ -7,6 +9,7 @@ from unblob.handlers.filesystem.minixfs import (
     MinixFSv1Handler,
     MinixFSv2Handler,
     MinixFSv3Handler,
+    MinixInode,
     get_endianness,
 )
 from unblob.testing import unhex
@@ -197,6 +200,37 @@ def test_read_zone_data_rejects_out_of_range_zone(zone_index):
     minix = _v1_minixfs()
     with pytest.raises(InvalidInputFormat, match="Zone index out of range"):
         minix._read_zone_data(zone_index)  # noqa: SLF001
+
+
+def _v1_dir_entry(inode: int, name: bytes) -> bytes:
+    # v1 directory entry with a 14 byte name field, NUL padded like mkfs.minix writes it
+    return inode.to_bytes(2, "little") + name.ljust(14, NULL)
+
+
+def test_read_directory_accepts_name_filling_the_field():
+    minix = _v1_minixfs()
+    # a name of exactly s_namelen bytes has no NUL terminator on disk
+    entries = _v1_dir_entry(2, b"short.txt") + _v1_dir_entry(3, b"cherry_pie.txt")
+    zone = minix.superblock.s_firstdatazone
+    minix.file.seek(zone * minix.zone_size)
+    minix.file.write(entries)
+    directory = MinixInode(
+        i_mode=stat.S_IFDIR,
+        i_nlinks=1,
+        i_uid=0,
+        i_gid=0,
+        i_size=len(entries),
+        i_time=0,
+        i_atime=None,
+        i_mtime=None,
+        i_ctime=None,
+        i_zone=[zone] + [0] * 8,
+    )
+
+    assert [(e.inode, e.name) for e in minix._read_directory(directory)] == [  # noqa: SLF001
+        (2, b"short.txt"),
+        (3, b"cherry_pie.txt"),
+    ]
 
 
 @pytest.mark.parametrize(
