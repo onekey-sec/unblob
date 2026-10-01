@@ -15,8 +15,6 @@ from typing import Any
 
 from .logging import multiprocessing_breakpoint
 
-mp.set_start_method("fork")
-
 
 class PoolBase(abc.ABC):
     @abc.abstractmethod
@@ -114,16 +112,17 @@ class MultiPool(PoolBase):
 
         self._running = False
         self._result_callback = result_callback
-        self._input = Queue(ctx=mp.get_context())
+        mp_context = mp.get_context("fork")
+        self._input = Queue(ctx=mp_context)
         self._input.cancel_join_thread()
-        self._output = ResultQueue(ctx=mp.get_context())
+        self._output = ResultQueue(ctx=mp_context)
         # see search results for "death-pipe" or "forkfd concept"
         (self._lifeline_worker_side, self._lifeline_host_side) = os.pipe()
         fcntl.fcntl(self._lifeline_host_side, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
         fcntl.fcntl(self._lifeline_worker_side, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
 
         self._procs = [
-            mp.Process(
+            mp_context.Process(
                 target=_worker_process,
                 args=(
                     handler,
