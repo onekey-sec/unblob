@@ -62,3 +62,30 @@ def test_unlzw_errors(content: bytes, start_offset: int):
     fake_file = File.from_bytes(content)
     with pytest.raises(InvalidInputFormat):
         handler.unlzw(fake_file, start_offset, max_len=len(content))
+
+
+# "ABCA\x0e" in the compress(1) stream format, with a clear code closing the
+# first code group, which pads the stream out to a 9 byte boundary.
+# Decompresses with both uncompress(1) and gzip(1).
+CLEAR_CODE_STREAM = bytes.fromhex("1f9d9041840c010800000000411c00")
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param(
+            b"\x1f\x9d\x90\x61\xe0\xc0\x61\x53\x26\x86\x02", id="without_clear_code"
+        ),
+        pytest.param(CLEAR_CODE_STREAM, id="with_clear_code"),
+    ],
+)
+@pytest.mark.parametrize("start_offset", [0, 1, 0x200])
+def test_calculate_chunk_spans_whole_stream(content: bytes, start_offset: int):
+    handler = UnixCompressHandler()
+    file = File.from_bytes(b"\x00" * start_offset + content)
+
+    chunk = handler.calculate_chunk(file, start_offset)
+
+    assert chunk is not None
+    assert chunk.start_offset == start_offset
+    assert chunk.end_offset == start_offset + len(content)

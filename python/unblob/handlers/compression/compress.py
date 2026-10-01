@@ -91,8 +91,8 @@ class UnixCompressHandler(StructHandler):
     def unlzw(self, file: File, start_offset: int, max_len: int) -> int:  # noqa: C901
         """Calculate the end of a unix compress stream.
 
-        It performs decompression on a stream read from <file> from
-        <start_offset> up until <max_len>.
+        It performs decompression on at most <max_len> bytes read from
+        <file>, starting at <start_offset>.
 
         Adapted from Brandon Owen works
         (https://github.com/umeat/unlzw).
@@ -173,6 +173,7 @@ class UnixCompressHandler(StructHandler):
                     if remaining_bits >= max_len - nxt:
                         break
                     nxt += remaining_bits
+                    file.seek(remaining_bits, io.SEEK_CUR)
 
                 buf = left = 0
 
@@ -210,6 +211,7 @@ class UnixCompressHandler(StructHandler):
                     if remaining_bits > max_len - nxt:
                         break
                     nxt += remaining_bits
+                    file.seek(remaining_bits, io.SEEK_CUR)
                 buf = left = 0
 
                 # Mark this location for computing the next flush
@@ -252,7 +254,7 @@ class UnixCompressHandler(StructHandler):
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         file.seek(0, io.SEEK_END)
-        max_len = file.tell()
+        max_len = file.tell() - start_offset
 
         end_offset = self.unlzw(file, start_offset, max_len)
 
