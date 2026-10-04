@@ -108,6 +108,7 @@ class ZIPHandler(StructHandler):
     )
 
     ENCRYPTED_FLAG = 0b0001
+    CD_FILE_HEADER = 0x02014B50
     EOCD_RECORD_HEADER = 0x6054B50
     ZIP64_EOCD_SIGNATURE = 0x06064B50
     ZIP64_EOCD_LOCATOR_HEADER = 0x07064B50
@@ -121,8 +122,16 @@ class ZIPHandler(StructHandler):
         file.seek(start_offset + end_of_central_directory.offset_of_cd, io.SEEK_SET)
         for _ in range(end_of_central_directory.total_entries):
             file_header = self.cparser_le.partial_cd_file_header_t(file)
+            if file_header.magic != self.CD_FILE_HEADER:
+                raise InvalidInputFormat(
+                    "Invalid central directory file header in ZIP chunk."
+                )
+            # see https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT section 4.3.12
+            # the fixed part is followed by the file name, the extra field and the file comment
             file.seek(
-                file_header.file_name_length + file_header.extra_field_length,
+                file_header.file_name_length
+                + file_header.extra_field_length
+                + file_header.file_comment_length,
                 io.SEEK_CUR,
             )
             if file_header.flags & self.ENCRYPTED_FLAG:

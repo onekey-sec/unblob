@@ -44,6 +44,7 @@ class InstarHDHandler(ZIPHandler):
 
     EXTRACTOR = InstarHDExtractor()
 
+    CD_FILE_HEADER = 0x08014B50
     EOCD_RECORD_HEADER = 0x9054B50
 
     DOC = HandlerDoc(
