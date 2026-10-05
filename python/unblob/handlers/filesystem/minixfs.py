@@ -228,10 +228,11 @@ class MinixFS:
     def _read_directory(self, inode: MinixInode) -> Iterator[MinixDirEntry]:
         for zone_data in self._stream_file_data(inode):
             for i in range(0, len(zone_data), self.dir_entry_size):
+                entry_data = zone_data[i : i + self.dir_entry_size]
+                if len(entry_data) < self.dir_entry_size:
+                    break
                 raw_entry = self.struct_parser.parse(
-                    "minix_dir_entry",
-                    zone_data[i : i + self.dir_entry_size],
-                    self.endianness,
+                    "minix_dir_entry", entry_data + b"\x00", self.endianness
                 )
                 yield MinixDirEntry(inode=raw_entry.inode, name=raw_entry.name)
 
