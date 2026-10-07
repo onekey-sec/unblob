@@ -79,3 +79,21 @@ def test_calculate_chunk_is_start_offset_aware(start_offset: int):
     assert chunk is not None
     assert chunk.start_offset == start_offset
     assert chunk.end_offset == start_offset + len(APPLE1_STREAM)
+
+
+# "ABCA\x0e" in the compress(1) stream format, with a clear code closing the
+# first code group, which pads the stream out to a 9 byte boundary.
+# Decompresses with both uncompress(1) and gzip(1).
+CLEAR_CODE_STREAM = bytes.fromhex("1f9d9041840c010800000000411c00")
+
+
+@pytest.mark.parametrize("start_offset", [0, 1, 0x200])
+def test_calculate_chunk_spans_clear_code_padding(start_offset: int):
+    handler = UnixCompressHandler()
+    file = File.from_bytes(b"\x00" * start_offset + CLEAR_CODE_STREAM)
+
+    chunk = handler.calculate_chunk(file, start_offset)
+
+    assert chunk is not None
+    assert chunk.start_offset == start_offset
+    assert chunk.end_offset == start_offset + len(CLEAR_CODE_STREAM)

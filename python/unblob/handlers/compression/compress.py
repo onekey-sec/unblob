@@ -173,6 +173,7 @@ class UnixCompressHandler(StructHandler):
                     if remaining_bits >= max_len - nxt:
                         break
                     nxt += remaining_bits
+                    file.seek(remaining_bits, io.SEEK_CUR)
 
                 buf = left = 0
 
@@ -210,6 +211,7 @@ class UnixCompressHandler(StructHandler):
                     if remaining_bits > max_len - nxt:
                         break
                     nxt += remaining_bits
+                    file.seek(remaining_bits, io.SEEK_CUR)
                 buf = left = 0
 
                 # Mark this location for computing the next flush
