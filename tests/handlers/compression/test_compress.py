@@ -62,3 +62,20 @@ def test_unlzw_errors(content: bytes, start_offset: int):
     fake_file = File.from_bytes(content)
     with pytest.raises(InvalidInputFormat):
         handler.unlzw(fake_file, start_offset, max_len=len(content))
+
+
+# "apple1\n" in the compress(1) stream format, same bytes as the bundled
+# integration test sample tests/integration/compression/compress/__input__/apple1.z.
+APPLE1_STREAM = bytes.fromhex("1f9d9061e0c06153268602")
+
+
+@pytest.mark.parametrize("start_offset", [0, 1, 0x200])
+def test_calculate_chunk_is_start_offset_aware(start_offset: int):
+    handler = UnixCompressHandler()
+    file = File.from_bytes(b"\x00" * start_offset + APPLE1_STREAM)
+
+    chunk = handler.calculate_chunk(file, start_offset)
+
+    assert chunk is not None
+    assert chunk.start_offset == start_offset
+    assert chunk.end_offset == start_offset + len(APPLE1_STREAM)
