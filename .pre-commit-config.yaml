@@ -27,7 +27,7 @@ repos:
       - id: ruff-format
         name: Format python (ruff)
         language: system
-        types_or: [python, pyi]
+        types_or: [python, pyi, markdown]
         require_serial: true
         entry: uv run ruff format --force-exclude
       - id: nixfmt
