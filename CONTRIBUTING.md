@@ -137,7 +137,7 @@ uv run pre-commit install
 uv run pytest tests/ -v
 ```
 
-Tests are run against Python 3.11, 3.12, 3.13, and 3.14 in CI. Integration test fixtures live in `tests/integration/` and are tracked by Git LFS — make sure LFS is set up before running them.
+Tests are run against Python 3.11, 3.12, 3.13, 3.14, and 3.15 in CI. Integration test fixtures live in `tests/integration/` and are tracked by Git LFS — make sure LFS is set up before running them.
 
 ---
 
