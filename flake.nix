@@ -117,6 +117,7 @@
               clippy
               pinact
               rustc
+              rustfmt
               just
 
               nodejs # for pyright
