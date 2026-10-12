@@ -620,11 +620,7 @@ class FileSystem:
                 src = safe_link.src.absolute_path
                 dst = safe_link.dst.absolute_path
                 self._ensure_parent_dir(dst)
-                os.link(src, dst)
-                # FIXME: from python 3.10 change the above to
-                #        dst.hardlink_to(src)
-                #        so as to make it consistent with create_symlink
-                #        (see Path.link_to vs Path.hardlink_to parameter order mess up)
+                dst.hardlink_to(src)
             except FileNotFoundError:
                 self.record_problem(
                     safe_link.format_report("Hard link target does not exist.")
