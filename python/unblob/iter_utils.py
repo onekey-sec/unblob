@@ -1,16 +1,4 @@
 import itertools
-from collections.abc import Iterable, Iterator
-from typing import TypeVar
-
-T = TypeVar("T")
-
-
-def pairwise(iterable: Iterable[T]) -> Iterator[tuple[T, T]]:
-    # Copied from Python 3.10
-    # pairwise('ABCDEFG') --> AB BC CD DE EF FG
-    a, b = itertools.tee(iterable)
-    next(b, None)
-    return zip(a, b, strict=False)
 
 
 def get_intervals(values: list[int]) -> list[int]:
@@ -25,6 +13,6 @@ def get_intervals(values: list[int]) -> list[int]:
 
     """
     all_diffs = []
-    for value, next_value in pairwise(values):
+    for value, next_value in itertools.pairwise(values):
         all_diffs.append(next_value - value)
     return all_diffs
