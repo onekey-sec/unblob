@@ -101,3 +101,5 @@ repos:
     hooks:
       - id: renovate-config-validator
         args: [--strict]
+        # use node from PATH when present (e.g. nix-shell), download it otherwise
+        language_version: default
