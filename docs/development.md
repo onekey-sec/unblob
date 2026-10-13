@@ -132,6 +132,7 @@ Every handler inherits from the abstract class `Handler` located in
 ```python
 class Handler(abc.ABC):
     """A file type handler is responsible for searching, validating and "unblobbing" files from Blobs."""
+
     NAME: str
     PATTERNS: str
     PATTERN_MATCH_OFFSET: int = 0
@@ -142,7 +143,9 @@ class Handler(abc.ABC):
         """Returns external command dependencies needed for this handler to work."""
 
     @abc.abstractmethod
-    def calculate_chunk(self, file: io.BufferedIOBase, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(
+        self, file: io.BufferedIOBase, start_offset: int
+    ) -> Optional[ValidChunk]:
         """Returns a ValidChunk when it found a valid format for this Handler.
         Otherwise it can raise and Exception or return None, those will be ignored.
         """
@@ -284,7 +287,9 @@ class MyformatHandler(StructHandler):
     HEADER_STRUCT = ""
     EXTRACTOR = None
 
-    def calculate_chunk(self, file: io.BufferedIOBase, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(
+        self, file: io.BufferedIOBase, start_offset: int
+    ) -> Optional[ValidChunk]:
         return
 ```
 
@@ -303,7 +308,9 @@ class MyformatHandler(StructHandler):
     HEADER_STRUCT = ""
     EXTRACTOR = None
 
-    def calculate_chunk(self, file: io.BufferedIOBase, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(
+        self, file: io.BufferedIOBase, start_offset: int
+    ) -> Optional[ValidChunk]:
         return
 ```
 
@@ -317,17 +324,19 @@ class MyformatHandler(StructHandler):
         HexString("55 4E 42 4C 4F 42 21 21"),  # "UNBLOB!!"
     ]
 
-    C_DEFINITIONS= r"""
+    C_DEFINITIONS = r"""
         typedef struct myformat_header {
             char magic[8];
             uint32 size;
         } myformat_header_t;
     """
-    HEADER_STRUCT= "myformat_header_t"
+    HEADER_STRUCT = "myformat_header_t"
 
     EXTRACTOR = None
 
-    def calculate_chunk(self, file: io.BufferedIOBase, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(
+        self, file: io.BufferedIOBase, start_offset: int
+    ) -> Optional[ValidChunk]:
         return
 ```
 
@@ -341,17 +350,19 @@ class MyformatHandler(StructHandler):
         HexString("55 4E 42 4C 4F 42 21 21"),  # "UNBLOB!!"
     ]
 
-    C_DEFINITIONS= r"""
+    C_DEFINITIONS = r"""
         typedef struct myformat_header {
             char magic[8];
             uint32 size;
         } myformat_header_t;
     """
-    HEADER_STRUCT= "myformat_header_t"
+    HEADER_STRUCT = "myformat_header_t"
 
     EXTRACTOR = None
 
-    def calculate_chunk(self, file: io.BufferedIOBase, start_offset: int) -> Optional[ValidChunk]:
+    def calculate_chunk(
+        self, file: io.BufferedIOBase, start_offset: int
+    ) -> Optional[ValidChunk]:
         header = self.parse_header(file, Endian.LITTLE)
         end_offset = start_offset + header.size
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
@@ -420,9 +431,11 @@ would create a file `myplugins/myformat.py` with the following content:
 from unblob.models import Handler, StructHandler
 from unblob.plugins import hookimpl
 
+
 class MyformatHandler(StructHandler):
     # Format-handling code would go here
     ...
+
 
 @hookimpl
 def unblob_register_handlers() -> list[type[Handler]]:
@@ -459,9 +472,11 @@ Example:
 from unblob.models import ExtractResult
 from unblob.report import Report
 
+
 class MyReport(Report):
     message: str
     severity: str
+
 
 class MyExtractor:
     def extract(self, inpath, outdir):
@@ -482,8 +497,10 @@ your custom reports at runtime.
 from unblob.plugins import hookimpl
 from unblob.report import Report
 
+
 class MyReport(Report):
     message: str
+
 
 @hookimpl
 def unblob_register_reports() -> list[type[Report]]:
@@ -510,9 +527,7 @@ definitions: `Regex` and `HexString`.
 This object simply represents any regular expression. Example:
 
 ```python
-PATTERNS = [
-    Regex(r"-lh0-")
-]
+PATTERNS = [Regex(r"-lh0-")]
 ```
 
 #### HexString

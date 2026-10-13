@@ -117,11 +117,16 @@
               clippy
               pinact
               rustc
+              rustfmt
               just
 
               nodejs # for pyright
             ]
             ++ unblob.runtimeDeps;
+
+            # By default Python's shellHook add all Python dependencies of packages to PYTHONPATH
+            # We don't want that. All dependencies has to come through the uv-managed virtualenv.
+            dontAddPythonPath = true;
 
             uvExtraArgs = [
               "--group"

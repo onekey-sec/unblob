@@ -27,7 +27,7 @@ repos:
       - id: ruff-format
         name: Format python (ruff)
         language: system
-        types_or: [python, pyi]
+        types_or: [python, pyi, markdown]
         require_serial: true
         entry: uv run ruff format --force-exclude
       - id: nixfmt
@@ -57,12 +57,13 @@ repos:
         language: system
         types: [toml]
         entry: uv run taplo format
-      - id: semgrep-cstruct-size-shadowing
-        name: Check StructParser size shadowing (semgrep)
-        language: python
-        additional_dependencies: ["semgrep>=1.104,<2"]
-        pass_filenames: false
-        entry: semgrep --config .semgrep/disallow-cstruct-size-shadowing.yml --error python/unblob/handlers
+      - id: cstruct-size-shadowing
+        name: Avoid naming StructParser C definition fields `size`; it shadows dissect.cstruct's generated `.size` attribute.
+        language: pygrep
+        files: ^python/unblob/handlers/.*\.py$
+        args: [--multiline]
+        entry: >-
+          (?s)C_DEFINITIONS\s*=\s*r?("""((?!""").)*?\b(?:u?int(?:8|16|32|64)|char|ulong|ushort|short)\s+size(?:\s*\[[^\]]+\])?\s*;.*?"""|'''((?!''').)*?\b(?:u?int(?:8|16|32|64)|char|ulong|ushort|short)\s+size(?:\s*\[[^\]]+\])?\s*;.*?''')
       - id: cargo-fmt # rustup component add rustfmt
         name: Check rust (cargo fmt)
         entry: cargo fmt --all --
@@ -101,3 +102,5 @@ repos:
     hooks:
       - id: renovate-config-validator
         args: [--strict]
+        # use node from PATH when present (e.g. nix-shell), download it otherwise
+        language_version: default
