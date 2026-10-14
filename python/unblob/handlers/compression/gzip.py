@@ -50,6 +50,13 @@ GZIP2_CRC_LEN = 4
 GZIP2_SIZE_LEN = 4
 GZIP2_FOOTER_LEN = GZIP2_CRC_LEN + GZIP2_SIZE_LEN
 
+# Members decompressing up to this size must have a matching CRC32 and size
+# in their trailer. Small members are where false positives live, e.g. x86
+# code that happens to look like a gzip header followed by a tiny deflate
+# stream.  Larger members are accepted with a bad trailer, as 7z still
+# extracts their content.
+GZIP2_STRICT_TRAILER_MAX_SIZE = 64 * 1024
+
 FLAG_EXTRA = 4
 FLAG_NAME = 8
 
@@ -162,7 +169,16 @@ class GZIPHandler(Handler):
         except (gzip.BadGzipFile, zlib.error) as e:
             raise InvalidInputFormat from e
 
-        file.seek(GZIP2_FOOTER_LEN - len(fp.unused_data), io.SEEK_CUR)
+        file.seek(-len(fp.unused_data), io.SEEK_CUR)
+        footer = file.read(GZIP2_FOOTER_LEN)
+        if len(footer) < GZIP2_FOOTER_LEN:
+            raise InvalidInputFormat("Truncated gzip trailer")
+
+        crc, size = struct.unpack("<II", footer)
+        if fp.size <= GZIP2_STRICT_TRAILER_MAX_SIZE and (
+            crc != fp.crc or size != fp.size & 0xFFFFFFFF
+        ):
+            raise InvalidInputFormat("gzip trailer does not match content")
 
         return file.tell()
 

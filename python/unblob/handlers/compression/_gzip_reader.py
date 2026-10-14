@@ -44,3 +44,11 @@ class SingleMemberGzipReader(gzip._GzipReader):  # noqa: SLF001
     @property
     def unused_data(self):
         return self._decompressor.unused_data
+
+    @property
+    def crc(self) -> int:
+        return self._crc
+
+    @property
+    def size(self) -> int:
+        return self._stream_size
