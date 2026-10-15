@@ -1,3 +1,4 @@
+import gzip
 import struct
 from unittest.mock import Mock
 
@@ -8,6 +9,7 @@ from unblob.handlers.filesystem.romfs import (
     FileHeader,
     FSType,
     RomFSError,
+    RomFSFSHandler,
     RomFSHeader,
     get_string,
     valid_checksum,
@@ -84,3 +86,46 @@ def test_create_inode_rejects_regular_file_past_eof():
         header.create_inode(inode)
 
     header.fs.write_chunks.assert_not_called()
+
+
+def build_image(full_size: int, image_size: int) -> bytes:
+    # genromfs layout: header, volume name padded to 16 bytes, then zero padding
+    # up to the next 1024 byte boundary; full_size counts from the image start
+    image = bytearray(image_size)
+    image[0:8] = b"-rom1fs-"
+    struct.pack_into(">I", image, 8, full_size)
+    image[16:17] = b"v"
+    image[32:full_size] = b"\x01" * (full_size - 32)
+    checksum = sum(struct.unpack(">128I", image[:512])) & 0xFFFFFFFF
+    struct.pack_into(">I", image, 12, (-checksum) & 0xFFFFFFFF)
+    assert valid_checksum(bytes(image[:512]))
+    return bytes(image)
+
+
+@pytest.mark.parametrize(
+    "full_size, image_size",
+    [
+        pytest.param(1024, 1024, id="aligned"),
+        pytest.param(928, 1024, id="padded"),
+        pytest.param(1000, 1024, id="padded-near-boundary"),
+    ],
+)
+@pytest.mark.parametrize(
+    "trailer",
+    [
+        pytest.param(b"", id="eof"),
+        pytest.param(gzip.compress(bytes(range(256)), mtime=0), id="gzip"),
+    ],
+)
+@pytest.mark.parametrize("start_offset", [0, 0x10])
+def test_calculate_chunk_ends_at_image_end(
+    full_size, image_size, trailer, start_offset
+):
+    image = build_image(full_size, image_size)
+    file = File.from_bytes(b"\xaa" * start_offset + image + trailer)
+    file.seek(start_offset)
+
+    chunk = RomFSFSHandler().calculate_chunk(file, start_offset)
+
+    assert chunk is not None
+    assert chunk.end_offset == start_offset + image_size
