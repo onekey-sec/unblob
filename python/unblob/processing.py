@@ -1,4 +1,5 @@
 import enum
+import itertools
 import multiprocessing
 import shutil
 from collections.abc import Iterable, Sequence
@@ -16,7 +17,6 @@ from unblob.handlers import BUILTIN_DIR_HANDLERS, BUILTIN_HANDLERS, Handlers
 from .extractor import carve_unknown_chunk, carve_valid_chunk, fix_extracted_directory
 from .file_utils import InvalidInputFormat, iterate_file
 from .finder import search_chunks
-from .iter_utils import pairwise
 from .logging import noformat
 from .models import (
     Chunk,
@@ -786,7 +786,7 @@ def calculate_unknown_chunks(
         unknown_chunk = UnknownChunk(start_offset=0, end_offset=first.start_offset)
         unknown_chunks.append(unknown_chunk)
 
-    for chunk, next_chunk in pairwise(sorted_by_offset):
+    for chunk, next_chunk in itertools.pairwise(sorted_by_offset):
         diff = next_chunk.start_offset - chunk.end_offset
         if diff != 0:
             unknown_chunk = UnknownChunk(

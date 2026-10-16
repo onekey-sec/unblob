@@ -97,7 +97,7 @@ uv sync --no-dev
 uv run unblob --show-external-dependencies
 ```
 
-Requires Python ≥ 3.10, [uv](https://docs.astral.sh/uv/), and a Rust toolchain (for the compiled extensions).
+Requires Python ≥ 3.11, [uv](https://docs.astral.sh/uv/), and a Rust toolchain (for the compiled extensions).
 
 ---
 

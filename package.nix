@@ -50,7 +50,7 @@ python3.pkgs.buildPythonApplication {
   pname = "unblob";
   inherit version;
   pyproject = true;
-  disabled = python3.pkgs.pythonOlder "3.9";
+  disabled = python3.pkgs.pythonOlder "3.11";
 
   src = nix-filter {
     root = ./.;
