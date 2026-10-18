@@ -62,6 +62,7 @@
     | [`NETGEAR TRX V1`](#netgear-trx-v1) | ARCHIVE | :octicons-check-16: |
     | [`NETGEAR TRX V2`](#netgear-trx-v2) | ARCHIVE | :octicons-check-16: |
     | [`NTFS`](#ntfs) | FILESYSTEM | :octicons-check-16: |
+    | [`NUTTX CROMFS`](#nuttx-cromfs) | FILESYSTEM | :octicons-check-16: |
     | [`PAR2 (MULTI-VOLUME)`](#par2-multi-volume) | ARCHIVE | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
     | [`PNG`](#png) | MEDIA | :octicons-alert-fill-12: |
@@ -1131,6 +1132,23 @@
     === "References"
 
         - [NTFS Wikipedia](https://en.wikipedia.org/wiki/NTFS){ target="_blank" }
+## NuttX CROMFS
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        NuttX CROMFS is a read-only embedded file system with independently LZF-compressed blocks. Both little-endian and big-endian images are supported.
+
+        ---
+
+        - **Handler type:** FileSystem
+        - **Vendor:** Apache
+
+    === "References"
+
+        - [NuttX CROMFS image generator](https://github.com/apache/nuttx/blob/master/tools/gencromfs.c){ target="_blank" }
+        - [NuttX CROMFS implementation](https://github.com/apache/nuttx/blob/master/fs/cromfs/fs_cromfs.c){ target="_blank" }
 ## PAR2 (multi-volume)
 
 !!! success "Fully supported"
