@@ -4,7 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from unblob.file_utils import File, InvalidInputFormat
+from unblob.file_utils import File, InvalidInputFormat, SeekError
+from unblob.finder import search_chunks
 from unblob.handlers import BUILTIN_HANDLERS
 from unblob.handlers.filesystem.cromfs import (
     MAGIC,
@@ -108,20 +109,18 @@ def test_invalid_lzf(compressed, size):
 
 @pytest.mark.parametrize("size", [1, 4, 19, 20, 41])
 def test_truncated_image(size):
-    with pytest.raises(InvalidInputFormat):
-        parse(make_image()[:size])
+    with pytest.raises((InvalidInputFormat, EOFError, SeekError)):
+        parse(make_image()[:size]).parse()
 
 
 @pytest.mark.parametrize(
     "offset, fmt, value",
     [
-        (0, "I", 0),
         (4, "H", 0),
         (4, "H", 100),
         (8, "I", 0),
         (8, "I", 5000),
         (12, "I", 20),
-        (12, "I", 5000),
         (16, "I", 0),
         (16, "I", 65536),
         (20, "H", stat.S_IFREG),
@@ -134,8 +133,8 @@ def test_truncated_image(size):
 def test_invalid_volume_and_root(offset, fmt, value):
     data = make_image()
     struct.pack_into("<" + fmt, data, offset, value)
-    with pytest.raises(InvalidInputFormat):
-        parse(data)
+    with pytest.raises((InvalidInputFormat, EOFError, SeekError)):
+        parse(data).parse()
 
 
 @pytest.mark.parametrize(
@@ -299,8 +298,8 @@ def test_hard_link_chain():
     first = add_link(data)
     second = add_link(data, name=b"second", target=first)
     struct.pack_into("<H", data, 4, 4)
-    offset, node = parse(data).resolve(second)
-    assert offset == 42
+    node = parse(data).resolve(second)
+    assert node.offset == 42
     assert stat.S_ISREG(node.mode)
 
 
@@ -347,3 +346,73 @@ def test_reject_unreachable_directory_alias(tmp_path):
     output.mkdir()
     with pytest.raises(InvalidInputFormat, match="unreachable"):
         CromFSExtractor().extract(source, output)
+
+
+@pytest.mark.parametrize("field, value", [(0, 0), (12, 5000)])
+def test_finder_rejects_invalid_magic_and_image_overflow(field, value, task_result):
+    data = make_image()
+    struct.pack_into("<I", data, field, value)
+    with File.from_bytes(data) as file:
+        assert search_chunks(file, file.size(), (CROMFSHandler,), task_result) == []
+    assert not task_result.reports
+
+
+def test_block_cannot_read_following_firmware_bytes():
+    data = make_image()
+    struct.pack_into("<I", data, 12, len(data) - 5)
+    image = parse(data)
+    with pytest.raises(InvalidInputFormat, match="past the image"):
+        list(image.chunks(image.node(42)))
+
+
+def test_short_payload_read_raises_eof():
+    image = parse(make_image()[:-4])
+    with pytest.raises(EOFError, match="Truncated"):
+        list(image.chunks(image.node(42)))
+
+
+def test_entries_expose_node_offsets_paths_and_tree_parents():
+    with File.from_path(FIXTURES / "little/__input__/sample.cromfs") as file:
+        image = CromFS(file)
+        entries = list(image.entries())
+        entry = next(
+            node for node in entries if node.path == Path("nested/message.txt")
+        )
+        assert entry.name == Path("message.txt")
+        assert image.tree[str(entry.offset)].data is entry
+        assert image.tree[str(entry.parent_offset)].data.path == Path("nested")
+        assert list(image.entries()) == entries
+
+
+def test_forward_hard_link_preserves_file_identity(tmp_path):
+    data = make_image()
+    offset = add_link(data)
+    # Place the alias before its target in the physical peer chain.
+    struct.pack_into("<I", data, 32, offset)
+    struct.pack_into("<I", data, offset + 12, 42)
+    struct.pack_into("<I", data, 54, 0)
+    source = tmp_path / "image"
+    source.write_bytes(data)
+    output = tmp_path / "output"
+    output.mkdir()
+    CromFSExtractor().extract(source, output)
+    assert (output / "alias").read_bytes() == b"hello"
+    assert (output / "alias").stat().st_ino == (output / "file").stat().st_ino
+
+
+def test_forward_directory_alias(tmp_path):
+    data = make_image(payload=b"")
+    struct.pack_into("<H", data, 42, stat.S_IFDIR | 0o555)
+    struct.pack_into("<I", data, 58, 0)
+    offset = add_link(data)
+    struct.pack_into("<I", data, 32, offset)
+    struct.pack_into("<I", data, offset + 12, 42)
+    struct.pack_into("<I", data, 54, 0)
+    source = tmp_path / "image"
+    source.write_bytes(data)
+    output = tmp_path / "output"
+    output.mkdir()
+    result = CromFSExtractor().extract(source, output)
+    assert not result.reports
+    assert (output / "alias").is_symlink()
+    assert (output / "alias").resolve() == output / "file"
