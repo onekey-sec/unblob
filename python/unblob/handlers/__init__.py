@@ -50,6 +50,7 @@ from .executable import elf, macho, xalz
 from .filesystem import (
     btrfs_stream,
     cramfs,
+    cromfs,
     extfs,
     fat,
     iso9660,
@@ -75,6 +76,7 @@ __all__ = [
 
 BUILTIN_HANDLERS: Handlers = (
     cramfs.CramFSHandler,
+    cromfs.CROMFSHandler,
     deafbead.DeafBeadHandler,
     extfs.EXTHandler,
     fat.FATHandler,
