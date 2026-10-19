@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import atexit
+import os
 import re
 import sys
 from collections.abc import Iterable
@@ -7,6 +8,7 @@ from importlib.metadata import version
 from pathlib import Path
 
 import click
+from click.shell_completion import shell_complete
 from pymdownx import slugs
 from rich.console import Console
 from rich.panel import Panel
@@ -625,6 +627,12 @@ Extraction directory size: [#00FFC8]{human_size(extracted_size)}[/#00FFC8]""",
 
 
 def main():
+    # Run shell completion manually, since it's not handled by `cli.invoke`.
+    complete_var = "_UNBLOB_COMPLETE"
+    if instruction := os.getenv(complete_var):
+        sys.exit(shell_complete(cli, {}, "unblob", complete_var, instruction))
+
+    # Use `cli.invoke(ctx)` instead of `cli()` to avoid click swallowing EOFError.
     try:
         # Click argument parsing
         ctx = cli.make_context("unblob", sys.argv[1:])
