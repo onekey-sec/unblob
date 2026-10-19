@@ -1799,6 +1799,9 @@ wheels = [
 name = "pyperscan"
 version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.11'",
+]
 sdist = { url = "https://files.pythonhosted.org/packages/aa/62/d86a46a53443ca8d0d76183de5123abbde46da2a42d53e2368cd025518a3/pyperscan-0.3.0.tar.gz", hash = "sha256:a77215265381be7e12878f577cd1c3babbdc57006af9c6f1372df70b4992cbd6", size = 81533, upload-time = "2023-12-15T11:26:00.121Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7b/6c/1ee22fc667974ce329d0909ccaa67638b8d43b621b3b666de5b59e43b20f/pyperscan-0.3.0-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:26570f9d84758f6a2b636612a97e621511cdc7dbdffff9668ec264eb2ecbf285", size = 2296074, upload-time = "2023-12-15T11:26:06.387Z" },
@@ -1807,6 +1810,29 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e3/f6/804a6de37f4a9ab300dfb1542245240c925da9862125adfad9b8fecc8352/pyperscan-0.3.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b05a7683727919b7abf42ccb80277e9f5dd06b70e40ed6756e0f948047cf0a2", size = 5189561, upload-time = "2023-12-15T11:26:08.304Z" },
     { url = "https://files.pythonhosted.org/packages/b6/6f/8572e9fc41caa90ebe3471359139ddc486a2587223b8cddf87fc33a28a8c/pyperscan-0.3.0-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:095552cb789f9d4596a49e59bfc92f5814ed0836a721241d0e24b5dec1bd2b61", size = 5231600, upload-time = "2023-12-15T11:26:04.769Z" },
     { url = "https://files.pythonhosted.org/packages/6c/52/05150c1334dedcb62175a1d42efb7389dd8e5b2c65a3abb0e8842ec4f886/pyperscan-0.3.0-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:fa05bba61bad569c41a55835c05f3184c5f643f9b6ecfe9a4bf1ab6a79184dce", size = 5328363, upload-time = "2023-12-15T11:26:09.854Z" },
+]
+
+[[package]]
+name = "pyperscan"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.11'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a7/a5/a7e4a4e9aa22486d4a91565701daeb6c66c8478c64a19db796e1b1242804/pyperscan-0.4.0.tar.gz", hash = "sha256:ab3b6b9c523793bb9e57911d8ffd3413a0f24aa3e200004630b9e5490834c9ca", size = 89089, upload-time = "2026-10-06T20:49:27.733Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8f/be/4dd6995a8c7d9512d7fc06a2345c123b47dfc136750fba6cb049ec30e0ad/pyperscan-0.4.0-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:6e7c1ecb79ebbbbc9524f355e538e887d09065da3b014bd3e702e34f66f8a04f", size = 2365956, upload-time = "2026-10-06T20:49:09.613Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/af/9e23a85921acd93c658a511346f117298378da65b19cf62055a92b75269e/pyperscan-0.4.0-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:ccc1c06c2261678110cd04ccee1c500e0447a0b98619222410352954b78d5e93", size = 2283154, upload-time = "2026-10-06T20:49:11.126Z" },
+    { url = "https://files.pythonhosted.org/packages/95/a6/9c53ed1cf0fe6d895cfba8aea78d9c39e1fcc7f869c46b68a24ec5f92aac/pyperscan-0.4.0-cp311-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:eb617cff72ecf5ad21f1c1d0a5589fab425d5e75e97698f1ccea74b220de7794", size = 3051352, upload-time = "2026-10-06T20:49:12.478Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/58/4f12970eae7e8affb92fd19f698280545888247784b9b84bb1281c7a939d/pyperscan-0.4.0-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8f8700deb6de709da7ac9f60a2ae6aefda9f166680be25fd3a888183c9697706", size = 4999865, upload-time = "2026-10-06T20:49:13.962Z" },
+    { url = "https://files.pythonhosted.org/packages/88/39/effbed434cd275913c9b051c375fe5933520e132f2096586208922c7082e/pyperscan-0.4.0-cp311-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:a49956da943a3bbbb82a05a301a795b0856eaa2e67611cfa17c7522b984784c2", size = 3021958, upload-time = "2026-10-06T20:49:15.485Z" },
+    { url = "https://files.pythonhosted.org/packages/87/7d/a49a7a6dd26df38e0ffa40a3e48771e53a0eec15850199be87943b623ba8/pyperscan-0.4.0-cp311-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:1982945c46ce17717ac2efd8aa0046449ffcc8d5572cd65434db219867eddbfd", size = 5001003, upload-time = "2026-10-06T20:49:16.913Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/7a/22b38f052e160c0f8c2ffc0b3e3e226ed77b7c305fe396b6cec1c2aa6693/pyperscan-0.4.0-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:6a753be7cc6c186b92330e9addd7baa201c5dfe1f91469bb1a8351da39bb3b7d", size = 2367399, upload-time = "2026-10-06T20:49:18.355Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/fa/8878877125e52396112ea3355cad3c3c008b3353150ca7f44db8343bcfbd/pyperscan-0.4.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:65ee23b485da83b8f89b081deabcce138d7519c768b08467c412fa417ac90373", size = 2279651, upload-time = "2026-10-06T20:49:19.964Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/7d/81debf3b0525694e4020110a13cd24fa793441ff6bcff8d74c429e5eb4a5/pyperscan-0.4.0-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:603cee1ca99351aeea2a64387df58b97392f9ecb490c9eeecdf37c4cf79d4b81", size = 3047873, upload-time = "2026-10-06T20:49:21.509Z" },
+    { url = "https://files.pythonhosted.org/packages/98/71/212be7ad06173acbec6fa8e25f4514220b40539e57329f290ec50e200fe8/pyperscan-0.4.0-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f3fb17281711f604e2a39781ea623a7551d4049390dccc358c73e254ac2d0da8", size = 4995079, upload-time = "2026-10-06T20:49:23.211Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/d3/7f59d1c3748ffb70f540718f561997746b24d7f40d7c122710a022c5c873/pyperscan-0.4.0-cp314-cp314t-musllinux_1_1_aarch64.whl", hash = "sha256:f776a1a62367497963d5796ccc6d2bf5160c1c2f8b28e480e14f492b4812b6bf", size = 3017826, upload-time = "2026-10-06T20:49:24.673Z" },
+    { url = "https://files.pythonhosted.org/packages/72/86/0bf0e2a2bd3758d27787f68bc94db5bb495409ab091bca9b9156a79f4d66/pyperscan-0.4.0-cp314-cp314t-musllinux_1_1_x86_64.whl", hash = "sha256:034e1bc1008c038ca559443b080b9de757699c893977f5b439eb7166a5a3e061", size = 4996236, upload-time = "2026-10-06T20:49:26.265Z" },
 ]
 
 [[package]]
@@ -2211,7 +2237,8 @@ dependencies = [
     { name = "pydantic" },
     { name = "pyfatfs" },
     { name = "pymdown-extensions" },
-    { name = "pyperscan" },
+    { name = "pyperscan", version = "0.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "pyperscan", version = "0.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "python-magic" },
     { name = "rarfile" },
     { name = "rich" },
