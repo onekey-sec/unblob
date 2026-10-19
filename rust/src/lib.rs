@@ -1,15 +1,30 @@
 pub mod math_tools;
 pub mod sandbox;
 
-use pyo3::prelude::*;
-
 /// Performance-critical functionality
-#[pymodule]
-fn _rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    math_tools::init_module(m)?;
-    sandbox::init_module(m)?;
+#[pyo3::pymodule]
+mod _rust {
+    use pyo3::{prelude::*, types::PyDict};
 
-    pyo3_log::init();
+    #[pymodule_export]
+    use crate::math_tools::python as math_tools;
+    #[pymodule_export]
+    use crate::sandbox::python as sandbox;
 
-    Ok(())
+    #[pymodule_init]
+    fn init(m: &Bound<'_, PyModule>) -> PyResult<()> {
+        // Needed in order to get `import unblob._rust.<name>` work.
+        let sys_modules = m
+            .py()
+            .import("sys")?
+            .getattr("modules")?
+            .cast_into::<PyDict>()?;
+        for value in m.dict().values() {
+            if let Ok(submodule) = value.cast::<PyModule>() {
+                sys_modules.set_item(submodule.name()?, submodule)?;
+            }
+        }
+        pyo3_log::init();
+        Ok(())
+    }
 }
