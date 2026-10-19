@@ -278,7 +278,7 @@ class MultiFileReport(HandledBlobReport):
 
 class ExtractedFileDeletedReport(Report):
     path: Path
-    handler_name: str
+    handler_names: list[str]
 
 
 class ExtractionProblem(Report):
