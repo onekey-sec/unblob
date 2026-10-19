@@ -183,6 +183,23 @@ def test_help(params):
     assert result.output.startswith("Usage: cli [OPTIONS] FILE")
 
 
+def test_shell_completion(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+):
+    monkeypatch.setenv("_UNBLOB_COMPLETE", "fish_source")
+    monkeypatch.setattr("sys.argv", ["unblob"])
+
+    # Note that we call `unblob.cli.main` directly.
+    # If we used `CliRunner`, it would use `unblob.cli.cli.main()`,
+    # where `click` would be able to handle completions on its own,
+    # so the test would pass even without the manual `shell_complete` call we want to test.
+    with pytest.raises(SystemExit) as exc_info:
+        unblob.cli.main()
+
+    assert exc_info.value.code == 0
+    assert "_UNBLOB_COMPLETE=fish_complete" in capsys.readouterr().out
+
+
 @pytest.mark.parametrize(
     "params",
     [
