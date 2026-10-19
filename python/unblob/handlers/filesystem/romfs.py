@@ -370,21 +370,18 @@ class RomFSFSHandler(StructHandler):
         # Every multi byte value must be in big endian order.
         header = self.parse_header(file, Endian.BIG)
 
-        # The zero terminated name of the volume, padded to 16 byte boundary.
-        get_string(file)
-
         # seek filesystem size (number of accessible bytes in this fs)
-        # from the actual end of the header
-        file.seek(header.full_size, io.SEEK_CUR)
+        # counted from the start of the image, header and volume name included
+        file.seek(start_offset + header.full_size, io.SEEK_SET)
 
         # Another thing to note is that romfs works on file headers and data
         # aligned to 16 byte boundaries, but most hardware devices and the block
         # device drivers are unable to cope with smaller than block-sized data.
         # To overcome this limitation, the whole size of the file system must be
         # padded to an 1024 byte boundary.
-        read_until_past(file, b"\x00")
+        end_offset = read_until_past(file, b"\x00")
 
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=file.tell(),
+            end_offset=end_offset,
         )
