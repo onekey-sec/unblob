@@ -571,7 +571,7 @@ class _FileTask:
                     remove_extracted_input=False,
                 )
                 if extraction_successful:
-                    self._delete_extracted_file_if_needed(self.task.path, chunk)
+                    self._delete_extracted_file_if_needed(self.task.path, [chunk])
         else:
             self._carve_then_extract_chunks(file, outer_chunks, unknown_chunks)
 
@@ -599,18 +599,24 @@ class _FileTask:
             randomness = self._calculate_randomness(carved_unknown_path)
             self.result.add_report(chunk.as_report(randomness=randomness))
 
+        extraction_results = []
         for chunk in outer_chunks:
             carved_path = carve_valid_chunk(carve_dir, file, chunk)
-            self._extract_chunk(
-                carved_path,
-                chunk,
-                self.config.get_extract_dir_for(carved_path),
-                # when a carved chunk is successfully extracted, usually
-                # we want to get rid of it, as its data is available in
-                # extracted format, and the raw data is still part of
-                # the file the chunk belongs to
-                remove_extracted_input=not self.config.keep_extracted_chunks,
+            extraction_results.append(
+                self._extract_chunk(
+                    carved_path,
+                    chunk,
+                    self.config.get_extract_dir_for(carved_path),
+                    # when a carved chunk is successfully extracted, usually
+                    # we want to get rid of it, as its data is available in
+                    # extracted format, and the raw data is still part of
+                    # the file the chunk belongs to
+                    remove_extracted_input=not self.config.keep_extracted_chunks,
+                )
             )
+
+        if outer_chunks and not unknown_chunks and all(extraction_results):
+            self._delete_extracted_file_if_needed(self.task.path, outer_chunks)
 
     def _calculate_randomness(self, path: Path) -> RandomnessReport | None:
         if self.task.depth < self.config.randomness_depth:
@@ -689,10 +695,10 @@ class _FileTask:
         return extraction_successful
 
     def _delete_extracted_file_if_needed(
-        self, delete_candidate_path: Path, chunk: ValidChunk
+        self, delete_candidate_path: Path, chunks: list[ValidChunk]
     ) -> None:
         filter_set = set(self.config.extracted_file_handler_filter)
-        if not self._should_delete_extracted_file(chunk, filter_set):
+        if not self._should_delete_extracted_file(chunks, filter_set):
             return
 
         if self.task.depth == 0:
@@ -701,18 +707,20 @@ class _FileTask:
         if not delete_candidate_path.exists() or delete_candidate_path.is_dir():
             return
 
+        handler_names = sorted({chunk.handler.NAME for chunk in chunks})
+        handler_name = ",".join(handler_names)
         try:
             delete_candidate_path.unlink()
             self.result.add_report(
                 ExtractedFileDeletedReport(
                     path=delete_candidate_path,
-                    handler_name=chunk.handler.NAME,
+                    handler_name=handler_name,
                 )
             )
             logger.debug(
                 "Removed extracted file after extraction",
                 path=delete_candidate_path,
-                handler=chunk.handler.NAME,
+                handlers=handler_names,
             )
         except OSError:
             logger.warning(
@@ -721,18 +729,15 @@ class _FileTask:
             )
 
     def _should_delete_extracted_file(
-        self, chunk: ValidChunk, filter_set: set[str]
+        self, chunks: list[ValidChunk], filter_set: set[str]
     ) -> bool:
-        if not chunk.is_whole_file:
-            return False
-
         deletion_mode = self.config.extracted_file_deletion
 
         if deletion_mode is ExtractedFileDeletionMode.NONE:
             return False
 
         if deletion_mode is ExtractedFileDeletionMode.SELECTED:
-            return chunk.handler.NAME in filter_set
+            return all(chunk.handler.NAME in filter_set for chunk in chunks)
 
         return True
 
