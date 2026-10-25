@@ -43,6 +43,25 @@ def test_calculate_chunk_stops_before_trailing_garbage():
     assert chunk.end_offset == len(payload)
 
 
+@pytest.mark.parametrize(
+    "truncated_member",
+    [
+        pytest.param(b"\x1f\x8b\x08\x00", id="truncated-header"),
+        pytest.param(gzip.compress(b"jackfruit" * 50)[:-20], id="truncated-stream"),
+    ],
+)
+def test_calculate_chunk_stops_before_truncated_member(truncated_member: bytes):
+    payload = gzip.compress(b"durian")
+    file = File.from_bytes(payload + truncated_member)
+
+    with file:
+        chunk = GZIPHandler().calculate_chunk(file, 0)
+
+    assert chunk is not None
+    assert chunk.start_offset == 0
+    assert chunk.end_offset == len(payload)
+
+
 def _corrupt_crc(member: bytes) -> bytes:
     corrupted = bytearray(member)
     corrupted[-8] ^= 0xFF
