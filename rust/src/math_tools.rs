@@ -1,4 +1,3 @@
-use pyo3::prelude::*;
 use statrs::distribution::{ChiSquared, ContinuousCDF};
 
 pub fn shannon_entropy(data: &[u8]) -> f64 {
@@ -19,11 +18,6 @@ pub fn shannon_entropy(data: &[u8]) -> f64 {
     }
 
     entropy
-}
-/// Calculates Shannon entropy of data
-#[pyfunction(name = "shannon_entropy")]
-pub fn py_shannon_entropy(py: Python, data: &[u8]) -> PyResult<f64> {
-    py.detach(|| Ok(shannon_entropy(data)))
 }
 
 pub fn chi_square_probability(data: &[u8]) -> f64 {
@@ -57,26 +51,22 @@ pub fn chi_square_probability(data: &[u8]) -> f64 {
     // Compute p-value (chi-square probability)
     1.0 - chi_squared.cdf(chi_square)
 }
-/// Calculates Chi Square of data
-#[pyfunction(name = "chi_square_probability")]
-pub fn py_chi_square_probability(py: Python, data: &[u8]) -> PyResult<f64> {
-    py.detach(|| Ok(chi_square_probability(data)))
-}
 
-pub fn init_module(root_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let module = PyModule::new(root_module.py(), "math_tools")?;
-    module.add_function(wrap_pyfunction!(py_shannon_entropy, &module)?)?;
-    module.add_function(wrap_pyfunction!(py_chi_square_probability, &module)?)?;
+#[pyo3::pymodule(submodule, module = "unblob._rust", name = "math_tools")]
+pub mod python {
+    use pyo3::prelude::*;
 
-    root_module.add_submodule(&module)?;
+    /// Calculates Shannon entropy of data
+    #[pyfunction]
+    fn shannon_entropy(py: Python, data: &[u8]) -> PyResult<f64> {
+        py.detach(|| Ok(super::shannon_entropy(data)))
+    }
 
-    root_module
-        .py()
-        .import("sys")?
-        .getattr("modules")?
-        .set_item("unblob._rust.math", module)?;
-
-    Ok(())
+    /// Calculates Chi Square of data
+    #[pyfunction]
+    fn chi_square_probability(py: Python, data: &[u8]) -> PyResult<f64> {
+        py.detach(|| Ok(super::chi_square_probability(data)))
+    }
 }
 
 #[cfg(test)]

@@ -76,6 +76,12 @@ repos:
         language: system
         pass_filenames: false
         types: [rust]
+      - id: rust-stubs
+        name: Generate type stubs for Rust code
+        entry: uv run --group stubgen maturin generate-stubs --out python --features pyo3/experimental-inspect
+        language: system
+        pass_filenames: false
+        files: ^(rust/src/.*\.rs|rust/Cargo\.lock)$
       - id: cargo-deny
         name: Check rust (cargo deny)
         entry: cargo deny check
