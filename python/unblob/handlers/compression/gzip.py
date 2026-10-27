@@ -190,8 +190,8 @@ class GZIPHandler(Handler):
         while end_offset < file.size():
             try:
                 next_end_offset = self._read_member_end_offset(file)
-            except (gzip.BadGzipFile, InvalidInputFormat):
-                # Stop at the last valid member if a later member-like sequence is malformed.
+            except (EOFError, gzip.BadGzipFile, InvalidInputFormat):
+                # Stop at the last valid member if a later member-like sequence is malformed or truncated.
                 break
 
             if next_end_offset is None:
