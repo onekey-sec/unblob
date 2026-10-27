@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from unblob.file_utils import File, InvalidInputFormat
+from unblob.finder import search_chunks
 from unblob.handlers.compression.gzip import (
     GZIP2_STRICT_TRAILER_MAX_SIZE,
     GZIPHandler,
@@ -60,6 +61,19 @@ def test_calculate_chunk_stops_before_truncated_member(truncated_member: bytes):
     assert chunk is not None
     assert chunk.start_offset == 0
     assert chunk.end_offset == len(payload)
+
+
+def test_search_chunks_identifies_member_followed_by_truncated_member(task_result):
+    payload = gzip.compress(b"durian")
+    content = payload + b"\x1f\x8b\x08\x00"
+
+    with File.from_bytes(content) as file:
+        chunks = search_chunks(file, len(content), (GZIPHandler,), task_result)
+
+    assert [(chunk.start_offset, chunk.end_offset) for chunk in chunks] == [
+        (0, len(payload))
+    ]
+    assert task_result.reports == []
 
 
 def _corrupt_crc(member: bytes) -> bytes:
