@@ -15,6 +15,7 @@ from .archive import (
     sevenzip,
     stuffit,
     tar,
+    uf2,
 )
 from .archive import (
     zip as ziparchive,
@@ -132,6 +133,7 @@ BUILTIN_HANDLERS: Handlers = (
     rar.RarHandler,
     ziparchive.ZIPHandler,
     dmg.DMGHandler,
+    uf2.UF2Handler,
     iso9660.ISO9660FSHandler,
     stuffit.StuffItSITHandler,
     stuffit.StuffIt5Handler,
