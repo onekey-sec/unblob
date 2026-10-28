@@ -46,7 +46,7 @@ from .compression import (
     zlib,
     zstd,
 )
-from .executable import elf, macho, xalz
+from .executable import elf, macho, mcuboot, xalz
 from .filesystem import (
     btrfs_stream,
     cramfs,
@@ -151,6 +151,7 @@ BUILTIN_HANDLERS: Handlers = (
     elf.ELF32Handler,
     elf.ELF64Handler,
     macho.MachOHandler,
+    mcuboot.MCUbootHandler,
     zlib.ZlibHandler,
     engenius.EngeniusHandler,
     ecc.AutelECCHandler,

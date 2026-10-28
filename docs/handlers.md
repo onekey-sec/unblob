@@ -49,6 +49,7 @@
     | [`LZMA`](#lzma) | COMPRESSION | :octicons-check-16: |
     | [`LZO`](#lzo) | COMPRESSION | :octicons-check-16: |
     | [`MACH-O`](#mach-o) | EXECUTABLE | :octicons-check-16: |
+    | [`MCUBOOT IMAGE`](#mcuboot-image) | EXECUTABLE | :octicons-alert-fill-12: |
     | [`MINIFS`](#minifs) | FILESYSTEM | :octicons-alert-fill-12: |
     | [`MINIX FS (V1)`](#minix-fs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`MINIX FS (V2)`](#minix-fs-v2) | FILESYSTEM | :octicons-check-16: |
@@ -900,6 +901,29 @@
     === "References"
 
         - [Mach-O Programming Topics](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/0-Introduction/introduction.html){ target="_blank" }
+## MCUboot image
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        MCUboot application image: header, image and TLV area (hashes, keys, signatures), used by Zephyr, nRF Connect SDK and ESP32 builds.
+
+        ---
+
+        - **Handler type:** Executable
+        - **Vendor:** MCUboot project
+
+    === "References"
+
+        - [MCUboot design: image format](https://docs.mcuboot.com/design.html#image-format){ target="_blank" }
+        - [imgtool](https://docs.mcuboot.com/imgtool.html){ target="_blank" }
+
+    === "Limitations"
+
+        - Big-endian images are not handled
+        - Signatures are not verified; 'signed' means a signature TLV is present
+        - Encrypted payloads are written as ciphertext
 ## MiniFS
 
 !!! warning "Partially supported"
