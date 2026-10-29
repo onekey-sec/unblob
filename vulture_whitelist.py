@@ -14,6 +14,7 @@ from unblob.handlers.archive.tar._safe_tar_file import (  # pyright: ignore[repo
 )
 from unblob.handlers.compression._ucl import UCLDecompressor
 from unblob.handlers.compression.lzo import HeaderFlags as LZOHeaderFlags
+from unblob.handlers.executable.mcuboot import MCUbootMetadataReport
 from unblob.models import (
     Handler,
     HandlerDoc,
@@ -116,3 +117,10 @@ UCLDecompressor
 
 SevenZipMetadataReport.version_major
 SevenZipMetadataReport.version_minor
+
+MCUbootMetadataReport.version
+MCUbootMetadataReport.load_address
+MCUbootMetadataReport.flags
+MCUbootMetadataReport.signed
+MCUbootMetadataReport.encrypted
+MCUbootMetadataReport.tlv_types
