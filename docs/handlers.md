@@ -34,6 +34,8 @@
     | [`GZIP (MULTI-VOLUME)`](#gzip-multi-volume) | COMPRESSION | :octicons-check-16: |
     | [`HP BDL`](#hp-bdl) | ARCHIVE | :octicons-check-16: |
     | [`HP IPKG`](#hp-ipkg) | ARCHIVE | :octicons-check-16: |
+    | [`INSTALLSHIELD CABINET`](#installshield-cabinet) | ARCHIVE | :octicons-alert-fill-12: |
+    | [`INSTALLSHIELD MULTI-VOLUME SET`](#installshield-multi-volume-set) | ARCHIVE | :octicons-alert-fill-12: |
     | [`INSTAR BNEG`](#instar-bneg) | ARCHIVE | :octicons-check-16: |
     | [`INSTAR HD`](#instar-hd) | ARCHIVE | :octicons-check-16: |
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
@@ -650,6 +652,48 @@
     === "References"
 
         - [hpbdl](https://github.com/tylerwhall/hpbdl){ target="_blank" }
+## InstallShield cabinet
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        InstallShield cabinet (data1.cab) holding an installer's files, extracted with unshield.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Flexera (InstallShield)
+
+    === "References"
+
+        - [unshield](https://github.com/twogood/unshield){ target="_blank" }
+        - [InstallScript .cab and .hdr files](https://docs.revenera.com/installshield/helplibrary/IsCabViewOverview.htm){ target="_blank" }
+
+    === "Limitations"
+
+        - Only the version 5 cabinet layout as a single file
+        - Multi-volume sets are taken by installshield_set
+## InstallShield multi-volume set
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        InstallShield cabinet set: data1.hdr and/or data1.cab ... dataN.cab in one directory, extracted as one set with unshield.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Flexera (InstallShield)
+
+    === "References"
+
+        - [unshield](https://github.com/twogood/unshield){ target="_blank" }
+
+    === "Limitations"
+
+        - Volumes must be named dataN.cab and numbered without gaps
 ## Instar BNEG
 
 !!! success "Fully supported"
