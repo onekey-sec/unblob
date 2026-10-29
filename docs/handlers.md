@@ -87,6 +87,7 @@
     | [`TESLA WALL CONNECTOR SBFH`](#tesla-wall-connector-sbfh) | ARCHIVE | :octicons-check-16: |
     | [`UBI`](#ubi) | FILESYSTEM | :octicons-check-16: |
     | [`UBIFS`](#ubifs) | FILESYSTEM | :octicons-check-16: |
+    | [`UF2`](#uf2) | ARCHIVE | :octicons-alert-fill-12: |
     | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-check-16: |
     | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
@@ -1542,6 +1543,28 @@
 
         - [UBIFS Documentation](https://www.kernel.org/doc/html/latest/filesystems/ubifs.html){ target="_blank" }
         - [UBIFS Wikipedia](https://en.wikipedia.org/wiki/UBIFS){ target="_blank" }
+## UF2
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        USB Flashing Format: 512-byte blocks, each carrying a payload for a target address, used by RP2040/RP2350, ESP32-S2/S3 (TinyUF2), nRF52 and SAMD bootloaders.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Microsoft
+
+    === "References"
+
+        - [UF2 specification](https://github.com/microsoft/uf2){ target="_blank" }
+        - [UF2 family IDs](https://github.com/microsoft/uf2/blob/master/utils/uf2families.json){ target="_blank" }
+
+    === "Limitations"
+
+        - One file per contiguous address region; gaps are not padded
+        - File-container blocks (flag 0x1000) are not reassembled into files
 ## ufs1
 
 !!! success "Fully supported"
