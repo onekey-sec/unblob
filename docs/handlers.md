@@ -30,6 +30,7 @@
     | [`ENGENIUS`](#engenius) | ARCHIVE | :octicons-alert-fill-12: |
     | [`EXTFS`](#extfs) | FILESYSTEM | :octicons-check-16: |
     | [`FAT`](#fat) | FILESYSTEM | :octicons-check-16: |
+    | [`GIF`](#gif) | MEDIA | :octicons-check-16: |
     | [`GZIP`](#gzip) | COMPRESSION | :octicons-check-16: |
     | [`GZIP (MULTI-VOLUME)`](#gzip-multi-volume) | COMPRESSION | :octicons-check-16: |
     | [`HP BDL`](#hp-bdl) | ARCHIVE | :octicons-check-16: |
@@ -586,6 +587,23 @@
     === "References"
 
         - [FAT Wikipedia](https://en.wikipedia.org/wiki/File_Allocation_Table){ target="_blank" }
+## GIF
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        The Graphics Interchange Format (GIF) is an indexed-colour image format made of blocks and data sub-blocks, ending with a trailer byte. unblob carves GIF images embedded in other data, such as web UI assets in RTOS firmware; standalone GIF files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [GIF89a Specification](https://www.w3.org/Graphics/GIF/spec-gif89a.txt){ target="_blank" }
+        - [GIF Wikipedia](https://en.wikipedia.org/wiki/GIF){ target="_blank" }
 ## GZIP
 
 !!! success "Fully supported"

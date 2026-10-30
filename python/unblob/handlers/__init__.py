@@ -65,7 +65,7 @@ from .filesystem import (
     yaffs,
 )
 from .filesystem.android import erofs, sparse
-from .media import jpeg, png
+from .media import gif, jpeg, png
 
 __all__ = [
     "BUILTIN_DIR_HANDLERS",
@@ -171,6 +171,7 @@ BUILTIN_HANDLERS: Handlers = (
     lvm.LVM2Handler,
     png.PNGHandler,
     jpeg.JPEGHandler,
+    gif.GIFHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
