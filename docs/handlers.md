@@ -94,6 +94,7 @@
     | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-check-16: |
     | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
+    | [`WAV`](#wav) | MEDIA | :octicons-check-16: |
     | [`XAMARIN COMPRESSED ASSEMBLIES`](#xamarin-compressed-assemblies) | EXECUTABLE | :octicons-check-16: |
     | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
     | [`XIAOMI HDR2`](#xiaomi-hdr2) | ARCHIVE | :octicons-check-16: |
@@ -1675,6 +1676,23 @@
     === "References"
 
         - [FreeBSD UZIP Documentation](https://github.com/freebsd/freebsd-src/tree/master/sys/geom/uzip){ target="_blank" }
+## WAV
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        WAV is the RIFF audio format: a RIFF form of type WAVE with a format chunk followed by the sample data. unblob carves WAV sounds embedded in other data, such as alarm or prompt sounds in RTOS firmware; standalone WAV files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [Multimedia Programming Interface and Data Specifications 1.0 (RIFF)](https://www.aelius.com/njh/wavemetatool/riffmci.pdf){ target="_blank" }
+        - [WAV Wikipedia](https://en.wikipedia.org/wiki/WAV){ target="_blank" }
 ## Xamarin Compressed assemblies
 
 !!! success "Fully supported"

@@ -71,6 +71,7 @@ DEFAULT_SKIP_MAGIC = (
     "OpenDocument",
     "PDF document",
     "PNG",
+    "RIFF (little-endian) data, WAVE audio",
     "SQLite",
     "TrueType Font data",
     "Web Open Font Format",
