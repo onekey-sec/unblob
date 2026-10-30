@@ -85,6 +85,7 @@ class HandlerType(Enum):
     BAREMETAL = "Baremetal"
     BOOTLOADER = "Bootloader"
     ENCRYPTION = "Encryption"
+    MEDIA = "Media"
 
 
 @dataclasses.dataclass(frozen=True)
