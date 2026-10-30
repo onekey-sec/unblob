@@ -62,6 +62,7 @@
     | [`NTFS`](#ntfs) | FILESYSTEM | :octicons-check-16: |
     | [`PAR2 (MULTI-VOLUME)`](#par2-multi-volume) | ARCHIVE | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
+    | [`PNG`](#png) | MEDIA | :octicons-alert-fill-12: |
     | [`QCA LZMA`](#qca-lzma) | COMPRESSION | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
@@ -1119,6 +1120,27 @@
 
         - [Partclone GitHub Repository](https://github.com/Thomas-Tsai/partclone){ target="_blank" }
         - [Clonezilla Official Documentation](https://clonezilla.org/){ target="_blank" }
+## PNG
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Portable Network Graphics (PNG) is a lossless raster image format made of CRC-protected chunks. unblob carves PNG images embedded in other data, such as web UI assets in RTOS firmware; standalone PNG files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [PNG Specification (Third Edition)](https://www.w3.org/TR/png-3/){ target="_blank" }
+        - [PNG Wikipedia](https://en.wikipedia.org/wiki/PNG){ target="_blank" }
+
+    === "Limitations"
+
+        - Apple's CgBI variant of PNG, used in iOS app bundles, is not recognised.
 ## QCA LZMA
 
 !!! success "Fully supported"
