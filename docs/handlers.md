@@ -39,6 +39,7 @@
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (NEW)`](#jffs2-new) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (OLD)`](#jffs2-old) | FILESYSTEM | :octicons-check-16: |
+    | [`JPEG`](#jpeg) | MEDIA | :octicons-alert-fill-12: |
     | [`LVM2`](#lvm2) | FILESYSTEM | :octicons-alert-fill-12: |
     | [`LZ4`](#lz4) | COMPRESSION | :octicons-check-16: |
     | [`LZ4 (LEGACY)`](#lz4-legacy) | COMPRESSION | :octicons-check-16: |
@@ -730,6 +731,28 @@
 
         - [JFFS2 Documentation](https://sourceware.org/jffs2/){ target="_blank" }
         - [JFFS2 Wikipedia](https://en.wikipedia.org/wiki/JFFS2){ target="_blank" }
+## JPEG
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        JPEG is a lossy image format made of marker segments and entropy-coded scan data, ending with an end-of-image marker. unblob carves JPEG images embedded in other data, such as web UI assets in RTOS firmware; standalone JPEG files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [ITU-T T.81 (JPEG) Specification](https://www.w3.org/Graphics/JPEG/itu-t81.pdf){ target="_blank" }
+        - [JPEG Wikipedia](https://en.wikipedia.org/wiki/JPEG){ target="_blank" }
+
+    === "Limitations"
+
+        - Only complete images are carved: a frame header, at least one scan and an end-of-image marker are required.
+        - JPEG-LS and JPEG 2000 are not recognised.
 ## LVM2
 
 !!! warning "Partially supported"
