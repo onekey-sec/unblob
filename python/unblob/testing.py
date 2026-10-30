@@ -10,9 +10,10 @@ import pytest
 from lark.lark import Lark
 from lark.visitors import Discard, Transformer
 
-from unblob.finder import build_hyperscan_database
+from unblob.file_utils import File
+from unblob.finder import build_hyperscan_database, search_chunks
 from unblob.logging import configure_logger
-from unblob.models import ProcessResult
+from unblob.models import Handler, ProcessResult, Task, TaskResult, ValidChunk
 from unblob.processing import ExtractionConfig
 from unblob.report import ExtractCommandFailedReport
 
@@ -119,6 +120,29 @@ def check_result(reports: ProcessResult):
         )
     ]
     assert errors == [], "Unexpected error reports"
+
+
+def calculate_chunk(
+    handler: type[Handler], content: bytes, start_offset: int = 0
+) -> ValidChunk | None:
+    """Run the handler's ``calculate_chunk`` on a pattern match at ``start_offset``."""
+    with File.from_bytes(content) as file:
+        file.seek(start_offset)
+        return handler().calculate_chunk(file, start_offset)
+
+
+def find_chunks(handler: type[Handler], content: bytes) -> list[tuple[int, int]]:
+    """Search the content like unblob does, with this one handler.
+
+    Covers the handler's patterns and ``calculate_chunk`` together, and returns the
+    start and end offset of each chunk found. Fails if ``calculate_chunk`` raises
+    an exception that unblob does not treat as an invalid chunk.
+    """
+    task_result = TaskResult(task=Task(path=Path("/nonexistent"), depth=0, blob_id=""))
+    with File.from_bytes(content) as file:
+        chunks = search_chunks(file, len(content), (handler,), task_result)
+    assert task_result.reports == [], "calculate_chunk raised an exception"
+    return [(chunk.start_offset, chunk.end_offset) for chunk in chunks]
 
 
 def unhex(hexdump: str) -> bytes:
