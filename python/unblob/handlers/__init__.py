@@ -174,6 +174,7 @@ BUILTIN_HANDLERS: Handlers = (
     gif.GIFHandler,
     qoi.QOIHandler,
     riff.WAVHandler,
+    riff.WEBPHandler,
 )
 
 BUILTIN_DIR_HANDLERS: DirectoryHandlers = (

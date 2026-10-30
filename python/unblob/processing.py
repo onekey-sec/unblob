@@ -72,6 +72,8 @@ DEFAULT_SKIP_MAGIC = (
     "PDF document",
     "PNG",
     "RIFF (little-endian) data, WAVE audio",
+    "RIFF (little-endian) data, Web/P image",  # e.g. libmagic 5.41
+    "RIFF (little-endian) data, WebP image",  # e.g. libmagic 5.48
     "SQLite",
     "TrueType Font data",
     "Web Open Font Format",

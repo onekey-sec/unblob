@@ -95,6 +95,7 @@
     | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
     | [`WAV`](#wav) | MEDIA | :octicons-check-16: |
+    | [`WEBP`](#webp) | MEDIA | :octicons-check-16: |
     | [`XAMARIN COMPRESSED ASSEMBLIES`](#xamarin-compressed-assemblies) | EXECUTABLE | :octicons-check-16: |
     | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
     | [`XIAOMI HDR2`](#xiaomi-hdr2) | ARCHIVE | :octicons-check-16: |
@@ -1693,6 +1694,23 @@
 
         - [Multimedia Programming Interface and Data Specifications 1.0 (RIFF)](https://www.aelius.com/njh/wavemetatool/riffmci.pdf){ target="_blank" }
         - [WAV Wikipedia](https://en.wikipedia.org/wiki/WAV){ target="_blank" }
+## WebP
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        WebP is an image format stored in a RIFF container: a RIFF form of type WEBP starting with a lossy (VP8), lossless (VP8L) or extended (VP8X) chunk. unblob carves WebP images embedded in other data; standalone WebP files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [WebP Container Specification](https://developers.google.com/speed/webp/docs/riff_container){ target="_blank" }
+        - [WebP Wikipedia](https://en.wikipedia.org/wiki/WebP){ target="_blank" }
 ## Xamarin Compressed assemblies
 
 !!! success "Fully supported"

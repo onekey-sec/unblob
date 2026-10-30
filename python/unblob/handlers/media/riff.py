@@ -137,3 +137,35 @@ class WAVHandler(_RIFFHandler):
             and wav_format.block_align
         ):
             raise InvalidInputFormat("Invalid WAV format")
+
+
+class WEBPHandler(_RIFFHandler):
+    NAME = "webp"
+
+    # the first chunk is the image (or, for the extended format, its 10-byte header)
+    PATTERNS = [
+        # lossy: chunk size, 3-byte frame tag, frame start code
+        Regex(r"RIFF.{4}WEBPVP8 .{7}\x9d\x01\x2a"),
+        # lossless: chunk size, signature
+        Regex(r"RIFF.{4}WEBPVP8L.{4}\x2f"),
+        # extended
+        Regex(r"RIFF.{4}WEBPVP8X\x0a\x00\x00\x00"),
+    ]
+
+    DOC = HandlerDoc(
+        name="WebP",
+        description="WebP is an image format stored in a RIFF container: a RIFF form of type WEBP starting with a lossy (VP8), lossless (VP8L) or extended (VP8X) chunk. unblob carves WebP images embedded in other data; standalone WebP files are skipped based on their file type.",
+        handler_type=HandlerType.MEDIA,
+        vendor=None,
+        references=[
+            Reference(
+                title="WebP Container Specification",
+                url="https://developers.google.com/speed/webp/docs/riff_container",
+            ),
+            Reference(
+                title="WebP Wikipedia",
+                url="https://en.wikipedia.org/wiki/WebP",
+            ),
+        ],
+        limitations=[],
+    )
