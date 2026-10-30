@@ -30,6 +30,7 @@
     | [`ENGENIUS`](#engenius) | ARCHIVE | :octicons-alert-fill-12: |
     | [`EXTFS`](#extfs) | FILESYSTEM | :octicons-check-16: |
     | [`FAT`](#fat) | FILESYSTEM | :octicons-check-16: |
+    | [`GIF`](#gif) | MEDIA | :octicons-check-16: |
     | [`GZIP`](#gzip) | COMPRESSION | :octicons-check-16: |
     | [`GZIP (MULTI-VOLUME)`](#gzip-multi-volume) | COMPRESSION | :octicons-check-16: |
     | [`HP BDL`](#hp-bdl) | ARCHIVE | :octicons-check-16: |
@@ -39,6 +40,7 @@
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (NEW)`](#jffs2-new) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (OLD)`](#jffs2-old) | FILESYSTEM | :octicons-check-16: |
+    | [`JPEG`](#jpeg) | MEDIA | :octicons-alert-fill-12: |
     | [`LVM2`](#lvm2) | FILESYSTEM | :octicons-alert-fill-12: |
     | [`LZ4`](#lz4) | COMPRESSION | :octicons-check-16: |
     | [`LZ4 (LEGACY)`](#lz4-legacy) | COMPRESSION | :octicons-check-16: |
@@ -62,10 +64,12 @@
     | [`NTFS`](#ntfs) | FILESYSTEM | :octicons-check-16: |
     | [`PAR2 (MULTI-VOLUME)`](#par2-multi-volume) | ARCHIVE | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
+    | [`PNG`](#png) | MEDIA | :octicons-alert-fill-12: |
     | [`QCA LZMA`](#qca-lzma) | COMPRESSION | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
+    | [`QOI`](#qoi) | MEDIA | :octicons-alert-fill-12: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`RPM`](#rpm) | ARCHIVE | :octicons-check-16: |
@@ -90,6 +94,8 @@
     | [`UFS1`](#ufs1) | FILESYSTEM | :octicons-check-16: |
     | [`UFS2`](#ufs2) | FILESYSTEM | :octicons-check-16: |
     | [`UZIP`](#uzip) | COMPRESSION | :octicons-check-16: |
+    | [`WAV`](#wav) | MEDIA | :octicons-check-16: |
+    | [`WEBP`](#webp) | MEDIA | :octicons-check-16: |
     | [`XAMARIN COMPRESSED ASSEMBLIES`](#xamarin-compressed-assemblies) | EXECUTABLE | :octicons-check-16: |
     | [`XIAOMI HDR1`](#xiaomi-hdr1) | ARCHIVE | :octicons-check-16: |
     | [`XIAOMI HDR2`](#xiaomi-hdr2) | ARCHIVE | :octicons-check-16: |
@@ -584,6 +590,23 @@
     === "References"
 
         - [FAT Wikipedia](https://en.wikipedia.org/wiki/File_Allocation_Table){ target="_blank" }
+## GIF
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        The Graphics Interchange Format (GIF) is an indexed-colour image format made of blocks and data sub-blocks, ending with a trailer byte. unblob carves GIF images embedded in other data, such as web UI assets in RTOS firmware; standalone GIF files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [GIF89a Specification](https://www.w3.org/Graphics/GIF/spec-gif89a.txt){ target="_blank" }
+        - [GIF Wikipedia](https://en.wikipedia.org/wiki/GIF){ target="_blank" }
 ## GZIP
 
 !!! success "Fully supported"
@@ -729,6 +752,28 @@
 
         - [JFFS2 Documentation](https://sourceware.org/jffs2/){ target="_blank" }
         - [JFFS2 Wikipedia](https://en.wikipedia.org/wiki/JFFS2){ target="_blank" }
+## JPEG
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        JPEG is a lossy image format made of marker segments and entropy-coded scan data, ending with an end-of-image marker. unblob carves JPEG images embedded in other data, such as web UI assets in RTOS firmware; standalone JPEG files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [ITU-T T.81 (JPEG) Specification](https://www.w3.org/Graphics/JPEG/itu-t81.pdf){ target="_blank" }
+        - [JPEG Wikipedia](https://en.wikipedia.org/wiki/JPEG){ target="_blank" }
+
+    === "Limitations"
+
+        - Only complete images are carved: a frame header, at least one scan and an end-of-image marker are required.
+        - JPEG-LS and JPEG 2000 are not recognised.
 ## LVM2
 
 !!! warning "Partially supported"
@@ -1119,6 +1164,27 @@
 
         - [Partclone GitHub Repository](https://github.com/Thomas-Tsai/partclone){ target="_blank" }
         - [Clonezilla Official Documentation](https://clonezilla.org/){ target="_blank" }
+## PNG
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Portable Network Graphics (PNG) is a lossless raster image format made of CRC-protected chunks. unblob carves PNG images embedded in other data, such as web UI assets in RTOS firmware; standalone PNG files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [PNG Specification (Third Edition)](https://www.w3.org/TR/png-3/){ target="_blank" }
+        - [PNG Wikipedia](https://en.wikipedia.org/wiki/PNG){ target="_blank" }
+
+    === "Limitations"
+
+        - Apple's CgBI variant of PNG, used in iOS app bundles, is not recognised.
 ## QCA LZMA
 
 !!! success "Fully supported"
@@ -1182,6 +1248,27 @@
     === "References"
 
         - [QNX wikipedia](https://en.wikipedia.org/wiki/QNX){ target="_blank" }
+## QOI
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        The Quite OK Image format (QOI) is a simple lossless image format used by embedded GUIs. It has no length field: the end is found by walking the op stream until every pixel is covered, followed by an end marker. unblob carves QOI images embedded in other data, such as GUI assets in RTOS firmware. Standalone QOI files are not skipped by file type, as firmware stores QOI assets back to back in one file that file type detection reports as a single QOI image; an image spanning the whole file is not carved instead.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [QOI Specification](https://qoiformat.org/qoi-specification.pdf){ target="_blank" }
+        - [QOI Wikipedia](https://en.wikipedia.org/wiki/QOI_(image_format)){ target="_blank" }
+
+    === "Limitations"
+
+        - Images with more than 16777216 pixels are not recognised.
 ## RAR
 
 !!! warning "Partially supported"
@@ -1590,6 +1677,40 @@
     === "References"
 
         - [FreeBSD UZIP Documentation](https://github.com/freebsd/freebsd-src/tree/master/sys/geom/uzip){ target="_blank" }
+## WAV
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        WAV is the RIFF audio format: a RIFF form of type WAVE with a format chunk followed by the sample data. unblob carves WAV sounds embedded in other data, such as alarm or prompt sounds in RTOS firmware; standalone WAV files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [Multimedia Programming Interface and Data Specifications 1.0 (RIFF)](https://www.aelius.com/njh/wavemetatool/riffmci.pdf){ target="_blank" }
+        - [WAV Wikipedia](https://en.wikipedia.org/wiki/WAV){ target="_blank" }
+## WebP
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        WebP is an image format stored in a RIFF container: a RIFF form of type WEBP starting with a lossy (VP8), lossless (VP8L) or extended (VP8X) chunk. unblob carves WebP images embedded in other data; standalone WebP files are skipped based on their file type.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [WebP Container Specification](https://developers.google.com/speed/webp/docs/riff_container){ target="_blank" }
+        - [WebP Wikipedia](https://en.wikipedia.org/wiki/WebP){ target="_blank" }
 ## Xamarin Compressed assemblies
 
 !!! success "Fully supported"

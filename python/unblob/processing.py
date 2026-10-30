@@ -55,23 +55,33 @@ logger = get_logger()
 DEFAULT_DEPTH = 10
 DEFAULT_PROCESS_NUM = multiprocessing.cpu_count()
 DEFAULT_SKIP_MAGIC = (
+    "Audio file with ID3",
     "BFLT",
     "Erlang BEAM file",
+    "FLAC audio bitstream data",
     "GIF",
     "GNU message catalog",
     "HP Printer Job Language",
+    "ISO Media",  # MP4, MOV, M4A, HEIF (ftyp box), not ISO 9660 CD images
     "JPEG",
     "Java module image",
     "MPEG",
     "MS Windows icon resource",
+    "Mac OS X icon",
     "Macromedia Flash data",
+    "Matroska data",
     "Microsoft Excel",
     "Microsoft PowerPoint",
     "Microsoft Word",
     "OpenDocument",
     "PDF document",
     "PNG",
+    "RIFF (little-endian) data, AVI",
+    "RIFF (little-endian) data, WAVE audio",
+    "RIFF (little-endian) data, Web/P image",  # e.g. libmagic 5.41
+    "RIFF (little-endian) data, WebP image",  # e.g. libmagic 5.48
     "SQLite",
+    "TIFF image data",
     "TrueType Font data",
     "Web Open Font Format",
     "Windows Embedded CE binary image",
