@@ -69,6 +69,7 @@
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
+    | [`QOI`](#qoi) | MEDIA | :octicons-alert-fill-12: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`RPM`](#rpm) | ARCHIVE | :octicons-check-16: |
@@ -1245,6 +1246,28 @@
     === "References"
 
         - [QNX wikipedia](https://en.wikipedia.org/wiki/QNX){ target="_blank" }
+## QOI
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        The Quite OK Image format (QOI) is a simple lossless image format used by embedded GUIs. It has no length field: the image ends with an end marker once the op stream covers every pixel.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [QOI Specification](https://qoiformat.org/qoi-specification.pdf){ target="_blank" }
+        - [QOI Wikipedia](https://en.wikipedia.org/wiki/QOI_(image_format)){ target="_blank" }
+
+    === "Limitations"
+
+        - Images with more than 16777216 pixels are not recognised.
+        - An image that spans the whole file is not carved, as it is a standalone file rather than embedded media.
 ## RAR
 
 !!! warning "Partially supported"
