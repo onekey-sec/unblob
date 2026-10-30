@@ -69,6 +69,7 @@
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
     | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
+    | [`QOI`](#qoi) | MEDIA | :octicons-alert-fill-12: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`RPM`](#rpm) | ARCHIVE | :octicons-check-16: |
@@ -1245,6 +1246,27 @@
     === "References"
 
         - [QNX wikipedia](https://en.wikipedia.org/wiki/QNX){ target="_blank" }
+## QOI
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        The Quite OK Image format (QOI) is a simple lossless image format used by embedded GUIs. It has no length field: the end is found by walking the op stream until every pixel is covered, followed by an end marker. unblob carves QOI images embedded in other data, such as GUI assets in RTOS firmware. Standalone QOI files are not skipped by file type, as firmware stores QOI assets back to back in one file that file type detection reports as a single QOI image; an image spanning the whole file is not carved instead.
+
+        ---
+
+        - **Handler type:** Media
+        
+
+    === "References"
+
+        - [QOI Specification](https://qoiformat.org/qoi-specification.pdf){ target="_blank" }
+        - [QOI Wikipedia](https://en.wikipedia.org/wiki/QOI_(image_format)){ target="_blank" }
+
+    === "Limitations"
+
+        - Images with more than 16777216 pixels are not recognised.
 ## RAR
 
 !!! warning "Partially supported"
