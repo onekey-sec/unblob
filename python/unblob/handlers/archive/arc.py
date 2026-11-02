@@ -15,6 +15,9 @@ from ...models import (
 logger = get_logger()
 
 END_HEADER = b"\x1a\x00"
+# type 1 (old style, stored) headers lack the trailing 4 byte length field
+OLD_HEADER_TYPE = 0x01
+LENGTH_FIELD_SIZE = 4
 
 
 class ARCHandler(StructHandler):
@@ -97,7 +100,11 @@ class ARCHandler(StructHandler):
             if not self.valid_header(header):
                 return None
 
-            offset += len(header) + header.file_size
+            header_size = len(header)
+            if header.header_type == OLD_HEADER_TYPE:
+                header_size -= LENGTH_FIELD_SIZE
+
+            offset += header_size + header.file_size
 
         return ValidChunk(
             start_offset=start_offset,
