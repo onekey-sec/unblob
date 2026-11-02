@@ -17,15 +17,22 @@ apt-get install --no-install-recommends -y \
     zstd
 
 case "$(dpkg --print-architecture)" in
-    amd64) sevenzip_arch="x64" ;;
-    arm64) sevenzip_arch="arm64" ;;
+    amd64)
+        sevenzip_arch="x64"
+        sevenzip_sha256="22cf82fcc6eb7474f1d5bb4f02c0f8ebd573a718089d6833dc30f8350a3b232e"
+        ;;
+    arm64)
+        sevenzip_arch="arm64"
+        sevenzip_sha256="0b71f6cfc34669b3bf69f2347efd3429f77020665003a13b9cdc53b784270421"
+        ;;
     *)
         echo "Unsupported architecture for 7-Zip: $(dpkg --print-architecture)" >&2
         exit 1
         ;;
 esac
 
-curl -L -o 7zip.tar.xz "https://www.7-zip.org/a/7z2600-linux-${sevenzip_arch}.tar.xz"
+curl -fL -o 7zip.tar.xz "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-linux-${sevenzip_arch}.tar.xz"
+printf '%s  %s\n' "$sevenzip_sha256" 7zip.tar.xz | sha256sum -c -
 install -d /usr/local/bin
 tar -xf 7zip.tar.xz -C /usr/local/bin 7zz 7zzs
 ln -sf /usr/local/bin/7zz /usr/local/bin/7z
