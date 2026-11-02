@@ -19,14 +19,19 @@ class SingleMemberGzipReader(gzip._GzipReader):  # noqa: SLF001
         uncompress = b""
 
         while True:
-            buf = self._fp.read(DEFAULT_BUFSIZE)
+            # Python 3.14's decompressor retains input internally when output
+            # reaches max_length. Drain it before reading more compressed data.
+            if getattr(self._decompressor, "needs_input", True):
+                buf = self._fp.read(DEFAULT_BUFSIZE)
+            else:
+                buf = b""
 
             uncompress = self._decompressor.decompress(buf, DEFAULT_BUFSIZE)
             if hasattr(self._decompressor, "unconsumed_tail"):
                 self._fp.prepend(self._decompressor.unconsumed_tail)
             self._fp.prepend(self._decompressor.unused_data)
 
-            if uncompress != b"":
+            if uncompress != b"" or self._decompressor.eof:
                 break
             if buf == b"":
                 raise EOFError(
