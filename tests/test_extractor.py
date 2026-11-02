@@ -12,6 +12,7 @@ from unblob.extractor import (
     fix_symlink,
 )
 from unblob.models import File, TaskResult, UnknownChunk
+from unblob.report import MaliciousSymlinkRemoved
 
 
 def test_carve_unknown_chunk(tmp_path: Path):
@@ -198,3 +199,26 @@ def test_fix_symlink_traversal_subdir(
 
     fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.exists() is False
+
+
+@pytest.mark.parametrize(
+    "link, target",
+    [
+        ("link_a", "/link_to_dir/../../../target_a"),
+        ("dir_1/link_b", "/link_to_dir/../../../target_b"),
+    ],
+)
+def test_fix_symlink_traversal_through_symlink(
+    link: str, target: str, tmpdir: Path, task_result: TaskResult
+):
+    tmpdir = PosixPath(tmpdir)
+    (tmpdir / "dir_1" / "dir_2" / "dir_3").mkdir(parents=True)
+    # resolving link_to_dir keeps the target inside tmpdir, while collapsing
+    # "link_to_dir/.." lexically moves it two levels above tmpdir
+    (tmpdir / "link_to_dir").symlink_to("dir_1/dir_2/dir_3")
+    link_path = tmpdir / Path(link)
+    link_path.symlink_to(Path(target))
+
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    assert fixed_link.is_symlink() is False
+    assert task_result.filter_reports(MaliciousSymlinkRemoved)
