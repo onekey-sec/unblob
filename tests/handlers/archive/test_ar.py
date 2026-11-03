@@ -3,7 +3,7 @@ from pathlib import Path
 import arpy
 import pytest
 
-from unblob.file_utils import File
+from unblob.file_utils import File, make_lost_and_found_path
 from unblob.handlers.archive.ar import ArExtractor, ARHandler
 from unblob.report import ExtractionProblem, PathTraversalProblem
 
@@ -99,6 +99,73 @@ def test_extract_keeps_traversal_checks(tmp_path: Path, name: bytes):
     assert isinstance(problem, PathTraversalProblem)
     assert problem.path == "../escape.o"
     assert (outdir / problem.extraction_path).read_bytes() == b"content"
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+@pytest.mark.parametrize(
+    "first_name, second_name",
+    [
+        pytest.param(b"test.o", b"test.o\0\0", id="padding"),
+        pytest.param(b"test.o\0", b"test.o\0\0", id="different-padding"),
+        pytest.param(b"/test.o\0", b"test.o", id="absolute-path"),
+        pytest.param(b"dir/../test.o\0", b"test.o", id="parent-alias"),
+        pytest.param(
+            b"../test.o\0",
+            str(make_lost_and_found_path(Path("../test.o"))).encode() + b"\0",
+            id="lost-and-found",
+        ),
+        pytest.param(b"dir\0", b"dir/test.o\0", id="file-as-parent"),
+        pytest.param(b"\xfe.o\0", b"\xff.o\0", id="decoded-name"),
+    ],
+)
+def test_extract_reports_path_conflict(
+    tmp_path: Path, first_name: bytes, second_name: bytes, reverse: bool
+):
+    members = [
+        ar_member(first_name, b"first"),
+        ar_member(second_name, b"second"),
+    ]
+    if reverse:
+        members.reverse()
+    archive = tmp_path / "input.a"
+    archive.write_bytes(b"!<arch>\n" + b"".join(members))
+    outdir = tmp_path / "output"
+
+    result = ArExtractor().extract(archive, outdir)
+
+    assert result is not None
+    extracted = [path for path in outdir.rglob("*") if path.is_file()]
+    assert len(extracted) == 1
+    assert extracted[0].read_bytes() == b"first"
+    collisions = [
+        report
+        for report in result.reports
+        if isinstance(report, ExtractionProblem)
+        and report.problem == "Archive path conflicts with an existing entry"
+    ]
+    assert len(collisions) == 1
+    assert collisions[0].path == repr(second_name)
+    assert collisions[0].resolution == "Skipped."
+
+
+def test_extract_keeps_existing_file(tmp_path: Path):
+    archive = tmp_path / "input.a"
+    archive.write_bytes(b"!<arch>\n" + ar_member(b"test.o\0", b"replacement"))
+    outdir = tmp_path / "output"
+    outdir.mkdir()
+    (outdir / "test.o").write_bytes(b"existing")
+
+    result = ArExtractor().extract(archive, outdir)
+
+    assert (outdir / "test.o").read_bytes() == b"existing"
+    assert result is not None
+    assert result.reports == [
+        ExtractionProblem(
+            path=repr(b"test.o\0"),
+            problem="Archive path conflicts with an existing entry",
+            resolution="Skipped.",
+        )
+    ]
 
 
 def test_extract_rejects_truncated_member(tmp_path: Path):
