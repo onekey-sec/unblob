@@ -3,7 +3,7 @@ from pathlib import Path
 import arpy
 import pytest
 
-from unblob.file_utils import File
+from unblob.file_utils import File, make_lost_and_found_path
 from unblob.handlers.archive.ar import ArExtractor, ARHandler
 from unblob.report import ExtractionProblem, PathTraversalProblem
 
