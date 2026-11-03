@@ -1,4 +1,6 @@
 import io
+import os
+import stat
 import tarfile
 import warnings
 
@@ -506,6 +508,48 @@ def test_extractall_converts_absolute_hardlink_target(tmp_path):
     ]
     assert link_path.read_bytes() == b"content"
     assert link_path.samefile(target_path)
+
+
+def test_extractall_skips_directory_metadata_through_retargeted_symlink(tmp_path):
+    outside_path = tmp_path / "outside"
+    outside_path.mkdir(mode=0o700)
+    os.utime(outside_path, (1_700_000_000, 1_700_000_000))
+    before = outside_path.stat()
+    tar_path = tmp_path / "retargeted-symlink.tar"
+
+    with tarfile.open(tar_path, "w") as archive:
+
+        def add(name, member_type, **attributes):
+            member = tarfile.TarInfo(name)
+            member.type = member_type
+            for attribute, value in attributes.items():
+                setattr(member, attribute, value)
+            archive.addfile(member)
+
+        add("x", tarfile.DIRTYPE, mode=0o755)
+        add("outside", tarfile.DIRTYPE, mode=0o755)
+        # "a" resolves to <extract_root>/outside while "b" points to "x" ...
+        add("b", tarfile.SYMTYPE, linkname="x")
+        add("a", tarfile.SYMTYPE, linkname="b/../outside")
+        add("a", tarfile.DIRTYPE, mode=0o707, mtime=0)
+        # ... and to <tmp_path>/outside once "b" is retargeted to "."
+        add("b", tarfile.SYMTYPE, linkname=".")
+
+    extract_root = tmp_path / "extract"
+    extractor = SafeTarFile(tar_path)
+    try:
+        extractor.extractall(extract_root)  # noqa: S202
+    finally:
+        extractor.close()
+
+    after = outside_path.stat()
+    assert stat.S_IMODE(after.st_mode) == stat.S_IMODE(before.st_mode)
+    assert after.st_mtime == before.st_mtime
+    assert [(report.path, report.problem) for report in extractor.reports] == [
+        ("b", "Duplicate tar entry."),
+        ("a", "Traversal attempt when restoring directory metadata."),
+    ]
+    assert stat.S_IMODE((extract_root / "x").stat().st_mode) == 0o755
 
 
 def test_unblob_tarinfo__frombuf_ignores_gnu_timestamp_prefix():

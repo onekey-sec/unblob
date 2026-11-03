@@ -238,6 +238,15 @@ class SafeTarFile:
 
         # copied from tarfile.extractall(), it is somewhat ugly, as uses private helpers!
         for tarinfo in directories:
+            # a later member may have retargeted a symlink on the way to the
+            # directory since extract() checked it, so check it again
+            if not is_safe_path(basedir=extract_root, path=extract_root / tarinfo.name):
+                self.record_problem(
+                    tarinfo,
+                    "Traversal attempt when restoring directory metadata.",
+                    "Skipped.",
+                )
+                continue
             dirpath = str(extract_root / tarinfo.name)
             try:
                 self.tarfile.chown(tarinfo, dirpath, numeric_owner=True)
