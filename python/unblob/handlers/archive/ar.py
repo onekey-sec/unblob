@@ -4,7 +4,7 @@ from pathlib import Path
 import arpy
 from structlog import get_logger
 
-from ...file_utils import FileSystem, OffsetFile, iterate_file
+from ...file_utils import FileSystem, OffsetFile
 from ...models import (
     Extractor,
     ExtractResult,
@@ -34,11 +34,27 @@ class ArExtractor(Extractor):
 
             for name in sorted(archive.archived_files):
                 archived_file = archive.archived_files[name]
+                # arpy includes BSD extended-name padding in the dictionary key,
+                # but has already excluded the full name field from the payload.
+                filename = (
+                    name.rstrip(b"\0")
+                    if archived_file.header.type == arpy.HEADER_BSD
+                    else name
+                )
+                if not filename or b"\0" in filename:
+                    fs.record_problem(
+                        ExtractionProblem(
+                            path=repr(name),
+                            problem="Empty archive path or embedded NUL in filename",
+                            resolution="Skipped.",
+                        )
+                    )
+                    continue
 
                 try:
-                    path = Path(name.decode())
+                    path = Path(filename.decode())
                 except UnicodeDecodeError:
-                    path = Path(name.decode(errors="replace"))
+                    path = Path(filename.decode(errors="replace"))
                     fs.record_problem(
                         ExtractionProblem(
                             path=repr(name),
@@ -47,14 +63,16 @@ class ArExtractor(Extractor):
                         )
                     )
 
-                fs.write_chunks(
-                    path,
-                    chunks=iterate_file(
-                        archived_file,
-                        0,
-                        archived_file.header.size,
-                    ),
-                )
+                try:
+                    fs.carve(path, archived_file, 0, archived_file.header.size)
+                except FileExistsError:
+                    fs.record_problem(
+                        ExtractionProblem(
+                            path=repr(name),
+                            problem="Archive path conflicts with an existing entry",
+                            resolution="Skipped.",
+                        )
+                    )
 
         return ExtractResult(reports=fs.problems)
 
