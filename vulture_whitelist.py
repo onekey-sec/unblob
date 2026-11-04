@@ -80,6 +80,7 @@ HandlerType.FILESYSTEM
 HandlerType.BAREMETAL
 HandlerType.BOOTLOADER
 HandlerType.ENCRYPTION
+HandlerType.MEDIA
 
 HandlerDoc
 generate_markdown
