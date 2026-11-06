@@ -245,12 +245,29 @@ class MachOHandler(StructHandler):
         # Fat headers are always big-endian regardless of the contained architectures
         fat_hdr = self._struct_parser.parse("fat_header_t", file, Endian.BIG)
 
-        end_offset = start_offset
-        for _ in range(fat_hdr.nfat_arch):
-            arch = self._struct_parser.parse("fat_arch_t", file, Endian.BIG)
-            if arch.slice_size > 0:
-                end_offset = max(
-                    end_offset, start_offset + arch.offset + arch.slice_size
-                )
+        architectures = [
+            self._struct_parser.parse("fat_arch_t", file, Endian.BIG)
+            for _ in range(fat_hdr.nfat_arch)
+        ]
+        fat_header_end = file.tell() - start_offset
 
+        # Slices must not cover the fat header or each other, as in xnu's
+        # fatfile_validate_fatarches():
+        # https://github.com/apple-oss-distributions/xnu/blob/xnu-11215.1.10/bsd/kern/mach_fat.c#L236
+        # Otherwise a slice can hold the fat binary itself, which is then found
+        # again in every carved slice and multiplies the output per depth level.
+        slices = sorted(
+            (arch.offset, arch.offset + arch.slice_size)
+            for arch in architectures
+            if arch.slice_size > 0
+        )
+        previous_end = fat_header_end
+        for slice_start, slice_end in slices:
+            if slice_start < fat_header_end:
+                raise InvalidInputFormat("Mach-O fat slice overlaps the fat header.")
+            if slice_start < previous_end:
+                raise InvalidInputFormat("Mach-O fat slices overlap.")
+            previous_end = slice_end
+
+        end_offset = start_offset + previous_end if slices else start_offset
         return MachOChunk(start_offset=start_offset, end_offset=end_offset)
