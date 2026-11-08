@@ -17,7 +17,7 @@ Inside ``Sdat``:
 an ``Otis`` (the item's signed data: an ``Sdat`` metadata block and a
 ``Sign`` element) and an ``Otie`` (the item entry: ``indx`` + ``data``
 payload). The item metadata carries the component's ``keyt`` letter (A..N,
-mapped to TZ, RPM, ABL, SYSTEM, KERNEL, ...), a ``size`` and a SHA-256
+mapped to TZ, RPM, ABOOT, SYSTEM, KERNEL, ...), a ``size`` and a SHA-256
 ``hash`` of the payload.
 
 ``Sign`` elements are ``{salg, blob}`` pairs: ``salg`` is the DER encoded
@@ -29,7 +29,7 @@ embedded ``cert`` certificate; the certificate uses non-canonical encodings
 rejected by strict X.509 parsers, so its public key is extracted with a
 minimal DER walk instead.
 
-The chunk ends at the declared ``total_len``; a small ``__PACKET_INFO__``
+The chunk ends at the declared ``total_len``; a small ``__PACKET INFO__``
 text footer can follow the package (wichita) and is left to the generic
 handling.
 
@@ -88,7 +88,7 @@ SIGNATURE_ALGORITHM_OID = bytes.fromhex("300d06092a864886f70d01010b0500")
 KEY_TYPE_NAMES = {
     "A": "TZ",
     "B": "RPM",
-    "C": "ABL",
+    "C": "ABOOT",
     "D": "SYSTEM",
     "E": "KERNEL",
     "F": "STUBL",
@@ -527,7 +527,7 @@ class IRobotOtpsHandler(StructHandler):
             "robots (sapphire, soho, stingray, lewis, sanmarino, wichita). "
             "The package is a TLV stream holding a signed data block whose "
             "Otpc content lists one Otim group per component. Each item's "
-            "payload is carved under its component name (TZ, RPM, ABL, "
+            "payload is carved under its component name (TZ, RPM, ABOOT, "
             "SYSTEM, KERNEL, ...), verified against the SHA-256 declared in "
             "its signed metadata, and both the package and item RSA "
             "signatures are verified against the certificate embedded in "

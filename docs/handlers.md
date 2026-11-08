@@ -725,7 +725,7 @@
 
     === "Description"
 
-        iRobot Otps signed OTA packages are used by Qualcomm-based robots (sapphire, soho, stingray, lewis, sanmarino, wichita). The package is a TLV stream holding a signed data block whose Otpc content lists one Otim group per component. Each item's payload is carved under its component name (TZ, RPM, ABL, SYSTEM, KERNEL, ...), verified against the SHA-256 declared in its signed metadata, and both the package and item RSA signatures are verified against the certificate embedded in the package; verification failures are reported as extraction problems.
+        iRobot Otps signed OTA packages are used by Qualcomm-based robots (sapphire, soho, stingray, lewis, sanmarino, wichita). The package is a TLV stream holding a signed data block whose Otpc content lists one Otim group per component. Each item's payload is carved under its component name (TZ, RPM, ABOOT, SYSTEM, KERNEL, ...), verified against the SHA-256 declared in its signed metadata, and both the package and item RSA signatures are verified against the certificate embedded in the package; verification failures are reported as extraction problems.
 
         ---
 

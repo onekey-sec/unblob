@@ -13,7 +13,8 @@ from unblob.file_utils import File, InvalidInputFormat, SeekError
 from unblob.handlers.archive.irobot.otps import IRobotOtpsExtractor, IRobotOtpsHandler
 from unblob.report import ExtractionProblem
 
-OID = bytes.fromhex("060c2b06010401838c3c04010105")
+PKG_OID = bytes.fromhex("060c2b06010401838c3c04010104")
+ITEM_OID = bytes.fromhex("060c2b06010401838c3c04010105")
 SALG = bytes.fromhex("300d06092a864886f70d01010b0500")
 
 _KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -63,7 +64,7 @@ def item(
         + tlv(b"cmnt", keyt.lower() + b"\0")
     )
     sdat = (
-        tlv(b"cnid", OID)
+        tlv(b"cnid", ITEM_OID)
         + tlv(b"salg", SALG)
         + tlv(b"Auth", tlv(b"cert", CERT))
         + tlv(b"keyt", b"key type " + keyt + b"\0")
@@ -78,7 +79,10 @@ def item(
 def otps(items: list[bytes], trailer: bytes = b"", *, do_sign: bool = True) -> bytes:
     otpc = tlv(b"Otpc", b"".join(items))
     sdat = (
-        tlv(b"cnid", OID) + tlv(b"salg", SALG) + tlv(b"Auth", tlv(b"cert", CERT)) + otpc
+        tlv(b"cnid", PKG_OID)
+        + tlv(b"salg", SALG)
+        + tlv(b"Auth", tlv(b"cert", CERT))
+        + otpc
     )
     body = (
         tlv(b"cmnt", b"Generated with otagen v2.0\0")
