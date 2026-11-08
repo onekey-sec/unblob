@@ -24,13 +24,16 @@ Three payload layouts are observed:
   order. The last entry's declared size slightly overshoots the stored data,
   so it is carved up to ``data_end``.
 - ``sigmastar-gzip`` (105/105v/205/405/505/705): a gzip member (original
-  filename ``SStarOta.bin``) at 0x30, followed by a small metadata region
-  holding a hex digest of the decompressed payload.
+  filename ``SStarOta.bin``) at 0x30, followed by a metadata region whose
+  first bytes are the ASCII hex MD5 digest of the member, verified during
+  extraction.
 
 Format reference: https://github.com/BookCatKid/irobot-firmware-archive
 """
 
+import hashlib
 import io
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -53,6 +56,7 @@ from unblob.models import (
     StructHandler,
     ValidChunk,
 )
+from unblob.report import ExtractionProblem
 
 logger = get_logger()
 
@@ -238,6 +242,7 @@ class IRobotApkgExtractor(Extractor):
                     0x30,
                     container.data_end - 0x30,
                 )
+                self._verify_member_digest(fs, file, container.data_end, name)
                 return ExtractResult(reports=fs.problems)
 
             seen: dict[str, int] = {}
@@ -279,6 +284,92 @@ class IRobotApkgExtractor(Extractor):
         name = Path(name).name
         return name or None
 
+    def _member_len(self, fs: FileSystem, file: File, data_end: int, name: str):
+        """Locate the gzip member end with a streaming decompressor pass."""
+        inflater = zlib.decompressobj(16 + zlib.MAX_WBITS)
+        offset = 0x30
+        file.seek(offset, io.SEEK_SET)
+        try:
+            while offset < data_end and not inflater.eof:
+                block = file.read(min(1 << 20, data_end - offset))
+                if not block:
+                    break
+                inflater.decompress(block)
+                offset += len(block)
+        except zlib.error:
+            fs.record_problem(
+                ExtractionProblem(
+                    problem=(
+                        "Cannot verify aPKG member digest: "
+                        "gzip member does not decompress"
+                    ),
+                    resolution="payload extracted anyway",
+                    path=name,
+                )
+            )
+            return None
+        if not inflater.eof:
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="Cannot verify aPKG member digest: truncated member",
+                    resolution="payload extracted anyway",
+                    path=name,
+                )
+            )
+            return None
+        return offset - len(inflater.unused_data) - 0x30
+
+    def _member_md5(self, file: File, member_len: int):
+        """Hash the member bytes."""
+        file.seek(0x30, io.SEEK_SET)
+        hasher = hashlib.md5(usedforsecurity=False)
+        remaining = member_len
+        while remaining:
+            block = file.read(min(remaining, 1 << 20))
+            if not block:
+                break
+            hasher.update(block)
+            remaining -= len(block)
+        return hasher.hexdigest()
+
+    def _verify_member_digest(
+        self, fs: FileSystem, file: File, data_end: int, name: str
+    ):
+        # the region after the gzip member starts with the ASCII hex MD5
+        # digest of the member itself
+        member_len = self._member_len(fs, file, data_end, name)
+        if member_len is None:
+            return
+        post_len = data_end - 0x30 - member_len
+        if post_len == 0:
+            return
+        file.seek(0x30 + member_len, io.SEEK_SET)
+        digest_raw = file.read(min(32, post_len))
+        try:
+            expected = digest_raw.decode("ascii")
+        except UnicodeDecodeError:
+            expected = ""
+        if len(expected) != 32 or any(
+            c not in "0123456789abcdef" for c in expected.lower()
+        ):
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="Cannot verify aPKG member digest: malformed digest",
+                    resolution="payload extracted anyway",
+                    path=name,
+                )
+            )
+            return
+
+        if self._member_md5(file, member_len) != expected.lower():
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="aPKG member digest mismatch",
+                    resolution="payload extracted anyway",
+                    path=name,
+                )
+            )
+
 
 class IRobotApkgHandler(StructHandler):
     NAME = "irobot_apkg"
@@ -302,7 +393,7 @@ class IRobotApkgHandler(StructHandler):
             "SigmaStar-based packages (100/200/400/500/700 series). "
             "Entry-table payloads are carved out by label, sequential-table "
             "payloads by entry id, and SigmaStar packages yield the embedded "
-            "gzip member plus trailing metadata for further processing."
+            "gzip member, verified against the package's MD5 digest."
         ),
         handler_type=HandlerType.ARCHIVE,
         vendor="iRobot",
@@ -313,7 +404,8 @@ class IRobotApkgHandler(StructHandler):
             ),
         ],
         limitations=[
-            "Payloads are not validated against the package signature trailer."
+            "The signature trailer is not verified; its scheme and key are "
+            "not part of the package."
         ],
     )
 

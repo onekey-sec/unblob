@@ -1,4 +1,5 @@
 import gzip
+import hashlib
 import struct
 import zlib
 from pathlib import Path
@@ -7,6 +8,7 @@ import pytest
 
 from unblob.file_utils import File, InvalidInputFormat
 from unblob.handlers.archive.irobot.apkg import IRobotApkgExtractor, IRobotApkgHandler
+from unblob.report import ExtractionProblem
 
 SIGNATURE_TRAILER = b"\xcc" * 304
 
@@ -64,7 +66,8 @@ def sequential_pkg(entries, last_overshoot: int = 0) -> bytes:
 
 def sigmastar_pkg(payload: bytes, name: bytes = b"C3_test") -> bytes:
     member = gzip.compress(payload, mtime=0)
-    post = b"186f5db3fd1f637416398a490af6d484" + b"\0" * 64
+    # the post-member region starts with the ASCII hex MD5 of the member
+    post = hashlib.md5(member, usedforsecurity=False).hexdigest().encode() + b"\0" * 64
     data_end = 0x30 + len(member) + len(post)
     return header(data_end, name) + member + post + SIGNATURE_TRAILER
 
@@ -142,7 +145,7 @@ def test_sigmastar_chunk_and_extract(tmp_path: Path):
 
     inpath = tmp_path / "in.irobot_apkg"
     inpath.write_bytes(blob[:data_end])
-    IRobotApkgExtractor().extract(inpath, tmp_path)
+    result = IRobotApkgExtractor().extract(inpath, tmp_path)
     carved = next(
         p.read_bytes()
         for p in tmp_path.iterdir()
@@ -150,6 +153,27 @@ def test_sigmastar_chunk_and_extract(tmp_path: Path):
     )
     inflater = zlib.decompressobj(16 + zlib.MAX_WBITS)
     assert inflater.decompress(carved) == payload
+    # the embedded MD5 digest matches the member, no problems recorded
+    assert result.reports == []
+
+
+def test_sigmastar_digest_mismatch(tmp_path: Path):
+    payload = b"payload contents\n" * 8
+    blob = bytearray(sigmastar_pkg(payload))
+    data_end = struct.unpack_from("<I", blob[8:12])[0]
+    # corrupt one hex character of the embedded digest, which sits right
+    # after the gzip member
+    inf = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    inf.decompress(bytes(blob[0x30:data_end]))
+    member_end = 0x30 + (data_end - 0x30) - len(inf.unused_data)
+    blob[member_end] ^= 0x01 if blob[member_end] != ord("0") else 0x00
+    blob[member_end] = ord("9") if blob[member_end] == ord("0") else ord("0")
+    inpath = tmp_path / "in.irobot_apkg"
+    inpath.write_bytes(bytes(blob[:data_end]))
+    result = IRobotApkgExtractor().extract(inpath, tmp_path)
+    problems = [p for p in result.reports if isinstance(p, ExtractionProblem)]
+    assert len(problems) == 1
+    assert "digest mismatch" in problems[0].problem
 
 
 def test_embedded_chunk_at_nonzero_offset():
