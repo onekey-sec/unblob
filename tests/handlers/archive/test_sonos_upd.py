@@ -104,6 +104,7 @@ def test_invalid_chunk(contents, error):
         (4, "rootfs"),
         (6, "kernel"),
         (21, "capabilities"),
+        (23, "application"),
         (0xFFFFFFFF, "signature"),
         (42, "section-42"),
     ],

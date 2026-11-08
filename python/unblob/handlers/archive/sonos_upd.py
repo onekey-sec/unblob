@@ -79,6 +79,7 @@ SECTION_NAMES = {
     17: "manifest",
     21: "capabilities",
     22: "ca-certificates",
+    23: "application",
     0xFFFFFFFF: "signature",
 }
 
