@@ -5,19 +5,47 @@ import zlib
 from pathlib import Path
 
 import pytest
+from cryptography.hazmat.primitives.asymmetric import rsa
 
+import unblob.handlers.archive.irobot.apkg as apkg_module
 from unblob.file_utils import File, InvalidInputFormat
 from unblob.handlers.archive.irobot.apkg import IRobotApkgExtractor, IRobotApkgHandler
 from unblob.report import ExtractionProblem
 
 SIGNATURE_TRAILER = b"\xcc" * 304
+TRAILER_HEADER = b"\xab" * 48
+
+# test signing key; the handler's embedded Prod key is swapped for it via
+# the prod_key fixture
+_PRIV = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+_NUMBERS = _PRIV.private_numbers()
+_TEST_N, _TEST_D = _NUMBERS.public_numbers.n, _NUMBERS.d
+
+
+@pytest.fixture
+def prod_key(monkeypatch):
+    monkeypatch.setattr(apkg_module, "_PROD_N", _TEST_N)
+    monkeypatch.setattr(apkg_module, "_PROD_E", _NUMBERS.public_numbers.e)
+
+
+def _rsa_sign(digest: bytes) -> bytes:
+    # PKCS#1 v1.5 block carrying the raw 32-byte digest, no DigestInfo
+    block = b"\x00\x01" + b"\xff" * (256 - 3 - 32) + b"\x00" + digest
+    return pow(int.from_bytes(block, "big"), _TEST_D, _TEST_N).to_bytes(256, "big")
+
+
+def _trailer(body: bytes, signed: bool) -> bytes:
+    if not signed:
+        return SIGNATURE_TRAILER
+    # the signature covers the package plus the 48-byte trailer header
+    return TRAILER_HEADER + _rsa_sign(hashlib.sha256(body + TRAILER_HEADER).digest())
 
 
 def header(data_end: int, name: bytes = b"test-pkg") -> bytes:
     return b"aPKG" + struct.pack("<III", 1, data_end, 0x100) + name.ljust(32, b"\0")
 
 
-def entry_table_pkg(entries) -> bytes:
+def entry_table_pkg(entries, *, signed=False) -> bytes:
     """Build an entry-table variant package.
 
     entries: list of (id, label, payload); entries at 0x400-aligned
@@ -36,10 +64,10 @@ def entry_table_pkg(entries) -> bytes:
     blob = header(data_end) + table
     for off, payload in parts:
         blob = blob.ljust(off, b"\0") + payload
-    return blob + SIGNATURE_TRAILER
+    return blob + _trailer(blob, signed)
 
 
-def sequential_pkg(entries, last_overshoot: int = 0) -> bytes:
+def sequential_pkg(entries, last_overshoot: int = 0, *, signed=False) -> bytes:
     """Build a sequential-table variant package.
 
     entries: list of (id, field, payload). Declared sizes equal the
@@ -61,15 +89,17 @@ def sequential_pkg(entries, last_overshoot: int = 0) -> bytes:
         declared = len(payload) + (last_overshoot if i == count - 1 else 0)
         head += struct.pack("<III", entry_id, field, declared)
     head += struct.pack("<II", len(entries[0][2]), 0x0B03)
-    return head + b"".join(p for _, _, p in entries) + SIGNATURE_TRAILER
+    body = head + b"".join(p for _, _, p in entries)
+    return body + _trailer(body, signed)
 
 
-def sigmastar_pkg(payload: bytes, name: bytes = b"C3_test") -> bytes:
+def sigmastar_pkg(payload: bytes, name: bytes = b"C3_test", *, signed=False) -> bytes:
     member = gzip.compress(payload, mtime=0)
     # the post-member region starts with the ASCII hex MD5 of the member
     post = hashlib.md5(member, usedforsecurity=False).hexdigest().encode() + b"\0" * 64
     data_end = 0x30 + len(member) + len(post)
-    return header(data_end, name) + member + post + SIGNATURE_TRAILER
+    body = header(data_end, name) + member + post
+    return body + _trailer(body, signed)
 
 
 handler = IRobotApkgHandler()
@@ -83,7 +113,7 @@ def _chunk(blob: bytes, start_offset: int = 0):
     return chunk
 
 
-def test_entry_table_chunk():
+def test_entry_table_chunk_unsigned_trailer_stays_outside():
     blob = entry_table_pkg(
         [
             (1, b"version1", b"A" * 100),
@@ -97,6 +127,23 @@ def test_entry_table_chunk():
     assert chunk.end_offset == data_end == len(blob) - len(SIGNATURE_TRAILER)
 
 
+@pytest.mark.usefixtures("prod_key")
+def test_signed_chunk_covers_trailer():
+    blob = entry_table_pkg([(1, b"version1", b"A" * 100)], signed=True)
+    chunk = _chunk(blob)
+    assert chunk.start_offset == 0
+    assert chunk.end_offset == len(blob)
+
+
+@pytest.mark.usefixtures("prod_key")
+def test_signed_chunk_embedded_at_nonzero_offset():
+    blob = entry_table_pkg([(1, b"version1", b"A" * 100)], signed=True)
+    prefix = b"\xde\xad" * 16
+    chunk = _chunk(prefix + blob, len(prefix))
+    assert chunk.start_offset == len(prefix)
+    assert chunk.end_offset == len(prefix) + len(blob)
+
+
 def test_entry_table_extract(tmp_path: Path):
     p1, p2, p3 = b"A" * 100, b"B" * 200, b"C" * 50
     blob = entry_table_pkg(
@@ -105,11 +152,40 @@ def test_entry_table_extract(tmp_path: Path):
     data_end = struct.unpack_from("<I", blob[8:12])[0]
     inpath = tmp_path / "in.irobot_apkg"
     inpath.write_bytes(blob[:data_end])
-    IRobotApkgExtractor().extract(inpath, tmp_path)
+    result = IRobotApkgExtractor().extract(inpath, tmp_path)
     assert (tmp_path / "version1").read_bytes() == p1
     assert (tmp_path / "version2").read_bytes() == p2
     # duplicated labels are disambiguated
     assert (tmp_path / "version2-1").read_bytes() == p3
+    # the fake trailer is not an iRobot signature
+    problems = [p for p in result.reports if isinstance(p, ExtractionProblem)]
+    assert len(problems) == 1
+    assert "signature trailer" in problems[0].problem
+
+
+@pytest.mark.usefixtures("prod_key")
+def test_signed_extract_reports_nothing(tmp_path: Path):
+    blob = entry_table_pkg(
+        [(1, b"version1", b"A" * 100), (2, b"version2", b"B" * 200)], signed=True
+    )
+    inpath = tmp_path / "in.irobot_apkg"
+    inpath.write_bytes(blob)
+    result = IRobotApkgExtractor().extract(inpath, tmp_path)
+    assert (tmp_path / "version1").read_bytes() == b"A" * 100
+    assert result.reports == []
+
+
+@pytest.mark.usefixtures("prod_key")
+def test_signature_mismatch_records_problem(tmp_path: Path):
+    blob = bytearray(entry_table_pkg([(1, b"version1", b"A" * 100)], signed=True))
+    blob[0x400] = ord("Z")  # corrupt a payload byte inside the signed range
+    inpath = tmp_path / "in.irobot_apkg"
+    inpath.write_bytes(bytes(blob))
+    result = IRobotApkgExtractor().extract(inpath, tmp_path)
+    assert (tmp_path / "version1").read_bytes() == b"Z" + b"A" * 99
+    problems = [p for p in result.reports if isinstance(p, ExtractionProblem)]
+    assert len(problems) == 1
+    assert "signature verification failed" in problems[0].problem
 
 
 def test_sequential_chunk_and_extract(tmp_path: Path):
@@ -136,15 +212,15 @@ def test_sequential_chunk_and_extract(tmp_path: Path):
     assert (tmp_path / "entry-5").read_bytes() == b"S" * 0x200
 
 
+@pytest.mark.usefixtures("prod_key")
 def test_sigmastar_chunk_and_extract(tmp_path: Path):
     payload = b"#!/bin/sh\necho update\n" + b"\x00" * 100
-    blob = sigmastar_pkg(payload)
+    blob = sigmastar_pkg(payload, signed=True)
     chunk = _chunk(blob)
-    data_end = struct.unpack_from("<I", blob[8:12])[0]
-    assert chunk.end_offset == data_end
+    assert chunk.end_offset == len(blob)
 
     inpath = tmp_path / "in.irobot_apkg"
-    inpath.write_bytes(blob[:data_end])
+    inpath.write_bytes(blob)
     result = IRobotApkgExtractor().extract(inpath, tmp_path)
     carved = next(
         p.read_bytes()
@@ -153,27 +229,28 @@ def test_sigmastar_chunk_and_extract(tmp_path: Path):
     )
     inflater = zlib.decompressobj(16 + zlib.MAX_WBITS)
     assert inflater.decompress(carved) == payload
-    # the embedded MD5 digest matches the member, no problems recorded
+    # embedded MD5 digest and signature both verify, no problems
     assert result.reports == []
 
 
+@pytest.mark.usefixtures("prod_key")
 def test_sigmastar_digest_mismatch(tmp_path: Path):
     payload = b"payload contents\n" * 8
-    blob = bytearray(sigmastar_pkg(payload))
+    blob = bytearray(sigmastar_pkg(payload, signed=True))
     data_end = struct.unpack_from("<I", blob[8:12])[0]
     # corrupt one hex character of the embedded digest, which sits right
-    # after the gzip member
+    # after the gzip member; the corruption also breaks the signature
     inf = zlib.decompressobj(16 + zlib.MAX_WBITS)
     inf.decompress(bytes(blob[0x30:data_end]))
     member_end = 0x30 + (data_end - 0x30) - len(inf.unused_data)
-    blob[member_end] ^= 0x01 if blob[member_end] != ord("0") else 0x00
     blob[member_end] = ord("9") if blob[member_end] == ord("0") else ord("0")
     inpath = tmp_path / "in.irobot_apkg"
-    inpath.write_bytes(bytes(blob[:data_end]))
+    inpath.write_bytes(bytes(blob))
     result = IRobotApkgExtractor().extract(inpath, tmp_path)
-    problems = [p for p in result.reports if isinstance(p, ExtractionProblem)]
-    assert len(problems) == 1
-    assert "digest mismatch" in problems[0].problem
+    problems = [p.problem for p in result.reports if isinstance(p, ExtractionProblem)]
+    assert len(problems) == 2
+    assert any("digest mismatch" in p for p in problems)
+    assert any("signature verification failed" in p for p in problems)
 
 
 def test_embedded_chunk_at_nonzero_offset():

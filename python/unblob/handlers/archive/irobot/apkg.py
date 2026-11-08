@@ -9,8 +9,8 @@ The fixed header is little-endian:
     | magic "aPKG" | version (1) | data_end | field_0c (0x100) | name[32] |
 
 ``data_end`` is the offset at which the signed container data ends; every
-observed package appends a 304-byte signature trailer after it, which is left
-out of the reported chunk.
+observed package appends a 304-byte signature trailer after it, which stays
+inside the chunk when it carries a valid signature block (see below).
 
 Three payload layouts are observed:
 
@@ -28,6 +28,17 @@ Three payload layouts are observed:
   first bytes are the ASCII hex MD5 digest of the member, verified during
   extraction.
 
+Every observed package appends a 304-byte signature trailer after
+``data_end``: a 48-byte opaque header followed by a 256-byte RSA-2048
+signature. The signature is a PKCS#1 v1.5 block carrying the raw SHA-256
+digest (without an ASN.1 DigestInfo prefix) of everything up to and
+including the 48-byte trailer header, that is ``package[0 : data_end +
+48]``. Packages are verified during extraction against the OTA "Prod"
+public key that the robots' own updater embeds; the same key is present in
+every payload blob of all aPKG families. When the trailer's RSA block does
+not carry valid padding the bytes are not an iRobot trailer at all, so the
+chunk then ends at ``data_end`` and the bytes are left to generic handling.
+
 Format reference: https://github.com/BookCatKid/irobot-firmware-archive
 """
 
@@ -44,6 +55,7 @@ from unblob.file_utils import (
     File,
     FileSystem,
     InvalidInputFormat,
+    SeekError,
     StructParser,
 )
 from unblob.models import (
@@ -89,6 +101,78 @@ SEQ_VARIANT_ENTRY_SIZE = 12
 SEQ_VARIANT_MARKER_SIZE = 8
 
 MAX_ENTRY_COUNT = 64
+
+TRAILER_HEADER_LEN = 48
+TRAILER_SIG_LEN = 256
+TRAILER_LEN = TRAILER_HEADER_LEN + TRAILER_SIG_LEN
+
+# iRobot OTA "Prod" RSA-2048 public key, embedded by the robots' own updater
+# in every aPKG payload blob (public key material only). DER encoded
+# SubjectPublicKeyInfo; the same modulus verifies all aPKG families.
+_OTA_PUBLIC_KEY = bytes.fromhex(
+    "30820122300d06092a864886f70d01010105000382010f003082010a02820101"
+    "00eb0697fb663283101e1df855344459c02f333d7e46e39a9fff701d60ccb905"
+    "77026fe3d32c4cd556fbdd932a70354e9dbec920e3ea81137b50a91420dac7e8"
+    "46ac5c8bb72d7836d5e591ac3690a8bfaac644fced9de110417a7f428cdc7080"
+    "f7d71296c58debce1044f96d9d7a5441039ce097cd14c1bb649126031561b278"
+    "e917b64c5d39a04473e45456206fcdabf4062261b919686565a9d6fc0be4b4e0"
+    "b969ea13e2370c0c9fa88937e7aeaf1f107069445216141159f7af33d4f99b0b"
+    "8fd9aa727b7d5a2095043c7f2d9f6ca0b81080a8fe4dbf2fd49c504089067e38"
+    "03526afeaa2a0b6f5e1f362e9269facd62b2c1c334e9ab3cdfd743568217adf6"
+    "9f0203010001"
+)
+
+
+def _der_tlv(buf: bytes, offset: int):
+    """Return (tag, value, next_offset) of a DER element."""
+    tag = buf[offset]
+    lead = buf[offset + 1]
+    if lead & 0x80:
+        length_bytes = lead & 0x7F
+        length = int.from_bytes(buf[offset + 2 : offset + 2 + length_bytes], "big")
+        value_offset = offset + 2 + length_bytes
+    else:
+        length = lead
+        value_offset = offset + 2
+    return tag, buf[value_offset : value_offset + length], value_offset + length
+
+
+def _prod_key_numbers() -> tuple[int, int]:
+    """Return (modulus, exponent) of the embedded OTA Prod key."""
+    # SubjectPublicKeyInfo ::= SEQ { AlgorithmIdentifier, BIT STRING }
+    _, spki, _ = _der_tlv(_OTA_PUBLIC_KEY, 0)
+    _, _, pos = _der_tlv(spki, 0)  # AlgorithmIdentifier
+    _, bit_string, _ = _der_tlv(spki, pos)
+    # RSAPublicKey ::= SEQ { modulus INTEGER, exponent INTEGER }; skip the
+    # BIT STRING's unused-bits byte
+    _, seq, _ = _der_tlv(bit_string[1:], 0)
+    _, modulus, pos = _der_tlv(seq, 0)
+    _, exponent, _ = _der_tlv(seq, pos)
+    return int.from_bytes(modulus, "big"), int.from_bytes(exponent, "big")
+
+
+_PROD_N, _PROD_E = _prod_key_numbers()
+
+
+def _decrypt_signature(signature: bytes) -> bytes | None:
+    """Public-decrypt a trailer signature block.
+
+    Returns the 32-byte digest when the block is a PKCS#1 v1.5 message
+    signed by the iRobot OTA Prod key (``00 01 FF* 00 || digest``), or
+    None when the bytes are not such a block.
+    """
+    if len(signature) != TRAILER_SIG_LEN:
+        return None
+    s = int.from_bytes(signature, "big")
+    if s >= _PROD_N:
+        return None
+    block = pow(s, _PROD_E, _PROD_N).to_bytes(TRAILER_SIG_LEN, "big")
+    if block[:2] != b"\x00\x01":
+        return None
+    separator = block.find(b"\x00", 2)
+    if separator < 10 or len(block) - separator - 1 != 32:
+        return None
+    return block[separator + 1 :]
 
 
 @dataclass(frozen=True)
@@ -243,12 +327,12 @@ class IRobotApkgExtractor(Extractor):
                     container.data_end - 0x30,
                 )
                 self._verify_member_digest(fs, file, container.data_end, name)
-                return ExtractResult(reports=fs.problems)
-
-            seen: dict[str, int] = {}
-            for entry in container.entries:
-                name = self._entry_name(entry, seen)
-                fs.carve(Path(name), file, entry.offset, entry.size)
+            else:
+                seen: dict[str, int] = {}
+                for entry in container.entries:
+                    name = self._entry_name(entry, seen)
+                    fs.carve(Path(name), file, entry.offset, entry.size)
+            self._verify_signature(fs, file, container.data_end)
         return ExtractResult(reports=fs.problems)
 
     def _entry_name(self, entry: ApkgEntry, seen: dict[str, int]) -> str:
@@ -370,6 +454,41 @@ class IRobotApkgExtractor(Extractor):
                 )
             )
 
+    def _verify_signature(self, fs: FileSystem, file: File, data_end: int):
+        # the 48-byte trailer header and the 256-byte signature sit inside
+        # the chunk when calculate_chunk's probe found a decryptable RSA
+        # block; the signature covers package[0 : data_end + 48]
+        try:
+            file.seek(data_end + TRAILER_HEADER_LEN, io.SEEK_SET)
+            signature = file.read(TRAILER_SIG_LEN)
+        except (SeekError, EOFError):
+            signature = b""
+        digest = _decrypt_signature(signature)
+        if digest is None:
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="aPKG signature trailer missing or unreadable",
+                    resolution="payload extracted anyway",
+                )
+            )
+            return
+        file.seek(0, io.SEEK_SET)
+        hasher = hashlib.sha256()
+        remaining = data_end + TRAILER_HEADER_LEN
+        while remaining:
+            block = file.read(min(remaining, 1 << 20))
+            if not block:
+                break
+            hasher.update(block)
+            remaining -= len(block)
+        if hasher.digest() != digest:
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="aPKG signature verification failed",
+                    resolution="payload extracted anyway",
+                )
+            )
+
 
 class IRobotApkgHandler(StructHandler):
     NAME = "irobot_apkg"
@@ -393,7 +512,11 @@ class IRobotApkgHandler(StructHandler):
             "SigmaStar-based packages (100/200/400/500/700 series). "
             "Entry-table payloads are carved out by label, sequential-table "
             "payloads by entry id, and SigmaStar packages yield the embedded "
-            "gzip member, verified against the package's MD5 digest."
+            "gzip member, verified against the package's MD5 digest. The "
+            "package trailer is verified as an RSA-2048 signature over the "
+            "whole package against the OTA public key the robots' own "
+            "updater ships; verification failures are reported as "
+            "extraction problems."
         ),
         handler_type=HandlerType.ARCHIVE,
         vendor="iRobot",
@@ -403,17 +526,26 @@ class IRobotApkgHandler(StructHandler):
                 url="https://github.com/BookCatKid/irobot-firmware-archive/blob/6dee59f86f5991d18b9bd06c089277128ca8aa22/src/irobot_firmware/analyze.py",
             ),
         ],
-        limitations=[
-            "The signature trailer is not verified; its scheme and key are "
-            "not part of the package."
-        ],
+        limitations=[],
     )
 
     def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
         header = self.parse_header(file, endian=Endian.LITTLE)
         container = ApkgContainer.parse(file, start_offset, header)
+        end_offset = start_offset + container.data_end
+
+        # a genuine trailer decrypts to a PKCS#1 v1.5 block under the OTA
+        # Prod key; without that padding the trailing bytes are not an
+        # iRobot trailer and stay outside the chunk
+        try:
+            file.seek(end_offset + TRAILER_HEADER_LEN, io.SEEK_SET)
+            signature = file.read(TRAILER_SIG_LEN)
+        except (SeekError, EOFError):
+            signature = b""
+        if _decrypt_signature(signature) is not None:
+            end_offset += TRAILER_LEN
 
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=start_offset + container.data_end,
+            end_offset=end_offset,
         )
