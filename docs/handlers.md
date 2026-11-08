@@ -74,6 +74,7 @@
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`RPM`](#rpm) | ARCHIVE | :octicons-check-16: |
     | [`SOLARIS_UFS1`](#solaris_ufs1) | FILESYSTEM | :octicons-check-16: |
+    | [`SONOS UPD`](#sonos-upd) | ARCHIVE | :octicons-alert-fill-12: |
     | [`SQUASHFS (V1)`](#squashfs-v1) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2)`](#squashfs-v2) | FILESYSTEM | :octicons-check-16: |
     | [`SQUASHFS (V2-NON-STANDARD)`](#squashfs-v2-non-standard) | FILESYSTEM | :octicons-check-16: |
@@ -1342,6 +1343,26 @@
 
         - [Unix File System Wikipedia](https://en.wikipedia.org/wiki/Unix_File_System){ target="_blank" }
         - [Oracle Solaris](https://en.wikipedia.org/wiki/Oracle_Solaris){ target="_blank" }
+## Sonos UPD
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Sonos UPD firmware packages are a concatenation of typed sections (version, compatibility list, preinstall script, kernel, root filesystem, partition tables, capability strings, certificates, signatures and payload sections). Each section is carved out and its payload extracted so nested formats can be processed recursively. Sections flagged as encrypted carry an RSA-OAEP wrapped AES-128-CBC envelope and are reported as encrypted.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Sonos
+
+    === "References"
+
+        - [Sonos firmware archive UPD parser](https://github.com/BookCatKid/sonos-firmware-archive/blob/687ee8e1067370843ddead7e0ea2fcdd6abde2ac/src/sonos_firmware/upd.py){ target="_blank" }
+
+    === "Limitations"
+
+        - Encrypted sections are reported but not decrypted or extracted, as decryption requires device specific RSA-2048 private keys; the carved sections can be decrypted offline with the matching key.
 ## SquashFS (v1)
 
 !!! success "Fully supported"
