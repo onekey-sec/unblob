@@ -165,11 +165,11 @@ def _rsa_key_from_certificate(der: bytes):
         _, seq, _ = _der_tlv(bits[1:], 0)  # RSAPublicKey, skip unused-bits byte
         _, modulus, pos = _der_tlv(seq, 0)
         _, exponent, _ = _der_tlv(seq, pos)
-    except IndexError as exc:
+        return rsa.RSAPublicNumbers(
+            int.from_bytes(exponent, "big"), int.from_bytes(modulus, "big")
+        ).public_key()
+    except (IndexError, ValueError) as exc:
         raise InvalidInputFormat("Malformed Otps certificate.") from exc
-    return rsa.RSAPublicNumbers(
-        int.from_bytes(exponent, "big"), int.from_bytes(modulus, "big")
-    ).public_key()
 
 
 def _hash_region(file: File, offset: int, size: int) -> bytes:
@@ -238,9 +238,12 @@ def _parse_item_sdat(file: File, start: int, end: int):
                 .split(b"\0", 1)[0]
                 .decode("ascii", "replace")
             )
-            # observed values look like "key type J"
+            # observed values look like "key type J"; an unknown letter
+            # passes through, so keep it filesystem-safe
             letter = keyt.rsplit(" ", 1)[-1]
-            meta["name"] = KEY_TYPE_NAMES.get(letter, letter)
+            name = KEY_TYPE_NAMES.get(letter, letter)
+            name = "".join(c if c.isalnum() or c in "+._-" else "_" for c in name)
+            meta["name"] = name if name not in (".", "..") else ""
         elif tag == b"Iexh":
             meta.update(_parse_otis_iexh(file, value, next_offset))
         elif tag == b"Auth":
@@ -295,6 +298,24 @@ def _parse_otie(file: File, start: int, end: int):
     return index, payload_offset, payload_size
 
 
+def _item_name(meta: dict, index: int, seen: set) -> str:
+    """Pick a unique output name for an item.
+
+    Deduplication is deterministic: an index suffix first, then a counter
+    for pathological repeats.
+    """
+    name = meta.get("name") or f"item-{index}"
+    if name in seen:
+        base = f"{name}-{index}"
+        name = base
+        suffix = 1
+        while name in seen:
+            suffix += 1
+            name = f"{base}-{suffix}"
+    seen.add(name)
+    return name
+
+
 def _parse_otim(file: File, otim_start: int, otim_end: int, seen: set) -> OtpsItem:
     meta: dict = {}
     index = payload_offset = payload_size = None
@@ -313,10 +334,7 @@ def _parse_otim(file: File, otim_start: int, otim_end: int, seen: set) -> OtpsIt
         raise InvalidInputFormat(
             "Otim payload size does not match its signed metadata."
         )
-    name = meta.get("name") or f"item-{index}"
-    if name in seen:
-        name = f"{name}-{index}"
-    seen.add(name)
+    name = _item_name(meta, index, seen)
     return OtpsItem(
         index=index,
         name=name,

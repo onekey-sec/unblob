@@ -207,7 +207,7 @@ class ApkgContainer:
         file.seek(start_offset + TABLE_VARIANT_COUNT_OFFSET, io.SEEK_SET)
         marker = file.read(8)
         if marker[:2] == b"\x1f\x8b":
-            if marker[2] != 0x08:  # deflate
+            if len(marker) < 3 or marker[2] != 0x08:  # deflate
                 raise InvalidInputFormat("Invalid aPKG gzip member header.")
             return cls(data_end=data_end, entries=[], sigmastar=True)
 
@@ -328,45 +328,56 @@ class IRobotApkgExtractor(Extractor):
                 )
                 self._verify_member_digest(fs, file, container.data_end, name)
             else:
-                seen: dict[str, int] = {}
+                seen: set[str] = set()
                 for entry in container.entries:
                     name = self._entry_name(entry, seen)
                     fs.carve(Path(name), file, entry.offset, entry.size)
             self._verify_signature(fs, file, container.data_end)
         return ExtractResult(reports=fs.problems)
 
-    def _entry_name(self, entry: ApkgEntry, seen: dict[str, int]) -> str:
+    def _entry_name(self, entry: ApkgEntry, seen: set[str]) -> str:
+        base = f"entry-{entry.id}"
         if entry.name:
-            base = "".join(c if c.isalnum() or c in "+._-" else "_" for c in entry.name)
-        else:
-            base = f"entry-{entry.id}"
-        count = seen.get(base, 0)
-        seen[base] = count + 1
-        return base if count == 0 else f"{base}-{count}"
+            candidate = "".join(
+                c if c.isalnum() or c in "+._-" else "_" for c in entry.name
+            )
+            if candidate not in (".", ".."):
+                base = candidate
+        name = base
+        suffix = 1
+        while name in seen:
+            name = f"{base}-{suffix}"
+            suffix += 1
+        seen.add(name)
+        return name
 
     def _gzip_original_name(self, file: File) -> str | None:
         # RFC 1952: when FNAME is set the zero-terminated original filename
-        # follows the fixed ten-byte header and optional FEXTRA block
-        file.seek(0x30, io.SEEK_SET)
-        member_header = file.read(10)
-        if len(member_header) < 10:
-            return None
-        flags = member_header[3]
-        cursor = 0x30 + 10
-        if flags & 0x04:
+        # follows the fixed ten-byte header and optional FEXTRA block; the
+        # name is cosmetic, unreadable optional fields just fall back
+        try:
+            file.seek(0x30, io.SEEK_SET)
+            member_header = file.read(10)
+            if len(member_header) < 10:
+                return None
+            flags = member_header[3]
+            cursor = 0x30 + 10
+            if flags & 0x04:
+                file.seek(cursor, io.SEEK_SET)
+                extra_len = int.from_bytes(file.read(2), "little")
+                cursor += 2 + extra_len
+            if not flags & 0x08:
+                return None
             file.seek(cursor, io.SEEK_SET)
-            extra_len = int.from_bytes(file.read(2), "little")
-            cursor += 2 + extra_len
-        if not flags & 0x08:
+            raw = file.read(4096).split(b"\0", 1)[0]
+        except (SeekError, EOFError):
             return None
-        file.seek(cursor, io.SEEK_SET)
-        raw = file.read(4096).split(b"\0", 1)[0]
         try:
             name = raw.decode("ascii")
         except UnicodeDecodeError:
             return None
         name = Path(name).name
-        return name or None
+        return name if name and name != ".." else None
 
     def _member_len(self, fs: FileSystem, file: File, data_end: int, name: str):
         """Locate the gzip member end with a streaming decompressor pass."""
@@ -378,7 +389,12 @@ class IRobotApkgExtractor(Extractor):
                 block = file.read(min(1 << 20, data_end - offset))
                 if not block:
                     break
-                inflater.decompress(block)
+                # bound decompressed output; only the member end matters,
+                # the output itself is discarded
+                pending = block
+                while pending and not inflater.eof:
+                    inflater.decompress(pending, 1 << 20)
+                    pending = inflater.unconsumed_tail
                 offset += len(block)
         except zlib.error:
             fs.record_problem(
