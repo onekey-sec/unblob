@@ -1,0 +1,327 @@
+"""iRobot aPKG firmware container.
+
+aPKG is the outer container of the ``*.signed`` OTA packages used by classic
+iRobot robots (Marconi, Aero, Ningbo, Congo, Roomba 9xx, el Paso) and by the
+SigmaStar-based generations (100/200/400/500/700 series).
+
+The fixed header is little-endian:
+
+    | magic "aPKG" | version (1) | data_end | field_0c (0x100) | name[32] |
+
+``data_end`` is the offset at which the signed container data ends; every
+observed package appends a 304-byte signature trailer after it, which is left
+out of the reported chunk.
+
+Three payload layouts are observed:
+
+- ``entry-table`` (marconi/aero/ningbo/congo): an entry count at 0x30 followed
+  by 0x58-byte entries ``{id, offset, size, label[76]}`` at 0x34. Offsets are
+  absolute positions inside the container.
+- ``sequential-table`` (elpaso/roomba9xx): ``data_end`` repeated at 0x30, tag
+  0x0b03 at 0x34, an entry count at 0x50 and 12-byte entries
+  ``{id, field, size}`` at 0x54. A ``{size, 0x0b03}`` marker for the first
+  entry follows the table, then payloads are stored back to back in table
+  order. The last entry's declared size slightly overshoots the stored data,
+  so it is carved up to ``data_end``.
+- ``sigmastar-gzip`` (105/105v/205/405/505/705): a gzip member (original
+  filename ``SStarOta.bin``) at 0x30, followed by a small metadata region
+  holding a hex digest of the decompressed payload.
+
+Format reference: https://github.com/BookCatKid/irobot-firmware-archive
+"""
+
+import io
+from dataclasses import dataclass
+from pathlib import Path
+
+from structlog import get_logger
+
+from unblob.file_utils import (
+    Endian,
+    File,
+    FileSystem,
+    InvalidInputFormat,
+    StructParser,
+)
+from unblob.models import (
+    Extractor,
+    ExtractResult,
+    HandlerDoc,
+    HandlerType,
+    HexString,
+    Reference,
+    StructHandler,
+    ValidChunk,
+)
+
+logger = get_logger()
+
+C_DEFINITIONS = r"""
+    typedef struct apkg_header {
+        char magic[4];        /* "aPKG" */
+        uint32 version;       /* container version, always 1 */
+        uint32 data_end;      /* end of container data, signature trailer follows */
+        uint32 field_0c;      /* always 0x100 in observed packages */
+        char name[32];        /* package name, NUL padded */
+    } apkg_header_t;
+
+    typedef struct apkg_entry {
+        uint32 id;
+        uint32 offset;        /* entry payload offset inside the container */
+        uint32 payload_size;
+        char label[76];       /* NUL padded ASCII label */
+    } apkg_entry_t;
+"""
+
+TABLE_VARIANT_COUNT_OFFSET = 0x30
+TABLE_VARIANT_ENTRY_OFFSET = 0x34
+TABLE_VARIANT_ENTRY_SIZE = 0x58
+
+SEQ_VARIANT_TAG = 0x0B03
+SEQ_VARIANT_COUNT_OFFSET = 0x50
+SEQ_VARIANT_ENTRY_OFFSET = 0x54
+SEQ_VARIANT_ENTRY_SIZE = 12
+# the {first_size, 0x0b03} marker between the sequential table and the payloads
+SEQ_VARIANT_MARKER_SIZE = 8
+
+MAX_ENTRY_COUNT = 64
+
+
+@dataclass(frozen=True)
+class ApkgEntry:
+    id: int
+    offset: int
+    size: int
+    name: str | None
+
+
+@dataclass(frozen=True)
+class ApkgContainer:
+    data_end: int
+    entries: list[ApkgEntry]
+    # for the sigmastar variant the payload is a single gzip member
+    sigmastar: bool
+
+    @classmethod
+    def parse(cls, file: File, start_offset: int, header) -> "ApkgContainer":
+        if header.version != 1:
+            raise InvalidInputFormat(
+                f"Unsupported aPKG container version: {header.version}."
+            )
+        if header.field_0c != 0x100:
+            raise InvalidInputFormat(
+                f"Unexpected aPKG header field: {header.field_0c:#x}."
+            )
+        data_end = header.data_end
+        if data_end <= 0x30:
+            raise InvalidInputFormat(f"Invalid aPKG data_end: {data_end:#x}.")
+
+        file.seek(start_offset + TABLE_VARIANT_COUNT_OFFSET, io.SEEK_SET)
+        marker = file.read(8)
+        if marker[:2] == b"\x1f\x8b":
+            if marker[2] != 0x08:  # deflate
+                raise InvalidInputFormat("Invalid aPKG gzip member header.")
+            return cls(data_end=data_end, entries=[], sigmastar=True)
+
+        seq_marker = int.from_bytes(marker[:4], "little")
+        seq_tag = int.from_bytes(marker[4:8], "little")
+        if seq_marker == data_end and seq_tag == SEQ_VARIANT_TAG:
+            return cls._parse_sequential(file, start_offset, data_end)
+
+        return cls._parse_entry_table(file, start_offset, data_end)
+
+    @classmethod
+    def _parse_entry_table(
+        cls, file: File, start_offset: int, data_end: int
+    ) -> "ApkgContainer":
+        file.seek(start_offset + TABLE_VARIANT_COUNT_OFFSET, io.SEEK_SET)
+        entry_count = int.from_bytes(file.read(4), "little")
+        if not 1 <= entry_count <= MAX_ENTRY_COUNT:
+            raise InvalidInputFormat(f"Invalid aPKG entry count: {entry_count}.")
+        table_end = TABLE_VARIANT_ENTRY_OFFSET + entry_count * TABLE_VARIANT_ENTRY_SIZE
+        if table_end > data_end:
+            raise InvalidInputFormat("aPKG entry table exceeds container data.")
+
+        struct_parser = StructParser(C_DEFINITIONS)
+        entries = []
+        for _ in range(entry_count):
+            raw = file.read(TABLE_VARIANT_ENTRY_SIZE)
+            if len(raw) != TABLE_VARIANT_ENTRY_SIZE:
+                raise InvalidInputFormat("Truncated aPKG entry table.")
+            entry = struct_parser.cparser_le.apkg_entry_t(raw)
+            if entry.payload_size == 0:
+                raise InvalidInputFormat("aPKG entry with zero size.")
+            if entry.offset < table_end or entry.offset + entry.payload_size > data_end:
+                raise InvalidInputFormat(
+                    "aPKG entry points outside the container data."
+                )
+            label = entry.label.split(b"\0", 1)[0].decode("ascii", "replace")
+            entries.append(
+                ApkgEntry(
+                    id=entry.id,
+                    offset=entry.offset,
+                    size=entry.payload_size,
+                    name=label or None,
+                )
+            )
+        return cls(data_end=data_end, entries=entries, sigmastar=False)
+
+    @classmethod
+    def _parse_sequential(
+        cls, file: File, start_offset: int, data_end: int
+    ) -> "ApkgContainer":
+        file.seek(start_offset + SEQ_VARIANT_COUNT_OFFSET, io.SEEK_SET)
+        entry_count = int.from_bytes(file.read(4), "little")
+        if not 1 <= entry_count <= MAX_ENTRY_COUNT:
+            raise InvalidInputFormat(
+                f"Invalid aPKG sequential entry count: {entry_count}."
+            )
+        table_end = SEQ_VARIANT_ENTRY_OFFSET + entry_count * SEQ_VARIANT_ENTRY_SIZE
+        if table_end + SEQ_VARIANT_MARKER_SIZE > data_end:
+            raise InvalidInputFormat("aPKG entry table exceeds container data.")
+
+        raw_entries = []
+        for _ in range(entry_count):
+            entry_id = int.from_bytes(file.read(4), "little")
+            file.read(4)  # second field, meaning not yet identified
+            size = int.from_bytes(file.read(4), "little")
+            raw_entries.append((entry_id, size))
+
+        # the table is followed by a {size, 0x0b03} marker describing the
+        # first stored entry
+        first_size = int.from_bytes(file.read(4), "little")
+        marker_tag = int.from_bytes(file.read(4), "little")
+        if marker_tag != SEQ_VARIANT_TAG or first_size != raw_entries[0][1]:
+            raise InvalidInputFormat("Invalid aPKG sequential block marker.")
+
+        payload_offset = table_end + SEQ_VARIANT_MARKER_SIZE
+        entries = cls._sequential_entries(raw_entries, payload_offset, data_end)
+        return cls(data_end=data_end, entries=entries, sigmastar=False)
+
+    @staticmethod
+    def _sequential_entries(raw_entries, payload_offset: int, data_end: int):
+        entries = []
+        for ordinal, (entry_id, declared_size) in enumerate(raw_entries):
+            if declared_size == 0 or payload_offset >= data_end:
+                raise InvalidInputFormat("Invalid aPKG sequential entry size.")
+            size = declared_size
+            if payload_offset + size > data_end:
+                if ordinal != len(raw_entries) - 1:
+                    raise InvalidInputFormat(
+                        "aPKG sequential entry exceeds container data."
+                    )
+                # the last declared size overshoots the stored data; carve
+                # what is actually stored
+                size = data_end - payload_offset
+            entries.append(
+                ApkgEntry(id=entry_id, offset=payload_offset, size=size, name=None)
+            )
+            payload_offset += size
+        return entries
+
+
+class IRobotApkgExtractor(Extractor):
+    def __init__(self):
+        self._struct_parser = StructParser(C_DEFINITIONS)
+
+    def extract(self, inpath: Path, outdir: Path):
+        fs = FileSystem(outdir)
+        with File.from_path(inpath) as file:
+            header = self._struct_parser.parse("apkg_header_t", file, Endian.LITTLE)
+            container = ApkgContainer.parse(file, 0, header)
+
+            if container.sigmastar:
+                name = self._gzip_original_name(file) or "payload.bin"
+                fs.carve(
+                    Path(name),
+                    file,
+                    0x30,
+                    container.data_end - 0x30,
+                )
+                return ExtractResult(reports=fs.problems)
+
+            seen: dict[str, int] = {}
+            for entry in container.entries:
+                name = self._entry_name(entry, seen)
+                fs.carve(Path(name), file, entry.offset, entry.size)
+        return ExtractResult(reports=fs.problems)
+
+    def _entry_name(self, entry: ApkgEntry, seen: dict[str, int]) -> str:
+        if entry.name:
+            base = "".join(c if c.isalnum() or c in "+._-" else "_" for c in entry.name)
+        else:
+            base = f"entry-{entry.id}"
+        count = seen.get(base, 0)
+        seen[base] = count + 1
+        return base if count == 0 else f"{base}-{count}"
+
+    def _gzip_original_name(self, file: File) -> str | None:
+        # RFC 1952: when FNAME is set the zero-terminated original filename
+        # follows the fixed ten-byte header and optional FEXTRA block
+        file.seek(0x30, io.SEEK_SET)
+        member_header = file.read(10)
+        if len(member_header) < 10:
+            return None
+        flags = member_header[3]
+        cursor = 0x30 + 10
+        if flags & 0x04:
+            file.seek(cursor, io.SEEK_SET)
+            extra_len = int.from_bytes(file.read(2), "little")
+            cursor += 2 + extra_len
+        if not flags & 0x08:
+            return None
+        file.seek(cursor, io.SEEK_SET)
+        raw = file.read(4096).split(b"\0", 1)[0]
+        try:
+            name = raw.decode("ascii")
+        except UnicodeDecodeError:
+            return None
+        name = Path(name).name
+        return name or None
+
+
+class IRobotApkgHandler(StructHandler):
+    NAME = "irobot_apkg"
+
+    PATTERNS = [
+        HexString(
+            """
+            61 50 4b 47 // "aPKG"
+        """
+        ),
+    ]
+    C_DEFINITIONS = C_DEFINITIONS
+    HEADER_STRUCT = "apkg_header_t"
+    EXTRACTOR = IRobotApkgExtractor()
+
+    DOC = HandlerDoc(
+        name="iRobot aPKG",
+        description=(
+            "iRobot aPKG containers wrap classic robot firmware packages "
+            "(marconi, aero, ningbo, congo, roomba9xx, elpaso) and "
+            "SigmaStar-based packages (100/200/400/500/700 series). "
+            "Entry-table payloads are carved out by label, sequential-table "
+            "payloads by entry id, and SigmaStar packages yield the embedded "
+            "gzip member plus trailing metadata for further processing."
+        ),
+        handler_type=HandlerType.ARCHIVE,
+        vendor="iRobot",
+        references=[
+            Reference(
+                title="iRobot firmware archive aPKG analysis",
+                url="https://github.com/BookCatKid/irobot-firmware-archive/blob/6dee59f86f5991d18b9bd06c089277128ca8aa22/src/irobot_firmware/analyze.py",
+            ),
+        ],
+        limitations=[
+            "Payloads are not validated against the package signature trailer."
+        ],
+    )
+
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk | None:
+        header = self.parse_header(file, endian=Endian.LITTLE)
+        container = ApkgContainer.parse(file, start_offset, header)
+
+        return ValidChunk(
+            start_offset=start_offset,
+            end_offset=start_offset + container.data_end,
+        )
