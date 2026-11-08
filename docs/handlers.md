@@ -38,7 +38,7 @@
     | [`INSTAR BNEG`](#instar-bneg) | ARCHIVE | :octicons-check-16: |
     | [`INSTAR HD`](#instar-hd) | ARCHIVE | :octicons-check-16: |
     | [`IROBOT APKG`](#irobot-apkg) | ARCHIVE | :octicons-alert-fill-12: |
-    | [`IROBOT OTPS`](#irobot-otps) | ARCHIVE | :octicons-alert-fill-12: |
+    | [`IROBOT OTPS`](#irobot-otps) | ARCHIVE | :octicons-check-16: |
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (NEW)`](#jffs2-new) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (OLD)`](#jffs2-old) | FILESYSTEM | :octicons-check-16: |
@@ -709,7 +709,7 @@
 
     === "Description"
 
-        iRobot aPKG containers wrap classic robot firmware packages (marconi, aero, ningbo, congo, roomba9xx, elpaso) and SigmaStar-based packages (100/200/400/500/700 series). Entry-table payloads are carved out by label, sequential-table payloads by entry id, and SigmaStar packages yield the embedded gzip member plus trailing metadata for further processing.
+        iRobot aPKG containers wrap classic robot firmware packages (marconi, aero, ningbo, congo, roomba9xx, elpaso) and SigmaStar-based packages (100/200/400/500/700 series). Entry-table payloads are carved out by label, sequential-table payloads by entry id, and SigmaStar packages yield the embedded gzip member, verified against the package's MD5 digest.
 
         ---
 
@@ -722,14 +722,14 @@
 
     === "Limitations"
 
-        - Payloads are not validated against the package signature trailer.
+        - The signature trailer is not verified; its scheme and key are not part of the package.
 ## iRobot Otps
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
-        iRobot Otps signed OTA packages are used by Qualcomm-based robots (sapphire, soho, stingray, lewis, sanmarino, wichita). The package is a TLV stream holding a signed data block whose Otpc content lists one Otim group per component. Each item's payload is carved under its component name (TZ, RPM, ABL, SYSTEM, KERNEL, ...) and verified against the SHA-256 declared in its signed metadata.
+        iRobot Otps signed OTA packages are used by Qualcomm-based robots (sapphire, soho, stingray, lewis, sanmarino, wichita). The package is a TLV stream holding a signed data block whose Otpc content lists one Otim group per component. Each item's payload is carved under its component name (TZ, RPM, ABL, SYSTEM, KERNEL, ...), verified against the SHA-256 declared in its signed metadata, and both the package and item RSA signatures are verified against the certificate embedded in the package; verification failures are reported as extraction problems.
 
         ---
 
@@ -739,10 +739,6 @@
     === "References"
 
         - [iRobot firmware archive Otie/Otim analysis](https://github.com/BookCatKid/irobot-firmware-archive/blob/6dee59f86f5991d18b9bd06c089277128ca8aa22/src/irobot_firmware/analyze.py){ target="_blank" }
-
-    === "Limitations"
-
-        - Package and item signatures are not verified; payloads are checked against the SHA-256 in the signed item metadata.
 ## ISO 9660
 
 !!! success "Fully supported"
