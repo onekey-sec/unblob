@@ -22,8 +22,31 @@ def section(section_type: int, flags: int, payload: bytes) -> bytes:
     )
 
 
+def envelope(
+    data: bytes = b"\xdd" * 32,
+    *,
+    recipient: bytes = b"\x11" * 20,
+    rsa: bytes = b"\xcc" * 256,
+    cipher_id: int = 1,
+) -> bytes:
+    """Build a structurally valid Sonos encryption envelope."""
+    header_len = 0x16 + len(recipient) + 4 + 4 + len(rsa) + 8
+    return (
+        ENVELOPE_MAGIC
+        + header_len.to_bytes(4, "big")
+        + b"\x00" * 12
+        + bytes([len(recipient), 3])
+        + recipient
+        + (1).to_bytes(4, "big")
+        + len(rsa).to_bytes(4, "big")
+        + rsa
+        + cipher_id.to_bytes(4, "big")
+        + len(data).to_bytes(4, "big")
+        + data
+    )
+
+
 PREINSTALL = b"#!/bin/sh\necho preinstall\n"
-ENVELOPE = ENVELOPE_MAGIC + b"\x00" * 312 + b"\xaa" * 32
 
 handler = SonosUPDHandler()
 
@@ -34,7 +57,8 @@ handler = SonosUPDHandler()
         (section(3, 0, PREINSTALL), 0, 0, 16 + len(PREINSTALL)),
         (b"garbage" + section(6, 0, b"kernel") + b"trailing", 7, 7, 7 + 16 + 6),
         (section(0xFFFFFFFF, 1, b"\x00" * 128), 0, 0, 16 + 128),
-        (section(15, 0x14, ENVELOPE), 0, 0, 16 + len(ENVELOPE)),
+        (section(15, 0x14, envelope()), 0, 0, 16 + len(envelope())),
+        (section(15, 0x94, envelope()), 0, 0, 16 + len(envelope())),
     ],
 )
 def test_chunk_calculation(contents, start_offset, expected_start, expected_end):
@@ -49,7 +73,7 @@ def test_chunk_calculation(contents, start_offset, expected_start, expected_end)
 
 
 def test_encrypted_chunk_is_reported():
-    file = File.from_bytes(section(4, 4, ENVELOPE))
+    file = File.from_bytes(section(4, 4, envelope()))
     chunk = handler.calculate_chunk(file, 0)
 
     assert chunk is not None
@@ -64,6 +88,15 @@ def test_plaintext_chunk_has_no_metadata_reports():
     assert chunk is not None
     assert not chunk.is_encrypted
     assert chunk.metadata_reports == []
+
+
+VALID_ENVELOPE = envelope()
+
+
+def _patch_envelope(payload: bytes, offset: int, data: bytes) -> bytes:
+    patched = bytearray(payload)
+    patched[offset : offset + len(data)] = data
+    return bytes(patched)
 
 
 @pytest.mark.parametrize(
@@ -83,11 +116,57 @@ def test_plaintext_chunk_has_no_metadata_reports():
         (section(4, 0x40, b"payload"), InvalidInputFormat),
         (section(4, 0x100, b"payload"), InvalidInputFormat),
         (section(4, 0xFFFF0000, b"payload"), InvalidInputFormat),
+        # encryption modifier bits without the encrypted bit
+        (section(4, 0x10, b"payload"), InvalidInputFormat),
+        (section(4, 0x80, b"payload"), InvalidInputFormat),
+        (section(4, 0x90, b"payload"), InvalidInputFormat),
+        (section(4, 0x11, b"payload"), InvalidInputFormat),
         # encrypted flag without the envelope magic
         (section(4, 4, b"not an envelope payload"), InvalidInputFormat),
         (section(6, 0x14, b"not an envelope payload"), InvalidInputFormat),
-        # encrypted flag with a truncated envelope magic
-        (section(4, 4, ENVELOPE_MAGIC[:2]), InvalidInputFormat),
+        # envelope magic only, or truncated right after the magic
+        (section(4, 4, ENVELOPE_MAGIC), InvalidInputFormat),
+        (section(4, 4, ENVELOPE_MAGIC + b"\x00" * 10), InvalidInputFormat),
+        # envelope header length below the structural minimum
+        (
+            section(
+                4, 4, _patch_envelope(VALID_ENVELOPE, 4, (0x39).to_bytes(4, "big"))
+            ),
+            InvalidInputFormat,
+        ),
+        # envelope header length beyond the payload
+        (
+            section(
+                4, 4, _patch_envelope(VALID_ENVELOPE, 4, (0x1000).to_bytes(4, "big"))
+            ),
+            InvalidInputFormat,
+        ),
+        # unexpected recipient length
+        (
+            section(4, 4, _patch_envelope(VALID_ENVELOPE, 0x14, b"\x10")),
+            InvalidInputFormat,
+        ),
+        # RSA blob not capped by the header
+        (
+            section(
+                4, 4, _patch_envelope(VALID_ENVELOPE, 0x2E, (0x80).to_bytes(4, "big"))
+            ),
+            InvalidInputFormat,
+        ),
+        # unsupported cipher id
+        (
+            section(
+                4, 4, _patch_envelope(VALID_ENVELOPE, 0x132, (2).to_bytes(4, "big"))
+            ),
+            InvalidInputFormat,
+        ),
+        # data length inconsistent with the payload size
+        (
+            section(
+                4, 4, _patch_envelope(VALID_ENVELOPE, 0x136, (0x40).to_bytes(4, "big"))
+            ),
+            InvalidInputFormat,
+        ),
     ],
 )
 def test_invalid_chunk(contents, error):

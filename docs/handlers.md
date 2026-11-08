@@ -1362,7 +1362,7 @@
 
     === "Limitations"
 
-        - Encrypted sections are reported but not decrypted, as decryption requires device specific RSA-2048 private keys; carved sections can be decrypted offline with the matching key.
+        - Encrypted sections are reported but not decrypted or extracted, as decryption requires device specific RSA-2048 private keys; the carved sections can be decrypted offline with the matching key.
 ## SquashFS (v1)
 
 !!! success "Fully supported"
