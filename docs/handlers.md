@@ -37,7 +37,7 @@
     | [`HP IPKG`](#hp-ipkg) | ARCHIVE | :octicons-check-16: |
     | [`INSTAR BNEG`](#instar-bneg) | ARCHIVE | :octicons-check-16: |
     | [`INSTAR HD`](#instar-hd) | ARCHIVE | :octicons-check-16: |
-    | [`IROBOT APKG`](#irobot-apkg) | ARCHIVE | :octicons-alert-fill-12: |
+    | [`IROBOT APKG`](#irobot-apkg) | ARCHIVE | :octicons-check-16: |
     | [`IROBOT OTPS`](#irobot-otps) | ARCHIVE | :octicons-check-16: |
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (NEW)`](#jffs2-new) | FILESYSTEM | :octicons-check-16: |
@@ -705,11 +705,11 @@
     === "References"
 ## iRobot aPKG
 
-!!! warning "Partially supported"
+!!! success "Fully supported"
 
     === "Description"
 
-        iRobot aPKG containers wrap classic robot firmware packages (marconi, aero, ningbo, congo, roomba9xx, elpaso) and SigmaStar-based packages (100/200/400/500/700 series). Entry-table payloads are carved out by label, sequential-table payloads by entry id, and SigmaStar packages yield the embedded gzip member, verified against the package's MD5 digest.
+        iRobot aPKG containers wrap classic robot firmware packages (marconi, aero, ningbo, congo, roomba9xx, elpaso) and SigmaStar-based packages (100/200/400/500/700 series). Entry-table payloads are carved out by label, sequential-table payloads by entry id, and SigmaStar packages yield the embedded gzip member, verified against the package's MD5 digest. The package trailer is verified as an RSA-2048 signature over the whole package against the OTA public key the robots' own updater ships; verification failures are reported as extraction problems.
 
         ---
 
@@ -719,10 +719,6 @@
     === "References"
 
         - [iRobot firmware archive aPKG analysis](https://github.com/BookCatKid/irobot-firmware-archive/blob/6dee59f86f5991d18b9bd06c089277128ca8aa22/src/irobot_firmware/analyze.py){ target="_blank" }
-
-    === "Limitations"
-
-        - The signature trailer is not verified; its scheme and key are not part of the package.
 ## iRobot Otps
 
 !!! success "Fully supported"
