@@ -1,23 +1,59 @@
+import datetime
 import hashlib
 import struct
 from pathlib import Path
 
 import pytest
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.x509.oid import NameOID
 
 from unblob.file_utils import File, InvalidInputFormat, SeekError
 from unblob.handlers.archive.irobot.otps import IRobotOtpsExtractor, IRobotOtpsHandler
 from unblob.report import ExtractionProblem
 
-CERT = b"\x30\x82" + b"\x01" * 100
 OID = bytes.fromhex("060c2b06010401838c3c04010105")
 SALG = bytes.fromhex("300d06092a864886f70d01010b0500")
+
+_KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+_NAME = x509.Name(
+    [
+        x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Test Corp"),
+        x509.NameAttribute(NameOID.COMMON_NAME, "Test Otps Cert"),
+    ]
+)
+CERT = (
+    x509.CertificateBuilder()
+    .subject_name(_NAME)
+    .issuer_name(_NAME)
+    .public_key(_KEY.public_key())
+    .serial_number(1)
+    .not_valid_before(datetime.datetime(2020, 1, 1))
+    .not_valid_after(datetime.datetime(2040, 1, 1))
+    .sign(_KEY, hashes.SHA256())
+    .public_bytes(serialization.Encoding.DER)
+)
 
 
 def tlv(tag: bytes, value: bytes) -> bytes:
     return tag + struct.pack("<I", len(value)) + value
 
 
-def item(index: int, keyt: bytes, payload: bytes, sha: bytes | None = None) -> bytes:
+def sign(data: bytes) -> bytes:
+    sig = _KEY.sign(data, padding.PKCS1v15(), hashes.SHA256())
+    return tlv(b"Sign", tlv(b"salg", SALG) + tlv(b"blob", sig))
+
+
+def item(
+    index: int,
+    keyt: bytes,
+    payload: bytes,
+    sha: bytes | None = None,
+    *,
+    bad_sig: bool = False,
+) -> bytes:
     if sha is None:
         sha = hashlib.sha256(payload).digest()
     iexh = (
@@ -33,12 +69,13 @@ def item(index: int, keyt: bytes, payload: bytes, sha: bytes | None = None) -> b
         + tlv(b"keyt", b"key type " + keyt + b"\0")
         + tlv(b"Iexh", iexh)
     )
-    otis = tlv(b"Sdat", sdat) + b"\xaa" * 551  # signature tail
+    # sign other data to produce a valid-looking but wrong signature
+    otis = tlv(b"Sdat", sdat) + sign(b"not the sdat" if bad_sig else sdat)
     otie = tlv(b"indx", bytes([index])) + tlv(b"data", payload)
     return tlv(b"Otim", tlv(b"Otis", otis) + tlv(b"Otie", otie))
 
 
-def otps(items: list[bytes], trailer: bytes = b"") -> bytes:
+def otps(items: list[bytes], trailer: bytes = b"", *, do_sign: bool = True) -> bytes:
     otpc = tlv(b"Otpc", b"".join(items))
     sdat = (
         tlv(b"cnid", OID) + tlv(b"salg", SALG) + tlv(b"Auth", tlv(b"cert", CERT)) + otpc
@@ -46,7 +83,11 @@ def otps(items: list[bytes], trailer: bytes = b"") -> bytes:
     body = (
         tlv(b"cmnt", b"Generated with otagen v2.0\0")
         + tlv(b"Sdat", sdat)
-        + tlv(b"Sign", b"\xbb" * 512)
+        + (
+            sign(sdat)
+            if do_sign
+            else tlv(b"Sign", tlv(b"salg", SALG) + tlv(b"blob", b"\xbb" * 256))
+        )
     )
     return b"Otps" + struct.pack("<I", len(body)) + body + trailer
 
@@ -92,9 +133,11 @@ def test_extract(tmp_path: Path):
     blob = otps([item(0, b"A", PAYLOAD_TZ), item(1, b"B", PAYLOAD_RPM)])
     inpath = tmp_path / "in.irobot_otps"
     inpath.write_bytes(blob)
-    IRobotOtpsExtractor().extract(inpath, tmp_path)
+    result = IRobotOtpsExtractor().extract(inpath, tmp_path)
     assert (tmp_path / "TZ").read_bytes() == PAYLOAD_TZ
     assert (tmp_path / "RPM").read_bytes() == PAYLOAD_RPM
+    # valid package and item signatures produce no problems
+    assert result.reports == []
 
 
 def test_extract_records_hash_mismatch(tmp_path: Path):
@@ -108,6 +151,31 @@ def test_extract_records_hash_mismatch(tmp_path: Path):
     problems = [p for p in result.reports if isinstance(p, ExtractionProblem)]
     assert len(problems) == 1
     assert "SHA-256 mismatch" in problems[0].problem
+
+
+def test_extract_records_signature_mismatch(tmp_path: Path):
+    # the item signature does not match its Sdat; the package signature
+    # still covers the final bytes and verifies
+    blob = otps([item(0, b"A", PAYLOAD_TZ, bad_sig=True)])
+    inpath = tmp_path / "in.irobot_otps"
+    inpath.write_bytes(blob)
+    result = IRobotOtpsExtractor().extract(inpath, tmp_path)
+    assert (tmp_path / "TZ").read_bytes() == PAYLOAD_TZ
+    problems = [p for p in result.reports if isinstance(p, ExtractionProblem)]
+    assert len(problems) == 1
+    assert "TZ signature verification failed" in problems[0].problem
+
+
+def test_extract_records_package_signature_mismatch(tmp_path: Path):
+    # do_sign writes a garbage signature blob instead of signing the Sdat
+    blob = otps([item(0, b"A", PAYLOAD_TZ)], do_sign=False)
+    inpath = tmp_path / "in.irobot_otps"
+    inpath.write_bytes(blob)
+    result = IRobotOtpsExtractor().extract(inpath, tmp_path)
+    assert (tmp_path / "TZ").read_bytes() == PAYLOAD_TZ
+    problems = [p for p in result.reports if isinstance(p, ExtractionProblem)]
+    assert len(problems) == 1
+    assert "package signature verification failed" in problems[0].problem
 
 
 def test_extract_unknown_key_type(tmp_path: Path):
@@ -133,6 +201,12 @@ def test_extract_unknown_key_type(tmp_path: Path):
         lambda b: otps_rebuild(b, size_lie=True),
         # a second Sdat block inside the package
         lambda b: otps_rebuild(b, dup_sdat=True),
+        # package missing the Sign block
+        lambda b: otps_rebuild(b, drop_sign=True),
+        # package missing the signing certificate
+        lambda b: otps_rebuild(b, drop_cert=True),
+        # item missing its Sign element
+        lambda b: otps_rebuild(b, drop_item_sign=True),
     ],
 )
 def test_invalid(mutate):
@@ -144,7 +218,15 @@ def test_invalid(mutate):
 
 
 def otps_rebuild(
-    blob: bytes, *, drop_sdat=False, drop_otie=False, size_lie=False, dup_sdat=False
+    blob: bytes,
+    *,
+    drop_sdat=False,
+    drop_otie=False,
+    size_lie=False,
+    dup_sdat=False,
+    drop_sign=False,
+    drop_cert=False,
+    drop_item_sign=False,
 ) -> bytes:
     """Rebuild small invalid variants."""
     if drop_sdat:
@@ -166,6 +248,16 @@ def otps_rebuild(
         # turn the trailing Sign element into a second Sdat
         idx = blob.rfind(b"Sign")
         return blob[:idx] + b"Sdat" + blob[idx + 4 :]
+    if drop_sign:
+        idx = blob.rfind(b"Sign")
+        return blob[:idx] + b"jUnk" + blob[idx + 4 :]
+    if drop_cert:
+        idx = blob.find(b"cert")
+        return blob[:idx] + b"xxxx" + blob[idx + 4 :]
+    if drop_item_sign:
+        # the first Sign element belongs to the item's Otis
+        idx = blob.find(b"Sign")
+        return blob[:idx] + b"jUnk" + blob[idx + 4 :]
     return blob
 
 
