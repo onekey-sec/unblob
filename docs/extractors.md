@@ -40,6 +40,7 @@ The following executables found installed, which are needed by unblob:
     ubireader_extract_files     ✓
     ubireader_extract_images    ✓
     unar                        ✓
+    unshield                    ✓
     zstd                        ✓
 ```
 
@@ -65,6 +66,7 @@ for current versions.
 | partclone                   | `partclone.restore`                                   | 0.3.39          | ❌            | https://github.com/Thomas-Tsai/partclone                         |
 | android-sdk-libsparse-utils | `simg2img`                                            | 8.1.0           | ❌            | https://packages.debian.org/unstable/android-sdk-libsparse-utils |
 | unar                        | `unar`                                                | 1.10.1          | ❌            | https://theunarchiver.com/command-line                           |
+| unshield                    | `unshield`                                            | 1.6.2           | ❌            | https://github.com/twogood/unshield                              |
 | sasquatch                   | `sasquatch`, `sasquatch-v4be`                         | 1.0             | ❌            | https://github.com/onekey-sec/sasquatch                          |
 | jefferson                   | `jefferson`                                           | master          | ✅            | https://github.com/onekey-sec/jefferson                          |
 | ubireader                   | `ubireader_extract_files`, `ubireader_extract_images` | master          | ✅            | https://github.com/onekey-sec/ubi_reader                         |
