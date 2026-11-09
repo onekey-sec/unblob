@@ -527,7 +527,7 @@ class FileSystem:
             for chunk in chunks:
                 f.write(chunk)
 
-    def carve(self, path: Path, file: File, start_offset: int, size: int):
+    def carve(self, path: Path, file: RandomReader, start_offset: int, size: int):
         logger.debug("carving file", path=path, _verbosity=3)
         safe_path = self._get_extraction_path(path, "carve")
 
