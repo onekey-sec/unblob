@@ -21,6 +21,7 @@ from unblob.models import (
     StructHandler,
     ValidChunk,
 )
+from unblob.report import ExtractionProblem
 
 UFS_C_DEFINITION = """
         #define UFS_MAXMNTLEN    512
@@ -334,17 +335,32 @@ class UFSParser:
             self.super_block.fs_inodes_per_group * self.super_block.fs_ncg
         )
 
-    def walk_extract(self, fs: FileSystem, ino_num: int, path: Path):  # noqa: C901
+    def walk_extract(  # noqa: C901
+        self, fs: FileSystem, ino_num: int, path: Path, visited_dirs: set[int]
+    ):
         inode = self.read_inode(ino_num)
         file_type = stat.S_IFMT(inode.mode)
 
         match file_type:
             case stat.S_IFDIR:
+                # Apart from "." and "..", a directory has a single entry
+                # pointing to it. Entries pointing to an already extracted
+                # directory would loop or repeat its whole subtree.
+                if ino_num in visited_dirs:
+                    fs.record_problem(
+                        ExtractionProblem(
+                            problem=f"Directory inode {ino_num} is already extracted.",
+                            resolution="Skipped.",
+                            path=str(path),
+                        )
+                    )
+                    return
+                visited_dirs.add(ino_num)
                 fs.mkdir(path, exist_ok=True)
                 for child_ino, name in self.parse_dentries(inode):
                     if name in (".", ".."):
                         continue
-                    self.walk_extract(fs, child_ino, path / name)
+                    self.walk_extract(fs, child_ino, path / name, visited_dirs)
             case stat.S_IFREG:
                 fs.write_chunks(path, self.read_file_content(inode))
             case stat.S_IFLNK:
@@ -549,7 +565,7 @@ class UFSExtractor(Extractor):
         fs = FileSystem(outdir)
         with File.from_path(inpath) as f:
             parser = self.parser(f, self.sb_offset)
-            parser.walk_extract(fs, UFS_ROOT_INO, Path("/"))
+            parser.walk_extract(fs, UFS_ROOT_INO, Path("/"), set())
         return ExtractResult(reports=fs.problems)
 
 

@@ -4,7 +4,12 @@ import struct
 import pytest
 
 from unblob.file_utils import File, InvalidInputFormat, StructParser
-from unblob.handlers.filesystem.ufs import UFS_C_DEFINITION, UFS2Parser
+from unblob.handlers.filesystem.ufs import (
+    UFS_C_DEFINITION,
+    UFS2Parser,
+    UFSExtractor,
+)
+from unblob.report import ExtractionProblem
 
 FSIZE = 512
 IBLKNO = 4
@@ -111,3 +116,107 @@ def test_read_file_content_rejects_block_pointer_past_filesystem():
 def test_read_file_content_reads_valid_data_block():
     parser = UFS2Parser(File.from_bytes(_build_block_pointer_image(DATA_FRAGMENT)), 0)
     assert b"".join(parser.read_file_content(parser.read_inode(2))) == DATA_MARKER
+
+
+ROOT_INO = 2
+DIR_INO = 3
+FILE_INO = 4
+FILE_DATA = b"apple"
+# data fragments start right after the 16 inode table entries
+TREE_DBLKNO = IBLKNO + INODES_PER_GROUP * 256 // FSIZE
+
+
+def _dir_block(entries: list[tuple[str, int]]) -> bytes:
+    block = b""
+    for i, (name, ino) in enumerate(entries):
+        reclen = (8 + len(name) + 3) & ~3
+        if i == len(entries) - 1:
+            reclen = FSIZE - len(block)
+        # struct ufs_dirent: d_ino, d_reclen, d_type, d_namlen, d_name
+        entry = struct.pack("<IHBB", ino, reclen, 0, len(name)) + name.encode()
+        block += entry.ljust(reclen, b"\x00")
+    return block
+
+
+def _inode(mode: int, size: int, block: int) -> bytes:
+    inode = bytearray(256)
+    struct.pack_into("<H", inode, 0, mode)
+    struct.pack_into("<Q", inode, 16, size)
+    struct.pack_into("<Q", inode, 112, block)  # direct_blocks[0]
+    return bytes(inode)
+
+
+def _build_tree_image(dirs: dict[int, list[tuple[str, int]]]) -> bytes:
+    """Build a UFS2 image with the given directories and one regular file."""
+    total_fragments = TREE_DBLKNO + len(dirs) + 1
+    cs = StructParser(UFS_C_DEFINITION).cparser_le
+    superblock = cs.ufs_superblock_t(bytes(bytearray(cs.ufs_superblock_t.size)))
+    superblock.fs_fsize = FSIZE
+    superblock.fs_bsize = FSIZE
+    superblock.fs_frag = 1
+    superblock.fs_ncg = 1
+    superblock.fs_inodes_per_group = INODES_PER_GROUP
+    superblock.fs_iblkno = IBLKNO
+    superblock.fs_dblkno = TREE_DBLKNO
+    superblock.fs_frags_per_group = total_fragments
+    superblock.fs_u11.fs_u2.fs_size_64 = total_fragments
+
+    image = bytearray(total_fragments * FSIZE)
+    image[: cs.ufs_superblock_t.size] = superblock.dumps()
+
+    inodes = [
+        (ino, stat.S_IFDIR | 0o755, _dir_block([(".", ino), ("..", ino), *entries]))
+        for ino, entries in dirs.items()
+    ]
+    inodes.append((FILE_INO, stat.S_IFREG | 0o644, FILE_DATA))
+    for block, (ino, mode, data) in enumerate(inodes, start=TREE_DBLKNO):
+        image[block * FSIZE : block * FSIZE + len(data)] = data
+        offset = IBLKNO * FSIZE + ino * 256
+        image[offset : offset + 256] = _inode(mode, len(data), block)
+    return bytes(image)
+
+
+@pytest.mark.parametrize(
+    "dirs, skipped_ino, skipped_path",
+    [
+        pytest.param(
+            {
+                ROOT_INO: [("a", DIR_INO), ("b", DIR_INO)],
+                DIR_INO: [("f", FILE_INO)],
+            },
+            DIR_INO,
+            "/b",
+            id="shared-directory",
+        ),
+        pytest.param(
+            {
+                ROOT_INO: [("a", DIR_INO)],
+                DIR_INO: [("f", FILE_INO), ("up", ROOT_INO)],
+            },
+            ROOT_INO,
+            "/a/up",
+            id="loop-to-ancestor",
+        ),
+    ],
+)
+def test_walk_extract_skips_directory_already_extracted(
+    tmp_path, dirs, skipped_ino, skipped_path
+):
+    image_path = tmp_path / "ufs2.img"
+    image_path.write_bytes(_build_tree_image(dirs))
+    outdir = tmp_path / "out"
+
+    result = UFSExtractor(UFS2Parser, 0).extract(image_path, outdir)
+
+    assert sorted(p.relative_to(outdir).as_posix() for p in outdir.rglob("*")) == [
+        "a",
+        "a/f",
+    ]
+    assert (outdir / "a" / "f").read_bytes() == FILE_DATA
+    assert result.reports == [
+        ExtractionProblem(
+            problem=f"Directory inode {skipped_ino} is already extracted.",
+            resolution="Skipped.",
+            path=skipped_path,
+        )
+    ]
