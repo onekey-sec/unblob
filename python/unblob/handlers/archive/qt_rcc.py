@@ -28,7 +28,6 @@ import contextlib
 import dataclasses
 import io
 import zlib
-from collections.abc import Iterator
 from pathlib import Path
 
 import zstandard
@@ -244,6 +243,12 @@ class RccParser:
         else:
             data_offset = offset + header.data_offset + body.data_offset
             data_len = self._read_data_len(file, data_offset)
+            # zlib payloads must hold at least the 4-byte uncompressed
+            # size prefix before the compressed stream
+            if flags & COMPRESSED_ZLIB_FLAG and data_len < 4:
+                raise InvalidInputFormat(
+                    "RCC zlib payload smaller than its size prefix."
+                )
             extent = max(extent, data_offset + 4 + data_len - offset)
             node = RccNode(
                 index,
@@ -263,6 +268,10 @@ class RccParser:
             raise InvalidInputFormat(f"Unknown RCC node flags: {flags:#x}.")
         if flags & COMPRESSED_ZLIB_FLAG and flags & COMPRESSED_ZSTD_FLAG:
             raise InvalidInputFormat("RCC node with two compression algorithms.")
+        if flags & DIRECTORY_FLAG and flags & (
+            COMPRESSED_ZLIB_FLAG | COMPRESSED_ZSTD_FLAG
+        ):
+            raise InvalidInputFormat("RCC directory node with compression flag.")
 
     def _read_name(
         self, file: File, offset: int, header, name_offset: int
@@ -399,13 +408,14 @@ class QtRccExtractor(Extractor):
         # zlib payloads carry a 4-byte big-endian uncompressed size prefix
         file.seek(payload_offset, io.SEEK_SET)
         declared_size = int.from_bytes(file.read(4), "big")
+        decompressor = zlib.decompressobj()
         try:
-            chunks = self._zlib_chunks(file, payload_offset + 4, node.data_len - 4)
             with fs.open(out_path, "wb+") as outfile:
                 produced = 0
-                for chunk in chunks:
-                    produced += len(chunk)
-                    outfile.write(chunk)
+                for chunk in iterate_file(file, payload_offset + 4, node.data_len - 4):
+                    out = decompressor.decompress(chunk)
+                    produced += len(out)
+                    outfile.write(out)
         except zlib.error as e:
             fs.unlink(out_path)
             fs.record_problem(
@@ -423,6 +433,22 @@ class QtRccExtractor(Extractor):
                         f"RCC entry size mismatch: declared "
                         f"{declared_size}, got {produced}"
                     ),
+                    resolution="Extracted anyway.",
+                    path=str(out_path),
+                )
+            )
+        if not decompressor.eof:
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="Truncated zlib stream in RCC entry",
+                    resolution="Extracted anyway.",
+                    path=str(out_path),
+                )
+            )
+        elif decompressor.unused_data:
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="Trailing data after zlib stream in RCC entry",
                     resolution="Extracted anyway.",
                     path=str(out_path),
                 )
@@ -450,11 +476,23 @@ class QtRccExtractor(Extractor):
                     path=str(out_path),
                 )
             )
-
-    def _zlib_chunks(self, file: File, offset: int, size: int) -> Iterator[bytes]:
-        decompressor = zlib.decompressobj()
-        for chunk in iterate_file(file, offset, size):
-            yield decompressor.decompress(chunk)
+            return
+        if not decompressor.eof:
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="Truncated zstd stream in RCC entry",
+                    resolution="Extracted anyway.",
+                    path=str(out_path),
+                )
+            )
+        elif decompressor.unused_data:
+            fs.record_problem(
+                ExtractionProblem(
+                    problem="Trailing data after zstd stream in RCC entry",
+                    resolution="Extracted anyway.",
+                    path=str(out_path),
+                )
+            )
 
 
 class QtRccHandler(StructHandler):

@@ -175,6 +175,18 @@ def _patch(contents: bytes, offset: int, data: bytes) -> bytes:
             int.from_bytes(SAMPLE_V3[8:12], "big") + 4,
             (ZLIB | ZSTD).to_bytes(2, "big"),
         ),
+        # directory node carrying a compression flag
+        _patch(
+            SAMPLE_V3,
+            int.from_bytes(SAMPLE_V3[8:12], "big") + 4,
+            (DIR | ZLIB).to_bytes(2, "big"),
+        ),
+        # zlib payload shorter than its 4-byte size prefix
+        _patch(
+            make_rcc({"f": (b"x" * 50, ZLIB)}, version=3, file_flags=ZLIB),
+            24,
+            (3).to_bytes(4, "big"),
+        ),
         # first_child out of bounds
         _patch(
             SAMPLE_V3,
@@ -227,6 +239,8 @@ def _patch(contents: bytes, offset: int, data: bytes) -> bytes:
         "root-not-dir",
         "node-unknown-flag",
         "node-two-compressions",
+        "compressed-directory",
+        "zlib-payload-under-prefix",
         "child-index-out-of-bounds",
         "child-count-out-of-bounds",
         "truncated-tree",
@@ -474,3 +488,84 @@ def test_extract_uncreatable_dir_skips_subtree(tmp_path: Path, monkeypatch):
     assert len(result.reports) == 1
     assert isinstance(result.reports[0], ExtractionProblem)
     assert "Cannot create RCC directory" in result.reports[0].problem
+
+
+def _file_rcc(name: str, payload: bytes, flags: int = 0) -> bytes:
+    """Two-node rcc (root dir + one file) with a raw payload of choice."""
+    names = name_entry(utf16(name))
+    tree = struct.pack(">IHIIQ", 0, DIR, 1, 1, 0) + struct.pack(
+        ">IHHHIQ", 0, flags, 0, 1, 0, 0
+    )
+    data = struct.pack(">I", len(payload)) + payload
+    data_off = 24
+    names_off = data_off + len(data)
+    tree_off = names_off + len(names)
+    return (
+        MAGIC
+        + struct.pack(">IIIII", 3, tree_off, data_off, names_off, 0)
+        + data
+        + names
+        + tree
+    )
+
+
+def _extract(tmp_path: Path, rcc: bytes):
+    inpath = tmp_path / "in.qt_rcc"
+    inpath.write_bytes(rcc)
+    outdir = tmp_path / "out"
+    outdir.mkdir()
+    return QtRccExtractor().extract(inpath, outdir), outdir
+
+
+def test_extract_truncated_zlib_stream(tmp_path: Path):
+    # cutting the stream tail produces complete output but must still
+    # be flagged: zlib.decompressobj() does not raise on truncation
+    raw = b"truncation test " * 20
+    stream = zlib.compress(raw)[:-4]
+    rcc = _file_rcc("f", struct.pack(">I", len(raw)) + stream, ZLIB)
+
+    result, outdir = _extract(tmp_path, rcc)
+
+    assert (outdir / "f").read_bytes() == raw
+    assert len(result.reports) == 1
+    assert isinstance(result.reports[0], ExtractionProblem)
+    assert "Truncated zlib stream" in result.reports[0].problem
+
+
+def test_extract_trailing_data_after_zlib_stream(tmp_path: Path):
+    raw = b"trailing test " * 20
+    payload = struct.pack(">I", len(raw)) + zlib.compress(raw) + b"JUNK"
+    rcc = _file_rcc("f", payload, ZLIB)
+
+    result, outdir = _extract(tmp_path, rcc)
+
+    assert (outdir / "f").read_bytes() == raw
+    assert len(result.reports) == 1
+    assert isinstance(result.reports[0], ExtractionProblem)
+    assert "Trailing data" in result.reports[0].problem
+
+
+def test_extract_truncated_zstd_stream(tmp_path: Path):
+    raw = b"truncation test " * 20
+    stream = zstandard.ZstdCompressor().compress(raw)[:-5]
+    rcc = _file_rcc("f", stream, ZSTD)
+
+    result, _outdir = _extract(tmp_path, rcc)
+
+    assert len(result.reports) == 1
+    assert isinstance(result.reports[0], ExtractionProblem)
+    assert "Truncated zstd stream" in result.reports[0].problem
+
+
+def test_extract_corrupt_zstd(tmp_path: Path):
+    raw = b"corruption test " * 20
+    stream = bytearray(zstandard.ZstdCompressor().compress(raw))
+    stream[5:8] = b"\xff\xff\xff"
+    rcc = _file_rcc("f", bytes(stream), ZSTD)
+
+    result, outdir = _extract(tmp_path, rcc)
+
+    assert not (outdir / "f").exists()
+    assert len(result.reports) == 1
+    assert isinstance(result.reports[0], ExtractionProblem)
+    assert "zstd" in result.reports[0].problem
