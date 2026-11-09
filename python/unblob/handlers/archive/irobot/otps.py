@@ -27,7 +27,10 @@ whole package ``Sdat``; each item signature covers the item's ``Sdat``).
 Signatures are verified during extraction against the RSA key of the
 embedded ``cert`` certificate; the certificate uses non-canonical encodings
 rejected by strict X.509 parsers, so its public key is extracted with a
-minimal DER walk instead.
+minimal DER walk instead. Since the certificate ships inside the package,
+verification proves the package is internally consistent with that
+certificate rather than that it originated from iRobot (unlike the aPKG
+handler, which checks the trailer against a known public key).
 
 The chunk ends at the declared ``total_len``; a small ``__PACKET INFO__``
 text footer can follow the package (wichita) and is left to the generic
@@ -77,6 +80,14 @@ C_DEFINITIONS = r"""
 HEADER_LEN = 8
 MAX_TLV_ELEMENTS = 512
 HASH_CHUNK_SIZE = 1024 * 1024
+SHA256_LEN = 32
+
+# bounds for values read into memory, far above observed sizes
+MAX_CERT_SIZE = 32 * 1024  # ~1.6 KiB observed
+MAX_SIGNATURE_SIZE = 4 * 1024  # RSA-4096 blob is 512 B
+MAX_SALG_SIZE = 256  # DER OID is 15 B
+MAX_KEYT_SIZE = 256  # "key type J" is ~11 B
+MAX_COMMENT_SIZE = 4 * 1024  # < 200 B observed
 
 # top-level tags observed across the preserved package catalog
 TOP_LEVEL_TAGS = {b"cmnt", b"Sdat", b"Sign"}
@@ -128,6 +139,13 @@ def _read_u32(file: File, offset: int) -> int:
 def _read_bytes(file: File, offset: int, size: int) -> bytes:
     file.seek(offset, io.SEEK_SET)
     return file.read(size)
+
+
+def _read_bounded(file: File, offset: int, size: int, limit: int, what: str):
+    """Read a TLV value into memory, rejecting absurd declared sizes."""
+    if size > limit:
+        raise InvalidInputFormat(f"Otps {what} field is too large.")
+    return _read_bytes(file, offset, size)
 
 
 def _der_tlv(buf: bytes, offset: int):
@@ -195,9 +213,13 @@ def _parse_sign(file: File, start: int, end: int) -> OtpsSignature:
     salg = blob = None
     for tag, value, next_offset in _iter_tlvs(file, start, end):
         if tag == b"salg":
-            salg = _read_bytes(file, value, next_offset - value)
+            salg = _read_bounded(
+                file, value, next_offset - value, MAX_SALG_SIZE, "salg"
+            )
         elif tag == b"blob":
-            blob = _read_bytes(file, value, next_offset - value)
+            blob = _read_bounded(
+                file, value, next_offset - value, MAX_SIGNATURE_SIZE, "signature"
+            )
     if blob is None:
         raise InvalidInputFormat("Otps Sign element lacks its blob.")
     return OtpsSignature(salg=salg, blob=blob)
@@ -206,7 +228,9 @@ def _parse_sign(file: File, start: int, end: int) -> OtpsSignature:
 def _parse_auth_cert(file: File, start: int, end: int) -> bytes | None:
     for tag, value, next_offset in _iter_tlvs(file, start, end):
         if tag == b"cert":
-            return _read_bytes(file, value, next_offset - value)
+            return _read_bounded(
+                file, value, next_offset - value, MAX_CERT_SIZE, "certificate"
+            )
     return None
 
 
@@ -215,12 +239,18 @@ def _parse_otis_iexh(file: File, start: int, end: int) -> dict:
     fields = {}
     for tag, value, next_offset in _iter_tlvs(file, start, end):
         if tag == b"hash":
+            if next_offset - value != SHA256_LEN:
+                raise InvalidInputFormat("Invalid Otps item hash size.")
             fields["hash"] = _read_bytes(file, value, next_offset - value).hex()
         elif tag == b"size":
+            if next_offset - value != 4:
+                raise InvalidInputFormat("Invalid Otps Iexh size field.")
             fields["size"] = _read_u32(file, value)
         elif tag == b"cmnt":
             fields["cmnt"] = (
-                _read_bytes(file, value, next_offset - value)
+                _read_bounded(
+                    file, value, next_offset - value, MAX_COMMENT_SIZE, "cmnt"
+                )
                 .split(b"\0", 1)[0]
                 .decode("ascii", "replace")
             )
@@ -234,7 +264,7 @@ def _parse_item_sdat(file: File, start: int, end: int):
     for tag, value, next_offset in _iter_tlvs(file, start, end):
         if tag == b"keyt":
             keyt = (
-                _read_bytes(file, value, next_offset - value)
+                _read_bounded(file, value, next_offset - value, MAX_KEYT_SIZE, "keyt")
                 .split(b"\0", 1)[0]
                 .decode("ascii", "replace")
             )
@@ -287,7 +317,7 @@ def _parse_otie(file: File, start: int, end: int):
     index = payload_offset = payload_size = None
     for tag, value, next_offset in _iter_tlvs(file, start, end):
         if tag == b"indx":
-            if next_offset - value > 4:
+            if not 1 <= next_offset - value <= 4:
                 raise InvalidInputFormat("Invalid Otie index size.")
             index = int.from_bytes(
                 _read_bytes(file, value, next_offset - value), "little"

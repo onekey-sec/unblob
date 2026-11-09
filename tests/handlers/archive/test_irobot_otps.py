@@ -10,7 +10,11 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.x509.oid import NameOID
 
 from unblob.file_utils import File, InvalidInputFormat, SeekError
-from unblob.handlers.archive.irobot.otps import IRobotOtpsExtractor, IRobotOtpsHandler
+from unblob.handlers.archive.irobot.otps import (
+    MAX_CERT_SIZE,
+    IRobotOtpsExtractor,
+    IRobotOtpsHandler,
+)
 from unblob.report import ExtractionProblem
 
 PKG_OID = bytes.fromhex("060c2b06010401838c3c04010104")
@@ -76,12 +80,18 @@ def item(
     return tlv(b"Otim", tlv(b"Otis", otis) + tlv(b"Otie", otie))
 
 
-def otps(items: list[bytes], trailer: bytes = b"", *, do_sign: bool = True) -> bytes:
+def otps(
+    items: list[bytes],
+    trailer: bytes = b"",
+    *,
+    do_sign: bool = True,
+    cert: bytes = CERT,
+) -> bytes:
     otpc = tlv(b"Otpc", b"".join(items))
     sdat = (
         tlv(b"cnid", PKG_OID)
         + tlv(b"salg", SALG)
-        + tlv(b"Auth", tlv(b"cert", CERT))
+        + tlv(b"Auth", tlv(b"cert", cert))
         + otpc
     )
     body = (
@@ -119,7 +129,7 @@ def test_chunk_covers_declared_length():
 
 
 def test_packet_info_trailer_is_outside_chunk():
-    trailer = b"\x00__PACKET_INFO__\nOS_VERSION=linux\n" + b"\0" * 100
+    trailer = b"\x00__PACKET INFO__\nOS_VERSION=linux\n" + b"\0" * 100
     blob = otps([item(0, b"A", PAYLOAD_TZ)], trailer)
     chunk = _chunk(blob)
     assert chunk.end_offset == len(blob) - len(trailer)
@@ -190,6 +200,24 @@ def test_extract_unknown_key_type(tmp_path: Path):
     assert (tmp_path / "Z").read_bytes() == PAYLOAD_TZ
 
 
+def _retag(blob: bytes, tag: bytes, new_tag: bytes, *, last=False) -> bytes:
+    """Rename the first (or last) occurrence of a TLV tag."""
+    idx = (blob.rfind if last else blob.find)(tag)
+    return blob[:idx] + new_tag + blob[idx + 4 :]
+
+
+def _declare_len(blob: bytes, tag: bytes, length: int, *, last=False) -> bytes:
+    """Lie about an element's declared length."""
+    idx = (blob.rfind if last else blob.find)(tag)
+    return blob[: idx + 4] + struct.pack("<I", length) + blob[idx + 8 :]
+
+
+def _set_u32(blob: bytes, tag: bytes, value: int) -> bytes:
+    """Overwrite the u32 value of a 4-byte element."""
+    idx = blob.find(tag)
+    return blob[: idx + 8] + struct.pack("<I", value) + blob[idx + 12 :]
+
+
 @pytest.mark.parametrize(
     "mutate",
     [
@@ -198,19 +226,26 @@ def test_extract_unknown_key_type(tmp_path: Path):
         # unknown top-level tag
         lambda b: b[:8] + b"junk" + b[12:],
         # no Sdat block
-        lambda b: otps_rebuild(b, drop_sdat=True),
+        lambda b: _retag(b, b"Sdat", b"cmnt"),
         # Otim missing Otie
-        lambda b: otps_rebuild(b, drop_otie=True),
+        lambda b: _retag(b, b"Otie", b"jUnk"),
         # declared item size mismatch vs data length
-        lambda b: otps_rebuild(b, size_lie=True),
+        lambda b: _set_u32(b, b"size", 999),
         # a second Sdat block inside the package
-        lambda b: otps_rebuild(b, dup_sdat=True),
+        lambda b: _retag(b, b"Sign", b"Sdat", last=True),
         # package missing the Sign block
-        lambda b: otps_rebuild(b, drop_sign=True),
+        lambda b: _retag(b, b"Sign", b"jUnk", last=True),
         # package missing the signing certificate
-        lambda b: otps_rebuild(b, drop_cert=True),
+        lambda b: _retag(b, b"cert", b"xxxx"),
         # item missing its Sign element
-        lambda b: otps_rebuild(b, drop_item_sign=True),
+        lambda b: _retag(b, b"Sign", b"jUnk"),
+        # Iexh size field declared with 8 bytes instead of 4
+        lambda b: _declare_len(b, b"size", 8),
+        # Iexh hash field declared with 16 bytes instead of 32
+        lambda b: _declare_len(b, b"hash", 16),
+        # Otie index declared with 0 or 5 bytes
+        lambda b: _declare_len(b, b"indx", 0, last=True),
+        lambda b: _declare_len(b, b"indx", 5, last=True),
     ],
 )
 def test_invalid(mutate):
@@ -221,48 +256,14 @@ def test_invalid(mutate):
         handler.calculate_chunk(file, 0)
 
 
-def otps_rebuild(
-    blob: bytes,
-    *,
-    drop_sdat=False,
-    drop_otie=False,
-    size_lie=False,
-    dup_sdat=False,
-    drop_sign=False,
-    drop_cert=False,
-    drop_item_sign=False,
-) -> bytes:
-    """Rebuild small invalid variants."""
-    if drop_sdat:
-        # replace 'Sdat' tag of the top-level element with 'cmnt'
-        idx = blob.find(b"Sdat", 8)
-        return blob[:idx] + b"cmnt" + blob[idx + 4 :]
-    if drop_otie:
-        idx = blob.find(b"Otie")
-        return blob[:idx] + b"jUnk" + blob[idx + 4 :]
-    if size_lie:
-        idx = blob.find(b"size")
-        return (
-            blob[: idx + 4]
-            + struct.pack("<I", 4)
-            + struct.pack("<I", 999)
-            + blob[idx + 16 :]
-        )
-    if dup_sdat:
-        # turn the trailing Sign element into a second Sdat
-        idx = blob.rfind(b"Sign")
-        return blob[:idx] + b"Sdat" + blob[idx + 4 :]
-    if drop_sign:
-        idx = blob.rfind(b"Sign")
-        return blob[:idx] + b"jUnk" + blob[idx + 4 :]
-    if drop_cert:
-        idx = blob.find(b"cert")
-        return blob[:idx] + b"xxxx" + blob[idx + 4 :]
-    if drop_item_sign:
-        # the first Sign element belongs to the item's Otis
-        idx = blob.find(b"Sign")
-        return blob[:idx] + b"jUnk" + blob[idx + 4 :]
-    return blob
+def test_oversized_certificate_rejected():
+    # the declared cert length fits the TLV bounds but exceeds the bound
+    # for values read into memory
+    blob = otps([item(0, b"A", PAYLOAD_TZ)], cert=b"\x30" * (MAX_CERT_SIZE + 1))
+    file = File.from_bytes(blob)
+    file.seek(0)
+    with pytest.raises(InvalidInputFormat):
+        handler.calculate_chunk(file, 0)
 
 
 def test_truncated():
