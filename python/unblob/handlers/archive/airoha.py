@@ -71,7 +71,11 @@ class AirohaExtractor(Extractor):
     def _read_sections(self, file: File) -> list:
         tlv = self._struct_parser.parse("airoha_tlv_header_t", file, Endian.LITTLE)
         while tlv.tlv_type != TlvType.MOVER_INFO:
+            if tlv.tlv_length == 0:
+                raise InvalidInputFormat("Airoha TLV with zero length, cannot advance")
             file.seek(tlv.tlv_length, io.SEEK_CUR)
+            if file.tell() >= file.size():
+                raise InvalidInputFormat("Airoha MOVER_INFO TLV not found")
             tlv = self._struct_parser.parse("airoha_tlv_header_t", file, Endian.LITTLE)
 
         mover = self._struct_parser.parse(
