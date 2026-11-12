@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import arpy
@@ -19,10 +18,6 @@ from ...models import (
 from ...report import ExtractionProblem
 
 logger = get_logger()
-
-
-HEADER_LENGTH = 0x44
-SIGNATURE_LENGTH = 0x8
 
 
 class ArExtractor(Extractor):
@@ -98,18 +93,14 @@ class ARHandler(Handler):
                 "Hit an ArchiveFormatError, we've probably hit some other kind of data",
                 exc_info=exc,
             )
-
-            # wind the cursor back the whole header length to check if we failed on
-            # the first match, which means malformed AR archive
-            ar.file.seek(-HEADER_LENGTH, os.SEEK_CUR)
-            # we check if we failed on the first match
-            if start_offset == file.tell():
+            # failing on the very first member header means this is not an AR archive
+            if not ar.headers:
                 return None
-            # otherwise we seek past the signature (failure on malformed AR archive
-            # within the whole file, not at the start)
-            ar.file.seek(SIGNATURE_LENGTH, os.SEEK_CUR)
 
+        # arpy tracks where the next member header would start, which is the end
+        # of the last member it parsed (padded to an even offset). Unlike the file
+        # position, it does not depend on how many bytes follow the archive.
         return ValidChunk(
             start_offset=start_offset,
-            end_offset=file.tell(),
+            end_offset=start_offset + ar.next_header_offset,
         )
