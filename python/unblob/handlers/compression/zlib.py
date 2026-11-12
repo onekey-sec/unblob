@@ -72,10 +72,11 @@ class ZlibHandler(Handler):
         decompressor = zlib.decompressobj()
 
         try:
-            content = file.read(DEFAULT_BUFSIZE)
-            while content and not decompressor.eof:
-                decompressor.decompress(content)
+            while not decompressor.eof:
                 content = file.read(DEFAULT_BUFSIZE)
+                if not content:
+                    break
+                decompressor.decompress(content)
 
         except zlib.error:
             raise InvalidInputFormat("invalid zlib stream") from None
