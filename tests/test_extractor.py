@@ -198,3 +198,28 @@ def test_fix_symlink_traversal_subdir(
 
     fixed_link = fix_symlink(link_path, tmpdir, task_result)
     assert fixed_link.exists() is False
+
+
+@pytest.mark.parametrize(
+    "link, target",
+    [
+        ("link_b", "/link_a/../../target_b"),
+        ("dir_3/link_c", "/link_a/../../target_c"),
+    ],
+)
+def test_fix_symlink_traversal_through_symlink(
+    link: str, target: str, tmpdir: Path, task_result: TaskResult
+):
+    # "link_a" resolves two levels deep, so the targets above stay inside tmpdir when
+    # resolved through it, but climb above tmpdir once ".." is collapsed lexically
+    tmpdir = PosixPath(tmpdir)
+    (tmpdir / "dir_1/dir_2").mkdir(parents=True)
+    (tmpdir / "link_a").symlink_to("dir_1/dir_2")
+    link_path = tmpdir / Path(link)
+    target_path = Path(target)
+
+    link_path.parent.mkdir(parents=True, exist_ok=True)
+    link_path.symlink_to(target_path)
+
+    fixed_link = fix_symlink(link_path, tmpdir, task_result)
+    assert fixed_link.is_symlink() is False
