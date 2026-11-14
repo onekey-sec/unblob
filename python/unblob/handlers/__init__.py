@@ -46,7 +46,8 @@ from .compression import (
     zlib,
     zstd,
 )
-from .executable import elf, macho, pe, xalz
+from .executable import elf, macho, xalz
+from .executable.pe import pe
 from .filesystem import (
     btrfs_stream,
     cramfs,
