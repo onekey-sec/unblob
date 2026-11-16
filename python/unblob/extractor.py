@@ -76,7 +76,11 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
     else:
         target = path.resolve()
 
-    safe = is_safe_path(outdir, target)
+    # Check the value that is written back: relpath collapses ".." lexically, while
+    # resolve() follows symlinks, so "/a/../../b" with "a" -> "x/y" resolves inside
+    # outdir but would be rewritten to "../b".
+    relative_target = os.path.relpath(outdir.joinpath(target), start=path.parent)
+    safe = is_safe_path(outdir, path.parent / relative_target)
 
     if not safe:
         logger.error("Path traversal attempt through symlink, removing", target=target)
@@ -86,7 +90,6 @@ def fix_symlink(path: Path, outdir: Path, task_result: TaskResult) -> Path:
         task_result.add_report(error_report)
         path.unlink()
     else:
-        relative_target = os.path.relpath(outdir.joinpath(target), start=path.parent)
         path.unlink()
         path.symlink_to(relative_target)
     return path
