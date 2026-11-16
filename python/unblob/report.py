@@ -52,6 +52,10 @@ class ErrorReport(Report):
     severity: Severity
 
 
+class ExtractionSkippedReport(Report):
+    reason: str
+
+
 class UnknownError(ErrorReport):
     """Describes an exception raised during file processing."""
 
@@ -343,6 +347,7 @@ class ExtendedAttributeExtractionProblem(ExtractionProblem):
 
 BUILTIN_REPORT_TYPES: tuple[type[Report], ...] = (
     ErrorReport,
+    ExtractionSkippedReport,
     UnknownError,
     CalculateChunkExceptionReport,
     CalculateMultiFileExceptionReport,

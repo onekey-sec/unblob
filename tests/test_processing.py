@@ -35,6 +35,7 @@ from unblob.processing import (
 )
 from unblob.report import (
     ChunkReport,
+    ExtractionSkippedReport,
     FileMagicReport,
     HashReport,
     MultiFileCollisionReport,
@@ -728,7 +729,13 @@ def test_multi_file_no_extraction(
     extract_dir = extraction_root / "input_extract" / "test_extract"
 
     assert not extract_dir.exists()
-    assert task_result_by_path[directory].filter_reports(MultiFileReport)
+    multi_file_reports = task_result_by_path[directory].filter_reports(MultiFileReport)
+    assert multi_file_reports
+    assert all(
+        report.extraction_reports
+        == [ExtractionSkippedReport(reason="No extractor is defined.")]
+        for report in multi_file_reports
+    )
 
 
 def test_multi_file_multi_level_content(

@@ -20,6 +20,7 @@ from .report import (
     ChunkReport,
     EncryptionMetadataReport,
     ErrorReport,
+    ExtractionSkippedReport,
     MetadataReport,
     MultiFileReport,
     RandomnessReport,
@@ -200,7 +201,9 @@ class ValidChunk(Chunk):
                 path=inpath,
                 chunk=self,
             )
-            raise ExtractError
+            raise ExtractError(
+                ExtractionSkippedReport(reason="Encrypted file is not extracted.")
+            )
 
         return self.handler.extract(inpath, outdir)
 
@@ -518,7 +521,9 @@ class DirectoryHandler(abc.ABC, Generic[DExtractor]):
     def extract(self, paths: list[Path], outdir: Path) -> ExtractResult | None:
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", paths=paths)
-            raise ExtractError
+            raise ExtractError(
+                ExtractionSkippedReport(reason="No extractor is defined.")
+            )
 
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
@@ -556,7 +561,9 @@ class Handler(abc.ABC, Generic[TExtractor]):
     def extract(self, inpath: Path, outdir: Path) -> ExtractResult | None:
         if self.EXTRACTOR is None:
             logger.debug("Skipping file: no extractor.", path=inpath)
-            raise ExtractError
+            raise ExtractError(
+                ExtractionSkippedReport(reason="No extractor is defined.")
+            )
 
         # We only extract every blob once, it's a mistake to extract the same blob again
         outdir.mkdir(parents=True, exist_ok=False)
