@@ -43,7 +43,7 @@ pip install unblob
 Then install the required external extractor tools. On Ubuntu/Debian:
 
 ```console
-sudo apt install android-sdk-libsparse-utils e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover libhyperscan-dev zstd lz4
+sudo apt install android-sdk-libsparse-utils e2fsprogs p7zip-full unar unshield zlib1g-dev liblzo2-dev lzop lziprecover libhyperscan-dev zstd lz4
 ```
 
 For SquashFS support, also install [sasquatch](https://github.com/onekey-sec/sasquatch):
