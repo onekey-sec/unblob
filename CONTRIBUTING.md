@@ -68,7 +68,7 @@ Follow the [security policy](https://github.com/onekey-sec/unblob/security/polic
 
 | Tool | Purpose |
 |------|---------|
-| Python ≥ 3.10 | Runtime |
+| Python ≥ 3.11 | Runtime |
 | [git](https://git-scm.com/download) | Version control |
 | [uv](https://docs.astral.sh/uv/getting-started/installation/) | Python package management |
 | [Rust toolchain](https://rustup.rs/) | Building native extensions |
@@ -137,7 +137,7 @@ uv run pre-commit install
 uv run pytest tests/ -v
 ```
 
-Tests are run against Python 3.10, 3.11, 3.12, 3.13, and 3.14 in CI. Integration test fixtures live in `tests/integration/` and are tracked by Git LFS — make sure LFS is set up before running them.
+Tests are run against Python 3.11, 3.12, 3.13, and 3.14 in CI. Integration test fixtures live in `tests/integration/` and are tracked by Git LFS — make sure LFS is set up before running them.
 
 ---
 
