@@ -121,7 +121,10 @@ python3.pkgs.buildPythonApplication {
   pythonImportsCheck = [ "unblob" ];
 
   makeWrapperArgs = [
-    "--prefix PATH : ${lib.makeBinPath runtimeDeps}"
+    "--prefix"
+    "PATH"
+    ":"
+    (lib.makeBinPath runtimeDeps)
   ];
 
   nativeCheckInputs =
