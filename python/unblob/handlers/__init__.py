@@ -48,6 +48,7 @@ from .compression import (
 )
 from .executable import elf, macho, xalz
 from .filesystem import (
+    apfs,
     btrfs_stream,
     cramfs,
     extfs,
@@ -75,6 +76,7 @@ __all__ = [
 ]
 
 BUILTIN_HANDLERS: Handlers = (
+    apfs.APFSHandler,
     cramfs.CramFSHandler,
     deafbead.DeafBeadHandler,
     extfs.EXTHandler,
