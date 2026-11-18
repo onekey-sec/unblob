@@ -35,6 +35,7 @@
     | [`GZIP (MULTI-VOLUME)`](#gzip-multi-volume) | COMPRESSION | :octicons-check-16: |
     | [`HP BDL`](#hp-bdl) | ARCHIVE | :octicons-check-16: |
     | [`HP IPKG`](#hp-ipkg) | ARCHIVE | :octicons-check-16: |
+    | [`INSTALLSHIELD PACKAGEFORTHEWEB`](#installshield-packagefortheweb) | ARCHIVE | :octicons-alert-fill-12: |
     | [`INSTAR BNEG`](#instar-bneg) | ARCHIVE | :octicons-check-16: |
     | [`INSTAR HD`](#instar-hd) | ARCHIVE | :octicons-check-16: |
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
@@ -673,6 +674,26 @@
     === "References"
 
         - [hpbdl](https://github.com/tylerwhall/hpbdl){ target="_blank" }
+## InstallShield PackageForTheWeb
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        Single-file InstallShield setup.exe payload (PackageForTheWeb and ISSetupStream layouts) holding the files the setup stub unpacks: MSIs, transforms, cabinets and prerequisites. Member data is obfuscated with a filename-derived key and often zlib-deflated.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Flexera (InstallShield)
+
+    === "References"
+
+        - [ISx InstallShield installer extractor](https://github.com/lifenjoiner/ISx){ target="_blank" }
+
+    === "Limitations"
+
+        - Packages of layout type 5 or newer are not recognized
 ## Instar BNEG
 
 !!! success "Fully supported"
