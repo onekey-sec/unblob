@@ -20,6 +20,7 @@ import io
 import struct
 import zlib
 from pathlib import Path
+from typing import BinaryIO
 
 from structlog import get_logger
 
@@ -61,31 +62,34 @@ FLAG_EXTRA = 4
 FLAG_NAME = 8
 
 
-def get_gzip_embedded_name(path: Path) -> str:
-    name = b""
-    with path.open("rb") as file:
-        # skip magic bytes and method
-        file.read(2)
-        (_method, flag, _last_mtime) = struct.unpack("<BBIxx", file.read(8))
-
-        if flag & FLAG_EXTRA:
-            # Read & discard the extra field, if present
-            [extra_len] = struct.unpack("<H", file.read(2))
-            file.seek(extra_len, io.SEEK_CUR)
-
-        if flag & FLAG_NAME:
-            # Read and discard a null-terminated string containing the filename
-            while True:
-                s = file.read(1)
-                if not s or s == b"\000":
-                    break
-                name += s
-
-    # return a valid, safe name without directories!
+def read_gzip_embedded_name(
+    file: BinaryIO | File,
+    *,
+    max_name_length: int | None = None,
+    encoding: str = "utf-8",
+) -> str:
+    """Read the original filename from a gzip header at the current position."""
+    name = bytearray()
+    file.read(2)
+    (_method, flag, _last_mtime) = struct.unpack("<BBIxx", file.read(8))
+    if flag & FLAG_EXTRA:
+        [extra_len] = struct.unpack("<H", file.read(2))
+        file.seek(extra_len, io.SEEK_CUR)
+    if flag & FLAG_NAME:
+        while max_name_length is None or len(name) < max_name_length:
+            char = file.read(1)
+            if not char or char == b"\0":
+                break
+            name.extend(char)
     try:
-        return Path(name.decode("utf-8")).name
+        return Path(name.decode(encoding)).name
     except UnicodeDecodeError:
         return ""
+
+
+def get_gzip_embedded_name(path: Path) -> str:
+    with path.open("rb") as file:
+        return read_gzip_embedded_name(file)
 
 
 class GZIPExtractor(Extractor):
