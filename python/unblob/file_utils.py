@@ -404,6 +404,26 @@ def read_until_past(file: File, pattern: bytes):
             return file.tell() - 1
 
 
+def deduplicate_name(
+    name: str,
+    used: set[str],
+    *,
+    duplicate_base: str | None = None,
+    start_suffix: int = 1,
+) -> str:
+    """Reserve a name, adding a deterministic suffix when it is already taken."""
+    candidate = name
+    if candidate in used:
+        base = duplicate_base if duplicate_base is not None else name
+        candidate = base
+        suffix = start_suffix
+        while candidate in used:
+            candidate = f"{base}-{suffix}"
+            suffix += 1
+    used.add(candidate)
+    return candidate
+
+
 def chop_root(path: Path):
     """Make absolute paths relative by chopping off the root."""
     if not path.is_absolute():

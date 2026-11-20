@@ -37,6 +37,7 @@
     | [`HP IPKG`](#hp-ipkg) | ARCHIVE | :octicons-check-16: |
     | [`INSTAR BNEG`](#instar-bneg) | ARCHIVE | :octicons-check-16: |
     | [`INSTAR HD`](#instar-hd) | ARCHIVE | :octicons-check-16: |
+    | [`IROBOT APKG`](#irobot-apkg) | ARCHIVE | :octicons-check-16: |
     | [`ISO 9660`](#iso-9660) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (NEW)`](#jffs2-new) | FILESYSTEM | :octicons-check-16: |
     | [`JFFS2 (OLD)`](#jffs2-old) | FILESYSTEM | :octicons-check-16: |
@@ -701,6 +702,22 @@
         - **Vendor:** Instar
 
     === "References"
+## iRobot aPKG
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        iRobot aPKG containers wrap classic robot firmware packages (marconi, aero, ningbo, congo, roomba9xx, elpaso) and SigmaStar-based packages (100/200/400/500/700 series). Entry-table payloads are named by version string, sequential-table payloads by entry id with CRC-32 verification, and SigmaStar packages yield the embedded gzip member, verified against the package's MD5 digest. Signed metapackages yield the firmware URL, TLS certificate and any additional metadata. The package trailer is verified as an RSA-2048 signature over the header and payload against the OTA production public key; verification failures are reported as extraction problems.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** iRobot
+
+    === "References"
+
+        - [iRobot firmware archive aPKG analysis](https://github.com/BookCatKid/irobot-firmware-archive/blob/6dee59f86f5991d18b9bd06c089277128ca8aa22/src/irobot_firmware/analyze.py){ target="_blank" }
 ## ISO 9660
 
 !!! success "Fully supported"
