@@ -24,7 +24,7 @@ from .archive.dlink import alpha_encimg, deafbead, encrpted_img, fpkg, shrs
 from .archive.engeniustech import engenius
 from .archive.hp import bdl, ipkg
 from .archive.instar import bneg, instar_hd
-from .archive.irobot import apkg
+from .archive.irobot import apkg, otps
 from .archive.moxa import frm
 from .archive.netgear import chk, trx
 from .archive.qnap import qnap_nas, qnap_networking
@@ -119,6 +119,7 @@ BUILTIN_HANDLERS: Handlers = (
     instar_hd.InstarHDHandler,
     ipkg.HPIPKGHandler,
     apkg.IRobotApkgHandler,
+    otps.IRobotOtpsHandler,
     sparse.SparseHandler,
     ar.ARHandler,
     arc.ARCHandler,
