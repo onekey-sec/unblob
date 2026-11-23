@@ -163,6 +163,20 @@ class SkippableFrameHandler(_LZ4HandlerBase):
         frame_size = convert_int32(file.read(FRAME_SIZE_LEN), Endian.LITTLE)
         file.seek(frame_size, io.SEEK_CUR)
         end_offset = file.tell()
+
+        next_magic = file[end_offset : end_offset + MAGIC_LEN]
+        if (
+            start_offset != 0
+            and next_magic
+            and (
+                len(next_magic) != MAGIC_LEN
+                or convert_int32(next_magic, Endian.LITTLE) not in FRAME_MAGICS
+            )
+        ):
+            raise InvalidInputFormat(
+                "Embedded LZ4 skippable frame is not followed by an LZ4 frame."
+            )
+
         return ValidChunk(start_offset=start_offset, end_offset=end_offset)
 
 
