@@ -26,6 +26,14 @@ from unblob.testing import (
 
 TEST_DATA_PATH = Path(__file__).parent / "integration"
 HANDLERS_PACKAGE_PATH = Path(handlers.__file__).parent
+EXTFS_VERSION_DEPENDENT_OUTPUTS = (
+    "attr_fastlink",
+    "attr_link",
+    "bad_link_size",
+    "high_link",
+    "long_fastlink",
+    "long_link",
+)
 
 
 def test_handler_docs_have_unique_names():
@@ -79,7 +87,11 @@ def test_all_handlers(
         reports = sandbox.run(process_file, extraction_config, input_file)
         check_result(reports)
 
-    check_output_is_the_same(output_dir, extraction_config.extract_root)
+    # debugfs 1.47.2 skips these corrupt symlinks; 1.47.4 emits them.
+    exclude = EXTFS_VERSION_DEPENDENT_OUTPUTS if handler_name == "extfs" else ()
+    check_output_is_the_same(
+        output_dir, extraction_config.extract_root, exclude=exclude
+    )
 
 
 @pytest.mark.parametrize(
