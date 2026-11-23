@@ -111,6 +111,15 @@ def test_upx_certificate_table_is_included():
         ),
         pytest.param({"packheader": build_upx_packheader(version=9)}, id="version"),
         pytest.param(
+            {"packheader": build_upx_packheader(version=0xFF)}, id="version-0xff"
+        ),
+        pytest.param({"packheader": build_upx_packheader(c_len=1)}, id="c-len-min"),
+        pytest.param(
+            # upx refuses to unpack data that did not compress
+            {"packheader": build_upx_packheader(c_len=0x200, u_len=0x200)},
+            id="incompressible",
+        ),
+        pytest.param(
             {"packheader": build_upx_packheader(format=21)}, id="unknown-format"
         ),
         pytest.param(
@@ -138,6 +147,23 @@ def test_upx_certificate_table_is_included():
 )
 def test_invalid_upx_packheader_is_not_claimed(kwargs: dict):
     assert calculate_chunk(PEHandler, build_upx_pe(**kwargs)) is None
+
+
+@pytest.mark.parametrize(
+    "decoy",
+    [
+        pytest.param(b"UPX!", id="bare-magic"),
+        pytest.param(build_upx_packheader(header_checksum=0), id="bad-checksum"),
+    ],
+)
+def test_upx_decoy_magic_before_packheader(decoy: bytes):
+    # only the packheader after the decoy is valid: every magic must be tried
+    packed = bytearray(build_upx_pe())
+    assert UPX_SECTION_TABLE_END + len(decoy) <= UPX_PACKHEADER_OFFSET
+    packed[UPX_SECTION_TABLE_END : UPX_SECTION_TABLE_END + len(decoy)] = decoy
+    chunk = calculate_chunk(PEHandler, bytes(packed))
+    assert isinstance(chunk, PEChunk)
+    assert isinstance(chunk.payload, UPXPayload)
 
 
 def test_upx_window_is_bounded(monkeypatch: pytest.MonkeyPatch):

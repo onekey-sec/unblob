@@ -35,6 +35,10 @@ C_DEFINITIONS = r"""
 UPX_MAGIC = b"UPX!"
 # the 32 byte packheader layout above starts with packheader version 10
 UPX_MIN_VERSION = 10
+# PackHeader::decodePackHeaderFromBuf refuses version 0xff ("cannot unpack UPX"), and
+# c_len or u_len below 2 ("header corrupted 4")
+UPX_INVALID_VERSION = 0xFF
+UPX_MIN_LEN = 2
 UPX_HEADER_CHECKSUM_MODULUS = 251
 # resource limit: upx writes the packheader into the few hundred bytes of header padding
 MAX_UPX_HEADER_WINDOW = 0x1000
@@ -94,38 +98,40 @@ class UPXPayload(PEPayload):
             first_raw_data, headers.section_table_end + MAX_UPX_HEADER_WINDOW
         )
         # the window bounds where the magic starts, the magic itself may cross its end
-        magic_offset = file.find(
-            UPX_MAGIC,
-            headers.start_offset + headers.section_table_end,
-            headers.start_offset + window_end + len(UPX_MAGIC) - 1,
-        )
-        if magic_offset == -1:
-            return None
-
-        file.seek(magic_offset, io.SEEK_SET)
-        try:
-            packheader = _parser.parse("upx_packheader_t", file, Endian.LITTLE)
-        except EOFError:
-            # probing: a packheader cut by the end of the file
-            return None
-        if not self._is_valid(packheader, headers, image_end):
-            return None
-        # the compressed data is inside the sections: the image is the whole payload
-        return image_end
+        search_start = headers.start_offset + headers.section_table_end
+        search_end = headers.start_offset + window_end + len(UPX_MAGIC) - 1
+        # every magic in the window is tried: a "UPX!" before the packheader (e.g. a
+        # decoy in the header padding) must not hide it
+        while (magic_offset := file.find(UPX_MAGIC, search_start, search_end)) != -1:
+            search_start = magic_offset + 1
+            file.seek(magic_offset, io.SEEK_SET)
+            try:
+                packheader = _parser.parse("upx_packheader_t", file, Endian.LITTLE)
+            except EOFError:
+                # probing: a packheader cut by the end of the file, as are later ones
+                return None
+            if self._is_valid(packheader, headers, image_end):
+                # the compressed data is inside the sections: the image is the payload
+                return image_end
+        return None
 
     @staticmethod
     def _is_valid(packheader, headers: PEHeaders, image_end: int) -> bool:
         # the header checksum gates any PE with a "UPX!" string in its header padding;
-        # the Adler-32 checksums of the data are verified by upx on extraction. The stub
-        # decompresses into the image: u_len fits in SizeOfImage, which also bounds what
-        # upx allocates by what the PE maps.
+        # the Adler-32 checksums of the data are verified by upx on extraction. The
+        # version and length checks are those of upx 4.2.2, which also refuses to
+        # unpack data that did not compress (Packer::getPackHeader). The stub
+        # decompresses into the image: u_len fits in SizeOfImage, which also bounds
+        # what upx allocates by what the PE maps.
         checksummed = packheader.dumps()[len(UPX_MAGIC) : -1]
         return (
             packheader.version >= UPX_MIN_VERSION
+            and packheader.version != UPX_INVALID_VERSION
             and sum(checksummed) % UPX_HEADER_CHECKSUM_MODULUS
             == packheader.header_checksum
             and UPX_FORMAT_MACHINES.get(packheader.format)
             == headers.file_header.machine
+            and UPX_MIN_LEN <= packheader.c_len < packheader.u_len
             and packheader.c_len <= image_end
             and packheader.u_len <= headers.optional_header.size_of_image
         )

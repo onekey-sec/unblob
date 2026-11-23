@@ -179,6 +179,9 @@ def test_coff_symbol_table_is_included():
     [
         pytest.param({"file_header": {"signature": b"PE\x00\x01"}}, id="signature"),
         pytest.param({"file_header": {"number_of_sections": 0}}, id="no-sections"),
+        pytest.param(
+            {"file_header": {"number_of_sections": 0xFFFF}}, id="too-many-sections"
+        ),
         pytest.param({"optional_header": {"magic": 0x107}}, id="optional-header-magic"),
         pytest.param(
             {"file_header": {"size_of_optional_header": 96 + 16 * 8 - 1}},

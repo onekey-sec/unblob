@@ -135,6 +135,10 @@ PE_SIGNATURE = b"PE\x00\x00"
 MAX_DATA_DIRECTORIES = 16
 # resource limit, real images have a handful of debug entries
 MAX_DEBUG_ENTRIES = 64
+# resource limit: NumberOfSections is a uint16, but "the Windows loader limits the
+# number of sections to 96" (PE format, "COFF File Header"), and the images carrying
+# a payload have a handful of sections
+MAX_SECTIONS = 96
 # COFF symbol table entries are 18 bytes, the string table starts with its uint32 length
 COFF_SYMBOL_SIZE = 18
 COFF_STRING_TABLE_LENGTH_SIZE = 4
@@ -186,9 +190,12 @@ class PEHeaders:
         file_header = _parser.parse("pe_file_header_t", file, Endian.LITTLE)
         if file_header.signature != PE_SIGNATURE:
             raise InvalidInputFormat("Missing PE signature")
-        # number_of_sections is a uint16, which bounds the section table
         if not file_header.number_of_sections:
             raise InvalidInputFormat("PE without sections")
+        if file_header.number_of_sections > MAX_SECTIONS:
+            raise InvalidInputFormat(
+                f"Too many sections: {file_header.number_of_sections}"
+            )
 
         optional_header = cls._parse_optional_header(file, file_header)
         data_directories = [
