@@ -104,12 +104,7 @@ class SHRSHandler(StructHandler):
         if not self.is_valid_header(header, file):
             raise InvalidInputFormat("Invalid SHRS header.")
 
-        cipher = Cipher(algorithms.AES(KEY), modes.CBC(header.iv))
-        decryptor = cipher.decryptor()
-        read_bytes = 0
-
-        while read_bytes < header.file_size:
-            read_bytes += len(decryptor.update(file.read(1024)))
-        end_offset = file.tell()
-
-        return ValidChunk(start_offset=start_offset, end_offset=end_offset)
+        return ValidChunk(
+            start_offset=start_offset,
+            end_offset=start_offset + len(header) + header.file_size,
+        )
