@@ -1,10 +1,11 @@
-#/bin/sh -xeu
+#!/bin/sh -xeu
 
 apt-get update
 
 apt-get install --no-install-recommends -y \
     android-sdk-libsparse-utils \
     curl \
+    e2fsprogs \
     erofs-utils \
     lz4 \
     lziprecover \
@@ -42,9 +43,12 @@ curl -L -o sasquatch_1.0.deb "https://github.com/onekey-sec/sasquatch/releases/d
 dpkg -i sasquatch_1.0.deb
 rm -f sasquatch_1.0.deb
 
-curl -L -o libext2fs2_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/libext2fs2_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
-curl -L -o e2fsprogs_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/e2fsprogs_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
-curl -L -o libss2_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/libss2_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
-dpkg -i libext2fs2_1.47.0-3.ok2.deb libss2_1.47.0-3.ok2.deb
-dpkg -i e2fsprogs_1.47.0-3.ok2.deb
-rm -f libext2fs2_1.47.0-3.ok2.deb libss2_1.47.0-3.ok2.deb e2fsprogs_1.47.0-3.ok2.deb
+# Our debugfs fix was released upstream in 1.47.2 (onekey-sec/unblob#1252).
+if dpkg --compare-versions "$(dpkg-query -W -f='${Version}' e2fsprogs)" lt 1.47.2; then
+    curl -L -o libext2fs2_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/libext2fs2_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
+    curl -L -o e2fsprogs_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/e2fsprogs_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
+    curl -L -o libss2_1.47.0-3.ok2.deb "https://github.com/onekey-sec/e2fsprogs/releases/download/v1.47.0-3.ok2/libss2_1.47.0-3.ok2_$(dpkg --print-architecture).deb"
+    dpkg -i libext2fs2_1.47.0-3.ok2.deb libss2_1.47.0-3.ok2.deb
+    dpkg -i e2fsprogs_1.47.0-3.ok2.deb
+    rm -f libext2fs2_1.47.0-3.ok2.deb libss2_1.47.0-3.ok2.deb e2fsprogs_1.47.0-3.ok2.deb
+fi

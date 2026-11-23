@@ -65,7 +65,9 @@ def extraction_config(tmp_path: Path):
     return config
 
 
-def check_output_is_the_same(reference_dir: Path, extract_dir: Path):
+def check_output_is_the_same(
+    reference_dir: Path, extract_dir: Path, exclude: tuple[str, ...] = ()
+):
     __tracebackhide__ = True
 
     diff_command = [
@@ -88,9 +90,10 @@ def check_output_is_the_same(reference_dir: Path, extract_dir: Path):
         "*.symlink",
         "--exclude",
         "*.fifo",
-        str(reference_dir),
-        str(extract_dir),
     ]
+    for pattern in exclude:
+        diff_command.extend(("--exclude", pattern))
+    diff_command.extend((str(reference_dir), str(extract_dir)))
 
     try:
         subprocess.run(diff_command, capture_output=True, check=True, text=True)
