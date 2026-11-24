@@ -7,6 +7,7 @@ from .archive import (
     cab,
     cpio,
     dmg,
+    installshield,
     msi,
     par2,
     partclone,
@@ -125,6 +126,7 @@ BUILTIN_HANDLERS: Handlers = (
     arj.ARJHandler,
     cab.CABHandler,
     msi.MsiHandler,
+    installshield.InstallShieldHandler,
     tar.TarUstarHandler,
     tar.TarUnixHandler,
     cpio.PortableASCIIHandler,
@@ -183,4 +185,5 @@ BUILTIN_DIR_HANDLERS: DirectoryHandlers = (
     sevenzip.MultiVolumeSevenZipHandler,
     gzip.MultiVolumeGzipHandler,
     par2.MultiVolumePAR2Handler,
+    installshield.InstallShieldSetHandler,
 )

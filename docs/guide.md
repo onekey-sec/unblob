@@ -215,7 +215,7 @@ Usage: unblob [OPTIONS] FILE
   You also need these extractor commands to be able to extract the supported
   file types: 7z, debugfs, jefferson, lz4, lziprecover, lzop, sasquatch,
   sasquatch-v4be, simg2img, ubireader_extract_files, ubireader_extract_images,
-  unar, zstd
+  unar, unshield, zstd
 
   NOTE: Some older extractors might not be compatible.
 

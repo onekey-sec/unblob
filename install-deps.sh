@@ -12,6 +12,7 @@ apt-get install --no-install-recommends -y \
     lzop \
     partclone \
     unar \
+    unshield \
     upx \
     xz-utils \
     libmagic1 \

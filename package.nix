@@ -19,6 +19,7 @@
   simg2img,
   ubi_reader,
   unar,
+  unshield,
   upx,
   zstd,
   versionCheckHook,
@@ -38,6 +39,7 @@ let
     ubi_reader
     simg2img
     unar
+    unshield
     upx
     zstd
     lz4
