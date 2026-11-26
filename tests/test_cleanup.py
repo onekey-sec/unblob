@@ -9,13 +9,19 @@ from pathlib import Path
 
 import pytest
 
+from unblob.extractors import Command
+from unblob.handlers.archive.zip import ZIPHandler
 from unblob.models import File, Handler, Regex, ValidChunk
 from unblob.processing import (
     ExtractedFileDeletionMode,
     ExtractionConfig,
     process_file,
 )
-from unblob.report import ExtractedFileDeletedReport
+from unblob.report import (
+    ChunkReport,
+    ExtractedFileDeletedReport,
+    ExtractionSkippedReport,
+)
 from unblob.testing import check_result
 
 _ZIP_CONTENT = b"good file"
@@ -98,6 +104,34 @@ class _HandlerWithNullExtractor(Handler):
         return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
 
 
+class _FirstChunkHandler(Handler):
+    NAME = "first"
+    EXTRACTOR = Command("cp", "{inpath}", "{outdir}/first")
+    PATTERNS = [Regex("A")]
+
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk:
+        del file
+        return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
+
+
+class _SecondChunkHandler(Handler):
+    NAME = "second"
+    EXTRACTOR = Command("cp", "{inpath}", "{outdir}/second")
+    PATTERNS = [Regex("B")]
+
+    def calculate_chunk(self, file: File, start_offset: int) -> ValidChunk:
+        del file
+        return ValidChunk(start_offset=start_offset, end_offset=start_offset + 1)
+
+
+class _FailingSecondChunkHandler(_SecondChunkHandler):
+    EXTRACTOR = Command("false")
+
+
+class _FirstChunkHandlerWithoutExtractor(_FirstChunkHandler):
+    EXTRACTOR = None
+
+
 def test_keep_chunks_with_null_extractor(input_file: Path, output_dir: Path):
     input_file.write_bytes(b"some text")
     config = ExtractionConfig(
@@ -133,3 +167,95 @@ def test_delete_intermediate_files_reported(input_file: Path, output_dir: Path):
     ]
     assert any(report.path == inner_zip_path for report in deleted_reports)
     check_result(all_reports)
+
+
+@pytest.mark.parametrize(
+    "content,handler_filter,expect_deleted",
+    [
+        (b"AB", ("first", "second"), True),
+        (b"AB", ("first",), False),
+        (b"AXB", ("first", "second"), False),
+    ],
+)
+def test_delete_intermediate_file_only_when_fully_covered_by_selected_chunks(
+    content: bytes,
+    handler_filter: tuple[str, ...],
+    expect_deleted: bool,
+    input_file: Path,
+    output_dir: Path,
+):
+    input_file.write_bytes(wrapzip("chunks.bin", content))
+    config = ExtractionConfig(
+        extract_root=output_dir,
+        randomness_depth=0,
+        handlers=(ZIPHandler, _FirstChunkHandler, _SecondChunkHandler),
+        extracted_file_deletion=ExtractedFileDeletionMode.SELECTED,
+        extracted_file_handler_filter=handler_filter,
+        max_depth=2,
+        process_num=1,
+    )
+
+    reports = process_file(config, input_file)
+
+    assert reports.errors == []
+    assert input_file.exists()
+    intermediate_path = output_dir / f"{input_file.name}_extract" / "chunks.bin"
+    assert intermediate_path.exists() is not expect_deleted
+    deletion_reported = any(
+        report.path == intermediate_path and report.handler_names == ["first", "second"]
+        for result in reports.results
+        for report in result.reports
+        if isinstance(report, ExtractedFileDeletedReport)
+    )
+    assert deletion_reported is expect_deleted
+
+
+def test_keep_fully_covered_file_when_chunk_extraction_fails(
+    input_file: Path, output_dir: Path
+):
+    input_file.write_bytes(wrapzip("chunks.bin", b"AB"))
+    config = ExtractionConfig(
+        extract_root=output_dir,
+        randomness_depth=0,
+        handlers=(ZIPHandler, _FirstChunkHandler, _FailingSecondChunkHandler),
+        extracted_file_deletion=ExtractedFileDeletionMode.SELECTED,
+        extracted_file_handler_filter=("first", "second"),
+        max_depth=2,
+        process_num=1,
+    )
+
+    reports = process_file(config, input_file)
+
+    assert reports.errors
+    assert (output_dir / f"{input_file.name}_extract" / "chunks.bin").exists()
+
+
+def test_keep_fully_covered_file_when_chunk_has_no_extractor(
+    input_file: Path, output_dir: Path
+):
+    input_file.write_bytes(wrapzip("chunks.bin", b"AB"))
+    config = ExtractionConfig(
+        extract_root=output_dir,
+        randomness_depth=0,
+        handlers=(ZIPHandler, _FirstChunkHandlerWithoutExtractor, _SecondChunkHandler),
+        extracted_file_deletion=ExtractedFileDeletionMode.SELECTED,
+        extracted_file_handler_filter=("first", "second"),
+        max_depth=2,
+        process_num=1,
+    )
+
+    reports = process_file(config, input_file)
+
+    assert reports.errors == []
+    intermediate_path = output_dir / f"{input_file.name}_extract" / "chunks.bin"
+    assert intermediate_path.exists()
+    assert (config.get_extract_dir_for(intermediate_path) / "0-1.first").exists()
+    [chunk_report] = [
+        report
+        for result in reports.results
+        for report in result.filter_reports(ChunkReport)
+        if report.handler_name == "first"
+    ]
+    assert chunk_report.extraction_reports == [
+        ExtractionSkippedReport(reason="No extractor is defined.")
+    ]
