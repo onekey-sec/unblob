@@ -70,6 +70,7 @@
     | [`QNAP NETWORKING`](#qnap-networking) | ARCHIVE | :octicons-check-16: |
     | [`QNX DEFLATE`](#qnx-deflate) | COMPRESSION | :octicons-check-16: |
     | [`QOI`](#qoi) | MEDIA | :octicons-alert-fill-12: |
+    | [`QT RCC`](#qt-rcc) | ARCHIVE | :octicons-check-16: |
     | [`RAR`](#rar) | ARCHIVE | :octicons-alert-fill-12: |
     | [`ROMFS`](#romfs) | FILESYSTEM | :octicons-check-16: |
     | [`RPM`](#rpm) | ARCHIVE | :octicons-check-16: |
@@ -1270,6 +1271,23 @@
 
         - Images with more than 16777216 pixels are not recognised.
         - An image that spans the whole file is not carved, as it is a standalone file rather than embedded media.
+## Qt RCC
+
+!!! success "Fully supported"
+
+    === "Description"
+
+        Qt binary resource files produced by the Resource Compiler (rcc -binary) bundle a directory tree of files, optionally zlib or zstd compressed, into a single blob. The handler walks the resource tree and extracts every file with its resource path, decompressing payloads where flagged.
+
+        ---
+
+        - **Handler type:** Archive
+        - **Vendor:** Qt
+
+    === "References"
+
+        - [Qt Resource System](https://doc.qt.io/qt-6/resources.html){ target="_blank" }
+        - [QResource format implementation in qtbase](https://codebrowser.dev/qt5/qtbase/src/corelib/io/qresource.cpp.html){ target="_blank" }
 ## RAR
 
 !!! warning "Partially supported"
