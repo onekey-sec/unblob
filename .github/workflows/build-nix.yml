@@ -17,8 +17,6 @@ jobs:
             arch: x86_64-linux
           - os: ubuntu-24.04-arm
             arch: aarch64-linux
-          - os: macos-15-intel
-            arch: x86_64-darwin
           - os: macos-15
             arch: aarch64-darwin
     name: Build Nix - ${{ matrix.arch }}.${{ matrix.os }}
