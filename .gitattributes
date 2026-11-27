@@ -1,3 +1,4 @@
 tests/integration/** filter=lfs diff=lfs merge=lfs -text
+tests/integration/**/*.py -filter -diff -merge text
 tests/files/** filter=lfs diff=lfs merge=lfs -text
 docs/demo.gif filter=lfs diff=lfs merge=lfs -text
