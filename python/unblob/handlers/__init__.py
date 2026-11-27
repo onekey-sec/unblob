@@ -13,6 +13,7 @@ from .archive import (
     rar,
     rpm,
     sevenzip,
+    sonos_upd,
     stuffit,
     tar,
 )
@@ -169,6 +170,7 @@ BUILTIN_HANDLERS: Handlers = (
     btrfs_stream.BTRFSStreamHandler,
     sbfh.SBFHHandler,
     airoha.AirohaHandler,
+    sonos_upd.SonosUPDHandler,
     rpm.RPMHandler,
     lvm.LVM2Handler,
     png.PNGHandler,
