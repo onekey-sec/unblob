@@ -65,6 +65,7 @@
     | [`NUTTX CROMFS`](#nuttx-cromfs) | FILESYSTEM | :octicons-check-16: |
     | [`PAR2 (MULTI-VOLUME)`](#par2-multi-volume) | ARCHIVE | :octicons-check-16: |
     | [`PARTCLONE`](#partclone) | ARCHIVE | :octicons-check-16: |
+    | [`PE`](#pe) | EXECUTABLE | :octicons-alert-fill-12: |
     | [`PNG`](#png) | MEDIA | :octicons-alert-fill-12: |
     | [`QCA LZMA`](#qca-lzma) | COMPRESSION | :octicons-check-16: |
     | [`QNAP NAS`](#qnap-nas) | ARCHIVE | :octicons-check-16: |
@@ -1182,6 +1183,33 @@
 
         - [Partclone GitHub Repository](https://github.com/Thomas-Tsai/partclone){ target="_blank" }
         - [Clonezilla Official Documentation](https://clonezilla.org/){ target="_blank" }
+## PE
+
+!!! warning "Partially supported"
+
+    === "Description"
+
+        PE (Portable Executable) is the executable file format of Windows and UEFI. The handler carves PE files with a known payload and extracts it. Nullsoft (NSIS) installers are carved with their appended installer data and extracted with 7-Zip, after their CRC is verified (a mismatch is reported). UPX packed PE32 (i386) and PE32+ (amd64) files are unpacked with upx. The chunk covers the PE image, whose size is computed from the headers, the section table, debug data and COFF symbol table stored outside of sections, then the data a payload appends (NSIS installer data), and an Authenticode certificate table right after them. Other PE files are not claimed: their contents are searched like any other data.
+
+        ---
+
+        - **Handler type:** Executable
+        - **Vendor:** Microsoft
+
+    === "References"
+
+        - [PE Format](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format){ target="_blank" }
+        - [NSIS firstheader definition (fileform.h, v3.11)](https://github.com/kichik/nsis/blob/v311/Source/exehead/fileform.h){ target="_blank" }
+        - [UPX packheader definition (packhead.cpp, v4.2.2)](https://github.com/upx/upx/blob/v4.2.2/src/packhead.cpp){ target="_blank" }
+
+    === "Limitations"
+
+        - Only NSIS and UPX are recognised. PE files of other packers and installers (Inno Setup, WiX Burn, ...) are processed as plain data.
+        - NSIS data is only looked for at the first 512 byte boundary after the PE image, where makensis writes it.
+        - The CRC of NSIS installers built without CRC check (CRCCheck off) is not verified.
+        - UPX is only recognised in i386 and amd64 PE files.
+        - UPX packed files whose packheader was modified or removed, as done to hinder unpacking, are processed as plain data.
+        - Only packheaders of version 10 and later are recognised; the layout was checked against files packed by upx 4.2.2 (packheader version 13).
 ## PNG
 
 !!! warning "Partially supported"
